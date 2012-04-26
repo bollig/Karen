@@ -1,0 +1,55 @@
+1 - Keeneland Proposal
+
+2 - CUSP Test Case (Simple Poisson)
+    - Accept as truth for my parallel GMRES
+
+3 - Paper (at least 3 sections)
+
+4 - Spear MPI Hosts.conf 
+
+5 - VCL Parallel Algorithm 
+    - Now that my inner, norm and alltoall are debugged
+
+
+- Compare Exit conditions
+- Preconditionero
+
+
+
+
+Thesis
+===========
+
+node generation
+    TODO: return to CVT; generate very large number of nodes (>10 million)
+        - Get Womeldorfs code for generating
+node indexing
+    TODO: return to true float morton ordering
+        - Get steves ordering code
+domain decomposition
+    TODO: parmetis
+RBF-FD Weights
+    TODO: Compute on GPU
+RBF-FD for PDE
+    TODO: Return to Parabolic on GPU
+    TODO: Solve 3D Mantle Convection Problem
+Timescheme and Stability
+    Hyperviscosity
+    TODO: crank-nicholson/another implicit scheme
+Iterative Solvers
+    TODO: parallel bicgstab 
+Preconditioning
+    TODO: Table of preconditioners
+
+Open Questions: 
+    What is the ideal workload (N) for fixed processors and fixed stencil size
+    What is the ideal stencil size (n) for fixed processors and fixed workload 
+    What is the ideal processor count (p) for fixed problem size and workload
+    How does the GPU impact these values? 
+    What kind of performance increase does the GPU provide if we hand-tune our kernels? 
+    What kind of performance can we get by using libraries like OpenCL and CUSP?
+
+    What preconditioners work the best?
+    What iterative solver works better? GMRES or BiCGStab? 
+
+
