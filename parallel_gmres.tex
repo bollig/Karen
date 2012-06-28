@@ -1,5 +1,21 @@
 \chapter{Multi-GPU Preconditioned GMRES}
 
+List of algorithms: 
+\begin{itemize} 
+\item Preconditioned GMRES with communication points
+\item ILU0
+\item Multi-coloring(?)
+\item MC-ILU0(?)
+\end{itemize}
+List of figures: 
+\begin{itemize}
+\item spy of matrices tested (including rbffd for n=17,31,50,101)
+\item spy of matrices before and after interleave re-ordering
+\item MatrixMarket file (match Li and Saad) on CPU/GPU vs GFLOPS
+\item GMRES iterations per second vs N vs n
+\item Strong scaling GMRES time vs \# of CPUs/GPUs vs n
+\item Weak scaling GMRES time vs \# of CPUs/GPUs vs n
+\end{itemize} 
 
 \section{Introduction}
 This handout follows the implementation of my Parallel (Multi-GPU) GMRES algorithm. 
