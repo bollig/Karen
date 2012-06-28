@@ -2,8 +2,20 @@
 
 \usepackage{textcase}
 \usepackage[pdftex]{graphicx}
-\usepackage{hyperref}
-\hypersetup{breaklinks=true}
+%\usepackage{hyperref}
+%\hypersetup{breaklinks=true}
+
+\usepackage[
+    hyperindex=true,		% Make numbers of index links as well
+   	backref=page, 		% Provide page listing where refs occur in the bibliography
+	%breaklinks=true,
+    colorlinks,%
+    citecolor=green,%
+    filecolor=blue,%
+    linkcolor=red,%
+    urlcolor=orange, 
+]{hyperref}
+
 
 \title{PDE Solutions with RBF-FD and Multiple GPUs}
 \author{Evan F. Bollig}
@@ -22,6 +34,10 @@
 \committeeperson{Beauxeau D'Claune}{Committee Member}
 \committeeperson{Arlip Zarseeld}{Committee Member}
 
+%%%% USEPACKAGES for MACROS %%%%%
+\usepackage{algpseudocode}
+\usepackage[chapter]{algorithm}
+
 \input{macros/macros.tex}
 \input{macros/misc_mac.tex}
 
@@ -37,6 +53,7 @@
 \tableofcontents
 \listoftables
 \listoffigures
+\listofalgorithms
 %\listofmusex
 
 \input{symbols.tex}
