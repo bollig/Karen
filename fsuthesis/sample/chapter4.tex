@@ -1,0 +1,107 @@
+\def\BiBTeX{{\rmfamily B\kern-.05em%
+   \textsc{i\kern-.025em b}\kern-.08em\TeX}}
+
+\newenvironment{narrowref}{\par
+  \frenchspacing
+  \setlength{\leftskip}{4.5em}
+  \setlength{\rightskip}{3em}
+  \setlength{\parindent}{-1.5em}
+  \setlength{\parskip}{.6\baselineskip}}%
+ {\par\nonfrenchspacing\addvspace{.5\baselineskip}}
+
+\chapter{Citations and References}
+\section{Using the \texttt{references} Environment}
+Let's start simple.  Assuming we don't have many citations, we'll
+create a references section manually using the
+\verb|\begin{references}| environment provided by the
+\textsf{fsuthesis} class.  If your discipline has a style
+guide for presenting references, you can use that to create your own
+entries.  Here are some example entries with explicit formatting
+specified:
+\begin{verbatim}
+\begin{references}
+Picaut, J., F. Masia, and Y. du Penhoat, 1997: An advective-reflective
+conceptual model for the oscillatory nature of the ENSO.
+\textit{Science}, \textbf{277}, 663--666.
+
+Yasunari, T., 1990: Impact of Indian monsoon on the coupled
+atmosphere/ocean system in the tropical Pacific.
+\textit{Meteor. Atmos. Phys.}, \textbf{44}, 19--41.
+\end{references}
+\end{verbatim}
+
+Note that I had to specify italics and bold-facing myself, according
+to the style guide that I'm using.  (If you don't have a
+discipline-specific style guide, see \cite{Anonymous:1993:CMS}
+or \cite{Anonymous:2009:PMA} for lots of bibliographic examples.)
+The \lit{references} environment provides exdented entries, spacing,
+and a heading, but the rest of the formatting is up to you.  Likewise,
+citations of these references within your document must be formatted
+manually.  Once processed, the reference entries above look like the
+following:
+\begin{narrowref}
+Picaut, J., F. Masia, and Y. du Penhoat, 1997: An advective-reflective
+conceptual model for the oscillatory nature of the ENSO.
+\textit{Science}, \textbf{277}, 663--666.
+
+Yasunari, T., 1990: Impact of Indian monsoon on the coupled
+atmosphere/ocean system in the tropical Pacific.
+\textit{Meteor. Atmos. Phys.}, \textbf{44}, 19--41.
+\end{narrowref}
+
+\section{Citations and \BiBTeX}
+If your thesis or dissertation does not have many citations or
+references, this may be all you need. However, if you have more than a
+handful of citations, you owe it to yourself to invest a little more
+energy into learning about the powerful, time-saving features of
+\BiBTeX.  To use \BiBTeX, bibliographic entries are added to an
+external file with tags identifying elements of the entry, such as
+authors, titles, journals, etc.  You may then cite a reference in
+your document using its unique key.  Many disciplines have developed
+large \BiBTeX{} databases already, so if you're lucky, you only need
+download a pre-built file ready to go.  You can always add a few more
+references if those entries don't already exist in the file you
+download.
+
+For this sample document, I have created a small \BiBTeX{}
+bibliography database in a file called \lit{myrefs.bib} which is
+excerpted from a larger collection of pre-generated \TeX-related
+entries I downloaded from the web.  If your discipline does not
+already distribute \BiBTeX{} databases publicly, it's just a bit
+more typing to create your own \BiBTeX{} file.  Another advantage of
+the \BiBTeX{} approach is that you can continue to add to this
+database throughout your professional career, creating entries as you
+read books and journal articles you may want to reference in the
+future.  I encourage you to refer to the standard \LaTeX{} references
+(e.g., \cite{Lamport:1994:LDP} and \cite{Kopka:2004:GLT}) or to search
+the web for further information on creating your own \BiBTeX{}
+database.
+
+Once you've created or downloaded a \BiBTeX{} database, you may cite a
+document using its unique \textit{key} as an argument to
+the \LaTeX{} \verb|\cite| macro.  For example, in the previous
+paragraph, I used the commands \verb|\cite{Lamport:1994:LDP}| and
+\verb|\cite{Kopka:2004:GLT}|, where \lit{Lamport:1994:LDP} and
+\lit{Kopka:2004:GLT} are the keys for their respective documents.
+By making these citations, the bibliographic entries for these
+documents will be pulled from my \BiBTeX{} file and added to the
+bibliography automatically.  I can also add entries to the
+bibliography without having citations in my text by using
+the \verb|\nocite{key}| command with the desired \textit{key}.
+If I want every entry in my \BiBTeX{} file inserted into my
+bibliography, then I can issue the command \verb|\nocite{*}|
+as a shortcut.  (You don't have to worry about citations being
+redundant: bibliographic entries will be included only once no matter
+how many times they may be \verb|\cite|d or \verb|\nocite|d in your
+document.)
+
+This document uses the default citation and bibliography formatting
+supplied by \LaTeX, but if your discipline publishes \BiBTeX{} files
+for common use, it may also have created its own \BiBTeX{} formatting
+style which you may want to use.  One common alternative is to use
+the \pkg{natbib} package activated by
+including \verb|\usepackage{natbib}| in the document preamble.  This
+package will allow you to make author--year citations in your document
+automatically (e.g., ``Fargunkle et al., (2001)'') using the
+same \BiBTeX{} database file.  See \cite{Kopka:2004:GLT} (or search
+the web) for more information on \pkg{natbib}.

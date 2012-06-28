@@ -1,0 +1,1148 @@
+% \iffalse meta-comment
+%
+% Copyright (C) 2011 by Bret Whissel
+%                       Department of Earth, Ocean and Atmospheric Science
+%                       Florida State University
+%                       e-mail: bwhissel@fsu.edu
+%
+% This file may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either
+% version 1.2 of this license or (at your option) any later
+% version.  The latest version of this license is in:
+%
+%    http://www.latex-project.org/lppl.txt
+%
+% and version 1.2 or later is part of all distributions of
+% LaTeX version 1999/12/01 or later.
+%
+% \fi
+%
+% \iffalse
+%<*driver>
+\ProvidesFile{fsuthesis.dtx}
+%</driver>
+%<class>\NeedsTeXFormat{LaTeX2e}[2005/09/16]
+%<class>\ProvidesClass{fsuthesis}
+%<*class>
+  [2011/08/23 v3.0.0
+    (FSU LaTeX document class for Thesis/Dissertations
+     maintained by Bret Whissel, bwhissel@fsu.edu)]
+%</class>
+%
+%<*driver>
+\documentclass{ltxdoc}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{fsuthesis.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \CheckSum{882}
+%
+% \CharacterTable {Upper-case
+%  \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z Lower-case
+%  \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z Digits
+%  \0\1\2\3\4\5\6\7\8\9 Exclamation \!  Double quote \" Hash (number)
+%  \# Dollar \$ Percent \% Ampersand \& Acute accent \' Left paren \(
+%  Right paren \) Asterisk \* Plus \+ Comma \, Minus \- Point \.
+%  Solidus \/ Colon \: Semicolon \; Less than \< Equals \= Greater
+%  than \> Question mark \?  Commercial at \@ Left bracket \[
+%  Backslash \\ Right bracket \] Circumflex \^ Underscore \_ Grave
+%  accent \` Left brace \{ Vertical bar \| Right brace \} Tilde \~}
+%
+% \changes{v2.0.0}{2010/01/28}{Initial release of new design.}
+% \changes{v3.0.0}{2011/08/23}{Change to FSU Guidelines bumps major
+% version number; Enhanced PDF metadata.}
+%
+% \GetFileInfo{fsuthesis.dtx}
+%
+% \DoNotIndex{\if,\fi,\else,\\,\@plus,\@m,\advance,\def,\divide,\end,\begin,\expandafter,\gdef,\global,\hb@xt@,\hfil,\hrule,\hrulefill,\hsize,\ht,\ifdim,\ifnum,\let,\m@ne,\mbox,\newcommand,\newcounter,\newenvironment,\newif,\newlength,\nobreak,\nobreakspace,\p@,\par,\protect,\relax,\renewcommand,\renewenvironment,\sbox,\setlength,\space,\@tempboxa,\@tempcnta,\@tempdima,\vfil,\vfill,\vskip,\wd,\z@}
+%
+% \title{The \textsf{fsuthesis} Class\thanks{This
+%   document corresponds to \textsf{fsuthesis}~\fileversion,
+%   dated \filedate.}}
+% \author{Bret Whissel \\ \texttt{bwhissel@fsu.edu}}
+% \date{August 23, 2011}
+%
+% \maketitle
+%
+% \StopEventually{\PrintChanges \PrintIndex}
+%
+% \section{Introduction}
+% 
+% The \textsf{fsuthesis} class may be used to generate Theses and
+% Dissertations in the format required by the Florida State University
+% Graduate School as described by the document \textit{Guidelines \&
+% Requirements for Electronic Theses, Treatises and Dissertations},
+% revised August~2011. This class extends the standard \LaTeX{}
+% document class \textsf{report.cls}, adding elements and
+% re-formatting as required to comply with FSU's standards.
+%
+% Dependencies: This package requires the external package
+% \textsf{ifpdf} which usually ships with most distributions
+% \LaTeX{}. This package is used to conditionally include PDF-only
+% information.
+%
+% \section{What Has Gone Before}
+% The first FSU \LaTeX{} style file was based on macros from Stanford
+% University, modified to comply with FSU standards by Jon Ahlquist.
+% For many years Mimi Burbank maintained and upgraded another set of
+% macros, until her retirement.  Subsequent updates were provided by
+% Wickus Nienaber and Jack Tyndall.
+%
+% Begun in 2009, this version is an entirely new re-write by Bret
+% Whissel of the Earth, Ocean and Atmospheric Science Department.
+% Corrections and improvements should be directed to his attention 
+% at \texttt{bwhissel@fsu.edu}.
+%
+% Official changes to this class file will be reflected in the first
+% two elements of the version number.  Should any local changes be
+% made to this file, please increment the smallest version number
+% (see the |\ProvidesClass| macro above in this document's source code).
+%
+% \section{Option Registration}
+%
+% \begin{macro}{hardcopy}
+% \begin{macro}{expanded}
+% \begin{macro}{chapterleaders}
+% In addition to the options provided by the standard \textsf{report} class,
+% this class provides three supplemental options:  |hardcopy|,
+% |expanded|, and |chapterleaders|.
+%
+% The |hardcopy| option will increase the size of the margin along the
+% binding-edge.  If the standard option |twoside| is also given, then
+% the binding-edge will be shifted for even and odd pages, and the
+% standard option |openright| will be forced.
+%
+% The |expanded| option increases the spacing of baselines.  This
+% requires many subtle tweaks in standard \textsf{report} definitions, as
+% vertical spacing at chapter headings and other places becomes
+% irregular and must be accounted for.
+%
+% The |chapterleaders| option causes the display of leader dots
+% in the \textit{Table of Contents} for chapter headings, which
+% would otherwise be suppressed.  This could be nice for people who
+% request that section/sub-section headings in the ToC be suppressed.
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\if@hardcopy}
+% \begin{macro}{\if@expanded}
+% \begin{macro}{\ifch@pleaders}
+% Declaring the document options merely sets appropriate flags,
+% which we define here.  We deal with the options later.
+%    \begin{macrocode}
+\newif\if@hardcopy
+\newif\if@expanded
+\newif\ifch@pleaders
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% The rest of this section is boiler-plate for handling the options
+% and passing standard options on to the \textsf{report} class for handling.
+% The final step is to load the \textsf{report} class, so that we may 
+% continue to override its features here.  Then we load the \textsf{ifpdf}
+% package since we will need it down the road.
+% \changes{v3.0.0}{2011/08/23}{Added \textsf{ifpdf} package}
+%
+%    \begin{macrocode}
+\DeclareOption{hardcopy}{\@hardcopytrue}
+\DeclareOption{expanded}{\@expandedtrue}
+\DeclareOption{chapterleaders}{\ch@pleaderstrue}
+\DeclareOption*{\PassOptionsToClass{\CurrentOption}{report}}
+\ProcessOptions \relax
+\LoadClass{report}
+\RequirePackage{ifpdf}
+%    \end{macrocode}
+%
+% \section{Establishing Page Margins}
+%
+% Now we'll set up page margins that FSU expects.  In general,
+% the August~2011 \textit{Guidelines \& Requirements for
+% Electronic Theses, Treatises and Dissertations} requires that
+% margins be at least 1'' on all sides.
+%
+% \begin{macro}{\headheight}
+% \begin{macro}{\headsep}
+% We do not use running headers, but should someone turn them
+% on, we set them to appear (illegally) in the area above the
+% page body.
+%    \begin{macrocode}
+\setlength{\headheight}{\topskip}
+\setlength{\headsep}{10pt}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}%
+%
+% \begin{macro}{\textheight}
+% \begin{macro}{\footskip}
+% We set the |\textheight| to accommodate a fixed number of
+% lines whose heights are defined by |\baselineskip|. (This parameter
+% is established by the document font size selection.)  We want the
+% page body to occupy the entire vertical space, less the top and
+% bottom margins and the space reserved for the pagenumber.  The
+% \textit{Guidelines} specify a 1/2-inch space between the last line
+% and the page number, so we set |\footskip| to be in that ballpark
+% to start.  Once we've established the actual text height, we'll
+% reset |\footskip| to absorb any additional space.
+%    \begin{macrocode}
+\setlength{\footskip}{0.35in}
+\setlength{\@tempdima}{\paperheight}
+\addtolength{\@tempdima}{-2in}
+\addtolength{\@tempdima}{-\footskip}
+\divide\@tempdima\baselineskip
+\@tempcnta=\@tempdima
+\setlength\textheight{\@tempcnta\baselineskip}
+%    \end{macrocode}
+% Now that the text height has been calculated, we fix the
+% |\footskip| setting to take up the slack.
+%    \begin{macrocode}
+\setlength{\footskip}{\paperheight}
+\addtolength{\footskip}{-2in}
+\addtolength{\footskip}{-\textheight}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\topmargin}
+% Finally, we set |\topmargin| now that we've fixed the rest
+% of the vertical space, and we turn on |\flushbottom| so that
+% page body baselines are more consistent.
+%    \begin{macrocode}
+\setlength{\topmargin}{\paperheight}
+\addtolength{\topmargin}{-2in}
+\addtolength{\topmargin}{-\headheight}
+\addtolength{\topmargin}{-\headsep}
+\addtolength{\topmargin}{-\textheight}
+\addtolength{\topmargin}{-\footskip}
+\flushbottom
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\textwidth}
+% \begin{macro}{\oddsidemargin}
+% \begin{macro}{\evensidemargin}
+% Accounting for the required margins, 
+% standard 8.5x11'' paper allows a maximum \LaTeX{} |\textwidth| of
+% 6.5\,inches.  Standard \LaTeX{} typically uses much narrower
+% column widths, however, so this class file sets a |\textwidth|
+% of 6.0\,inches.  The horizontal margins are derived from this
+% minimum width.  With the following code, selecting a narrower
+% paper size will reduce the size of the margins, not the text
+% column.
+%    \begin{macrocode}
+\setlength{\textwidth}{6.0in}
+\setlength{\@tempdima}{\paperwidth}
+\addtolength{\@tempdima}{-2in}
+\addtolength{\@tempdima}{-\textwidth}
+\divide\@tempdima by2
+\setlength{\oddsidemargin}{\@tempdima}
+\setlength{\evensidemargin}{\@tempdima}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \section{Processing the Document Options}
+% \subsection{Handling the \texttt{hardcopy} Option}
+% \begin{macro}{\evenoddoffset}
+% For printing hard copies of a thesis or dissertation, we allow a
+% little extra margin space along the binding edge.  The size of this
+% extra space is defined by |\evenoddoffset|. For two-sided hard
+% copies, we force chapters (and everything using that level heading)
+% to begin on right-hand (recto, odd-numbered) pages.  The margin
+% adjustments are added to the |\begin{document}| hooks, so that the
+% user may redefine |\evenoddoffset| in the document preamble.
+%    \begin{macrocode}
+\newlength{\evenoddoffset}
+\setlength{\evenoddoffset}{0.25in}
+\if@hardcopy%
+  \AtBeginDocument{\addtolength{\oddsidemargin}{\evenoddoffset}}
+  \if@twoside\@openrighttrue%
+    \AtBeginDocument{\addtolength{\evensidemargin}{-\evenoddoffset}}
+  \else
+    \AtBeginDocument{\addtolength{\evensidemargin}{\evenoddoffset}}\fi
+\fi
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Handling the \texttt{chapterleaders} Option}
+% This option makes a minor change to the \textit{Table of Contents}
+% by adding leader dots from the chapter title to the page number.
+% The default \LaTeX{} \textsf{report} class does not provide leaders on
+% chapter headings, just |section| and lower heading levels.  If the
+% user is writing a paper without subheadings, then the appearance
+% of the \textit{Table of Contents} might be improved by including
+% such leader dots.
+% \begin{macro}{\l@chapter}
+% If the user has requested the |chapterleaders| document option,
+% |\l@chapter| is re-defined to provide the leaders as requested.
+%    \begin{macrocode}
+\ifch@pleaders
+  \renewcommand*\l@chapter[2]{%
+    \ifnum \c@tocdepth >\m@ne
+      \addpenalty{-\@highpenalty}%
+      \vskip 1.0em \@plus\p@
+      {\@dottedtocline{0}{0pt}{1.5em}{\bfseries#1}{\bfseries#2}}
+    \fi}
+\fi
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Handling the \texttt{expanded} Option} Expanded spacing
+% requires a lot of tweaking.  The standard \textsf{report}-class
+% mechanisms allow a user to redefine |\baselinestretch|, and then all
+% baseline leading is increased by this factor.  Instead, the expanded
+% spacing environment stretches the |\baselineskip| by half again as
+% much, but only for the normal font size in the main body of the
+% text.  Other environments revert to single-spacing (e.g., the
+% various \textit{Tables of Contents} in the front matter, table and
+% figure captions, footnotes), and vertical spacing in list
+% environments is also scaled back.
+%
+% The definitions which follow are only defined if the
+% |expanded| option has been selected.
+%    \begin{macrocode}
+\if@expanded
+%    \end{macrocode}
+%
+% \subsubsection{Baseline Parameters}
+% \begin{macro}{\adjbaselineskip}
+% \begin{macro}{\blstretchiness}
+% \begin{macro}{\smblstretchiness}
+% To start, we define the adjustment to |\baselineskip| to be some
+% fraction of the original |\baselineskip|.  This adjustment is not
+% defined to be a rubber length, since we generally want fixed,
+% predictable baselines while we are in single-space mode.  In
+% expanded spacing mode, however, we can allow a little stretchiness
+% since we've already got some whitespace between lines.  We define
+% some baseline stretchiness with |\blstretchiness|, and a smaller
+% amount of stretchiness with |\smblstretchiness|.
+%    \begin{macrocode}
+  \newlength{\adjbaselineskip}%
+  \setlength{\adjbaselineskip}{0.5\baselineskip}%
+  \def\blstretchiness{0pt plus.4pt minus.3pt}
+  \def\smblstretchiness{0pt plus.3pt minus.2pt}
+%    \end{macrocode}
+% \textbf{Note:} If tweaking |\adjbaselineskip| here, be sure to
+% take a look at the section on adjusting the list environment
+% below, as those spacing values may also need to be adjusted.
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsubsection{Redefining \texttt{\char'134 normalsize}}
+% \begin{macro}{\f@normalsize}
+% \begin{macro}{\normalsize}
+% \begin{macro}{\expandspacing}
+% We preserve the original definition of |\normalsize| in
+% |\f@normalsize|, and then we redefine |\normalsize| to call
+% |\expandspacing| instead.  |\expandspacing| first calls the
+% old definition of |\normalsize| to establish the original
+% baselines.  (Otherwise, multiple calls to |\expandspacing|
+% will generate wider and wider baseline spacings.)
+%    \begin{macrocode}
+  \let\f@normalsize=\normalsize%
+  \newcommand{\expandspacing}{\f@normalsize%
+    \addtolength{\baselineskip}{\adjbaselineskip}%
+    \addtolength{\baselineskip}{\blstretchiness}}%
+  \renewcommand{\normalsize}{\expandspacing}%
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsubsection{Chapter Heading Adjustment}
+% \begin{macro}{\afterheadadj}
+% While in expanded-spacing mode, the first line of text after
+% chapter headings will be set a little lower than if we were in
+% single-space mode.  (We will be in single-space mode for the
+% automatically-generated lists in the front-matter, for example,
+% while most of the other chapter-level sections will be in
+% expanded-spacing mode.)  To compensate, we should call the
+% macro |\afterheadadj| to remove extra vertical space when we go
+% into expanded-spacing mode after chapter headings.
+%    \begin{macrocode}
+  \newcommand{\afterheadadj}{\addvspace{-\adjbaselineskip}}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsubsection{Adjustments to the \texttt{\char'134 list} Environments}
+% In expanded-spacing mode, most of the |\list| environments look
+% pretty bad if left with the standard expanded baselines.  We attempt
+% to compensate by reducing the amount of baseline skip while in list
+% mode.  We accomplish this by first calling the standard list startup
+% machinery, and then reducing the baseline skip and baseline stretchiness.
+%
+% \begin{macro}{\f@olist}
+% \begin{macro}{\list}
+% We preserve the regular function of the |\list| command in the macro
+% |\f@olist|, and then we redefine |\list| to scale back the standard
+% expanded spacing in the list environments.  The reduced baseline skip
+% is defined in terms of |\adjbaselineskip|, so if that vertical dimension
+% is adjusted, this amount may also need to be tweaked.  The |\baselineskip|
+% adjustment occurs only in the outer-most |\list| environment.  (All inner
+% |\list|s will share the same reduced |\baselineskip|.)
+%
+%    \begin{macrocode}
+  \let\f@olist=\list
+  \def\list#1#2{%
+    \f@olist{#1}{#2}
+    \ifnum \@listdepth=1
+      \setlength{\baselineskip}{2.4\adjbaselineskip}
+      \addtolength{\baselineskip}{\smblstretchiness}
+    \fi
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\f@oendlist}
+% \begin{macro}{\endlist}
+% After our mutation of |\list|, we undo our damage here by re-defining
+% |\endlist| to restore expanded spacing at the close of the
+% outer-most |\list| environment.
+%    \begin{macrocode}
+  \let\f@oendlist=\endlist
+  \def\endlist{%
+    \f@oendlist
+    \ifnum\@listdepth=0 \normalsize \fi
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsubsection{Fallback Definitions}
+% We allow our redefinitions to be NO-OPs if the |expanded| document
+% option has not been selected.  (Some of our later macro definitions
+% attempt to call a few of the macros above without testing |\if@expanded|.)
+%    \begin{macrocode}
+\else
+  \let\expandspacing=\relax
+  \let\f@normalsize=\relax
+  \let\afterheadadj=\relax
+  \let\f@olist=\list
+  \let\f@oendlist=\endlist
+\fi
+\f@normalsize
+%    \end{macrocode}
+%
+% \section{Testing the Presence of \textsf{hyperref}}
+% \begin{macro}{\if@hyperloaded}
+% \changes{v2.3.0}{2011/01/14}{New test added}
+% We may want to enhance the behavior of a few of our macros if the
+% \textsf{hyperref} package has been loaded.  We cannot test for package
+% loading after |begin{document}|, and the user's
+% |\usepackage{hyperref}| will have occured after this file has been
+% loaded.  So what we can do is create a new test here and have it
+% initialized in the |\begin{document}| hooks.
+% This test is used to add PDF bookmarks to the title page and to the
+% table of contents page (if \textsf{hyperref} has been loaded).
+%    \begin{macrocode}
+\newif\if@hyperloaded
+\AtBeginDocument{\@ifpackageloaded{hyperref}
+  {\@hyperloadedtrue}{\@hyperloadedfalse}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \newpage
+% \section{Definition of Title Page Macros}
+% \subsection{Token Storage}
+% \changes{v3.0.0}{2011/08/23}{Added definitions for |\@subject| and |\@keywords|}
+% \begin{macro}{\@degree}
+% \begin{macro}{\@department}
+% \begin{macro}{\@college}
+% \begin{macro}{\@semester}
+% \begin{macro}{\@degreeyear}
+% \begin{macro}{\@defensedate}
+% \begin{macro}{\@manuscripttype}
+% These definitions should be redefined within the document's
+% preamble, set to sane values using the corresponding macros
+% in the next section.
+%    \begin{macrocode}
+\gdef\@degree{\ClassError{fsuthesis}%
+  {No \protect\degree\space given}%
+  {You must provide a \protect\degree{Degree Name}%
+   \space command}}
+\gdef\@department{\ClassError{fsuthesis}%
+  {No \protect\department\space given}%
+  {You must provide a \protect\department{Name of Department}%
+   \space command}}
+\gdef\@college{\ClassError{fsuthesis}%
+  {No \protect\college\space given}%
+  {You must provide a \protect\college{My College or School}%
+   \space command}}
+\gdef\@semester{\ClassError{fsuthesis}%
+  {No \protect\semester\space given}%
+  {You must provide a \protect\semester{Fall}\space command}}
+\gdef\@degreeyear{\ClassError{fsuthesis}%
+  {No \protect\degreeyear\space given}%
+  {You must provide a \protect\degreeyear{20NN}\space command}}
+\gdef\@defensedate{\ClassError{fsuthesis}%
+  {No \protect\defensedate\space given}%
+  {You must provide a \protect\defensedate{Month dd, 20NN}%
+   \space command}}
+\gdef\@manuscripttype{\ClassError{fsuthesis}%
+  {No \protect\manuscripttype\space given}%
+  {You must provide a \protect\manuscripttype{Dissertation}%
+   \space command}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Title Page Token-Setting Macros}
+% \begin{macro}{\degree}
+% \begin{macro}{\department}
+% \begin{macro}{\college}
+% \begin{macro}{\semester}
+% \begin{macro}{\degreeyear}
+% \begin{macro}{\defensedate}
+% \begin{macro}{\manuscripttype}
+% \begin{macro}{\if@department}
+% These macros redefine the corresponding tokens described
+% above.  These should all be redefined within the preamble
+% section of the thesis or dissertation, with the exception
+% of |\department|, which may not be appropriate in some
+% Schools or Colleges.
+%    \begin{macrocode}
+\newif\if@department
+\newcommand*{\degree}[1]{\gdef\@degree{#1}}
+\newcommand*{\department}[1]{\gdef\@department{#1}\@departmenttrue}
+\newcommand*{\college}[1]{\gdef\@college{#1}}
+\newcommand*{\semester}[1]{\gdef\@semester{#1}}
+\newcommand*{\degreeyear}[1]{\gdef\@degreeyear{#1}}
+\newcommand*{\defensedate}[1]{\gdef\@defensedate{#1}}
+\newcommand*{\manuscripttype}[1]{\gdef\@manuscripttype{#1}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{Title Page Generation}
+% \begin{macro}{\maketitle}
+% \changes{v2.1.0}{2010/03/29}{Fixed titling with accented/foreign characters.}
+% \changes{v2.2.0}{2010/11/10}{Fixed distribution of vertical spacing.}
+% \changes{v2.3.0}{2011/01/14}{Added \texttt{pdfbookmark} to title page.}
+% This macro generates the title page by expanding a few of the macros
+% that should have been specified in the thesis document's preamble.
+% No page number is written on the title page, but the page should
+% occupy all the vertical space (within the margins), including the
+% space normally occupied by the page number.  The whole
+% page is enclosed in a centering environment, within the \LaTeX{}
+% \textsf{report} class's |titlepage| environment.
+%
+% If the \textsf{hyperref} package has been loaded, we first add a PDF
+% bookmark to the title page for convenience.  Then the pagebody is
+% expanded vertically by the amount |\footskip|.  Next we restore
+% single-spacing with |\f@normalsize|. (We'll double-space manually by
+% inserting |\baselineskip|s where necessary.)  We use |\vfill|s
+% to distribute vertical white space evenly across the page.  We don't
+% know how long the user's title is, and we'll let \LaTeX{} decide how
+% best to break the title into multiple lines.  However, the title
+% should be double-spaced, so we double |\baselineskip| before
+% processing the title.  This adds one extra blank line before the
+% title, so we compensate by |\vskip|ing a negative |\baselineskip|
+% first.
+%    \begin{macrocode}
+\renewcommand{\maketitle}{\begin{titlepage}%
+\ifpdf\if@hyperloaded\pdfbookmark[0]{Title Page}{MainTitlePage}\fi\fi
+\enlargethispage{\footskip}%
+\begin{center}%
+\f@normalsize THE FLORIDA STATE UNIVERSITY
+\vskip\baselineskip
+\MakeUppercase{\@college}%
+\vfill
+\vskip-\baselineskip
+{\addtolength{\baselineskip}{\baselineskip}%
+\MakeUppercase{\@title}\vfill}
+By
+\vskip\baselineskip
+\MakeUppercase{\@author}
+\vfill
+A \@manuscripttype{} submitted to the\\
+\if@department\@department\else\@college\fi\\
+in partial fulfillment of the\\
+requirements for the degree of\\
+\@degree
+\vfill
+Degree Awarded:\\
+\@semester{} Semester, \@degreeyear\pagebreak[4]
+\end{center}
+\end{titlepage}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \section{Definition of Committee Membership Page Macros}
+% \subsection{Committee Membership Page Definitions}
+% \begin{macro}{\commwidth}
+% \begin{macro}{\commskip}
+% \changes{v3.0.0}{2011/08/23}{Renamed width and skip, removing
+%   reference to signatures}
+% These macros control the width of the committee member column
+% and the vertical space between members.  We allow plenty of
+% stretchiness between entries, and significant shrink as well.
+% With this arrangement we can accommodate three to ten committee
+% members without stressing the page design
+% significantly.
+%    \begin{macrocode}
+\newlength{\commwidth}
+\setlength{\commwidth}{2.75in}
+\newlength{\commskip}
+\setlength{\commskip}{0.5in plus0.25fil minus.3in}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\committeeperson}
+% \changes{v3.0.0}{2011/08/18}{Removed signature lines for new ETD format.}
+% Theses/Dissertations require listing the student's graduate
+% committee.  Committee members are added to the page by means of the
+% |\committeeperson| macro.  It works by expanding and re-defining the
+% |\@thecmems| macro with additional arguments each time it is called.
+% The committee page then inserts the macro's text as is.  I use
+% |\expandafter| here since I just want one level of expansion rather
+% than the complete-to-the-core expansion of |\xdef|.  We account for
+% the extra |\vskip| at the top of the column later.
+%    \begin{macrocode}
+\gdef\@thecmems{}
+\newcommand{\committeeperson}[2]{%
+  \expandafter\gdef\expandafter\@thecmems\expandafter{%
+    \@thecmems\vskip\commskip\makebox[\commwidth][l]{#1}\\
+      \makebox[\commwidth][l]{#2}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{Committee Page Generation}
+% \begin{macro}{\makecommitteepage}
+% \changes{v2.3.0}{2011/06/10}{if openright, force recto}
+% \changes{v3.0.0}{2011/08/18}{changed from ``Signature Page'' to
+% ``Committee Page'', removing signature lines and college-level approvals.}
+% This macro inserts the boiler-plate text into a committee page.
+% For the text at the top of the page, we first test whether the
+% author and defense date information can fit on one line.  If it can,
+% we eject the line as is and start a new paragraph for the
+% supervisory committee line.  If it won't fit (because the author's
+% name is exceedingly long), then allow the supervisory committee line
+% to join with the previous line in a single paragraph.
+%
+% When the |\@thecmems| macro was created, it included a |\vskip|
+% before the the first committee member.  Before we expand the
+% |\@thecmems| macro, we |\vskip| backwards so that we have tighter
+% control over the spacing balance here. (It's easier than inserting
+% extra logic in the |\expandafter| series in the |\committeeperson|
+% macro.)
+%    \begin{macrocode}
+\newcommand{\makecommitteepage}{\f@normalsize\setcounter{page}{2}%
+\if@openright\cleardoublepage\else\clearpage\fi%
+{\addtolength{\baselineskip}{0.5\baselineskip}%
+\setbox\@tempboxa=\hbox{\@author{} defended this
+\MakeLowercase{\@manuscripttype} on \mbox{\@defensedate}.}
+\ifdim\wd\@tempboxa>\textwidth\raggedright\noindent\unhbox\@tempboxa{} \else
+  \noindent\unhbox\@tempboxa\par\fi
+\noindent The members of the supervisory committee were:\par}
+\vfil\begin{flushright}\vskip-\commskip\@thecmems\end{flushright}\vfil\vfil
+\vskip\baselineskip
+{\noindent The Graduate School has verified and approved the
+above-named committee members, and certifies that the
+\MakeLowercase{\@manuscripttype} has been approved in accordance
+with the university requirements.\par}\pagebreak[4]}
+%    \end{macrocode}
+% \end{macro}
+%
+% \section{Setting PDF Metadata}
+% \begin{macro}{\@subject}
+% \begin{macro}{\@keywords}
+% \begin{macro}{\subject}
+% \begin{macro}{\keywords}
+% \begin{macro}{\if@subject}
+% \begin{macro}{\if@keywords}
+% \changes{v3.0.0}{2011/08/23}{Explicitly set PDF metadata.}
+% Whether or not the user is aware of it, the PDF programs, drivers
+% and converters will set some document metadata in the output, such
+% as document title, author, etc.  If these are not set explicitly,
+% then they could be set to some unknown values. Here we attempt to
+% provide some adequate defaults.  To start, we define a few extra
+% macros which the user can use to enhance the metadata inserted into
+% the document.
+%    \begin{macrocode}
+\gdef\@subject{}
+\gdef\@keywords{}
+\newif\if@subject
+\newif\if@keywords
+\newcommand*{\subject}[1]{\gdef\@subject{#1}\@subjecttrue}
+\newcommand*{\keywords}[1]{\gdef\@keywords{#1}\@keywordstrue}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@pdfmetadata}
+% \begin{macro}{\@hypermetadata}
+% We must provide two different methods for setting metadata, since the
+% \textsf{hyperref} package will ignore the PDF information keywords.
+% Execution is deferred until the |begin{document}|, so all the required
+% information should be available.  Note that the \textsf{hyperref}
+% package will convert many accented or special characters in the
+% |\@title| and |\@author| strings (but not all) so that they may be
+% properly included as PDF metadata.  Without \textsf{hyperref}, the
+% |\@author| and |\@title| will probably not produce reliable results
+% if they contain non-ASCII characters.  (The same caveats apply to
+% the |\@subject| and |\@keywords| strings.)
+%    \begin{macrocode}
+\def\@pdfmetadata{{\def\protect{}\def\\{ }%
+  \edef\@litstr{/Title (\@title) /Author (\@author)}%
+  \if@subject\edef\@litstr{\@litstr /Subject (\@subject)}\fi%
+  \if@keywords\edef\@litstr{\@litstr /Keywords (\@keywords)}\fi%
+  \expandafter\pdfinfo\expandafter{\@litstr}}}
+\def\@hypermetadata{{\def\\{ }\edef\@nt{\@title}%
+  \hypersetup{pdftitle={\@nt},pdfauthor={\@author}}%
+  \if@subject\hypersetup{pdfsubject={\@subject}}\fi%
+  \if@keywords\hypersetup{pdfkeywords={\@keywords}}\fi}}
+\AtBeginDocument{\ifpdf\if@hyperloaded\@hypermetadata\else\@pdfmetadata\fi\fi}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \section{Document Sections}
+% \begin{macro}{\frontmatter}
+% \begin{macro}{\mainmatter}
+% Borrowing from the \textsf{book} class, we add these two macros for helping
+% to distinguish between front matter material and the body of the
+% document.  All page numbers are in small roman numerals for the
+% front matter text; starting with the opening of the first chapter,
+% pages are numbered starting with the arabic numeral ``1''.
+%    \begin{macrocode}
+\newcommand{\frontmatter}{\pagenumbering{roman}}
+\newcommand{\mainmatter}{%
+  \if@openright\cleardoublepage\else\clearpage\fi%
+  \expandspacing\pagenumbering{arabic}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \section{Special Names}
+% \begin{macro}{\acknowledgename}
+% \begin{macro}{\biosketchname}
+% \begin{macro}{\contentsname}
+% \begin{macro}{\listabbrevname}
+% \begin{macro}{\listmusexname}
+% \begin{macro}{\listsymname}
+% \begin{macro}{\musexname}
+% Here we (re)define heading names for special pages.  In addition,
+% a new |\musexname| macro is created for labeling the captions of
+% musical examples.  Other standard \textsf{report} macros defining
+% heading names are listed here in commented-out form for reference.
+% (Their default settings will be used unless overridden here or in
+% the user's document preamble.)
+%    \begin{macrocode}
+%\renewcommand*{\abstractname}{}
+\newcommand*{\acknowledgename}{Acknowledgments}
+%\renewcommand*{\bibname}{}
+\newcommand*{\biosketchname}{Biographical Sketch}
+\renewcommand*{\contentsname}{Table of Contents}
+\newcommand*{\listabbrevname}{List of Abbreviations}
+%\renewcommand*{\listfigurename}{}
+%\renewcommand*{\listtablename}{}
+\newcommand*{\listmusexname}{List of Musical Examples}
+\newcommand*{\listsymname}{List of Symbols}
+\newcommand*{\musexname}{Example}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \section{Front Matter Environments}
+% \begin{environment}{dedication}
+% \changes{v2.3.0}{2011/06/10}{if openright, force recto}
+% \begin{environment}{acknowledgments}
+% The dedication page has no heading.  Whatever text the user
+% may provide will be placed about 1/3rd of the way down the
+% page.  The acknowledgments page is formatted as a chapter
+% heading page (without a chapter number).  These pages are not
+% listed the table of contents.
+%    \begin{macrocode}
+\newenvironment{dedication}%
+  {\if@openright\cleardoublepage\else\clearpage\fi\mbox{}\vfill}
+  {\vfill\vfill\vskip1in\mbox{}\pagebreak[4]}
+\newenvironment{acknowledgments}%
+  {\chapter*{\acknowledgename}\normalsize\afterheadadj}
+  {\clearpage\f@normalsize}
+%    \end{macrocode}
+% \end{environment}
+% \end{environment}
+%
+% \begin{environment}{listofsymbols}
+% \begin{environment}{listofabbrevs}
+% Lists of Symbols or Abbreviations are not required, but if a
+% user does include them, they have chapter-style headings, and
+% they are included in the table of contents using the |frontmatter|
+% classification.  These pages are set to be single-spaced, as
+% they are likely to contain tabular material.
+%    \begin{macrocode}
+\newenvironment{listofsymbols}
+  {\chapter*{\listsymname}\f@normalsize%
+   \addcontentsline{toc}{frontmatter}{\listsymname}}
+  {\clearpage}
+\newenvironment{listofabbrevs}
+  {\chapter*{\listabbrevname}\f@normalsize%
+   \addcontentsline{toc}{frontmatter}{\listabbrevname}}
+  {\clearpage}
+%    \end{macrocode}
+% \end{environment}
+% \end{environment}
+%
+% \begin{environment}{abstract}
+% The |abstract| environment is set to be in expanded spacing
+% (if requested by document option), and an entry is added to
+% the \textit{ToC} using the |frontmatter| style.
+%    \begin{macrocode}
+\renewenvironment{abstract}%
+  {\chapter*{\abstractname}\normalsize\afterheadadj%
+   \addcontentsline{toc}{frontmatter}{\abstractname}}
+  {\clearpage\f@normalsize}
+%    \end{macrocode}
+% \end{environment}
+%
+% \section{Additional Front Matter Formatting}
+% \begin{macro}{\tableofcontents}
+% \changes{v2.3.0}{2011/01/14}{Redefined from \textsf{report} class to
+%   add \texttt{pdfbookmark} for table of contents}
+% If the \textsf{hyperref} package has been loaded, it would be nice to have
+% a PDF bookmark to the table of contents page.  We need to redefine
+% the original |\tableofcontents| in order to add that functionality.
+%    \begin{macrocode}
+\renewcommand{\tableofcontents}{
+  \if@twocolumn\@restonecoltrue\onecolumn\else\@restonecolfalse\fi
+  \chapter*{\contentsname
+    \@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname}}%
+  \ifpdf\if@hyperloaded\pdfbookmark[0]{Table of Contents}{contents}\fi\fi
+  \@starttoc{toc}%
+  \if@restonecol\twocolumn\fi
+}
+%    \end{macrocode} 
+% \end{macro}
+%
+% \begin{macro}{\l@frontmatter}
+% This macro specifies how frontmatter entries in the 
+% \textit{Table of Contents} appear.  Each entry is separated
+% by a little vertical space, with leader dots to the page number.
+%    \begin{macrocode}
+\newcommand*\l@frontmatter{%
+  \addvspace{1ex}\addpenalty{-\@highpenalty}%
+  \@dottedtocline{0}{0pt}{0pt}}%
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\toclevel@frontmatter}
+% For setting up bookmarks, the \textsf{hyperref} package wants to
+% know what level of the hierarchy various sections of the
+% \textit{Table of Contents} are.  Front matter entries are at the
+% top of their hierarchy, so we set the level at~0.
+%    \begin{macrocode}
+\def\toclevel@frontmatter{0}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l@figure}
+% \begin{macro}{\l@table}
+% Figure and table captions are listed with a single space
+% between each of them.  Since table and figure captions have
+% the same format, the |\l@table| macro is |\let| from the
+% |\l@figure| macro.
+%    \begin{macrocode}
+\renewcommand*\l@figure{%
+  \addvspace{10pt}%
+  \@dottedtocline{0}{0pt}{3.2em}}
+\let\l@table\l@figure
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\list@fsomething}
+% Since the \textit{List of Figures}, \textit{List of Tables},
+% and \textit{List of Musical Examples} all have similar function,
+% the common elements are gathered in this one definition.  (This
+% code is borrowed and modified from the \textsf{report} class.)
+%    \begin{macrocode}
+\newcommand{\list@fsomething}[2]{\f@normalsize%
+  \if@twocolumn\@restonecoltrue\onecolumn
+  \else\@restonecolfalse\fi
+  \chapter*{#1}%
+  \addvspace{-10pt}
+  \addcontentsline{toc}{frontmatter}{#1}%
+  \@mkboth{\MakeUppercase{#1}}{\MakeUppercase{#1}}
+  \@starttoc{#2}%
+  \if@restonecol\twocolumn\fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\listoftables}
+% \begin{macro}{\listoffigures}
+% \begin{macro}{\listofmusex}
+% All the hard stuff is done.  Now we just define these
+% macros in terms of |\list@fsomething|.
+%    \begin{macrocode}
+\renewcommand{\listoftables}{%
+  \list@fsomething{\listtablename}{lot}}
+\renewcommand{\listoffigures}{%
+  \list@fsomething{\listfigurename}{lof}}
+\newcommand{\listofmusex}{%
+  \list@fsomething{\listmusexname}{lom}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \section{Musical Example Indexing}
+% Here we establish some boiler-plate stuff to hook into the
+% standard \LaTeX{} mechanisms for table and figure captions,
+% adding a \textit{List of Musical Examples} capability and
+% new environments for their captioning.  Musical example
+% captions will be written to a |.lom| file.  The \textsf{hyperref}
+% package, should it be loaded later by the user, expects an
+% additional labeling macro called |\theHmusex| to be defined.
+%    \begin{macrocode}
+\let\l@musex\l@figure
+\newcounter{musex}[chapter]
+\renewcommand{\themusex}%
+  {\ifnum\c@chapter>\z@\thechapter.\fi\@arabic\c@musex}
+\newcommand{\theHmusex}%
+  {\ifnum\c@chapter>\z@\thechapter.\fi\@arabic\c@musex}
+\def\fps@musex{tbp}
+\def\ftype@musex{1}
+\def\ext@musex{lom}
+\def\fnum@musex{\musexname\nobreakspace\themusex}
+%    \end{macrocode}
+%
+% \begin{environment}{musex}
+% \begin{environment}{musex*}
+% These work just like the |figure| environments.
+%    \begin{macrocode}
+\newenvironment{musex}%
+  {\@float{musex}}
+  {\end@float}
+\newenvironment{musex*}%
+  {\@dblfloat{musex}}
+  {\end@dblfloat}
+%    \end{macrocode}
+% \end{environment}
+% \end{environment}
+%
+% \section{End Matter Formatting}
+% \begin{environment}{references}
+% This environment is intended for user-generated formatting of a
+% references or bibliography, i.e., non-\BibTeX{}.  It establishes
+% single-spaced lines with a blank line between entries, and the first
+% line of each entry is exdented.  The page heading is determined by
+% the current definition of |\bibname|, not the environment, so the
+% user must invoke |\renewcommand*{\bibname}{References}| in order
+% to change the name of this section.
+%    \begin{macrocode}
+\newenvironment{references}
+  {\chapter*{\bibname}\f@normalsize%
+   \addvspace{-\baselineskip} \@afterindenttrue%
+   \addcontentsline{toc}{frontmatter}{\bibname}%
+   \setlength{\leftskip}{1.5em}%
+   \setlength{\parindent}{-1.5em}%
+   \setlength{\parskip}{\baselineskip}}
+  {\clearpage}
+%    \end{macrocode}
+% \end{environment}
+%
+% \begin{environment}{thebibliography}
+% This is a re-definition of a \BibTeX{}-generated bibliography.
+% We have to be be sure to turn off expanded spacing (if it had
+% been requested), and add an entry to the \textit{ToC}.
+%    \begin{macrocode}
+\renewenvironment{thebibliography}[1]
+     {\chapter*{\bibname}\f@normalsize%
+      \addcontentsline{toc}{frontmatter}{\bibname}%
+      \@mkboth{\MakeUppercase\bibname}{\MakeUppercase\bibname}%
+      \f@olist{\@biblabel{\@arabic\c@enumiv}}%
+         {\settowidth\labelwidth{\@biblabel{#1}}%
+          \leftmargin\labelwidth
+          \advance\leftmargin\labelsep
+          \@openbib@code
+          \usecounter{enumiv}%
+          \let\p@enumiv\@empty
+          \if@expanded
+            \addtolength{\itemsep}{0pt plus3pt minus1.5pt}\fi
+          \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+      \sloppy
+      \clubpenalty4000
+      \@clubpenalty \clubpenalty
+      \widowpenalty4000%
+      \sfcode`\.\@m}
+     {\def\@noitemerr
+       {\@latex@warning{Empty `thebibliography' environment}}%
+      \f@oendlist}
+%    \end{macrocode}
+% \end{environment}
+%
+% \begin{environment}{biosketch}
+% The final page of a thesis or dissertation is the
+% Biographical Sketch.  It will be set in expanded spacing
+% (if that document option has been requested).
+%    \begin{macrocode}
+\newenvironment{biosketch}
+  {\chapter*{\biosketchname}\normalsize\afterheadadj%
+   \addcontentsline{toc}{frontmatter}{\biosketchname}}
+  {\clearpage\f@normalsize}
+%    \end{macrocode}
+% \end{environment}
+%
+% \section{Sectioning Command Formatting}
+% \begin{macro}{\chapheadskip}
+% The amount of vertical space from the top of the text body
+% area to the top of the chapter heading is defined here by
+% |\chapheadskip|.  This value is set here to be 2\,inches from
+% the top of the page. If the chapter heading font is changed,
+% this code will need adjustment.
+%    \begin{macrocode}
+\newlength{\chapheadskip}
+\sbox\@tempboxa{\LARGE\bfseries CHAPTER}
+\setlength{\chapheadskip}{1in}
+\addtolength{\chapheadskip}{-\ht\@tempboxa}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@makechapterhead}
+% \begin{macro}{\@makeschapterhead}
+% Chapter headings are upper-case, centered, LARGE, and bold. 
+% Starred chapter headings omit the 'Chapter/Appendix' label, and
+% this is used for all the non-chapter page headings in the format.
+%    \begin{macrocode}
+\def\@makechapterhead#1{%
+  \hrule height0pt depth0pt width0pt\vskip\chapheadskip%
+  {\centering\parindent=0pt\LARGE\bfseries%
+   \ifnum\c@secnumdepth >\m@ne%
+     \MakeUppercase{\@chapapp}\space\thechapter\par
+     \nobreak\vskip20pt\fi%
+   \interlinepenalty\@M%
+   \MakeUppercase{#1}\par\nobreak\addvspace{40pt}
+  }
+}
+\def\@makeschapterhead#1{%
+  \hrule height0pt depth0pt width0pt\vskip\chapheadskip%
+  {\centering\parindent=0pt\LARGE\bfseries%
+   \interlinepenalty\@M%
+   \MakeUppercase{#1}\par\nobreak\addvspace{40pt}
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\section}
+% \begin{macro}{\subsection}
+% Chapter sections have centered headings.  Subsections
+% are flush left.
+%    \begin{macrocode}
+\renewcommand{\section}{\@startsection{section}{1}{0pt}%
+  {4.0ex plus1ex minus0.3ex}%
+  {2.0ex plus0.3ex minus0.2ex}%
+  {\normalfont\centering\Large\bfseries}}  
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0pt}%
+  {3ex plus.8ex minus0.1ex}%
+  {1.25ex plus0.1ex minus.1ex}%
+  {\normalfont\raggedright\large\bfseries}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\subsubsection}
+% \begin{macro}{\paragraph}
+% \begin{macro}{\subparagraph}
+% These sectioning commands produce in-line headings, and they
+% must end with a period.  Rather than relying on the user to
+% consistently provide the period and to remain consistent with
+% other sectioning commands, these macros are re-defined to take
+% an additional argument (i.e., the heading text).  This text is
+% normally absorbed by the |\@startsection| macro, so instead we
+% can tack a period onto the end of the text when we pass control
+% to |\@startsection|.  The downside of the current implementation
+% is that we lose the ability to apply optional arguments for these
+% three sectioning commands.
+%    \begin{macrocode}
+\renewcommand{\subsubsection}[1]%
+  {\@startsection{subsubsection}{3}{\parindent}%
+    {1ex plus.5ex minus0.1ex}%
+    {-1em}%
+    {\normalfont\bfseries}{#1.}}
+\renewcommand{\paragraph}[1]%
+  {\@startsection{paragraph}{4}{\parindent}%
+    {1ex plus.5ex minus0.1ex}%
+    {-0.75em}%
+    {\normalfont\scshape}{#1.}}
+\renewcommand{\subparagraph}[1]%
+  {\@startsection{subparagraph}{5}{\parindent}%
+    {0pt}{-0.5em}{\normalfont\itshape}{#1.}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \section{Tweaking Captions}
+% \begin{macro}{\fcapindent}
+% \begin{macro}{\belowcaptionskip}
+% The default \textsf{report} class sets captions with the same margins
+% as the rest of the page body.  Instead, we narrow the caption
+% column by the amount |\fcapindent|.  The vertical space below a caption
+% is set by \textsf{report} to be 0\,points, but since captions
+% above tables need some space, we set the value to 10\,points here.
+%    \begin{macrocode}
+\newlength{\fcapindent}
+\setlength{\fcapindent}{2em}
+\setlength{\belowcaptionskip}{10\p@}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\@makecaption}
+% We narrow the caption column by adjusting |\leftskip| and
+% |\rightskip|.  We also set the text in single-space mode if
+% expanded spacing has been requested.  (Small, single-line
+% captions remain centered, as in the default \textsf{report} class.)
+%    \begin{macrocode}
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip%
+  \sbox\@tempboxa{#1: #2}%
+  \ifdim \wd\@tempboxa >\hsize
+    {\advance\leftskip\fcapindent \rightskip=\leftskip\relax%
+     \f@normalsize%
+     #1: #2\par}
+  \else
+    \global \@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+%    \end{macrocode}
+% \end{macro}
+%
+% \pagebreak
+% \Finale
+\endinput

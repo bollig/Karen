@@ -1,0 +1,825 @@
+\documentclass[11pt,letterpaper]{article}
+
+\title{The \textsf{fsuthesis} \LaTeX{} Class:\\
+  A User's Guide}
+\author{Bret D. Whissel\\Department of Earth, Ocean and Atmospheric
+  Science\\Florida State University}
+\date{August 23, 2011}
+
+\newcommand*{\acro}[1]{{\small\textsc{#1}}}
+\newcommand*{\booktitle}[1]{\textit{#1}}
+\newcommand*{\complit}[1]{\texttt{#1}}
+\newcommand*{\latexclass}[1]{\textsf{#1}}
+
+\newcommand*{\fsuth}{\latexclass{fsuthesis}}
+
+\renewcommand{\-}{\discretionary{}{}{}}
+
+\def\BibTeX{{\rmfamily B\kern-.05em%
+   \textsc{i\kern-.025em b}\kern-.08em\TeX}}
+
+\setcounter{tocdepth}{2}
+
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction to \LaTeX}
+
+If you are already a \TeX/\LaTeX{} convert, you may skip over this
+introductory material and jump ahead to the description of the
+\fsuth{} class macros in section~\ref{sec:Class}.  If you're new to
+\LaTeX, you may want to learn a little bit more about what you may be
+getting yourself into first.
+
+If you have grown up only learning to use the word-processing tools
+that are installed on a typical PC, \LaTeX{} may feel awkward at
+first.  However, \LaTeX's ability to generate cross-references, lists
+of tables and figures, and a table of contents---automatically---is
+already worth the small amount of effort required to get started with
+this very powerful typesetting system.  Further, if your document
+contains mathematics, you'll be hard-pressed to find better software
+for making equations look good in type.
+
+Historically, \LaTeX{} is not a \acro{WYSIWYG}\footnote{pronounced
+  ``wizzywig'': What You See Is What You Get} system.  Instead,
+documents are created using any available plain text editor.  When
+ready, the document is run through \LaTeX{} to produce viewable or
+printable output.  This two-step process may be different from what
+you're used to, but one advantage is that it allows authors to focus
+more on the content of their documents, and to focus less on the
+formatting (or at least to defer the attention to formatting until the
+final stages of document preparation).
+
+\section{Installation}
+
+\subsection{The \LaTeX{} System}
+
+The \LaTeX{} system (and the \TeX{} engine upon which it is built) may
+require some time to get installed and running.  But it is completely
+free software, and there are lots of resources for helping you to get
+started.  These are much more comprehensive than this
+\booktitle{User's Guide} can be.
+
+If you are working in a Microsoft Windows environment, take a look at
+the MiK\TeX{} project (see \complit{http://miktex.org}).  Mac users
+will find the \textsf{Mac}\TeX{} resources useful (see
+\complit{http://www.tug.org/mactex}).  Linux/\acro{UNIX} users should
+investigate the \TeX{}\,Live distribution, if \TeX{} is not already a
+part of your installation (see \complit{http://www.tug.org/texlive}).
+
+\subsection{Plain Text Editor}
+
+In addition to the \TeX/\LaTeX{} system, you will need a plain text
+editor.  In a Windows environment, \complit{notepad} is all that's
+required.  You can use more sophisticated editors, of course, as long
+as the editor will save your document as a plain text file.  Text
+editors are available on just about any modern computer platform, many
+of them free and high-quality.  Linux/\acro{UNIX} enthusiasts will
+probably already have access to and familiarity with \complit{emacs}
+or \complit{vim}, both of which have been ported to Windows and Mac
+environments.  There exist more advanced document development
+environments for \LaTeX{} which include document previews and
+\acro{WYSIWYG} functionality.
+
+\subsection{Installing the \fsuth{} Class File}
+
+The \fsuth{} class is packaged and distributed as a zip file.  When
+the zip file is unpacked, a folder called \complit{fsuthesis} is
+created.  In that folder will be found this \booktitle{User's Guide},
+in both its \acro{PDF} and \LaTeX{} source form, as well as a few
+other files, the \complit{thesis-template} folder, and a
+\complit{sample} folder.
+
+The \fsuth{} class file is called \complit{fsuthesis.cls}.  If you use
+the directory \complit{thesis-template} as a starting point, the
+\complit{fsuthesis.cls} file is already unpacked there and ready to
+use.  You can copy the \complit{thesis-template} directory to a new
+location and generate your document within that folder as a
+self-contained entity.  No further installation is necessary.
+
+Alternatively, you may install the \fsuth{} class file for system-wide
+or permanent use.  To generate the class file, run the following
+command:
+\begin{verbatim}
+latex fsuthesis.ins
+\end{verbatim}
+This operation extracts the class file from the file
+\complit{fsuthesis.dtx} (which contains documentation of interest to
+future maintainers of the \fsuth{} class).  Then copy the
+\complit{fsuthesis.cls} file into the \LaTeX{} file search tree.  (The
+proper location is operating system and installation-dependent.  For
+\acro{UNIX}/Linux systems, this location might be something like
+\complit{/usr/\-share/\-texmf-site/\-tex/\-latex/\-fsuthesis/}.)
+
+If you're interested in modifying the \fsuth{} class, you may want to
+read the source code's documentation.  To do this, run the following
+sequence of commands:
+\begin{verbatim}
+latex fsuthesis.dtx 
+makeindex -s gglo.ist -o fsuthesis.gls fsuthesis.glo
+makeindex -s gind.ist -o fsuthesis.ind fsuthesis.idx
+latex fsuthesis.dtx 
+\end{verbatim}
+Be sure to document your changes to the file by editing the
+\complit{fsuthesis.dtx} file, not the \complit{fsuthesis.cls} file, as
+changes to the latter file can be overwritten if the class file is
+re-extracted.  (In the steps above, you may run \complit{pdflatex}
+instead of \complit{latex} to generate a \acro{PDF} version of the class file
+documentation directly.)
+
+\section{Helpful \LaTeX{} References}
+
+For simple texts, you might not need more from \LaTeX{} than what's
+described in this \booktitle{User's Guide}.  For more complicated
+texts, however, or for documents containing several tables, figures,
+or mathematics, you will certainly want to supplement your \LaTeX{}
+references.  You will find a wealth of information on-line using your
+favorite web search engine, as well as several bound and printed
+reference materials.  I have found the texts cited below to be of
+particular value.
+\begin{itemize}
+\item
+For first-timers, \booktitle{The Not So Short Introduction to \LaTeXe}
+by Tobias Oetiker, Hubert Partl, Irene Hyna, and Elisabeth Schlegl
+promises to have you off and running in a few hours' time.  It's a
+document you may find readily on-line in \acro{PDF} form.
+
+\item
+The standard reference is the book \booktitle{\LaTeX: A Document
+  Preparation System}, 2nd~Ed., by Leslie Lamport, the original author
+of \LaTeX{}.  This text covers all the basics clearly and succinctly.
+
+\item
+A larger starting reference book is \booktitle{Guide to \LaTeX},
+4th~Ed., by Helmut Kopka and Patrick W.~Daly.  At twice the length of
+the Lamport book, \booktitle{Guide} covers all the basics, and it also
+touches on a few of the more common add-on packages.  The book
+comes with a CD-ROM with the \TeX\,Live distribution included, which
+can save you a lot of downloading time.
+
+\item
+Once your working knowledge of \LaTeX{} is secure, \booktitle{The
+  \LaTeX{} Companion}, 2nd~Ed., by Frank Mittelbach and Michel
+Goossens covers a broad range of topics and \LaTeX{} add-on packages.
+This text goes far beyond the basics, but it's an indispensable
+reference if you're interested in customizing the appearance of
+\LaTeX{} documents.
+\end{itemize}
+
+\section{Working with \LaTeX{}}
+
+Files you create for processing by \LaTeX{} should have file
+extensions of \complit{.tex}, e.g., \complit{mythesis.tex}.  For your
+own convenience, you may split the document into pieces (for example,
+one file per chapter), which may make the editing process a little
+easier by keeping manageable the amount of text you must scroll
+through at any one time.
+
+While you're typing your document, you will insert macro commands
+(or ``macros'') that mark up your document, indicating chapter and
+section headings, equations, tables, figures, etc.  Markup languages
+attempt to separate the content of the document from its appearance.
+As an author, you need not be quite as concerned about how everything
+looks, just what it says.  By marking up your document appropriately,
+you can let \LaTeX{} worry about how everything looks.
+
+A \LaTeX{} document begins with a section called ``the preamble''.  In
+this section, you set up or change the document-wide processing
+settings (like page margins, or selecting the font size, for example).
+The rest of the document is called the document ``body''.  Some
+\LaTeX{} commands are only allowed in the preamble, while others are
+allowed only in the document body.
+
+\section{The \fsuth{} Class}
+
+\label{sec:Class}
+\LaTeX{} comes with several pre-defined standard document types (or
+classes), such as \latexclass{article}, \latexclass{book}, and
+\latexclass{report}.  The \fsuth{} class is an extension of the
+\LaTeX{} \latexclass{report} class.  In essence, the \fsuth{}
+class provides all the features of \latexclass{report}, along with
+customizations to meet the standards of FSU's \booktitle{Guidelines \&
+  Requirements for Electronic Theses, Treatises and Dissertations},
+revised August~2011.  The rest of this document describes how to use
+the features of the \fsuth{} class.
+
+\subsection{Document Files}
+
+Packaged along with this \booktitle{User's Guide} and the \fsuth{}
+class file, you will find a folder called \complit{thesis-template}.
+Within the folder is a small collection of files, a skeleton upon
+which you may build your own document.  I suggest that you copy and
+rename this folder in a new location, giving your \emph{magnum opus}
+its own workspace.
+
+For now, we'll assume that you have renamed the folder
+\complit{thesis}.  Inside the folder, you'll find a file called
+\complit{mythesis.tex}.  This will be your document's principal file.
+We will assume that you will create additional files in this folder to
+add to your document, assuming at least one file per chapter.  You are
+free to rename any of these files as you like, as long as they end
+with the \complit{.tex} extension.
+
+The document skeleton constitutes a complete document as it stands,
+and you may run \LaTeX{} on \complit{mythesis.tex} immediately if you
+need to test your installation.  (How you run \LaTeX{} is
+platform-dependent, so you may need to refer to the section on
+\textsc{Installation} above for references specific to your
+environment.)  The rest of this \booktitle{User's Guide} follows the
+contents of \complit{mythesis.tex}, demonstrating the features of
+\fsuth.
+
+\subsection{Macros and Comments}
+
+\LaTeX{} macros (often used interchangeably with ``commands'') begin
+with a `\verb+\+' (backslash) character, followed by text.  Macros
+will often take arguments, and possibly optional arguments.  Optional
+arguments are usually included in square brackets (e.g.,
+\verb+[+\textit{option}\verb+]+) immediately following the macro
+invocation.  Required arguments will usually be found in curly braces
+(e.g., \verb+{+\textit{This is a required argument}\verb+}+) following
+the optional argument (if present).
+
+The percent sign (\verb+%+) is another special character in \LaTeX{}.
+It introduces a document comment, which runs to the end of the line.
+Commented text is ignored by \LaTeX{} entirely, and will not be typeset.
+If you need to print a percent sign as part of your text, precede it
+with the backslash character (`\verb+\+').  E.g.,
+\begin{verbatim}
+... total is 23\% of adjusted gross ...
+\end{verbatim}
+(See one of the references above for a complete list of \LaTeX{}
+special characters.)
+
+\subsection{The Document Preamble}
+
+If you look at the file \complit{mythesis.tex}, you will see that it
+consists primarily of \LaTeX{} macros and ``commented out'' lines
+containing more \LaTeX{} macros.  As you add text and flesh out your
+document, you may ``uncomment'' additional lines in this primary file
+by removing the leading percent sign, thereby making the line active.
+
+\subsubsection{Document Options}
+The first line of every \LaTeX{} document declares the type of
+document to be processed, along with a few processing options.  The
+first line of the document skeleton file \complit{mythesis.tex}
+contains the following line:
+\begin{verbatim}
+\documentclass[11pt]{fsuthesis}
+\end{verbatim}
+This line declares the document type to be \fsuth, and that the text
+will be set in 11-point type.
+
+Class \fsuth{} is derived from the \latexclass{report} class, so all
+the standard document options supported by \latexclass{report} will be
+supported by \fsuth.  (See one of the \LaTeX{} references above for
+complete lists of document options.)  The \fsuth{} class supports
+three additional document options: \complit{hardcopy},
+\complit{chapterleaders}, and \complit{expanded}.
+
+The \complit{hardcopy} option adds extra space along the binding edge
+of a page.  This may be useful for printing hard copies for review by
+your thesis committee, or if you want to have a professionally bound
+copy of your thesis or dissertation.  If you also include the standard
+\latexclass{report} option \complit{twoside}, then in addition to the
+binding-edge offset, all the chapters of your document will be forced
+to start on odd-numbered (right-hand) pages.
+
+The \complit{chapterleaders} option adds leader dots on chapter
+headings in the \textsl{Table of Contents}.  Normally, chapter
+headings are displayed in bold type with a page number and
+\emph{without} leader dots, while by default, sections and subsections
+are displayed with leader dots connecting their page numbers.  If you
+write a thesis without sections or subsections, or if you suppress
+their display in the \textsl{Table of Contents}, then you might want
+to specify the \complit{chapterleaders} option.
+
+The \complit{expanded} option makes your document ``double-spaced''.
+(In reality, the document is about 1.5-spaced.)  Some colleges, schools, or
+departments will prefer expanded spacing to allow committee members to
+pencil in comments.
+
+\subsubsection{Extra Packages}
+
+\LaTeX{} has many document feature add-ons.  If you wish to load
+additional packages, these options should follow the document class
+selection.  Be warned that some packages may not be compatible with
+the \fsuth{} class.  Many optional packages may already come installed
+with your \TeX/\LaTeX{} distribution, or you can download and install
+them from the \acro{CTAN} website ({\tt www.ctan.org}).
+
+In the skeleton document, several \verb|\usepackage| lines have
+been commented out.  If you have title, chapter, or section headings
+which include mathematics, you may want to uncomment the
+\latexclass{textcase} package line, as this will prevent the
+titling macros from upper-casing the math symbols inappropriately.
+
+If you will be inserting figures into your document electronically,
+you should uncomment the \latexclass{graphicx} line.  You can find
+some simple examples of figure inclusion in the \complit{sample}
+directory, but for the highest quality output, you owe it to yourself
+to learn more about this topic.  Searching the web for ``latex figure
+inclusion'' or other similar terms will turn up some useful links.
+
+If you are generating an electronic version of your document
+for which you'd like to have hyperlinks automatically connecting
+cross-references and entries in the \textsl{Table of Contents}, you
+should uncomment the \latexclass{hyperref} line.  If you find that you
+are suddenly getting ``Overfull hbox'' errors while using
+\latexclass{hyperref} (where there were none before), you could try
+adding the line \verb+\hypersetup{breaklinks=true}+ to your document,
+inserted just after the \verb+\usepackage{hyperref}+ line.  The
+\latexclass{hyperref} package has lots of configuration options, and
+you should refer to the package documentation for helpful information.
+
+\subsubsection{Thesis/Dissertation Description Macros}
+
+The next section in \complit{mythesis.tex} contains several macros
+that customize the title page and committee page of your document.  As
+a general rule, these macros require text arguments that should be
+given in mixed case using title capitalization rules (i.e., each word
+capitalized, except for articles, prepositions, and conjunctions;
+refer to your discipline's preferred style guide if in doubt).  All
+proper names should be capitalized normally.  If the FSU
+\booktitle{Guidelines} require elements to be displayed differently
+(all-caps, for example), the \fsuth{} class will make the adjustments
+required for you.
+
+The \verb|\title| macro declares the title of your thesis or
+dissertation.  If the title is long, it will be
+broken over several lines on the title page.  You have control over
+how the title is broken into lines by using the \LaTeX{}
+line-separator operator (`\verb+\\+') in the title.  (This command is
+what the \LaTeX{} manual calls ``fragile'', and so you must say
+`\verb+\protect\\+' when used in the argument of the \verb|\title|
+command.)
+
+The \verb|\author| macro gives your name.  Your name should be
+given as specified in the FSU \booktitle{Guidelines}.
+
+The \verb|\college| macro should contain the official name of your
+school or college.
+
+If your degree comes from a school or college with separate academic
+departments which issue degrees, the \verb|\department| macro should
+declare this name.  Otherwise, you should comment-out or delete the
+\verb|\department| line from your document file.
+
+The \verb|\manuscripttype| should be set to one of the following words, as
+appropriate: \complit{Thesis}, \complit{Treatise}, or
+\complit{Dissertation}.
+
+The title of your degree (e.g., ``Master of Arts'' or ``Doctor of
+Philosophy'') is given by the \verb|\degree| macro.
+
+The macro \verb|\semester| should be set to one of \complit{Fall},
+\complit{Spring}, or \complit{Summer}, according to the semester in
+which your degree was awarded.
+
+The year your degree is awarded should be given by
+\verb|\degreeyear|.  This should be a full 4-digit year.
+
+The date of your thesis, treatise, or dissertation defense should be
+specified in the \verb|\defensedate| macro.  Refer to the FSU
+\booktitle{Guidelines} for the appropriate format.
+
+If you are generating a \acro{PDF} file, you can add a subject and
+search keywords to the document's internal description.  The document
+title and author's name will already be included in the document
+metadata by default.  To add a subject to the metadata, use the
+\verb|\subject{my subject}| macro.  To add search keywords, use the
+\verb|\keywords| macro, separating each search term by commas or
+semicolons.
+
+\subsubsection{Committee Macros}
+
+The \fsuth{} class provides macros for generating your committee
+information page.  The \verb|\committeeperson| macro takes two
+arguments.  The first argument is the name of the committee member,
+given without titles.  The second argument is the committee membership
+status, e.g., ``Professor Directing Dissertation'' or ``Committee
+Member''.  (See the FSU \booktitle{Guidelines} about the appropriate
+options.)  You should provide one \verb|\committeeperson| line for
+each person, in the order in which they should appear on the committee
+page.
+
+\subsubsection{Changing Other Settings}
+
+You may change other document defaults while still in the document
+preamble.  For example, should you want to change the width of the
+text column or the page margins, here's where you would do it.  (Note
+that you must still adhere to FSU's \booktitle{Guidelines}, so be sure
+you know what you're doing.)
+
+\subsection{The Document Body}
+
+If there are no more adjustments to be made, you begin the document
+body with the \LaTeX{} command \verb|\begin{document}|.  You will
+notice that whenever you \verb|\begin{|\textit{something}\verb|}|, you
+should always supply a corresponding
+\verb|\end{|\textit{something}\verb|}|, or \LaTeX{} will complain.  So
+at the end of \complit{mythesis.tex}, you will find the
+\verb|\end{document}| command.  Anything beyond this point in the file
+is ignored by \LaTeX{}.
+
+\subsubsection{Front Matter}
+
+The first element after \verb|\begin{document}| should be the macro
+command \verb|\frontmatter|, which sets up roman numeral page
+numbering for the document elements that precede the first chapter of
+your thesis or dissertation.  The document skeleton in
+\complit{mythesis.tex} contains place-holders in the proper order for
+all the optional elements of the front matter.  Uncomment those
+elements that you will use, or you may leave commented or delete those
+elements that you don't use.
+
+Immediately following \verb|\frontmatter|, the macro commands
+\verb|\maketitle| and \verb|\makecommitteepage| generate the document
+title and committee pages, respectively.  Information for these pages
+is gathered from the data you have already set in macro calls in the
+preamble.
+
+If you wish to include a dedication in your thesis or dissertation,
+uncomment the \verb|\begin{dedication}| and \verb|\end{dedication}|
+lines, and type your dedication between them.  The text that you
+insert will appear about 1/3rd of the distance from the top of the
+page.  The rest of the formatting is up to you.
+
+Likewise, if you wish to include acknowledgments in your document,
+uncomment the \verb|\begin{acknowledgments}| and
+\verb|\end{acknowledgments}| lines, and insert the acknowledgment text
+between these lines.  The resulting page will have the centered heading
+\textbf{ACKNOWLEDGMENTS}, followed by your text.  If you wish to
+rename the heading, add the following line to your document
+preamble:
+\begin{verbatim}
+\renewcommand*{\acknowledgename}{My Acknowledgement Heading}
+\end{verbatim}
+
+The next item in the front matter is the \textsl{Table of Contents},
+which is generated for you automatically by the macro
+\verb|\tableofcontents|.  By default, the \textsl{Contents} page(s)
+will contain entries for the remaining front matter material, and
+entries for chapter headings, section headings, and subsection
+headings.  If listing section or subsection headings provides too
+much detail for your taste, you may remove these entries by resetting
+the \LaTeX{} counter \complit{tocdepth}.  \LaTeX{} considers chapter
+headings to be Level~0, section headings to be Level~1, and so on.
+The default setting of \complit{tocdepth} is~2 (so subsection
+headings are included).  To include only chapter and section headings
+in the \textsl{Contents}, for example, you could reset
+\complit{tocdepth} in the document preamble with the following line:
+\begin{verbatim}
+\setcounter{tocdepth}{1}
+\end{verbatim}
+
+The FSU \booktitle{Guidelines} state that if you have more than one
+figure or table in your document, the figures and/or tables should be
+contained in their own lists.  Turn each of these options on by
+uncommenting the \verb|\listoftables| and/or \verb|\listoffigures|
+lines in \complit{mythesis.tex}.  These tables will be generated for
+you automatically when your document is processed.  For those
+documents which contain multiple musical examples, a list of these may
+also be generated by uncommenting \verb|\listofmusex|.
+
+It is sometimes the case that a \textsl{List of Symbols} or a
+\textsl{List of Abbreviations} might be helpful to your readers.
+If you wish to include such document elements, uncomment the
+appropriate \verb|\begin|--\verb|\end| pair, and add any text you may
+require.  These entities would likely consist of tabular material, so
+you'll want to dig into \LaTeX{} table-making using any of the basic
+references mentioned earlier.
+
+The last common element of the front matter is a document abstract.
+Insert your text between the abstract \verb|\begin|--\verb|\end| pair.
+If you wish to change the default heading of \textbf{ABSTRACT}, you
+may do so by adding the following line to your document preamble:
+\begin{verbatim}
+\renewcommand*{\abstractname}{My Abstract}
+\end{verbatim}
+
+\subsection{The Main Text}
+
+At last, with the preliminaries out of the way, you may now get to the
+meat of your document.  Following the abstract, the command
+\verb|\mainmatter| restarts page numbering at ``1'' in arabic
+numerals, ready for your first chapter.
+
+The skeleton file \complit{mythesis.tex} has been set up to include
+the first chapter from an external file.  Note the command
+\begin{verbatim}
+\input chapter1
+\end{verbatim}
+This tells \LaTeX{} to insert the text of the file
+\complit{chapter1.tex} at this position and continue processing.
+There is nothing special about the file names, except that they should
+end with the extension \complit{.tex}.  Otherwise, you may call the
+external files whatever you like.  (However, avoid using filenames
+with spaces or special symbols, as these may be difficult for either
+\LaTeX{} or your operating system to handle properly.)  You can break
+up large chapters into even smaller pieces if you like, and then
+change \complit{mythesis.tex} accordingly, e.g.,
+\begin{verbatim}
+\input chapter1a
+\input chapter1b
+\end{verbatim}
+Or you could just continue adding text to \complit{mythesis.tex}
+directly, avoiding having to deal with any other external files
+entirely.  This is all up to you.
+
+\subsubsection{Sectioning/Heading Macros}
+
+Several levels of headings are provided by the \fsuth{} class, in the
+heading styles defined by FSU's \booktitle{Guidelines}.  By default,
+entries down to the subsection level are listed in the \textsl{Table
+  of Contents}.  (See the description of the \verb|\tableofcontents|
+macro above for information on changing this default.) Listed
+from the highest level down, these sectioning commands are:
+\begin{itemize}\addtolength{\parskip}{-8pt}
+\item \verb+\chapter+
+\item \verb+\section+
+\item \verb+\subsection+
+\item \verb+\subsubsection+
+\item \verb+\paragraph+
+\item \verb+\subparagraph+
+\end{itemize}
+Each of these macros take a single argument, the text of the heading.
+All headings should be capitalized as titles, i.e., mixed case text,
+each word capitalized except articles, prepositions, and conjunctions.
+Chapter headings will force the start of a new page.  The file
+\complit{chapter1.tex} in the \complit{thesis} folder has some example
+text to get you started.  If chapter titles include mathematics, you
+may want to uncomment the \latexclass{textcase} \verb|\usepackage|
+line near the beginning of the template document should you find your
+symbols becoming inappropriately upper-cased.
+
+By default, section and subsection headings are prefixed by section
+and subsection numbers. Sub-subsections produce an unnumbered
+in-line heading as the opening of a paragraph.  Paragraph and
+sub-paragraph headings also produce in-line headings and start new
+paragraphs, but with subtler font selections.
+
+You may change the level at which the heading macros produce numbered
+entries by setting \complit{secnumdepth}.  The default setting is
+level~two, which means that subsections will be numbered automatically.
+To stop numbering at the \complit{section} level (for example), reduce
+the value of \complit{secnumdepth} to one by issuing the following
+command in the document preamble:
+\begin{verbatim}
+\setcounter{secnumdepth}{1}
+\end{verbatim}
+By setting \complit{secnumdepth} to zero, you may disable all heading
+numbering except at the chapter level.  Or you may increase the value
+up to five to generate heading numbers all the way down to the
+sub-paragraph heading level.
+
+\subsubsection{Insertions: Figures, Tables, Musical Examples}
+
+The \fsuth{} class provides the standard \LaTeX{} environments for
+\complit{figure}s and \complit{table}s.  An additional environment
+called \complit{musex} has been added for those authors who need to
+provide musical examples.  The \complit{musex} environment behaves
+similarly to the \complit{figure} environment, except that captions
+include the heading ``Example'' instead of ``Figure'', and all the
+musical examples can be listed in the front matter in the \textsl{List
+  of Musical Examples}.
+
+By setting material off in a \complit{figure}, \complit{table}, or
+\complit{musex} environment, the material will be allowed to drift
+from its position in the text to the closest available location as
+follows: if there is space for the material at the bottom of the
+current page, it will be placed there; otherwise, it will be placed at
+the top of the next page, or perhaps on a page by itself.  (You have
+some control over the placement of floating elements.  For more
+detail, you'll need to consult one of the \LaTeX{} references.)
+
+Each \complit{figure}, \complit{table}, or \complit{musex} should
+contain a \LaTeX{} \verb+\caption+ macro whose single argument
+contains the text of the caption.  For figures and musical examples,
+the caption should be placed below the figure or musical example.  For
+tables, the caption should be located above the tabular material.
+Examples of the use of each of these environments can be found in the
+in the \complit{sample} directory.
+
+\LaTeX{} keeps track of the number of tables, figures, and musical
+examples, and your caption will be labeled and numbered automatically.
+The caption text will also be inserted into the appropriate
+\mbox{\textsl{List of \ldots}} if you requested the list in the
+front matter of your document.
+
+\LaTeX{} has many features to assist you in producing tabular material
+of arbitrary complexity.  Also, simple diagrams may be created using
+the \LaTeX{} \complit{picture} environment.  If you want to include
+graphics generated by external software, then you'll need to learn to
+use the features of the \latexclass{graphicx} package, and you should
+uncomment the appropriate \verb+\usepackage+ command in
+\complit{mythesis.tex} preamble.  You are strongly advised to refer to
+the \LaTeX{} references cited earlier to learn more about figures and
+tables if you intend to use them in your manuscript.
+
+\subsubsection{Cross References}
+
+One of the advantages of working with \LaTeX{} is the ability to
+automatically cross-reference equations, figures, tables, and musical
+examples.  In writing and revising your manuscript, it is likely that
+references to elements may shift as text is added or moved around.
+\LaTeX{} addresses this problem by allowing you to assign a
+\textit{label key} to each element.  Then you make a reference to an
+element's label key in your text to retrieve its number or
+page location.  When your document is processed, \LaTeX{} replaces all
+the label key references with their numerical values.
+
+As an example, let's take a look at how this might work if we wish to
+refer to an equation in our text.  In the left column is the result of
+what we've typed in the right column (unimportant text omitted for brevity).
+
+\bigskip
+\noindent
+\begin{minipage}[t]{2.5in}%
+  \small\sloppy
+  Leonhard Euler was a prolific mathematician whose
+  pioneering work in power series helped to develop the field
+  of mathematical analysis.  Equation~\ref{eq:euler-id} on
+  page~\pageref{eq:euler-id} is known as
+  \textit{Euler's Identity}, what physicist Richard Feynman called
+  ``the most remarkable formula in mathematics''.
+  \begin{equation}
+    e^{i\pi} + 1 = 0
+    \label{eq:euler-id}
+  \end{equation}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{2.1in}%
+\small
+\begin{verbatim}
+Leonhard Euler was a prolific
+...
+Equation~\ref{eq:euler-id} on
+page~\pageref{eq:euler-id} is
+...
+\begin{equation}
+e^{i\pi} + 1 = 0
+\label{eq:euler-id}
+\end{equation}
+\end{verbatim}
+\end{minipage}
+
+\bigskip
+The \complit{equation} environment automatically numbers equations for
+us.  The macro \verb+\label{eq:euler-id}+ creates the label key
+``\complit{eq:euler-id}'', tied to the automatically-numbered
+equation.  If we want to access the equation number, we may use the
+\verb+\ref{eq:euler-id}+ macro, while the macro
+\verb+\pageref{eq:euler-id}+ retrieves the page number.  For figures,
+tables, or musical examples, the \verb+\label+ command should be
+located within the \verb+\caption+ text.
+
+Since your text may \verb+\ref+ label keys before the corresponding
+\verb+\label+ has been encountered, you will need to run your document
+through the \LaTeX{} processor \emph{at least twice}.  The first pass
+will write all the label keys and page numbers out to an auxiliary
+file, and the second pass will then be able to resolve all the
+references properly.  (\LaTeX{} will complain about unresolved or
+changed references, reminding you to run the processor a second time.)
+
+As you're writing your document, you might want to keep a list of the
+label keys you've created so that you don't have to surf through other
+files to recall what a particular label key was.  Keep in mind that
+figures, tables, musical examples, and equations all use the same
+label system, and all label keys must be unique.  You may develop your
+own label key standards (like using \complit{eq:} when referencing an
+equation to avoid label ``collision'', for instance).  If you expect
+to have lots of figures, tables, etc., you may find it helpful to use
+descriptive label keys rather than generic ones, as they may be easier
+to remember.  E.g., \complit{fig:map-Europe-pre1914} is probably more
+mnemonic than \complit{fig:MapOne}.
+
+\subsection{Back Matter}
+
+Following the major chapters of your manuscript, you may have
+additional material for one appendix or more.  To shift from chapter
+headings to appendix headings, insert the macro \verb+\appendix+ at
+the end of your last chapter, before the first appendix.  Then use the
+\verb+\chapter+ macro just as you have for each of your chapters.
+(Appendices will be lettered rather than numbered.)
+
+\subsubsection{References/Bibliography}
+
+The \fsuth{} class provides two options to produce a bibliography or
+references section.  No matter which of the two options you choose,
+the heading of the section may be set in the document preamble with
+the following command:
+\begin{verbatim}
+\renewcommand*{\bibname}{Bibliography}
+\end{verbatim}
+According to FSU's \booktitle{Guidelines}, this section should be
+called ``References'' if entries in the section contain only
+references cited in the text of your manuscript.  The section should
+be called ``Bibliography'' if the entries in this section cover a
+broader scope of material than is actually cited in your manuscript.
+
+The first (and simplest) option is to use the \complit{references}
+environment.  Begin this section with \verb+\begin{references}+.
+(Despite the environment's name, the section heading is still
+determined by setting \verb+\bibname+.)  Then add each bibliographic
+entry with a blank line between each reference.  Follow the last entry
+with \verb+\end{references}+.  With this option, you will have to
+format each entry according to the style guide you have chosen to
+follow.
+
+The second option is to set up a \BibTeX{} database.  To use
+\BibTeX, you create or download a separate file of reference materials
+in a particular format.  Then you may cite any of these references
+within your manuscript using the \verb+\cite+ macro.  By running
+\LaTeX{} in combination with \BibTeX, citations are resolved (similar
+to how labels are resolved), and a list of the cited references are
+pulled into your document automatically.  To use this feature, you
+first select the bibliographic style, and then specify the \BibTeX{}
+database file:
+\begin{verbatim}
+\bibliographystyle{plain}
+\bibliography{myrefs}
+\end{verbatim}
+This selects the \complit{plain} bibliography style, and the
+\BibTeX{} database is said to reside in \complit{myrefs.bib}.
+Processing your document now requires a few extra steps as well:
+\begin{itemize}\addtolength{\parskip}{-6pt}
+\item Run \LaTeX{}
+\item Run \BibTeX{}
+\item Run \LaTeX{} \emph{twice more}
+\end{itemize}
+
+If you have a relatively small number of bibliographic entries or
+citations, then choosing the \complit{references} environment is
+probably the easiest solution.  However, if you are trying to manage a
+large number of citations or work in a discipline that has already
+established a large \BibTeX{} database, then it may save you
+considerable effort to learn how to use \BibTeX, in which case you
+will certainly need to use one of the \LaTeX{} references mentioned
+earlier.
+
+\subsubsection{Biographical Sketch}
+
+At last, you've reached the final page of your \booktitle{magnum
+  opus}.  It will contain your biographical sketch, starting with
+\verb+\begin{biosketch}+, and ending with \verb+\end{biosketch}+ as
+usual.  Insert what biographical material you wish to include here.
+
+\section{Keeping Things in Order}
+
+If you have lots of figures or musical example files in your document,
+you may want to keep these files in the sub-folder already created
+for you.  This helps to keep your thesis folder a little less
+cluttered.  Then if you have a chart called \complit{pie.eps} stored
+in the \complit{figures} folder, you just need to include the folder
+name when issuing the \verb+\includegraphics+ command, e.g.,
+\begin{verbatim}
+\includegraphics{figures/pie.eps}
+\end{verbatim}
+You can create any number of folders and sub-folders to help keep
+your files organized.
+
+\section{More Examples}
+
+The files in the \complit{thesis-template} directory are only a
+bare-bones template to help you get started on your own manuscript.
+You will find a more complete example of a thesis manuscript in the
+\complit{sample} directory.  The \LaTeX{} source files in this
+directory contain explanatory comments and many more examples of
+useful code.  The file \complit{thesis.pdf} in the \complit{sample}
+directory is the result of processing the source files, so you can
+easily compare the source files to the output to see how everything
+works.  You'll find some simple examples of equations, figures,
+tables, and bibliographic citations to help you create your own
+document.  You can find much more help from the web should you need
+more sophisticated examples.
+
+\section{Bugs, Corrections, Improvements}
+
+Should you discover what you think is a bug in the way that \fsuth{}
+formats your document, you may e-mail me at \texttt{bwhissel@fsu.edu}.
+It would be helpful to send the portion of your document which you
+believe is misbehaving.  Likewise, if you think that the appearance
+of theses or dissertations may be improved in some way, or if you have
+some macro definitions that you think may be generally useful and
+could be added to \fsuth, I am happy to hear your ideas.
+
+Also, if you think that any of this documentation is misleading or
+unclear, \emph{please} let me know.  I wish to make this
+\booktitle{User's Guide} and the \fsuth{} class as helpful as
+possible.
+
+Please note that I cannot help you to learn features of \LaTeX: there
+are many resources and tutorials that are freely available, and I am
+unable to support individual requests for help with anything that does
+not pertain directly to the \fsuth{} class.
+
+\bigskip
+\noindent
+Best wishes, and good luck!
+
+\end{document}
