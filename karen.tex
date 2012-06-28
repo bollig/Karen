@@ -1,19 +1,19 @@
 \documentclass[11pt]{fsuthesis}
 
-%\usepackage{textcase}
-%\usepackage[pdftex]{graphicx}
-%\usepackage{hyperref}
-%\hypersetup{breaklinks=true}
+\usepackage{textcase}
+\usepackage[pdftex]{graphicx}
+\usepackage{hyperref}
+\hypersetup{breaklinks=true}
 
-\title{This Is My Title:\protect\\And It Should Be a Long One}
-\author{V\`\i ct\"or \'E. I\c smyne}
+\title{PDE Solutions with RBF-FD and Multiple GPUs}
+\author{Evan F. Bollig}
 \college{College of Arty Science}
-\department{Department of Furtive Studies} % Delete if no department
-\manuscripttype{Thesis}                    % [Thesis, Dissertation, Treatise]
-\degree{Master of Science}                 
-\semester{Spring}                          % [Spring, Summer, Fall]
-\degreeyear{2010}
-\defensedate{January 31, 2010}
+\department{Department of Scientific Computing} % Delete if no department
+\manuscripttype{Dissertation}                    % [Thesis, Dissertation, Treatise]
+\degree{Doctorate of Science}                 
+\semester{Fall}                          % [Spring, Summer, Fall]
+\degreeyear{2012}
+\defensedate{October 1, 2012}
 %\subject{My Topic}
 %\keywords{keyterm1; keyterm2; keyterm3; ...}
 
@@ -28,47 +28,27 @@
 \maketitle
 \makecommitteepage
 
-%\begin{dedication}
-%\end{dedication}
-
-%\begin{acknowledgments}
-%\end{acknowledgments}
+\input{dedication.tex}
+\input{acknowledgments.tex}
 
 \tableofcontents
-%\listoftables
-%\listoffigures
+\listoftables
+\listoffigures
 %\listofmusex
 
-%\begin{listofsymbols}
-%\end{listofsymbols}
+\input{symbols.tex}
+\input{abbreviations.tex}
 
-%\begin{listofabbrevs}
-%\end{listofabbrevs}
-
-\begin{abstract}
-This is my abstract.
-\end{abstract}
+\input{abstract.tex}
 
 \mainmatter
 
-\input chapter1
+\input{chapter1.tex}
 %\input chapter2
 %\input chapter3
 
 %\appendix
 %\input appendix1
-
-% You have your choice of bibliography sections, either
-% hand-crafted or BibTeX.
-
-% This is the "hand-crafted" bibliography/references section:
-\begin{references}
-Mybib, Sample. \textit{An Example of a Bibliographic Entry
- Created Manually}. Tallahassee, Florida: Fornish and Frak, 2010.
-
-Smith, Marigold. \textit{Lots and Lots of Bibliographic Entries
- and How to Display Them}. Tallahassee, Florida: Gibson and Goulash, 2010.
-\end{references}
 
 % The BibTeX bibliography/references section.  View the file
 % 'myrefs.bib' to get a feel for what these entries may look like.
@@ -77,11 +57,9 @@ Smith, Marigold. \textit{Lots and Lots of Bibliographic Entries
 % that have been cited with \cite{key} somewhere in the text will
 % be included.
 %\nocite{*}
-%\bibliographystyle{plain}
-%\bibliography{myrefs}
+\bibliographystyle{plain}
+\bibliography{references.bib}
 
-\begin{biosketch}
-This is my biography.
-\end{biosketch}
+\input{biography.tex}
 
 \end{document}
