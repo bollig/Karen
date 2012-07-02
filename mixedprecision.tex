@@ -1,0 +1,13 @@
+\chapter{Mixed Precision}
+
+In an effort to increase computational throughput on the GPU, we investigated mixed precision options for RBF-FD. 
+
+Mixed precision implies the use of single and double precision operations to increase computation speed but decrease (slightly) the accuracy of the method. 
+
+
+We found that the sum of weights for a single stencil summed to $O(1e-4)$, a poor approximation to zero which in turn led to a poor approximation of derivative quantities.  
+
+\authnote{Eigenvalues of single precision matrix}
+\authnote{Re-tuned hyperviscosity?}
+\authnote{Single precision might not matter for heat and elliptic equations, but for hyperbolic equations it is important to have double precision for stability}
+\authnote{Show convergence of single precision weights} 
