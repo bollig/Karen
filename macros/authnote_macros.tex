@@ -1,0 +1,45 @@
+\usepackage{xparse}
+
+
+%%%%%%%%%%%%%%%
+% Show a Author's Note
+% USAGE: 
+% \incomplete[Optional footnote message to further clarify note]{The text which is currently not finished}
+\DeclareDocumentCommand \incomplete{ o m }
+{%
+\IfNoValueTF {#1}
+{\textcolor{red}{Incomplete: \ul{#2}}} 
+{\textcolor{red}{Incomplete: \ul{#2}}\footnote{Comment: #1}}%
+}
+%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%
+% Show a Author's Note
+% USAGE: 
+% \authnote[Optional footnote message to further clarify note]{The note to your readers}
+\DeclareDocumentCommand \authnote { o m }
+{%
+\IfNoValueTF {#1}
+{\textcolor{blue}{Author's Note: \ul{#2}}} 
+{\textcolor{blue}{Author's Note: \ul{#2}}\footnote{Comment: #1}}%
+}
+%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%
+% Strike out text that doesn't belong in the paper
+% USAGE: 
+% \strike[Optional footnote to state why it doesn't belong]{Text to strike out}
+\DeclareDocumentCommand \strike { o m }
+{%
+\setstcolor{red}
+\IfNoValueTF {#1}
+{\textcolor{Gray}{\st{#2}}} 
+{\textcolor{Gray}{\st{#2}}\footnote{Comment: #1}}%
+}
+%%%%%%%%%%%%%%%
+
+

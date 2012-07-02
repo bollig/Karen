@@ -1,3 +1,6 @@
 [submodule "paper1"]
 	path = paper1
 	url = ssh://pamd.sc.fsu.edu/~efb06/repos/paper1.git
+[submodule "keeneland_benchmarks"]
+	path = keeneland_benchmarks
+	url = git@github.com:bollig/Benchmarks.git
