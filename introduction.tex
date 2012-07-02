@@ -1,9 +1,62 @@
 \chapter{Introduction}
 
-Introduce
 \begin{itemize} 
-\item Concept of Radial Basis Function
-\item RBF based numerical methods
-\item Parallelism in RBFs
-\item RBF-FD parallel algorithms
+	\item Background of  the Problem/Study
+	\item Statement of the Problem 
+	\item Purpose of the Study (including hypothesis or research question)
+	\item Research Questions
+	\item Importance of the Study (why should the reader care?)
+	\item Scope of the Study
+	\item Definition of Terms
+	\item Limitations
 \end{itemize} 
+
+%------------------------------
+
+\section{Radial Basis Function Methods for PDEs}
+
+\begin{itemize}
+\item Easily extend to higher dimensions
+\item High rate of convergence (exponential for global RBFs)
+\item Successful applications to wide range of geophysical applications
+\item Global, Compact, FD, MQ-FD, DQ-FD, and even DRBEM methods
+\item We emphasize RBF-FD due to its low computational complexity and parallel nature
+\end{itemize} 
+
+\section{RBF-FD applications} 
+\begin{itemize} 
+	\item RBF-FD is applied to hyperbolic PDEs (Flyer, Wright, Lehto, Fornberg, etc)
+	\item RBF-FD applied to elliptic PDEs 
+	\item We study RBF-FD in context of hyperbolic advection and incompressible fluid flow.
+\end{itemize} 
+
+\section{RBF Parallelism}
+\begin{itemize} 
+	\item Parallel Global RBF papers
+	\item Parallel CSRBF papers
+	\item Not much parallelism in the field, so we introduce it via parallel SpMV and parallel preconditioned GMRES
+\end{itemize} 
+
+\section{GPU Computing} 
+\begin{itemize} 
+	\item Only Schmidt consider GPU for RBFs
+	\item Beyond the parallel (MPI applications, we port everything to the GPU to leverage the high FLOP per watt hardware. 
+\end{itemize} 
+
+\section{Major Challenges}
+Disclaimer: RBF-FD is young. As such, 
+\begin{itemize}
+	\item never parallelized
+	\item hand-written code (both CPU and GPU)
+	\item Few test cases
+	\item My role:
+	\begin{itemize} 
+	\item Developed test cases (Elliptic, Stokes) which were not seen before
+	\item Had to verify method convergence, stability, conditioning, etc for test cases before optimization
+	\item Attempted to build components required for a large 3D mantle convection code
+	\item Blind implementation to solve PDEs (learned a lot, but wasted lots of time learning about PDEs). 
+	\item Original view: Weights times solution values; Current view: Sparse matrix times solution vector. Different perspective makes huge difference in code and parallellization approach.
+	\item Resulted in minimal optimization to components
+	\end{itemize} 
+\end{itemize} 
+
