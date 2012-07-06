@@ -1,0 +1,15 @@
+\chapter{Scalable Partitioning} 
+It is important when working on a large cluster like Keeneland to have an implementation that scales well. We need to consider the cost of MPI communication and the possibility to amortize it by hiding it while we compute.
+
+
+Parallelizing in a distributed system requires: a) partitioning nodes, b) mapping global to local indices, and c) locally ordering nodes\cite{Saad2003}. We describe our approach to this within this section.
+
+\section{Partitioning}
+
+\section{Index mapping} 
+Since nodes are controlled by only one processor
+
+\section{Local node ordering}
+Nodes are ordered sequentially. 
+
+Q: how does applying an interior morton ordering impact performance? 
