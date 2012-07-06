@@ -4,3 +4,6 @@
 [submodule "keeneland_benchmarks"]
 	path = keeneland_benchmarks
 	url = git@github.com:bollig/Benchmarks.git
+[submodule "spear_benchmarks"]
+	path = spear_benchmarks
+	url = ssh://pamd.sc.fsu.edu/~efb06/repos/spear_benchmarks.git
