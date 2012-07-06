@@ -60,3 +60,34 @@ Disclaimer: RBF-FD is young. As such,
 	\end{itemize} 
 \end{itemize} 
 
+
+
+This thesis should outline details of all the research I have done for the dissertation. Topics include 
+
+parabolic pdes on ellipse and ellipsoid
+    - Test by monitoring linf norm
+    - node distributions with CVT make sure projection works (octree to test distance)
+    - first GPU kernels with boundary condition kernel as well 
+elliptic pdes on annulus
+    - Test by dirichlet manufactured solution convergence
+    - Describe neumann and robin boundary conditions
+    - Test my parallel GMRES on this
+    - Preconditioners ILU0, etc.
+hyperbolic
+    - repeat paper
+stokes
+    - parallel gmres
+    - preconditioners (dig up more)
+node ordering
+    - impact on conditioning
+    - coloring and cuthill mckee alternatives
+    - need complexity and benchmark comparison of kdtree vs LSH (benchmark for
+    various stencil sizes and node sizes
+Optimization of sparse matrix vector multiply and overlapping communication/computation
+    - Preconditioner on the GPU (Also solve weights on the GPU)
+    - Occupancy, GFLOPS, speedup
+
+Contribs: 
+    - RBF-FD to 3 PDE types on the GPU
+    - Scalable multi-GPU implementation
+    - Up to 20x speedup (Given spear results)
