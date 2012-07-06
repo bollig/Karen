@@ -90,4 +90,25 @@ Optimization of sparse matrix vector multiply and overlapping communication/comp
 Contribs: 
     - RBF-FD to 3 PDE types on the GPU
     - Scalable multi-GPU implementation
-    - Up to 20x speedup (Given spear results)
+    - Up to 20x speedup (Given spear results; need faster)
+    - Multi-GPU GMRES with preconditioners
+    - Qs: 
+        - How to get scalable implementation? Minimize comm and occupied memory
+        (span vector across CPUs)
+        - How to hide GPU upload/download? Overlap comm and comp.
+        - How much extra efficiency from node ordering? 
+        - How much reduction in bandwidth from node ordering?
+        - Which node ordering gives best bandwidth and conditioning?
+        - How to tie down nullspace for stokes on sphere?
+        - How to precondition RBF-FD? 
+        - How to stabilize the bell advection with velocity (12 days)? Is it
+        the same as a single operator (TODO)? 
+        - How does splitting operator impact hyperviscosity and eigenvalues? 
+        - How does CVT with support function converge? Support function is for
+        uniform on sphere, how does it compare to CVT in box?
+        - Can we color the graph from RBF-FD to get better parallelism in GPU? 
+        - Is it possible to use RBF-FD in single precision? Start by comparing
+        accuracy of weights for single and double precision. What are the
+        contours for single/double precision? Can we compute inverse of system
+        with single precision (Perhaps we need iterative method?)?
+        - 
