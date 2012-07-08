@@ -1,0 +1,10 @@
+- Convergence study CosineBell operator (no discontinuity at pole). How much do
+  we lose by splitting the operator? 
+
+- Benchmark for VCL GMRES on various sparse matrices (Match list from Bahi, Li and Saad)
+    - Repeat Benchmark for my Serial and Parallel implementation
+    - Requires GFLOPS, Iterations per second
+
+- Benchmark for VCL SpMV vs Vortex
+
+- Multi-color graph re-order according to color, gpu warp per color?
