@@ -8,6 +8,7 @@
 - Benchmark for VCL SpMV vs Vortex. Is it more efficient to use VCL? 
     - Repeat for split operator.
 
+- Overlap comm and comp. Start with Cosine and Vortex (VCL has no inherent non-blocking queue system yet)
 
 - Multi-color graph re-order according to color, gpu warp per color?
 
