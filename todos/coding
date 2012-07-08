@@ -5,6 +5,19 @@
     - Repeat Benchmark for my Serial and Parallel implementation
     - Requires GFLOPS, Iterations per second
 
-- Benchmark for VCL SpMV vs Vortex
+- Benchmark for VCL SpMV vs Vortex. Is it more efficient to use VCL? 
+    - Repeat for split operator.
+
 
 - Multi-color graph re-order according to color, gpu warp per color?
+
+- Optimizations: 
+    - Align weights to nearest 128 byte segment
+    - Shared memory banks
+    - Group larger than warp size
+    - Warp handle multiple stencils. How many stencils can fit in shared memory assuming threads operate on stencil in different shared memory elements
+    - Parallel reduction (use example code)
+
+- LU for weights on GPU
+
+- ILU0 on GPU 
