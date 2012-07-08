@@ -1,0 +1,274 @@
+%!TEX root = karen.tex
+
+
+\chapter{RBF Methods}
+
+%!TEX root =  paper_draft.tex
+\section{Calculating RBF-FD weights}
+\label{sec:rbffd}
+
+Given a set of function values, $\{u(\vx_j)\}_{j=1}^{N}$, on a set of $N$ nodes $\{\vx_j\}_{j=1}^{N}$, the operator $\diffop$ acting on $u(\vx)$ evaluated at 
+$\vx_j$, %$u(\vx_j)$ 
+is approximated by a weighted combination of function values, $\{u(\vx_i)\}_{i=1}^{n}$, in a small neighborhood of \eb{$u(\vx_j)$}{$\vx_j$}{1.7}, 
+where $n\ll N$ defines the size of the stencil. 
+%\eb{}{(added constant term to equation:)}{}
+\begin{align}
+\diffop{u(\vx)}\mid_{\vx=\vx_j} &\approx \sum_{i=1}^{n} w_i u(\vx_i) + w_{n+1} p_0
+\label{eq:derivFromFDWeights}
+\end{align}
+The RBF-FD weights, ${w_i}$, are found by enforcing that they are exact within the space spanned by the RBFs $\phi_i(\epsilon r) = \phi(\ep\vectornorm{\vx-\vx_{i}})$, centered at the nodes $\{\vx_i\}_{i=1}^{n}$, with 
+\ge{$r=\vectornorm{x - x_i}$}{$r=\vectornorm{\vx - \vx_i}$}{1.8}
+being the distance between where the RBF is centered and where it is evaluated as measured in the standard Euclidean 2-norm. \eb{It has also been shown through experience and}{Various studies show}{}  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} that better accuracy is achieved when the 
+interpolant can exactly reproduce \eb{a constant.}{a constant, $p_0$.}{1.9}  
+\eb{Hence, the constraint $\sum_{i=1}^{n}w_k=\diffop{1}|_{\vx=\vx_{j}}=0$ is added, where $w_{n+1}$ is ignored once the matrix in ({\ref{syst}}) is inverted. That is,}{Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}w_i=\diffop{1}|_{\vx=\vx_{j}}=0$ completes the system: }{1.9}
+%\ge{}{Address how the constraint is added. $w_{n+1}$ is mentioned without being defined.}{1.9}
+%\eb{}{($\epsilon$ has been moved outside the norm on the RHS)}{1.10}
+\eb{}{\begin{align}
+\begin{pmatrix}
+\phi(\epsilon\vectornorm{\vx_1-\vx_1}) & \phi(\epsilon\vectornorm{\vx_1-\vx_2} & \cdots & \phi(\epsilon\vectornorm{\vx_1-\vx_n}) & 1 \\
+\phi(\epsilon\vectornorm{\vx_2-\vx_1}) & \phi(\epsilon\vectornorm{\vx_2-\vx_2} & \cdots &
+\phi(\epsilon\vectornorm{\vx_2-\vx_n}) & 1\\
+\vdots & \ddots & \ddots & \vdots & \vdots\\
+\phi(\epsilon\vectornorm{\vx_n-\vx_1}) & \phi(\epsilon\vectornorm{\vx_n-\vx_2} & \cdots &
+\phi(\epsilon\vectornorm{\vx_n-\vx_n}) & 1 \\
+1 & 1 & \cdots & 1 & 0
+\end{pmatrix}
+\begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n  \\ w_{n+1}\end{bmatrix}
+&=
+\begin{bmatrix} \diffop{\phi(\ep\vectornorm{\vx-\vx_{1}})}|_{\vx=\vx_{j}} \\
+                \diffop{\phi(\ep\vectornorm{\vx-\vx_{2}})}|_{\vx=\vx_{j}} \\ \vdots \\  \diffop{\phi(\ep\vectornorm{\vx-\vx_{n}})}|_{\vx=\vx_{j}}\\
+                0
+\end{bmatrix},
+\label{syst}
+\end{align}
+where $w_{n+1}$ is ignored after the matrix in ({\ref{syst}}) is inverted.}{1.9}
+%\ge{}{Weights should be either $c_i$ or $w_i$ unless there is a reason for 
+%different names in different areas of the paper}{1.11}\eb{}{(Changed all weights from `c' to `w' for consistency.)}{1.11}
+%\ge{}{Address question 2.7 of reviewer}{2.7}
+This \eb{}{$n \times n$}{2.7} system solve is repeated \eb{$N$ times for each}{for each stencil center }{2.7} $\vx_j$, $j=1...N$, to form \eb{}{the $N$ rows of}{2.7} the DM \eb{}{ with $n$ non-zeros $(n\ll N)$ per row}{2.7}.
+As an example, if $\diffop$ is the identity operator, 
+then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. \eb{The reader should note that in}{In the}{} context of time-dependent PDEs, \eb{so long as the nodes do not move,}{}{} the stencil weights remain constant for all time-steps \eb{}{when the nodes are stationary}{}. Therefore, the calculation of the 
+differentiation weights is performed once in a single preprocessing step of O$(n^3N)$ 
+%\ge{}{floating point operations (FLOPs)}{1.12}. 
+\eb{}{FLOPs.}{already defined above}
+Improved efficiency is achieved
+by processing multiple right hand sides in one pass, calculating the weights
+corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}$, $\Laplacian$, etc.).
+
+%\ge{}{reply to the LSH question from the reviewer involving parallelization of the search process for each point, and the issue regarding embarrassingly parallel process. Also note: this is done only once so efficiency is not an issue, nor is parallelization.}{3.1}
+
+For each of the $N$ \eb{iterations}{small system solves}{} of Equation~(\ref{syst}), the $n$ nearest neighbors to $\vx_j$ need to be located. This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. \eb{}{While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. }{3.1}
+
+\subsection{Hyperviscosity}
+
+For RBF-FD, \eb{the DMs are}{differentiation matrices encode convective operators of the form 
+\begin{equation}
+D = \alpha \pd{}{\lambda} + \beta \pd{}{\theta} \label{eqconv}
+\end{equation}}{1.13}where $\alpha$ and $\beta$ are a function of the fluid velocity. The convective operator, discretized
+through RBF-FD, has eigenvalues 
+%\ge{shown}{given}{1.13} 
+ in the right half-plane causing the method to be unstable~\cite{FornbergLehto11, FlyerLehto11}. 
+%\eb{for hyperbolic equations since they have no inherent damping}{}{1.13}. 
+%\ge{}{Shorter previous sentence. What diff operator is being discretized by DM?}{1.13}
+Stabilization of the RBF-FD method is achieved through the application of a hyperviscosity filter 
+to Equation~(\ref{eqconv}) \cite{FornbergLehto11}. By \ge{using of Gaussian}{using Gaussian}{1.14} 
+ RBFs, $\phi(r) = e^{-(\epsilon r)^2}$, the hyperviscosity (a high order Laplacian operator) simplifies to
+\begin{equation}
+\Delta^{k}\phi(r) = \epsilon^{2k} p_k(r) \phi(r)
+\label{eqn:gaussian_hv}
+\end{equation}
+where $k$ is the order of the Laplacian and  $p_k(r)$ are multiples of generalized Laguerre polynomials that
+are generated recursively (see Section 3.2 \cite{FornbergLehto11}). We assume a 2D  Laplacian operator 
+when working on the surface of the sphere since a local stencil can be viewed as \eb{}{lying on}{1.15} a plane.
+%Since the purpose of hyperviscosity is to suppress the highly oscillatory modes while leaving all the smooth ones intact, it suffices to ignore the local curvature of the sphere, and calculate $\Delta^{k}\phi(r)$ as if the RBF-FD stencil was located on a 2D flat plane.
+\ge{}{Although it is clear that when the diameter of the stencil is not sufficiently 
+small compared to the radius of the sphere, that the hyperviscosity might not work as advertised,
+numerical evidence suggests that if the RBFs adequately resolve the convective operator, the 2D 
+hyperviscosity operator does its job. 
+We base our work on the work of Fornberg and Lehto \cite{FornbergLehto11}, which was
+performed on a sphere, and tune our parameters following their guidelines. 
+%If a resolution of $N$ nodes is adequate at one sphere radius, it will be adequate for all radii. 
+}{}
+%\eb{}{A 2D approximation for the hyperviscosity suffices because its only role is to suppress spurious unphysical modes. The scale of hyperviscosity, on the order of $10^{-30}$, makes this a completely harmless assumption even in the case when the stencil radius is large relative to the size of the sphere.}{2.8}
+
+%\ge{}{I do not understand question 2.8}{2.8}
+
+In the case of parabolic and hyperbolic PDEs, hyperviscosity is added as a filter to the right hand side of the evaluation. For example, at the continuous level, 
+the equation solved takes the form
+\begin{equation}
+\pd{u}{t} = - D u + H u,
+\label{eq:evaluation_with_hyperviscosity}
+\end{equation}
+%\ge{}{Address the issue of continuous versus discrete form. Use words operator and matrix properly.}{2.9} \authnote{Double check}
+where $D$ is the \eb{ DM operator for the PDE}{PDE operator}{2.9}, and $H$ is the hyperviscosity \eb{operator matrix}{filter operator}{2.9}.
+Applying hyperviscosity shifts all the eigenvalues of D to the left half of the complex plane. 
+This shift is controlled by $k$, the order of the Laplacian, and a scaling parameter $\gamma_c$, defined by
+\begin{equation*}	
+H = \gamma \Delta^{k} = \gamma_c N^{-k} \Delta^{k}.
+\end{equation*}
+Given a choice of $\epsilon$ (see Section~\ref{sec:numerical_validation}), it was found experimentally that $\gamma = \gamma_c N^{-k}$  provides stability and good accuracy for all values of $N$ considered here. It also ensures that the viscosity vanishes as $N\rightarrow\infty$ \cite{FlyerLehto11}.
+In general, the larger the stencil size, the higher the order of the Laplacian.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \eb{\cite{Fornberg2011a}}{\cite{FornbergLehto11,FlyerLehto11}}{}.
+
+
+\section{Cut from Paper1}
+
+Global RBF collocation methods pose the problem of interpolating a multivariate function $f : \domain
+    \rightarrow \R$ where $\domain \subset \R^m$. Given a set of sample values
+    $\{f(x_j)\}_{j=1}^{N}$ on a discrete set of nodes $X = \{x_j\}_{j=1}^{N}
+    \subset \domain$, an approximation $\hat{f}_N$ can be constructed through
+    linear combinations of interpolation functions. Here, we choose univariate,
+    radially symmetric functions based on Euclidean distance ($\vnorm{\cdot}$), and use
+    translates $\phi(x-x_j)$ of a single continuous real
+    valued function $\phi$ defined on $\R$ and centered at $x_j$:
+         \begin{equation*} 
+         \phi(x) := \varphi(\vnorm{x}).
+         \end{equation*} 
+    %with a continuous function $\varphi$ on $\R_0^{+}$. 
+    Here, $\varphi$ is a
+    Radial Basis Function and $\phi$ the
+    associated kernel. For simplification $\phi_j(x)$ refers to a kernel centered at $x_j$; i.e., $\varphi(\vectornorm{x-x_j})$.
+
+   The interpolant $\hat{f}_N(x)$ requires a linear combination of translates:  
+        \begin{equation*}
+      %  \hat{f}_N(x) = \sum_{j=1}^{N} c_j \varphi(\vnorm{x-x_j})
+        \hat{f}_N(x) = \sum_{j=1}^{N} c_j \phi_j(x)
+        \end{equation*}
+    with real coefficients $\{c_j\}_{j=1}^{N}$. Assuming the interpolant passes through
+    known values of $f$; i.e., 
+        \begin{equation*} 
+        \hat{f}_N(x_i) = f(x_i),\ \ \ \ \ 1 \leq i \leq N, 
+        \end{equation*}
+    allows one to solve for coefficients if the following linear system is uniquely
+    solvable: 
+        \begin{equation*} 
+        %\sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) = f(x_i),\ \ \ \ \ 1
+        \sum_{j=1}^{N} c_j \phi_j(x_i) = f(x_i),\ \ \ \ \ 1
+        \leq i \leq N. 
+        \end{equation*} 
+    This is true if the $N \by N$ matrix $\Phi$ produced by the linear system
+%        \begin{align} 
+%          \begin{pmatrix}  
+%            \varphi(\vnorm{x_1 - x_1}) & \varphi(\vnorm{x_1 - x_2}) & \cdots & \varphi(\vnorm{x_1 - x_N}) \\ 
+%            \varphi(\vnorm{x_2 - x_1}) & \varphi(\vnorm{x_2 - x_2}) & \cdots & \varphi(\vnorm{x_2 - x_N}) \\ 
+%            \vdots & \ddots & \ddots & \vdots \\
+%            \varphi(\vnorm{x_N - x_1}) & \varphi(\vnorm{x_N - x_2}) & \cdots & \varphi(\vnorm{x_N - x_N})
+%                \end{pmatrix} 
+%                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
+%               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
+%                         \Phi \vec{c} &= \vec{f} 
+%        \end{align} 
+        \begin{align*} 
+          \begin{pmatrix}  
+            \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_N(x_1) \\ 
+            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_N(x_2) \\ 
+            \vdots & \ddots & \ddots & \vdots \\
+            \phi_1(x_N) & \phi_2(x_N) & \cdots & \phi_N(x_N)
+                \end{pmatrix} 
+                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
+               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
+                         \Phi \vec{c} &= \vec{f} 
+        \end{align*} 
+is nonsingular.
+
+ When choosing an appropriate basis function for interpolation, a
+    subset of RBFs have been shown to produce symmetric positive definite
+    $\Phi$, while others are only conditionally positive definite (for more details see
+    \cite{Fasshauer2007}).  With
+    the latter set, additional polynomial terms are added to constrain the
+    system and enforce positive definiteness, resulting in this expanded system of equations: 
+        \begin{align} 
+       % \sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) + \sum_{k=1}^{t}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
+        \sum_{j=1}^{N} c_j \phi_j(x_i) + \sum_{k=1}^{M}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
+        \leq i \leq N, \nonumber \\ 
+        \sum_{j=1}^{N} c_j p_k(x_j) &=  0,\ \ \ \ \ \ \ \ \ \ 1 \leq k \leq M. \nonumber \\
+          \begin{pmatrix} \Phi & P \\ P^T & 0 \end{pmatrix} \begin{bmatrix} c \\ d \end{bmatrix} &= \begin{bmatrix} \vec{f} \\ 0 \end{bmatrix}
+	\label{eq:additional_constraints}
+        \end{align} 
+        where $\{p_k\}_{k=1}^{M}$ is a basis for $\Pi_{p}^{m} $ (the set of polynomials in $m$ variables of degree $\leq p$) and 
+       \begin{equation*}
+       M = {{p+m}\choose{m}}       .
+       \end{equation*} 
+      %\authnote{Add table? or cut:} Table~\ref{tbl:rbfoptions} provides example RBF functions and notes their (conditionally) positive definiteness. 
+
+
+Given the coefficients $\vec{c}$, the function value at a test point $x$ is interpolated by
+\begin{align}	 
+	\hat{f}_N(x) &= \sum_{j=1}^{N}c_j \Phi_j(x) + \sum_{l=1}^{M}d_l P_l(x)  \nonumber \\
+	&=  \left[\begin{array}{cc}
+        \Phi & \PP
+	\end{array} \right] 
+	 \begin{bmatrix}	c \\
+					d
+		 \end{bmatrix} \nonumber \\
+						 &= \vec{\Phi}_x^T \vec{c} \nonumber \\
+						 &= \vec{\Phi}_x^T \Phi^{-1}\vec{f}	
+						 \label{eq:rbf_interpolate_pt}
+\end{align}
+where $\vec{c}$ is substituted by the solution to Equation~\ref{eq:additional_constraints}. In Equation~\ref{eq:rbf_interpolate_pt} the term $\Phi_{x}^T\Phi^{-1}$, dependent only on node positions, can be evaluated prior to knowing $f$. 
+
+For the RBF-FD method, derivatives of $u(x)$ are weighted combinations of a small neighborhood of $N_s$ nodes (i.e., a stencil with $N_s \ll N$):
+ %derivative of u (i.e., $\diffop{u}$) at the stencil center ($x_1$) as a weighted combination of neighbors (like typical Finite Differencing): 
+        \begin{align} 
+        \diffop{u(x_1)} &\approx \sum_{j=1}^{N_s} c_j u(x_j) \nonumber 
+        \label{eq:derivFromFDWeights}
+        \end{align}
+where $\diffop{u}$ denotes a linear differential quantity over $u$ (e.g., $\diffop{u} = \d{u}{x}$). Here, ${c_j}$ are unknown, and obtained by enforcing the reconstruction:
+	\begin{align}
+	        \diffop{\phi_j(x_1)} = \sum_{i=1}^{N_s} c_i \phi_j(x_i) \ \ \ \ \ \ \textrm{for }j=1,2,...,N_s \nonumber 
+	\end{align}
+with $\diffop{\phi}_j$ provided by analytically applying the differential operator to the kernel function.
+This is equivalent to: 
+	\begin{align}        
+          \begin{pmatrix}  
+            \phi_1(x_1) & \phi_1(x_2) & \cdots & \phi_1(x_{N_s}) \\ 
+            \phi_2(x_1) & \phi_2(x_2) & \cdots & \phi_2(x_{N_s}) \\ 
+            \vdots & \ddots & \ddots & \vdots \\
+            \phi_{N_s}(x_1) & \phi_{N_s}(x_2) & \cdots & \phi_{N_s}(x_{N_s})
+                \end{pmatrix} 
+                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
+               &=                \begin{bmatrix} \diffop{\phi_1}(x_1) \\  \diffop{\phi_2}(x_1) \\ \vdots \\  \diffop{\phi_{N_s}}(x_1) 
+               \end{bmatrix} \\
+                         \Phi_{s} \vec{c} &= \vec{\Phi_{\diffop{}_s}}.% (x_1)
+                         \label{eqn:rbffd_simplified}
+                         % \Phi_{i,j} \vec{c} &= \vec{\diffop{\phi_j}} 
+        \end{align} 
+Solving Equation~\ref{eqn:rbffd_simplified} for stencils weights, $\vec{c}$, and substituting into Equation~\ref{eq:derivFromFDWeights} reveals the similarity between RBF-FD and the general problem of RBF interpolation (see Equation~\ref{eq:rbf_interpolate_pt} and discussion): 
+        \begin{align*} 
+        \diffop{u(x_1)} &\approx (\Phi^{-1}_s \vec{\Phi}_{\diffop{}_s})^T \vec{u} \\
+        &\approx \vec{\Phi}_{\diffop{}_s}^T \Phi^{-T}_s \vec{u}
+        \label{eq:rbffd_approx_derivs}
+        \end{align*}
+        
+	
+Again, based on the choice of RBF, positive definiteness of the system is ensured by adding the same constraints as Equation~\ref{eq:additional_constraints}, but note differential quantities for $\vec{\PP}$ on the right hand side: 
+	\begin{align}
+		\begin{pmatrix}
+		\Phi_s & \PP \\
+		\PP^T & 0
+		\end{pmatrix} \begin{bmatrix}
+							c \\ 
+							d
+							\end{bmatrix}
+				 &= \begin{bmatrix}
+							\vec{\Phi}_{\diffop{}_s} \\
+							\vec{\PP}_{\diffop{}}
+							 \end{bmatrix}.
+	\end{align}
+	%\authnote{must have things mixed up in my head. Cannot justify the reason to have $\PP_{\diffop{}}$ and not $0$. Perhaps because I dont fully understand the cardinal point derivation of RBFFD.}
+Equation~\ref{eq:rbffd_approx_derivs} is strictly for the stencil centered at node $x_1$. To obtain weights for all stencils in the domain, a total of $N$ such systems must be solved. %Following the discussion of Equation~\ref{eq:rbf_interpolate_pt}, stencils weights are computed given only node positions. 
+
+
+Stabilization of the RBF-FD method is achieved through the application of a hyperviscosity filter \cite{Fornberg2011b}. By assuming the use of Gaussian RBFs, $\phi(r) = e^{-(\epsilon r)^2}$, the hyperviscosity operator simplifies to
+\begin{equation}
+\Delta^{k}\phi(r) = \epsilon^{2k} p_k(r) \phi(r).
+\label{eqn:gaussian_hv}
+\end{equation}
+The multiples of generalized Laguerre polynomials, $p_k(r)$, are obtained through the following recursive relation:
+\begin{align*}
+\begin{cases} 
+p_0(r) &=1, \\
+p_1(r) &= 4(\epsilon r)^2 - 2d, \\
+p_k(r) &= 4((\epsilon r)^2 - 2(k-1) - \frac{d}{2})  p_{k-1}(r) - 8(k-1)(2(k-1) - 2 + d) p_{k-2}(r), \ \ \ \ k = 2, 3, ...
+\end{cases}
+\end{align*}
+where $d$ is the dimension of the problem. We assume $d=2$ below when working on the surface of the sphere.
