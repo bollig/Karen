@@ -17,6 +17,10 @@
 ]{hyperref}
 
 
+% Added packages
+\usepackage[usenames]{color}
+\usepackage{subfigure}
+
 \title{PDE Solutions with RBF-FD and Multiple GPUs}
 \author{Evan F. Bollig}
 \college{College of Arty Science}
@@ -40,6 +44,7 @@
 
 \input{macros/macros.tex}
 \input{macros/misc_mac.tex}
+\input{macros/aliases.tex}
 
 \begin{document}
 
@@ -63,51 +68,51 @@
 
 \mainmatter
 
-\input{introduction.tex}
+\input{chapter1.tex}
 
-\chapter{Review}
-\begin{itemize} 
-	\item Review of the Literature (don’t make the mistake of reviewing after rather than before data collection in qualitative studies)
-	\item The more references the better
-	\item All relevant, reliable, and recent studies be included
-	\item Organization is critical 
-	\item Compare, contrast, and evaluate previous studies
-\end{itemize}
-
-\chapter{Research Methodology}
-\begin{itemize} 
-	\item Research Perspective: type of methodology and why it is the best way to answer your research question
-	\item Context and Access: where, when, and how you will ﬁnd participants 
- 	\item Instrumentation: include copy in appendix or in text if using survey or interview questions
- 	\item Procedure: be specific so a reader could imitate your study 
- 	\item Data Analysis: again, specific down to the computer program used for statistics
- 	\item Qualitative methods
- 	\item Data Sources
- 	\item Data Collection
- 	\item Data Analysis
- 	\item Verification
- 	\item Ethical Considerations
-\end{itemize} 
-
-\chapter{Findings}
-\begin{itemize} 
-	\item Research Findings (Will be regularly updated)
-	\item Presentation of Data (Graphs, charts, tables, etc)
-	\item Timings, Convergence Rates, etc.
-\end{itemize} 
-
-\chapter{Summary}
-\begin{itemize} 
-\item Summary (what should readers find in document)
-\item Conclusions (what are the improvements made, what algorithms are demonstrated effective?)
-\item Discussion
-\item Suggestions for future research
-\end{itemize} 
-%\input{introduction.tex} 
-%\input{grid_generation.tex}
-%\input{parabolic_equations.tex}
-%\input{hyperbolic_equations.tex}
-%\input{parallel_gmres.tex} 
+%\chapter{Review}
+%\begin{itemize} 
+%	\item Review of the Literature (don’t make the mistake of reviewing after rather than before data collection in qualitative studies)
+%	\item The more references the better
+%	\item All relevant, reliable, and recent studies be included
+%	\item Organization is critical 
+%	\item Compare, contrast, and evaluate previous studies
+%\end{itemize}
+%
+%\chapter{Research Methodology}
+%\begin{itemize} 
+%	\item Research Perspective: type of methodology and why it is the best way to answer your research question
+%	\item Context and Access: where, when, and how you will ﬁnd participants 
+% 	\item Instrumentation: include copy in appendix or in text if using survey or interview questions
+% 	\item Procedure: be specific so a reader could imitate your study 
+% 	\item Data Analysis: again, specific down to the computer program used for statistics
+% 	\item Qualitative methods
+% 	\item Data Sources
+% 	\item Data Collection
+% 	\item Data Analysis
+% 	\item Verification
+% 	\item Ethical Considerations
+%\end{itemize} 
+%
+%\chapter{Findings}
+%\begin{itemize} 
+%	\item Research Findings (Will be regularly updated)
+%	\item Presentation of Data (Graphs, charts, tables, etc)
+%	\item Timings, Convergence Rates, etc.
+%\end{itemize} 
+%
+%\chapter{Summary}
+%\begin{itemize} 
+%\item Summary (what should readers find in document)
+%\item Conclusions (what are the improvements made, what algorithms are demonstrated effective?)
+%\item Discussion
+%\item Suggestions for future research
+%\end{itemize} 
+%%\input{introduction.tex} 
+%%\input{grid_generation.tex}
+%%\input{parabolic_equations.tex}
+%%\input{hyperbolic_equations.tex}
+%%\input{parallel_gmres.tex} 
 
 
 %\appendix
@@ -125,7 +130,7 @@
 %\nocite{Vuduc2005}
 
 %\bibliographystyle{plain}
-%\bibliography{references}
+%\bibliography{paper1_references}
 
 %\input{biography.tex}
 
