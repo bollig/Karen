@@ -9,21 +9,21 @@
 
 Given a set of function values, $\{u(\vx_j)\}_{j=1}^{N}$, on a set of $N$ nodes $\{\vx_j\}_{j=1}^{N}$, the operator $\diffop$ acting on $u(\vx)$ evaluated at 
 $\vx_j$, %$u(\vx_j)$ 
-is approximated by a weighted combination of function values, $\{u(\vx_i)\}_{i=1}^{n}$, in a small neighborhood of \eb{$u(\vx_j)$}{$\vx_j$}{1.7}, 
+is approximated by a weighted combination of function values, $\{u(\vx_i)\}_{i=1}^{n}$, in a small neighborhood of $\vx_j$, 
 where $n\ll N$ defines the size of the stencil. 
-%\eb{}{(added constant term to equation:)}{}
+%(added constant term to equation:)
 \begin{align}
 \diffop{u(\vx)}\mid_{\vx=\vx_j} &\approx \sum_{i=1}^{n} w_i u(\vx_i) + w_{n+1} p_0
 \label{eq:derivFromFDWeights}
 \end{align}
 The RBF-FD weights, ${w_i}$, are found by enforcing that they are exact within the space spanned by the RBFs $\phi_i(\epsilon r) = \phi(\ep\vectornorm{\vx-\vx_{i}})$, centered at the nodes $\{\vx_i\}_{i=1}^{n}$, with 
-\ge{$r=\vectornorm{x - x_i}$}{$r=\vectornorm{\vx - \vx_i}$}{1.8}
-being the distance between where the RBF is centered and where it is evaluated as measured in the standard Euclidean 2-norm. \eb{It has also been shown through experience and}{Various studies show}{}  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} that better accuracy is achieved when the 
-interpolant can exactly reproduce \eb{a constant.}{a constant, $p_0$.}{1.9}  
-\eb{Hence, the constraint $\sum_{i=1}^{n}w_k=\diffop{1}|_{\vx=\vx_{j}}=0$ is added, where $w_{n+1}$ is ignored once the matrix in ({\ref{syst}}) is inverted. That is,}{Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}w_i=\diffop{1}|_{\vx=\vx_{j}}=0$ completes the system: }{1.9}
-%\ge{}{Address how the constraint is added. $w_{n+1}$ is mentioned without being defined.}{1.9}
-%\eb{}{($\epsilon$ has been moved outside the norm on the RHS)}{1.10}
-\eb{}{\begin{align}
+$r=\vectornorm{\vx - \vx_i}$
+being the distance between where the RBF is centered and where it is evaluated as measured in the standard Euclidean 2-norm. Various studies show  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} that better accuracy is achieved when the 
+interpolant can exactly reproduce a constant, $p_0$.  
+Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}w_i=\diffop{1}|_{\vx=\vx_{j}}=0$ completes the system: 
+%Address how the constraint is added. $w_{n+1}$ is mentioned without being defined.
+%($\epsilon$ has been moved outside the norm on the RHS)
+\begin{align}
 \begin{pmatrix}
 \phi(\epsilon\vectornorm{\vx_1-\vx_1}) & \phi(\epsilon\vectornorm{\vx_1-\vx_2} & \cdots & \phi(\epsilon\vectornorm{\vx_1-\vx_n}) & 1 \\
 \phi(\epsilon\vectornorm{\vx_2-\vx_1}) & \phi(\epsilon\vectornorm{\vx_2-\vx_2} & \cdots &
@@ -41,37 +41,35 @@ interpolant can exactly reproduce \eb{a constant.}{a constant, $p_0$.}{1.9}
 \end{bmatrix},
 \label{syst}
 \end{align}
-where $w_{n+1}$ is ignored after the matrix in ({\ref{syst}}) is inverted.}{1.9}
-%\ge{}{Weights should be either $c_i$ or $w_i$ unless there is a reason for 
-%different names in different areas of the paper}{1.11}\eb{}{(Changed all weights from `c' to `w' for consistency.)}{1.11}
-%\ge{}{Address question 2.7 of reviewer}{2.7}
-This \eb{}{$n \times n$}{2.7} system solve is repeated \eb{$N$ times for each}{for each stencil center }{2.7} $\vx_j$, $j=1...N$, to form \eb{}{the $N$ rows of}{2.7} the DM \eb{}{ with $n$ non-zeros $(n\ll N)$ per row}{2.7}.
+where $w_{n+1}$ is ignored after the matrix in ({\ref{syst}}) is inverted.
+This $n \times n$ system solve is repeated for each stencil center  $\vx_j$, $j=1...N$, to form the $N$ rows of the DM  with $n$ non-zeros $(n\ll N)$ per row.
 As an example, if $\diffop$ is the identity operator, 
-then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. \eb{The reader should note that in}{In the}{} context of time-dependent PDEs, \eb{so long as the nodes do not move,}{}{} the stencil weights remain constant for all time-steps \eb{}{when the nodes are stationary}{}. Therefore, the calculation of the 
+then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. In the context of time-dependent PDEs,  the stencil weights remain constant for all time-steps when the nodes are stationary. Therefore, the calculation of the 
 differentiation weights is performed once in a single preprocessing step of O$(n^3N)$ 
-%\ge{}{floating point operations (FLOPs)}{1.12}. 
-\eb{}{FLOPs.}{already defined above}
+%floating point operations (FLOPs). 
+FLOPs.
 Improved efficiency is achieved
 by processing multiple right hand sides in one pass, calculating the weights
 corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}$, $\Laplacian$, etc.).
 
-%\ge{}{reply to the LSH question from the reviewer involving parallelization of the search process for each point, and the issue regarding embarrassingly parallel process. Also note: this is done only once so efficiency is not an issue, nor is parallelization.}{3.1}
+%reply to the LSH question from the reviewer involving parallelization of the search process for each point, and the issue regarding embarrassingly parallel process. Also note: this is done only once so efficiency is not an issue, nor is parallelization.
 
-For each of the $N$ \eb{iterations}{small system solves}{} of Equation~(\ref{syst}), the $n$ nearest neighbors to $\vx_j$ need to be located. This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. \eb{}{While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. }{3.1}
+For each of the $N$ small system solves of Equation~(\ref{syst}), the $n$ nearest neighbors to $\vx_j$ need to be located. This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. 
 
 \subsection{Hyperviscosity}
 
-For RBF-FD, \eb{the DMs are}{differentiation matrices encode convective operators of the form 
+For RBF-FD, differentiation matrices encode convective operators of the form 
 \begin{equation}
 D = \alpha \pd{}{\lambda} + \beta \pd{}{\theta} \label{eqconv}
-\end{equation}}{1.13}where $\alpha$ and $\beta$ are a function of the fluid velocity. The convective operator, discretized
+\end{equation}
+where $\alpha$ and $\beta$ are a function of the fluid velocity. The convective operator, discretized
 through RBF-FD, has eigenvalues 
-%\ge{shown}{given}{1.13} 
+%given 
  in the right half-plane causing the method to be unstable~\cite{FornbergLehto11, FlyerLehto11}. 
-%\eb{for hyperbolic equations since they have no inherent damping}{}{1.13}. 
-%\ge{}{Shorter previous sentence. What diff operator is being discretized by DM?}{1.13}
+%. 
+%Shorter previous sentence. What diff operator is being discretized by DM?
 Stabilization of the RBF-FD method is achieved through the application of a hyperviscosity filter 
-to Equation~(\ref{eqconv}) \cite{FornbergLehto11}. By \ge{using of Gaussian}{using Gaussian}{1.14} 
+to Equation~(\ref{eqconv}) \cite{FornbergLehto11}. By using Gaussian 
  RBFs, $\phi(r) = e^{-(\epsilon r)^2}$, the hyperviscosity (a high order Laplacian operator) simplifies to
 \begin{equation}
 \Delta^{k}\phi(r) = \epsilon^{2k} p_k(r) \phi(r)
@@ -79,19 +77,11 @@ to Equation~(\ref{eqconv}) \cite{FornbergLehto11}. By \ge{using of Gaussian}{usi
 \end{equation}
 where $k$ is the order of the Laplacian and  $p_k(r)$ are multiples of generalized Laguerre polynomials that
 are generated recursively (see Section 3.2 \cite{FornbergLehto11}). We assume a 2D  Laplacian operator 
-when working on the surface of the sphere since a local stencil can be viewed as \eb{}{lying on}{1.15} a plane.
+when working on the surface of the sphere since a local stencil can be viewed as lying on a plane.
 %Since the purpose of hyperviscosity is to suppress the highly oscillatory modes while leaving all the smooth ones intact, it suffices to ignore the local curvature of the sphere, and calculate $\Delta^{k}\phi(r)$ as if the RBF-FD stencil was located on a 2D flat plane.
-\ge{}{Although it is clear that when the diameter of the stencil is not sufficiently 
-small compared to the radius of the sphere, that the hyperviscosity might not work as advertised,
-numerical evidence suggests that if the RBFs adequately resolve the convective operator, the 2D 
-hyperviscosity operator does its job. 
-We base our work on the work of Fornberg and Lehto \cite{FornbergLehto11}, which was
-performed on a sphere, and tune our parameters following their guidelines. 
-%If a resolution of $N$ nodes is adequate at one sphere radius, it will be adequate for all radii. 
-}{}
-%\eb{}{A 2D approximation for the hyperviscosity suffices because its only role is to suppress spurious unphysical modes. The scale of hyperviscosity, on the order of $10^{-30}$, makes this a completely harmless assumption even in the case when the stencil radius is large relative to the size of the sphere.}{2.8}
+%A 2D approximation for the hyperviscosity suffices because its only role is to suppress spurious unphysical modes. The scale of hyperviscosity, on the order of $10^{-30}$, makes this a completely harmless assumption even in the case when the stencil radius is large relative to the size of the sphere.
 
-%\ge{}{I do not understand question 2.8}{2.8}
+%I do not understand question 2.8
 
 In the case of parabolic and hyperbolic PDEs, hyperviscosity is added as a filter to the right hand side of the evaluation. For example, at the continuous level, 
 the equation solved takes the form
@@ -99,15 +89,15 @@ the equation solved takes the form
 \pd{u}{t} = - D u + H u,
 \label{eq:evaluation_with_hyperviscosity}
 \end{equation}
-%\ge{}{Address the issue of continuous versus discrete form. Use words operator and matrix properly.}{2.9} \authnote{Double check}
-where $D$ is the \eb{ DM operator for the PDE}{PDE operator}{2.9}, and $H$ is the hyperviscosity \eb{operator matrix}{filter operator}{2.9}.
+%Address the issue of continuous versus discrete form. Use words operator and matrix properly. \authnote{Double check}
+where $D$ is the PDE operator, and $H$ is the hyperviscosity filter operator.
 Applying hyperviscosity shifts all the eigenvalues of D to the left half of the complex plane. 
 This shift is controlled by $k$, the order of the Laplacian, and a scaling parameter $\gamma_c$, defined by
 \begin{equation*}	
 H = \gamma \Delta^{k} = \gamma_c N^{-k} \Delta^{k}.
 \end{equation*}
 Given a choice of $\epsilon$ (see Section~\ref{sec:numerical_validation}), it was found experimentally that $\gamma = \gamma_c N^{-k}$  provides stability and good accuracy for all values of $N$ considered here. It also ensures that the viscosity vanishes as $N\rightarrow\infty$ \cite{FlyerLehto11}.
-In general, the larger the stencil size, the higher the order of the Laplacian.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \eb{\cite{Fornberg2011a}}{\cite{FornbergLehto11,FlyerLehto11}}{}.
+In general, the larger the stencil size, the higher the order of the Laplacian.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \cite{FornbergLehto11,FlyerLehto11}.
 
 
 \section{Cut from Paper1}

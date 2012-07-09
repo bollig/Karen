@@ -1,0 +1,9 @@
+
+Remove Tracked Changes.
+In VIM this can be done with the following regular expression: 
+
+:s/\\\(eb\|ge\){.\{-}}{\(.\{-}\)}{.\{-}}/\2/g
+
+- Search for: 
+    \eb or \ge followed by {<content1>}{<content2>}{<content3>} 
+  Replace string with <content2>
