@@ -1,0 +1,130 @@
+%!TEX root = prospectus.tex
+
+We propose the implementation of an efficient multi-node, multi-GPU RBF PDE package to run on a heterogeneous cluster of compute nodes, 
+each with one or more GPUs attached. Specifically, we will utilize hardware available in the Department of Scientific 
+Computing: the ACM cluster. As will be explained, the ACM cluster is moderately sized, but for true scaling tests a larger cluster 
+such as the TeraGrid Lincoln cluster will be required. For a survey of heterogeneous clusters that leverage co-processors like GPUs, refer to \cite{Goeddeke:2007}.
+
+%The term \emph{heterogeneous} 
+
+\section{ACM Cluster (FSU)}
+
+ The ACM cluster at Florida State University is funded by SCREM-NSF 0724273 titled
+"SCREMS: High Performance Computing and Visualization",
+with PI Gordon Erlebacher of the Department of Scientific Computing, and other faculty in the Department of Mathematics. The 
+cluster of one head node and 20 compute nodes %(one is currently missing) 
+is composed of homogenous CPUs. Each node 
+contains two dual-core Opteron 2.2 GHz CPUs (4 cores total) and 4 GB of RAM. Nodes are connected via 4X DDR Infiniband. 
+%(5 Gbit/s).  
+
+The homogeneity of the cluster is lost when 
+computing on with GPUs (see Table~\ref{tbl:acm_gpus}).  
+With each Tesla C1060 capable of roughly 933 GFLOPS in single precision, the peak performance of ACM in multi-core 
+compute mode is about 16 TFLOPS. Double precision is reduced to roughly 78 GFLOPS on the 
+C1060s \cite{TeslaSpec:2008}. At 20 compute nodes, ACM is a small cluster sufficient for development, but not large 
+enough to thoroughly test scaling properties.
+
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{|C|C|c|C|C|}
+\# of Nodes & \# GPUs per Node & GPU Name & Global Device Memory Size & Compute Capability \\
+\hline
+16 & 1 & Tesla C1060 & 4 GB & 1.3 \\
+3 & 1 & Tesla C870 & 1.5 GB & 1.0 \\
+1 & 1 & GeForce 8500 GT & 0.25 GB & 1.1\\
+1 & 0 & (ACM head-node) & N/A & N/A 
+\end{tabular}
+\end{center}
+\caption{Heterogeneous configuration of ACM cluster. The last entry represents the ACM head node which has no GPU 
+attached. }
+\label{tbl:acm_gpus}
+\end{table}%
+
+The Compute Capability listed in Table~\ref{tbl:acm_gpus} specifies the GPU's support for advancements such as atomic functions (introduced in 1.1) and double IEEE754 floating point precision (introduced in 1.3) \cite{CudaGuide:2008}. When programming in CUDA, we will only use the homogeneous component of the cluster. On the other hand, we might experiment with homogeneous computing with the OpenCL version of the code. 
+
+%\toevan{mention the peak transfer rates for Infiniband, GPU-CPU, CPU-GPU, GPU-GPU}
+
+\section{Lincoln}
+
+One of the large heterogeneous GPU clusters made available through the TeraGrid is NCSA's Lincoln \cite{Lincoln:2009}. Lincoln sports 192 compute nodes containing Dell PowerEdge 1950 dual-socket nodes with quad-core Intel Harpertown 2.33GHz processors (8 cores per node) and 16GB of memory. This gives Lincoln a total of 1536 total CPU cores. Attached to the compute nodes are 96 NVIDIA Tesla S1070 accelerator units each containing 4 Tesla GPUs (compute capability 1.3) and 16 GB of Global Device Memory for a total of 384 GPU units. The peak performance of a Tesla S1070 is roughly 4 TFLOPS for single precision and 345 GFLOPS for double precision. Each of the 192 compute nodes in Lincoln is connected to two of the Tesla S1070s via PCI-e Gen2 X8. Compute nodes are connected via Infiniband SDR. The peak performance of Lincoln considering both GPU and CPU computation is 47.5 TFLOPS \cite{Lincoln:2009}. 
+
+Lincoln is a heterogeneous multi-core compute platform, with heterogeneity arising from the ability to compute on both the CPU and GPU. G\"{o}ddeke et al. \cite{Goeddeke:2007} call this \emph{local heterogeneity}, in contrast to ACM where the hardware attached to individual nodes is heterogeneous and called \emph{global heterogeneity}. 
+%
+%\section{Performance, Efficiency and Saturation}
+
+%When working with GPUs, the PCI-e bus connecting the CPU and GPU becomes the bottleneck \cite{Goeddeke:2007a}.
+
+%\cite{Goeddeke:2007a} Amortizing the overhead of transfers to the GPU requires sufficient computation. 
+
+
+
+%\toevan{A large number of cores (differentiate between multi- and many- core architectures)}
+
+%\toevan{Need details on the peak transfer rates for different pipelines}
+%\begin{itemize}
+%	\item GPU-GPU
+%	\item CPU-GPU
+%	\item GPU-CPU
+%	\item Infiniband
+%	\item CPU-RAM
+%\end{itemize}
+%
+%Popular accelerators currently deployed include the Cell Broadband Engine (Cell BE), PhysX Boards (?), and graphics 
+%processing units (GPUs) including NVidia CUDA processors (GeForce, Quadro, Tesla) and ATIs Close To the Metal (CTM) 
+%boards.
+% 
+% This chapter: 
+% \begin{itemize}
+% 	\item CUDA architecture (what changes were made to nvidia hardware? number of multiprocessors, memory size, shared 
+%memory size, register count)
+%	\item Cell BE (SPUs, PPUs)
+%	\item FPGAs
+%	\item Clusters that leverage accelerators (acm, lincoln, etc)
+%\end{itemize}
+
+%Need details on which hardware and and clusters we will test (or does this belong in the proposal section?)
+
+%\
+
+
+\section{Future Hardware}
+
+In Spring 2010, NVidia will publicly release a new architecture code named "Fermi" \cite{Fermi:2009}. The new hardware will support many features of interest, the most important being 8x faster double precision than the older Tesla C1060 (GT200 architecture). It will also allow for concurrent kernel execution (for up to 16 small kernels) making it easier to keep the GPU saturated with computation. Table~\ref{tbl:fermi_compare} considers some of the more monumental differences between the Fermi and GT200 architectures.
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{D|C|C|}
+ & Fermi & GT200 \\ 
+ \hline\hline
+ \# of concurrent kernels & 16 & 1 \\
+ Warps scheduled concurrently & 2 & 1 \\
+ Clock cycles to dispatch instruction to warp & 2 & 4 \\
+ Caching on Global Device Memory & Yes & No \\
+ Shared memory & 64 KB & 16 KB \\
+ Shared memory banks & 32 & 16 \\
+ Bank conflict free FP64 access & Yes & No \\
+ Cycles to read FP64 (from shared memory) & 2 & 32 \\
+ Max allowed warps & 48 & 32 \\
+\end{tabular}
+\end{center}
+\caption{Comparison of NVidia's new Fermi architecture to the GT200 architecture used for GTX 280, Tesla C1060 and other GPUs in use today.}
+\label{tbl:fermi_compare}
+\end{table}%
+
+While there has been no word yet as to the date of availability (only speculation for Q1 2010), the Fermi architecture is anticipated to cost around \$2,500 to \$4,000 for the Tesla C2050 (3 GB Global Device Memory) and C2070 (6 GB Global Device Memory) units respectively \cite{FermiPrice:2009}.
+
+Additionally, the FSU HPC group (supported by the Department of Scientific Computing) has several grants in play, which may lead to the acquisition of an additional GPU cluster. 
+
+%In this section we survey existing hardware features, and their existence in large clusters.
+%\begin{verbatim}
+%\subsection{Dedicated HPC accelerators} GRAPE, TSUBAME \cite{Goeddeke:2007}
+%\subsection{Field Programmable Gate Arrays (FPGAs)} \cite{Goeddeke:2007}
+%\subsection{Cell Broadband Engine}
+%\subsection{ClearSpeed} Mentioned in \cite{Goeddeke:2009}
+%\subsection{Merrimac} Mentioned in \cite{Goeddeke:2009} (Erez:2007)
+%\subsection{PhysX?}
+%\subsection{NVidia GPUs}
+%Commodity: GeForce, Quadro
+%Tesla
+%\subsection{ATI GPUs}
+%FireStream
+%\end{verbatim}
