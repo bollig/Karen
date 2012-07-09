@@ -12,7 +12,7 @@ Evaluation of the right hand side of Equation~(\ref{eq:evaluation_with_hypervisc
 
 
 
-\eb{}{Our current implementation assumes that we are computing on a cluster of CPUs, with one GPU attached to each CPU. The CPU maintains control of execution and launches kernels on the GPU that execute in parallel. Under the OpenCL standard \cite{OpenCL2009}, a tiered memory hierarchy is available on the GPU with \textit{global device memory} as the primary and most abundant memory space. The memory space for GPU kernels is separate from the memory available to a CPU, so data must be explicitly copied to/from global device memory on the GPU. }{2.11}
+Our current implementation assumes that we are computing on a cluster of CPUs, with one GPU attached to each CPU. The CPU maintains control of execution and launches kernels on the GPU that execute in parallel. Under the OpenCL standard \cite{OpenCL2009}, a tiered memory hierarchy is available on the GPU with \textit{global device memory} as the primary and most abundant memory space. The memory space for GPU kernels is separate from the memory available to a CPU, so data must be explicitly copied to/from global device memory on the GPU. 
 
 
 \subsection{Memory Layout}
@@ -26,22 +26,14 @@ Implementations on the GPU are more efficient when node indices
 are sequential. Therefore, we also assign a local index for the nodes on 
 a given CPU, which run from 1 to the maximum number of nodes on that CPU. 
 
-\ge{}{It is convenient to break up the nodes on a given CPU into various sets
+It is convenient to break up the nodes on a given CPU into various sets
 according to whether they are sent to other processors, are retrieved from 
 other processors, are permanently on the processor, etc. Note as well, 
 that each node has a home processor since the RBF nodes are partitioned into 
-multiple domains without overlap.}{}
-Table~\ref{tbl:stencil_sets}, defines the collection of index lists that each CPU must maintain for both multi-CPU and multi-GPU implementations. \eb{In the context of multi-GPU, with the CPU managing mappings between global and local indices, the GPU operates on the local indices as if a single CPU/GPU implementation is running.}{}{} 
+multiple domains without overlap.
+Table~\ref{tbl:stencil_sets}, defines the collection of index lists that each CPU must maintain for both multi-CPU and multi-GPU implementations.  
 
-\eb{Figure~{\ref{fig:stencilSets2CPU}} shows three stencils 
-with centers $x$, $y$, and $z$. The global collection of nodes is distributed
-across processors in such a way that the evaluation of derivatives and the 
-solution update 
-is the responsibility of a single CPU-GPU pair. To better understand what follows, we consider the calculations and requirements as seen from the 
-	perpective a
-	a single CPU/GPU pair. We denote the set of  stencil centers that a CPU will update as $\setCenters$. 
-		RBF-FD stencils may span one or several partitions---represented in the figure by CPU1 and CPU2. To evaluate derivatives, solution values at nodes outside of $\setCenters$ must be obtained from other CPUs. We let $\setAllNodes$ represent the full set of nodes that a CPU interacts with.
- }{ 
+
 Figure~{\ref{fig:stencilSets2CPU}} illustrates a configuration with two 
 CPUs and two GPUs, and 9 stencils, four on CPU1, and five on CPU2, separated
 by a vertical line in the figure. Each stencil
@@ -54,9 +46,8 @@ CPU1 and CPU2.
 Since each CPU is responsible for the derivative evaluation and solution updates for any stencil center, it is clear that some nodes have a stencil with nodes that are on a different CPU. For example, node 8 on CPU1 has a stencil comprised of
 nodes 4,5,6,9, and itself. The data associated with node 6 must be retrieved
 from CPU2. Similarly, the data from node 5 must be sent to CPU2 to 
-complete calculations at the center of node 6.}{3.intro}     
+complete calculations at the center of node 6.
 
-\eb{}{
 The set of all nodes that a CPU interacts with is denoted by $\setAllNodes$, which includes not only the nodes stored on the CPU, but the nodes required from other CPUs to complete the calculations. 
 The set $\setCenters\in\setAllNodes$ contains the nodes at which the CPU 
 will compute derivatives and apply solution updates. 
@@ -71,13 +62,8 @@ The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices co
  is designed to simplify both CPU-CPU and CPU-GPU memory transfers by grouping nodes of similar type. The color of the global and local indices in the figure
  indicate the sets to which they belong. They are as follows: white represents $\setCenters \backslash \setBoundary$, 
  yellow represents $\setBoundary \backslash \setProvide$, green indices 
- represent $\setProvide$, and red represent $\setDepend$.  }{3.intro}
+ represent $\setProvide$, and red represent $\setDepend$.  
 
-\eb{
-While the subset of solution values corresponding to $\setCenters \subseteq \setAllNodes$ are stored locally on a CPU, the remaining values, 
-indexed by $\setDepend = \setAllNodes \backslash \setCenters$, 
-are received via MPI prior to evaluating Equation~({\ref{eq:evaluation_with_hyperviscosity})}. 
-Similarly, solution values that correspond to nodes sent to other processes---that is, nodes in another CPU's $\mathcal{R}$---are denoted by $\mathcal{O}$. }{}{3.intro}
 
         \begin{table}[t]
             \begin{center}
@@ -100,16 +86,13 @@ Similarly, solution values that correspond to nodes sent to other processes---th
         \begin{figure}[ht] 
             \centering
             \includegraphics[width=3.5in]{paper1/figures/omnigraffle/SimpleExample.pdf} 
-            \caption{\eb{}{Partitioning, index mappings and memory transfers for nine stencils ($n=5$) spanning two CPUs and two GPUs. Top: the directed graph created by stencil edges is partitioned for two CPUs. Middle: the partitioned stencil centers are reordered locally by each CPU to keep values sent to/received from other CPUs contiguous in memory. Bottom: to synchronize GPUs, CPUs must act as intermediaries for communication and global to local index translation. Middle and Bottom: color coding on indices indicates membership in sets from Table~\ref{tbl:stencil_sets}: $\setCenters \backslash \setBoundary$ is white, $\setBoundary \backslash \setProvide$ is yellow, $\setProvide$ is green and $\setDepend$ is red.}{}
+            \caption{Partitioning, index mappings and memory transfers for nine stencils ($n=5$) spanning two CPUs and two GPUs. Top: the directed graph created by stencil edges is partitioned for two CPUs. Middle: the partitioned stencil centers are reordered locally by each CPU to keep values sent to/received from other CPUs contiguous in memory. Bottom: to synchronize GPUs, CPUs must act as intermediaries for communication and global to local index translation. Middle and Bottom: color coding on indices indicates membership in sets from Table~\ref{tbl:stencil_sets}: $\setCenters \backslash \setBoundary$ is white, $\setBoundary \backslash \setProvide$ is yellow, $\setProvide$ is green and $\setDepend$ is red.
             }
             \label{fig:stencilSets2CPU}
         \end{figure}	
 
-  \eb{      To simplify memory transfers to and from the GPU, the set $\setAllNodes$ is ordered with additional structure. We let $\mathcal{B}$ represent indices of nodes that are in $\mathcal{O}$ or have stencils that depend on values from $\mathcal{R}$. In Figure~{\ref{fig:stencilSets2CPU}} the stencil center $y\in\mathcal{B}$, $y\in\mathcal{O}$, $x\in \mathcal{Q \backslash B}$, and $z\in \mathcal{R}$. The set difference $\mathcal{B} \backslash \mathcal{O}$ represents a subset of $\mathcal{G}$ that is not sent to other CPUs via MPI, but which depends on  values in $\mathcal{R}$ to be received. 
-}{}{3.intro}
- 
- \eb{Our implementation stores nodes and solution values following the ordering of $\setAllNodes$ given by (commented equation:)
-where nodes and values involved in send or receive MPI communication appear last. This ordering}{The structure of $\setAllNodes$}{} offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient \eb{MPI}{}{}data transfers. Second, asynchronous communication \eb{via MPI}{}{}allows for the overlap of communication and computation. This will be considered as part of \eb{a}{}{}future research on algorithm optimization.  Distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ while waiting on $\mathcal{R}$. 
+   
+ The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap of communication and computation. This will be considered as part of future research on algorithm optimization.  Distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ while waiting on $\mathcal{R}$. 
 
 
 
@@ -120,19 +103,12 @@ When targeting the GPU, communication of solution or intermediate values is a fo
 	\item Transfer $\mathcal{R}$ to the GPU
 	\item Launch a GPU kernel to operate on $\mathcal{Q}$
      \end{enumerate} 
-\eb{}{The data transfers involved in this process are illustrated at the bottom of Figure~\ref{fig:stencilSets2CPU}.}{}
-    Each GPU operates on \eb{a locally numbered set of nodes}{the local indices}{} ordered 
-according to Equation~(\ref{eqn:decompose_g}). \eb{}{The set 
+The data transfers involved in this process are illustrated at the bottom of Figure~\ref{fig:stencilSets2CPU}.
+    Each GPU operates on the local indices ordered 
+according to Equation~(\ref{eqn:decompose_g}). The set 
 $\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU then maps local to global indices and transfers $\setProvide$ to other CPUs. CPUs send only the subset of node values from $\setProvide$ that is required by the destination processors, but it is important to note that node information might be sent to several destinations. 
-As the set $\setDepend$ is received, the CPU converts back from global to local indices before copying a contiguous block of memory to the GPU. }{}
-\eb{	The CPU, however, must know the mapping
-        between the local numbering system on its attached GPU and the global
-        indexing accessible to all CPUs. The CPU converts indices from global to
-        local when nodes are received from other CPUs and from local to global
-        indices when sending to other CPUs. 
-        Currently, the grid is static, so that only the
-        two-way mapping relevant to the GPU attached to the CPU is stored
-        locally. }{}{} 
+As the set $\setDepend$ is received, the CPU converts back from global to local indices before copying a contiguous block of memory to the GPU. 
+
         This approach is scalable to a very large number of 
 		processors, since the individual processors do not require the 
 		full mapping between RBF nodes and CPUs. 
@@ -140,9 +116,8 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
 Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of $N=10,201$ nodes on the unit sphere onto four CPUs. Each partition, illustrated as a unique color, represents set $\setAllNodes$ for a single CPU. 
 Alternating representations between node points and interpolated surfaces illustrates the overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes requiring MPI communication) reside. As stencil size increases, the width of the overlap regions relative to total number of nodes on the sphere also increases. 
 
-\eb{}{
 The linear partitioning in Figure~\ref{fig:decomposed_sphere} was chosen for ease of implementation. Communication is limited for each
-processor to left and right neighbors only, which simplifies parallel debugging. This partitioning, however, does not guarantee properly balanced computational work-loads. Other partitionings of the sphere exist but are not studied here because this paper's focus is neither on efficiency nor on selecting a partitioning strategy for maximum accuracy. Examples of alternative approaches include a cubed-sphere \cite{Ivan2011} or icosahedral geodesic grid \cite{Randall2002}, which can evenly balance the computational load across partitions. Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. }{1.16} 
+processor to left and right neighbors only, which simplifies parallel debugging. This partitioning, however, does not guarantee properly balanced computational work-loads. Other partitionings of the sphere exist but are not studied here because this paper's focus is neither on efficiency nor on selecting a partitioning strategy for maximum accuracy. Examples of alternative approaches include a cubed-sphere \cite{Ivan2011} or icosahedral geodesic grid \cite{Randall2002}, which can evenly balance the computational load across partitions. Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
 
 \begin{figure}[ht!]
 \begin{center}
@@ -178,18 +153,16 @@ where each equation has a corresponding kernel launch. To handle a variety of Ru
 \item $\mathbf{k}_i = \Delta t f(t_n + \alpha_{i} \Delta t, \mathbf{u}_n + \alpha_{i} \mathbf{k}_{i-1})$, for steps $i=1,2,3,4$, and
 \item  $\mathbf{u}_n + \alpha_{i+1} \mathbf{k}_i$
 \end{enumerate} 
-We choose $\alpha_{i}=0, \frac{1}{2}, \frac{1}{2}, 1, 0$ and $\mathbf{k}_{0} = \mathbf{u}_n$. The second output for each $\mathbf{k}_{i=1,2,3}$ serves as input to the next evaluation, $\mathbf{k}_{i+1}$. In an effort to avoid an extra kernel launch---and corresponding\eb{ global}{}{2.11} memory loads---the SAXPY that produces the second output uses the same evaluation kernel. Both outputs are stored in global device memory. When the computation spans multiple GPUs, steps $\mathbf{k}_{1\rightarrow3}$ are each followed by a communication barrier to synchronize the subsets $\mathcal{O}$ and $\mathcal{R}$ of the second output (this includes copying the subsets between GPU and CPU). An additional synchronization occurs on the updated  solution, $\mathbf{u}_{n+1}$, to ensure that all GPUs share a consistent view of the solution going into the next time-step.
+We choose $\alpha_{i}=0, \frac{1}{2}, \frac{1}{2}, 1, 0$ and $\mathbf{k}_{0} = \mathbf{u}_n$. The second output for each $\mathbf{k}_{i=1,2,3}$ serves as input to the next evaluation, $\mathbf{k}_{i+1}$. In an effort to avoid an extra kernel launch---and corresponding memory loads---the SAXPY that produces the second output uses the same evaluation kernel. Both outputs are stored in global device memory. When the computation spans multiple GPUs, steps $\mathbf{k}_{1\rightarrow3}$ are each followed by a communication barrier to synchronize the subsets $\mathcal{O}$ and $\mathcal{R}$ of the second output (this includes copying the subsets between GPU and CPU). An additional synchronization occurs on the updated  solution, $\mathbf{u}_{n+1}$, to ensure that all GPUs share a consistent view of the solution going into the next time-step.
 
-\eb{Evaluation of Equation~({\ref{eq:evaluation_with_hyperviscosity})} depends on sparse matrix-vector multiplication, one per operator. Matrix-vector multiplication corresponds to steps $\mathbf{k}_{1\rightarrow4}$. The DM, $D$, is formed from a collection of one or more operators. $H$ has one operator. The GPU kernel parallelizes across stencils, with all operators for a single stencil applied through successive sparse vector dot products. The multiple sparse vector dot products attempt to keep solution values from global device memory in register or cache memory for faster reuse. }{To evaluate $\mathbf{k}_{1\rightarrow4}$, the discretized operators from Equation~(\ref{eq:evaluation_with_hyperviscosity}) are applied using sparse matrix-vector multiplication. If the operator $D$ is composed of multiple derivatives, a differentiation matrix for each derivative is applied independently, including an additional multiplication for the discretized $H$ operator.
- On the GPU, the kernel parallelizes across rows of the DMs, so all derivatives for stencils are computed in one kernel call.}{2.12} 
+To evaluate $\mathbf{k}_{1\rightarrow4}$, the discretized operators from Equation~(\ref{eq:evaluation_with_hyperviscosity}) are applied using sparse matrix-vector multiplication. If the operator $D$ is composed of multiple derivatives, a differentiation matrix for each derivative is applied independently, including an additional multiplication for the discretized $H$ operator.
+ On the GPU, the kernel parallelizes across rows of the DMs, so all derivatives for stencils are computed in one kernel call.
 
 
-\eb{}{
 For the GPU, the OpenCL language \cite{OpenCL2009} assumes a lowest common denominator of hardware capabilities to provide functional portability. For example, all target architectures are assumed to support some level of SIMD (Single Instruction Multiple Data) execution for kernels. Multiple \textit{work-items} execute a kernel in parallel. 
 A collection of work-items performing the same task is called a \textit{work-group}. While a user might think of work-groups as executing all work-items simultaneously, the work-items are divided at the hardware level into one or more SIMD \textit{warps}, which are executed by a single multiprocessor. On the family of Fermi GPUs, a warp is 32 work-items \cite{CudaGuide2011}. 
 OpenCL assumes a tiered memory hierarchy that provides fast but small \textit{local memory} space that is shared within a work-group \cite{OpenCL2009}. Local memory on Fermi GPUs is 48 KB per multiprocessor \cite{CudaGuide2011}. The \textit{global device memory} allows sharing between work-groups and is the slowest but most abundant memory. 
 In the GPU computing literature, the terms \textit{thread} and \textit{shared memory} are synonymous to \textit{work-item} and \textit{local memory} respectively, and are preferred below. 
-}{}
 
 Although the primary focus of this paper is the implementation 
 and verification of the RBF-FD method across multiple CPUs and GPUs, 
@@ -207,14 +180,14 @@ All the computation on the GPU is performed in 8-byte double precision.
 
 In this first implementation, each thread computes 
 the derivative at one stencil center  (Figure~\ref{fig:oneThreadPerStencil}). 
-The advantage of this approach is trivial concurrency.  Since each stencil has the same number of neighbors, each derivative has an identical number of computations. As long as the number of stencils is a multiple of the warp size, there are no idle threads. Should the total number of stencils be less than a multiple of the warp size, \eb{the last partial warp of threads might have divergences, leading to unused threads, although}{the final warp would contain idle threads, but}{} the impact on efficiency would be minimal assuming the stencil size is sufficiently large. 
+The advantage of this approach is trivial concurrency.  Since each stencil has the same number of neighbors, each derivative has an identical number of computations. As long as the number of stencils is a multiple of the warp size, there are no idle threads. Should the total number of stencils be less than a multiple of the warp size, the final warp would contain idle threads, but the impact on efficiency would be minimal assuming the stencil size is sufficiently large. 
 
 Perfect concurrency from a logical point of view does not 
 imply perfect efficiency in practice. 
 Unfortunately, the naive approach 
 is memory bound. When threads access weights in global memory, 
 a full warp accesses a 128-byte segment in a single memory operation \cite{CudaGuide2011}.
-Since each thread handles a single stencil, the various threads in a warp access data in very disparate areas of global memory, rather than the same segment. This leads to very large slowdowns as \ge{the extra}{extra}{2.13} memory operations are added for each 128-byte segment that the threads of a warp must access.
+Since each thread handles a single stencil, the various threads in a warp access data in very disparate areas of global memory, rather than the same segment. This leads to very large slowdowns as extra memory operations are added for each 128-byte segment that the threads of a warp must access.
 However, with stencils sharing many common nodes, and the Fermi hardware providing caching, some weights in the unused portions of the segments might remain in cache long enough to hide the cost of so many additional memory loads. 
 
 
@@ -242,8 +215,8 @@ Should  a stencil be larger than the warp size, the warp iterates over the stenc
 
 By operating on a warp by warp basis, weights for a single stencil are loaded with a reduced number of memory accesses. Memory loads for the solution vector remain random access but see some benefit when solution values for a stencil are in a small neighborhood in the memory space. Proximity in memory can be controlled by node indexing (see e.g., \cite{Bollig2011} and \cite{Connor2009}). 
 
-For stencil sizes smaller than 32, some threads in the warp always remain idle. Idle threads do not slow down the computation within a warp, but under-utilization of the GPU is not \ge{desireable}{desirable}{2.15}. For small stencil sizes, caching on the Fermi can hide some of the cost of memory loads for the naive approach, with no idle threads, making it more efficient. The real strength of one warp per stencil is seen for large stencil sizes. 
-\eb{}{As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. }{}
+For stencil sizes smaller than 32, some threads in the warp always remain idle. Idle threads do not slow down the computation within a warp, but under-utilization of the GPU is not desirable. For small stencil sizes, caching on the Fermi can hide some of the cost of memory loads for the naive approach, with no idle threads, making it more efficient. The real strength of one warp per stencil is seen for large stencil sizes. 
+As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. 
 
 
 
