@@ -5,6 +5,16 @@
 %\usepackage{hyperref}
 %\hypersetup{breaklinks=true}
 
+
+% Added packages
+\usepackage[usenames]{color}
+\usepackage{subfigure}
+\usepackage{amsfonts, amsmath, amssymb, graphics}
+
+% NOTE: bibentry MUST appear before the hyperref or build will fail
+\usepackage{bibentry}
+\nobibliography*
+
 \usepackage[
     hyperindex=true,		% Make numbers of index links as well
    	backref=page, 		% Provide page listing where refs occur in the bibliography
@@ -17,12 +27,6 @@
 ]{hyperref}
 
 
-% Added packages
-\usepackage[usenames]{color}
-\usepackage{subfigure}
-\usepackage{amsfonts, amsmath, amssymb, graphics}
-\usepackage{bibentry}
-\nobibliography*
 
 \title{PDE Solutions with RBF-FD and Multiple GPUs}
 \author{Evan F. Bollig}
@@ -148,7 +152,7 @@ need Survey of goals stated in prospectus and whether they were completed or not
 %\nocite{Vuduc2005}
 
 \bibliographystyle{plain}
-\bibliography{paper1_references}
+\bibliography{paper1_references,pr_2012_references}
 
 %\input{biography.tex}
 
