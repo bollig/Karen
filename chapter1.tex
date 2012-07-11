@@ -13,34 +13,35 @@ Differences (RBF-FD).
 \hl{fix:}
 Many scientific problems of importance can be expressed as a
 collection of PDEs. Solutions to these problems provide answers to many simple
-questions such as the current temperature of a material, or the
-current position of a moving object. More complicated systems of
-PDEs even allow one to model the flow of fluids.
+questions such as the current temperature of a material, or perhaps the
+current position of a moving object. Complex and coupled PDEs can simulate the growth of zebra stripes or cheetah spots \cite{FuselierWright2012} or even model the flow of fluids. \hl{Need refs for examples}
 
-The task of solving PDEs 
+
 In order to solve these problems, computational numerical
 methods are employed on a discretized version of the domain.
-Traditionally, three major categories exist for PDE solutions:
+Traditionally, three \hl{(and how would I classify FV? PartOfUnity?)} major categories exist for PDE solutions:
 finite difference (FD), finite element (FEM) and spectral
-element (SEM) \cite{Fasshauer:2007}. Interestingly, all three of
+element (SEM) \cite{Fasshauer2007}. Interestingly, all three of
 these methods rely on an underlying mesh, making them
 \emph{meshed methods}. While each has had a turn in the
 spotlight, more recently a new category, or rather a
 generalization on all three previous categories, has emerged:
 \emph{meshfree methods}.
 
+Traditional methods 
+
 The first task in traditional meshed methods is to generate an
 underlying grid/mesh. Node placement can be done in a variety of
 ways including uniform, non-uniform and random (monte carlo)
 sampling, or through iterative methods like Lloyd's algorithm
 that generate a regularized sampling of the domain (see e.g.,
-\cite{Du:1999}). In addition to choosing nodes, meshed methods
+\cite{Du1999}). \hl{Mesh2d, Triangle, DIstmesh} In addition to choosing nodes, meshed methods
 require connectivity/adjacency lists to form stencils (FD) or
 elements (FEM, SEM)---this implies an added challenge to cover
 the domain closure with a chosen element type. While these tasks
 may be straightforward in one- or two-dimensions, the extension
 into higher dimensions becomes increasingly more cumbersome
-\cite{Li:2007}. 
+\cite{Li2007}. 
 %Also, in higher dimensions some methods either function only under special
 %circumstances (e.g., regular grids), or fail altogether \cite{Li:2007}. 
 
@@ -52,7 +53,7 @@ of the domain. Multiresolution methods attempt to compromise between accurate ap
 reduced resolution by one of two approaches: a) \emph{multilevel methods} that decompose the model into a hierarchy with 
 several levels of mesh detail, then only use a level when it is required to capture phenomena; and b) \emph{adaptive irregular 
 sampling} which has one level of detail, but non-uniform nodal density concentrated in areas of high activity \cite
-{Iske:2004}. Such techniques require robust methods and complex code capable of either coarsening/smoothing the 
+{Iske2004}. Such techniques require robust methods and complex code capable of either coarsening/smoothing the 
 approximate solutions to new level, or handling non-uniform node placement, element size etc. 
 
 Ideally, we seek a method defined on arbitrary geometries, that behaves regularly in any dimension, and avoids the cost of 
@@ -61,10 +62,9 @@ methods provide all of these properties: based wholly on a set of independent po
 there is no cost for mesh generation, and refinement is as simple as adding new points where 
 they are needed. 
 
-Since their adoption by the mathematics community in the 1980s (\cite{Fasshauer:2007}), a plethora of meshfree methods have 
+Since their adoption by the mathematics community in the 1980s (\cite{Fasshauer2007}), a plethora of meshfree methods have 
 arisen for the solution of PDEs. For example, smoothed particle hydrodynamics, partition of unity method, element-free Galerkin 
-method and others have been considered for fluid flow problems \cite{Chandhini:2007}. For a recent survey of methods see \cite{Li:2007}.
-
+method and others have been considered for fluid flow problems \cite{Chandhini2007}. For a recent survey of methods see \cite{Li2007}.
 
 A subset of meshfree methods of particular interest to the community today revolves around Radial Basis Functions (RBFs). 
 RBFs are a class of radially symmetric functions (i.e., symmetric about a point, $x_j$, called the \emph{center}) of the form: 
@@ -73,7 +73,8 @@ RBFs are a class of radially symmetric functions (i.e., symmetric about a point,
 \end{equation}
 where $\varphi(r)$ is a univariate function whose value depends only on the distance from the center point. Examples of commonly used RBFs are available in Table~\ref{tbl:rbfs} with their corresponding plots in Figure~\ref{fig:rbf_examples}. 
 
-Numerical methods based on radial basis functions (RBFs) are rapidly gaining popularity for the solution of partial differential equations (PDEs). With a history extending back four decades for RBF interpolation schemes \cite{Hardy1971}, and two decades for RBFs applied to solving PDEs \cite{Kansa1990a}, many avenues of research remain untouched within their realm. Being a meshless method, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $n$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
+%Numerical methods based on radial basis functions (RBFs) are rapidly gaining popularity for the solution of partial differential equations (PDEs). 
+With a history extending back four decades for RBF interpolation schemes \cite{Hardy1971}, and two decades for RBFs applied to solving PDEs \cite{Kansa1990a}, many avenues of research remain untouched within their realm. Being a meshless method, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $n$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
 
 Examples of infinitely smooth RBFs in 2D space are shown in Figure \ref{fig:rbfs} (good references on non-smooth and compactly supported RBFs, which are not considered in this paper due to lower order of convergence, are \cite{BuhmannBook,WendlandBook}). RBF methods are based on a superposition of translates of these radially symmetric functions, providing a linearly independent but non-orthogonal basis used to interpolate between nodes in $n$-dimensional space. An example of RBF interpolation in 2D using 15 Gaussians is shown in Figure~\ref{fig:rbfInterpolation}, where 
    $\phi_j(r(\vx))$

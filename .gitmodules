@@ -13,3 +13,6 @@
 [submodule "fsu_2012"]
 	path = fsu_2012
 	url = git@github.com:bollig/fsu_2012.git
+[submodule "locality_sensitive_hashing"]
+	path = locality_sensitive_hashing
+	url = ssh://efb06@pamd.sc.fsu.edu/~/repos/locality_sensitive_hashing.git
