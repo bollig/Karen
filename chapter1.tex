@@ -5,6 +5,74 @@
 \section{Introduction}
 \label{sec:intro}
 
+The goal of this dissertation is to present a unified approach
+to parallel solutions of Partial Differential Equations (PDEs)
+with a method called Radial Basis Function-generated Finite
+Differences (RBF-FD).
+
+\hl{fix:}
+Many scientific problems of importance can be expressed as a
+collection of PDEs. Solutions to these problems provide answers to many simple
+questions such as the current temperature of a material, or the
+current position of a moving object. More complicated systems of
+PDEs even allow one to model the flow of fluids.
+
+The task of solving PDEs 
+In order to solve these problems, computational numerical
+methods are employed on a discretized version of the domain.
+Traditionally, three major categories exist for PDE solutions:
+finite difference (FD), finite element (FEM) and spectral
+element (SEM) \cite{Fasshauer:2007}. Interestingly, all three of
+these methods rely on an underlying mesh, making them
+\emph{meshed methods}. While each has had a turn in the
+spotlight, more recently a new category, or rather a
+generalization on all three previous categories, has emerged:
+\emph{meshfree methods}.
+
+The first task in traditional meshed methods is to generate an
+underlying grid/mesh. Node placement can be done in a variety of
+ways including uniform, non-uniform and random (monte carlo)
+sampling, or through iterative methods like Lloyd's algorithm
+that generate a regularized sampling of the domain (see e.g.,
+\cite{Du:1999}). In addition to choosing nodes, meshed methods
+require connectivity/adjacency lists to form stencils (FD) or
+elements (FEM, SEM)---this implies an added challenge to cover
+the domain closure with a chosen element type. While these tasks
+may be straightforward in one- or two-dimensions, the extension
+into higher dimensions becomes increasingly more cumbersome
+\cite{Li:2007}. 
+%Also, in higher dimensions some methods either function only under special
+%circumstances (e.g., regular grids), or fail altogether \cite{Li:2007}. 
+
+Complex geometries, irregular boundaries and mesh refinement also pose a problem for meshed methods. As the complexity of 
+the geometry/boundaries increases, so too should the resolution of the approximating mesh in order to 
+accurately reconstruct the detail present. A na\"{i}ve approach to refinement increases the density of nodes uniformly across the 
+domain, adding much more computation and memory storage than necessary for activity that is localized to sub-regions 
+of the domain. Multiresolution methods attempt to compromise between accurate approximation of the domain and 
+reduced resolution by one of two approaches: a) \emph{multilevel methods} that decompose the model into a hierarchy with 
+several levels of mesh detail, then only use a level when it is required to capture phenomena; and b) \emph{adaptive irregular 
+sampling} which has one level of detail, but non-uniform nodal density concentrated in areas of high activity \cite
+{Iske:2004}. Such techniques require robust methods and complex code capable of either coarsening/smoothing the 
+approximate solutions to new level, or handling non-uniform node placement, element size etc. 
+
+Ideally, we seek a method defined on arbitrary geometries, that behaves regularly in any dimension, and avoids the cost of 
+mesh generation. The ability to locally refine areas of interest in a practical fashion is also desirable. Fortunately, meshfree 
+methods provide all of these properties: based wholly on a set of independent points in $n$-dimensional space, 
+there is no cost for mesh generation, and refinement is as simple as adding new points where 
+they are needed. 
+
+Since their adoption by the mathematics community in the 1980s (\cite{Fasshauer:2007}), a plethora of meshfree methods have 
+arisen for the solution of PDEs. For example, smoothed particle hydrodynamics, partition of unity method, element-free Galerkin 
+method and others have been considered for fluid flow problems \cite{Chandhini:2007}. For a recent survey of methods see \cite{Li:2007}.
+
+
+A subset of meshfree methods of particular interest to the community today revolves around Radial Basis Functions (RBFs). 
+RBFs are a class of radially symmetric functions (i.e., symmetric about a point, $x_j$, called the \emph{center}) of the form: 
+\begin{equation}
+\phi_j(x) = \varphi(\vectornorm{x - x_j})
+\end{equation}
+where $\varphi(r)$ is a univariate function whose value depends only on the distance from the center point. Examples of commonly used RBFs are available in Table~\ref{tbl:rbfs} with their corresponding plots in Figure~\ref{fig:rbf_examples}. 
+
 Numerical methods based on radial basis functions (RBFs) are rapidly gaining popularity for the solution of partial differential equations (PDEs). With a history extending back four decades for RBF interpolation schemes \cite{Hardy1971}, and two decades for RBFs applied to solving PDEs \cite{Kansa1990a}, many avenues of research remain untouched within their realm. Being a meshless method, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $n$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
 
 Examples of infinitely smooth RBFs in 2D space are shown in Figure \ref{fig:rbfs} (good references on non-smooth and compactly supported RBFs, which are not considered in this paper due to lower order of convergence, are \cite{BuhmannBook,WendlandBook}). RBF methods are based on a superposition of translates of these radially symmetric functions, providing a linearly independent but non-orthogonal basis used to interpolate between nodes in $n$-dimensional space. An example of RBF interpolation in 2D using 15 Gaussians is shown in Figure~\ref{fig:rbfInterpolation}, where 
@@ -22,6 +90,18 @@ is an RBF centered at $\{\vx_j\}_{j=1}^{n}$.
 \end{figure}
 
 Infinitely smooth RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon r)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2007, Fornberg2011a} allow for numerically stable computation of interpolants in the nearly flat RBF regime (i.e., $\epsilon \rightarrow 0$) where high accuracy has been observed \cite{Larsson2003, Fornberg2008}.
+
+
+RBF methods originated in 1971 with Hardy's use of the multiquadric functions for interpolation \cite{Hardy1971}. Like most numerical methods, RBFs come with certain
+limitations. For example, RBF interpolation is---in general---not a well-posed
+problem, so it requires careful choice of positive definite or conditionally
+positive definite basis functions. %(see \cite{Iske2004,Fasshauer2007} for
+%details).  
+Additionally, a support parameter $\epsilon$ included with all RBFs controls the width of the function. Decreasing this parameter increases the support of the function and accuracy of interpolation, but worsens the conditioning of the problem \cite{Schaback1995}. Traditionally, the conditioning of the system increases dramatically as the number of
+nodes increases. In effort to control this, one can choose RBFs with
+compact support---functions that are effectively zero outside of a small
+cut-off radius---in order to introduce sparsity patterns \cite{Fasshauer2007}. 
+Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2011a} allow for numerically stable computation of interpolants typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). 
 
 Historically, the most common way to implement RBFs is in a global sense. That is, the value of a function value or any of its derivatives 
 at a node location is a linear combination of all the function values over the \textit{entire} domain, just as in a pseudospectral method. If using infinitely smooth RBFs, this leads to exponential convergence of the RBF interpolant for smooth data \cite{Fornberg2005}. %(need reference 
@@ -76,16 +156,6 @@ The remainder of this paper is organized as follows: Section~\ref{sec:rbffd} int
 
 \section{Cut from Paper1}
 
-RBF methods originated in 1971 with Hardy's use of the multiquadric functions for interpolation \cite{Hardy1971}. Like most numerical methods, RBFs come with certain
-limitations. For example, RBF interpolation is---in general---not a well-posed
-problem, so it requires careful choice of positive definite or conditionally
-positive definite basis functions. %(see \cite{Iske2004,Fasshauer2007} for
-%details).  
-Additionally, a support parameter $\epsilon$ included with all RBFs controls the width of the function. Decreasing this parameter increases the support of the function and accuracy of interpolation, but worsens the conditioning of the problem \cite{Schaback1995}. Traditionally, the conditioning of the system increases dramatically as the number of
-nodes increases. In effort to control this, one can choose RBFs with
-compact support---functions that are effectively zero outside of a small
-cut-off radius---in order to introduce sparsity patterns \cite{Fasshauer2007}. 
-Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2011a} allow for numerically stable computation of interpolants typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). 
 
 
 Sufficient understanding of RBF interpolation led to the development of the first global RBF method for PDEs in \cite{Kansa1990a}. Most popular among global methods is collocation, wherein RBF interpolation approximates the PDE solution by solving a large, dense linear system. 
