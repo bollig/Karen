@@ -28,8 +28,6 @@ spotlight, more recently a new category, or rather a
 generalization on all three previous categories, has emerged:
 \emph{meshfree methods}.
 
-Traditional methods 
-
 The first task in traditional meshed methods is to generate an
 underlying grid/mesh. Node placement can be done in a variety of
 ways including uniform, non-uniform and random (monte carlo)
@@ -111,36 +109,36 @@ Infinitely smooth RBFs depend on a shape or support parameter $\epsilon$ that co
 
 
 Historically, the most common way to leverage RBFs for PDE solutions is in a global interpolation sense. That is, the value of a function value or any of its derivatives 
-at a node location is a linear combination of all the function values over the \textit{entire} domain, just as in a pseudospectral method. If using infinitely smooth RBFs, this leads to exponential convergence of the RBF interpolant for smooth data \cite{Fornberg2005}. %(need reference 
-%\st{As discussed in {\cite{FlyerWright09}}, global RBF methods  require a 
-%preprocessing stage, executed once, to assemble and solve for the 
-%differentiation matrices. This step costs $O(N^3)$ floating point operations,
+at a node location is a linear combination of all the function values over the \textit{entire} domain, just as in a pseudospectral method. If using infinitely smooth RBFs, this leads to spectral (exponential) convergence of the RBF interpolant for smooth data \cite{Fornberg2005}. %(need reference 
+As discussed in {\cite{FlyerWright09}}, global RBF methods 
+require $O(N^3)$ floating point operations (FLOPs) in pre-processing, where $N$ is the total number of nodes, to assemble and solve a dense linear system for differentiation coefficients. The coefficients in turn are assembled into a dense Differentiation Matrix (DM) that is applied via matrix-vector multiply to compute derivatives at all $N$ nodes for a cost of $O(N^2)$ operations. \hl{assumes explicit scheme}
+% 
+%   require a 
+%preprocessing stage, executed once, to assemble and solve a linear 
+%system to produce differentiation matrices for a cost of $O(N^3)$ floating point operations (FLOPS),
 %where $N$ is the total number of RBFs. 
-%The differentiation matrix, DM, is dense and is applied to a vector of 
-%function values evaluated at the RBF node centers to obtain an 
-%approximation to function derivatives at the RBF node centers. The cost 
-%of a derivative calculation is $O(N^2)$. }
-As discussed in \cite{FlyerWright09}, global RBF differentiation matrices (DM) are full, requiring $O(N^3)$ floating point operations (FLOPs) to assemble for a given node layout and $O(N^2)$ to time-step.
+%The differentiation matrix is dense and applied via matrix-vector multiplication to obtain approximation function derivatives at the RBF node centers. The cost 
+%of derivative calculation is $O(N^2)$.
 
-%$O(N^3)$ floating point operations in pre-processing, where $N$ is the total number of nodes, to assemble and solve a dense linear system that collocates function values at nodes and results in differentiation coefficients. The differentiation coefficients in turn form a dense Differentiation Matrix (DM) that is applied via matrix-vector multiply at every time-step to compute derivatives at a cost of $O(N^2)$ operations. }{1.4}
-%%(what matrices?). 
 
 Alternatively, one can use RBF-generated finite differences (RBF-FD) to introduce sparse DMs (Note: for pure interpolation, compactly supported RBFs can also introduce sparse matrices \cite{Wendland1995}).
 RBF-FD was first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
 but it was the simultaneous, yet independent,
 efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. 
-The RBF-FD method is similar in concept to classical 
-finite-differences (FD) but differs in that the underlying differentiation 
-weights are exact for RBFs rather than polynomials. RBF-FD 
-%(yes, spectral and exponential are the same)
+RBF-FD 
 share advantages with global RBF methods, 
 like the ability to function without an underlying mesh, easily extend to higher dimensions and afford large time steps; however spectral accuracy is lost. 
 Some of the advantages of RBF-FD 
 include high computational speed together with high-order accuracy
 (6th to 10th order accuracy is common) and the opportunity 
 for parallelization.
+
+The RBF-FD method is similar in concept to classical 
+finite-differences (FD): both methods approximate derivatives as a weighted sum of values at nodes within a nearby neighborhood. The two methods differ in that the underlying differentiation 
+weights are exact for RBFs rather than polynomials. 
+
 As in FD, increasing the stencil size $n$  increases the accuracy of the approximation.
-Given $N$ total nodes in the domain (such as on the surface of a sphere), $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$, much lower than for the global RBF method of $O(N^3)$, with the cost per time step also being $O(N)$. RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
+Given $N$ total nodes in the domain (such as on the surface of a sphere), $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$---much lower than for the global RBF method of $O(N^3)$---with derivative evaluations on the order of $O(nN) \implies O(N)$. RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
 
 As $N$ grows larger, it behooves us to work on parallel architectures, be it CPUs or GPUs. With regard to the latter, there is some research on leveraging RBFs on GPUs in the fields of visualization \cite{Cuntz2007,Weiler2005},  surface reconstruction \cite{Corrigan2005,Carr2003}, and neural networks \cite{Brandstetter2008}. However, research on the parallelization of RBF algorithms to solve PDEs on multiple CPU/GPU architectures is essentially non-existent. We have found three studies that have addressed this topic, none of which implement RBF-FD but rather take the avenue of domain decomposition for global RBFs (similar to a spectral element approach). In \cite{Divo2007}, Divo and Kassab introduce subdomains with artificial boundaries that are processed independently. Their implementation was designed for a 36 node cluster, but benchmarks and scalability tests are not provided. Kosec and \v{S}arler \cite{Kosec2008} parallelize coupled heat transfer and fluid flow models using OpenMP on a single workstation with one dual-core processor. They achieved a speedup factor of 1.85x over serial execution, although there were
