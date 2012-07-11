@@ -1,4 +1,4 @@
-all: karen.pdf
+all: bibpdf
 
 # Simple case:  no figures or BibTeX
 karen.pdf: karen.tex
@@ -23,5 +23,6 @@ bibpdf:
 	pdflatex karen
 	pdflatex karen
 
+clean: distclean
 distclean:
 	-@rm *.{aux,toc,dvi,lof,lot,log,lom,bbl,blg,pdf,ps,out} *~

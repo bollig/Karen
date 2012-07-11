@@ -74,12 +74,12 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \begin{center}
 \subfigure[No Hyperviscosity]
 {
-\includegraphics[width=2.85in]{paper1/figures/vortex_rollup/eigs_N4096_n101_noHV.pdf}
+\includegraphics[width=2.85in]{figures/paper1/figures/vortex_rollup/eigs_N4096_n101_noHV.pdf}
 \label{fig:vortex_eigs_nohv}
 }
 \subfigure[With Hyperviscosity]
 {
-\includegraphics[width=2.85in]{paper1/figures/vortex_rollup/eigs_N4096_n101_HV_k4_gamma40.pdf}
+\includegraphics[width=2.85in]{figures/paper1/figures/vortex_rollup/eigs_N4096_n101_HV_k4_gamma40.pdf}
 \label{fig:vortex_eigs_hv}
 }
 \caption{Eigenvalues of $\text{diag}(\omega(\theta)) D_\lambda$ for the vortex roll-up test case for $N=4096$ nodes, stencil size $n=101$ and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=4$ and $\gamma_c = 40$.
@@ -92,12 +92,12 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \begin{center}
 \subfigure[Computed Solution]
 {
-\includegraphics[width=2.5in]{paper1/figures/vortex_rollup/vortexComputedSolution-eps-converted-to.pdf}
+\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/vortexComputedSolution-eps-converted-to.pdf}
 \label{fig:vortex_approx}
 }
 \subfigure[Relative Absolute Error ]
 {
-\includegraphics[width=2.5in]{paper1/figures/vortex_rollup/vortexRelativeError-eps-converted-to.pdf}
+\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/vortexRelativeError-eps-converted-to.pdf}
 \label{fig:vortex_relerr}
 }
 \caption{Vortex roll-up solution at time $t=10$ using RBF-FD with $N=10,201$ and $n=50$ point stencil. Normalized $\ell_2$ error of solution at $t=10$ is $1.25(10^{-2})$ }
@@ -110,7 +110,7 @@ For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ 
 
 \begin{figure}[htbp!]
 \begin{center}
-\includegraphics[width=3in] {paper1/figures/vortex_rollup/convergence_plot_hv.pdf}
+\includegraphics[width=3in] {figures/paper1/figures/vortex_rollup/convergence_plot_hv.pdf}
 \caption{Convergence plot for vortex roll-up at $t=3$. }
 \label{fig:conv_plot_vortex_hv}
 \end{center}
@@ -177,12 +177,12 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \begin{center}
 \subfigure[No Hyperviscosity]
 {
-\includegraphics[width=2.75in]{paper1/figures/cosine_bell/eigs_N4096_n101_noHV_SCALED.pdf}
+\includegraphics[width=2.75in]{figures/paper1/figures/cosine_bell/eigs_N4096_n101_noHV_SCALED.pdf}
 \label{fig:cosine_eigs_nohv}
 }
 \subfigure[With Hyperviscosity]
 {
-\includegraphics[width=2.75in]{paper1/figures/cosine_bell/eigs_HV_N4096_n101_k8_gamma5e_m2_SCALED.pdf}
+\includegraphics[width=2.75in]{figures/paper1/figures/cosine_bell/eigs_HV_N4096_n101_k8_gamma5e_m2_SCALED.pdf}
 \label{fig:cosine_eigs_hv}
 }
 \caption{Eigenvalues of (\ref{eq:cosine_with_hyperviscosity}) for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=8$ and $\gamma_c = 5*10^{-2}$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.  
@@ -195,12 +195,12 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \begin{center}
 \subfigure[10 Revolutions]
 {
-\includegraphics[width=2.4in]{paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
+\includegraphics[width=2.4in]{figures/paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
 \label{fig:cosine_approx}
 }
 \subfigure[Absolute Error at 10 revolutions]
 {
-\includegraphics[width=2.6in]{paper1/figures/cosine_bell/trimmed_Error_CoveredScale2.pdf}
+\includegraphics[width=2.6in]{figures/paper1/figures/cosine_bell/trimmed_Error_CoveredScale2.pdf}
 \label{fig:cosine_abserror}
 }
 \caption{Cosine bell solution after 10 revolutions with $N=10201$ nodes and stencil size $n=101$.
@@ -223,7 +223,7 @@ Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolu
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=3in]{paper1/figures/cosine_bell/convergence_plot_hv.pdf}
+\includegraphics[width=3in]{figures/paper1/figures/cosine_bell/convergence_plot_hv.pdf}
 \caption{Convergence plot for cosine bell advection. Normalized $\ell_2$ error at 10 revolutions with hyperviscosity enabled. }
 \label{fig:conv_cosine_bell}
 \end{center}
