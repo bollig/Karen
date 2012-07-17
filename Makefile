@@ -25,4 +25,4 @@ bibpdf:
 
 clean: distclean
 distclean:
-	-@rm *.{aux,toc,dvi,lof,lot,log,lom,bbl,blg,ps,out} *~
+	-@rm *.{aux,toc,dvi,lof,lot,log,lom,bbl,blg,ps,out,synctex.gz,brf,loa} *~
