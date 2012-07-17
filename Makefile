@@ -24,4 +24,4 @@ bibpdf:
 	pdflatex karen
 
 distclean:
-	-@rm *.{aux,toc,dvi,lof,lot,log,lom,bbl,blg,pdf,ps,out} *~
+	-@rm *.{aux,toc,dvi,lof,lot,log,lom,bbl,blg,ps,out} *~
