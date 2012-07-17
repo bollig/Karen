@@ -88,10 +88,22 @@ Figure~\ref{fig:rbfInterpolation}, where $\phi_j(r(\vx))$ is an
 RBF centered at $\{\vx_j\}_{j=1}^{n}$.
 
 \begin{figure}[ht]
-    \centering
-    \subfigure[Gaussian] { \includegraphics[width=0.25\textwidth]{figures/paper1/figures/ga_rbf2d-eps-converted-to.pdf} }
-    \subfigure[Inverse Multiquadric] { \includegraphics[width=0.25\textwidth]{figures/paper1/figures/imq_rbf2d-eps-converted-to.pdf} }
-    \subfigure[Multiquadric] { \includegraphics[width=0.25\textwidth]{figures/paper1/figures/mq_rbf2d-eps-converted-to.pdf} }
+\centering
+	\begin{subfigure}[b]{0.25\textwidth}
+    	\centering
+		\includegraphics[width=0.25\textwidth]{figures/paper1/figures/ga_rbf2d-eps-converted-to.pdf} 
+		\caption{Gaussian}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.25\textwidth}
+	\centering
+		\includegraphics[width=0.25\textwidth]{figures/paper1/figures/imq_rbf2d-eps-converted-to.pdf}
+		\caption{Inverse Multiquadric}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.25\textwidth}
+	\centering
+		\includegraphics[width=0.25\textwidth]{figures/paper1/figures/mq_rbf2d-eps-converted-to.pdf} 
+		\caption{Multiquadric}
+	\end{subfigure} 
     \caption{Commonly used RBFs.}
     \label{fig:rbfs}
 \end{figure}

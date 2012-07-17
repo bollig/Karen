@@ -16,3 +16,6 @@
 [submodule "locality_sensitive_hashing"]
 	path = locality_sensitive_hashing
 	url = ssh://efb06@pamd.sc.fsu.edu/~/repos/locality_sensitive_hashing.git
+[submodule "paper2"]
+	path = paper2
+	url = ssh://pamd.sc.fsu.edu/~efb06/repos/paper2.git

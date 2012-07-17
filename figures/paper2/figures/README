@@ -1,0 +1,28 @@
+
+Filenames: 
+============
+N10201_KDTree_Stokes.png
+N10201_KDTree_ReorderedStokes.png  
+
+Detail: 
+============
+Spy of LHS assembly for original ordering (UUUVVVWWW) and interleaved solution (UVWUVWUVW) ordering
+N = 10201
+n = 31
+ep = 3.435
+hv_k = 4
+hv_gamma = 8e2
+eta = 1
+
+
+-------------------------
+
+
+Filenames: 
+===========
+N10201_KDTree_ReorderedStokes_10to50.png
+N10201_KDTree_Stokes_10to50.png
+
+Detail: 
+===========
+Subblock LHS(10:50,10:50) for the two spy plots above.

@@ -72,34 +72,37 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 
 \begin{figure}[htb]
 \begin{center}
-\subfigure[No Hyperviscosity]
-{
-\includegraphics[width=2.85in]{figures/paper1/figures/vortex_rollup/eigs_N4096_n101_noHV.pdf}
-\label{fig:vortex_eigs_nohv}
-}
-\subfigure[With Hyperviscosity]
-{
-\includegraphics[width=2.85in]{figures/paper1/figures/vortex_rollup/eigs_N4096_n101_HV_k4_gamma40.pdf}
-\label{fig:vortex_eigs_hv}
-}
-\caption{Eigenvalues of $\text{diag}(\omega(\theta)) D_\lambda$ for the vortex roll-up test case for $N=4096$ nodes, stencil size $n=101$ and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=4$ and $\gamma_c = 40$.
-}
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=2.85in]{figures/paper1/figures/vortex_rollup/eigs_N4096_n101_noHV.pdf}
+	\caption{No Hypervsiscosity}
+	\label{fig:vortex_eigs_nohv}
+\end{subfigure}
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=2.85in]{figures/paper1/figures/vortex_rollup/eigs_N4096_n101_HV_k4_gamma40.pdf}
+	\caption{With Hyperviscosity}
+	\label{fig:vortex_eigs_hv}
+\end{subfigure}
+\caption{Eigenvalues of $\text{diag}(\omega(\theta)) D_\lambda$ for the vortex roll-up test case for $N=4096$ nodes, stencil size $n=101$ and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=4$ and $\gamma_c = 40$. }
 \label{fig:eig_vortex}
 \end{center}
 \end{figure}
 
 \begin{figure}[htbp]
 \begin{center}
-\subfigure[Computed Solution]
-{
-\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/vortexComputedSolution-eps-converted-to.pdf}
-\label{fig:vortex_approx}
-}
-\subfigure[Relative Absolute Error ]
-{
-\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/vortexRelativeError-eps-converted-to.pdf}
-\label{fig:vortex_relerr}
-}
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/vortexComputedSolution-eps-converted-to.pdf}
+	\caption{Computed Solution}
+	\label{fig:vortex_approx}
+\end{subfigure} 
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/vortexRelativeError-eps-converted-to.pdf}
+	\caption{Relative Absolute Error}
+	\label{fig:vortex_relerr}
+\end{subfigure}
 \caption{Vortex roll-up solution at time $t=10$ using RBF-FD with $N=10,201$ and $n=50$ point stencil. Normalized $\ell_2$ error of solution at $t=10$ is $1.25(10^{-2})$ }
 \label{fig:vortex_t10}
 \end{center}
@@ -175,16 +178,17 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 
 \begin{figure}[ht!]
 \begin{center}
-\subfigure[No Hyperviscosity]
-{
-\includegraphics[width=2.75in]{figures/paper1/figures/cosine_bell/eigs_N4096_n101_noHV_SCALED.pdf}
-\label{fig:cosine_eigs_nohv}
-}
-\subfigure[With Hyperviscosity]
-{
-\includegraphics[width=2.75in]{figures/paper1/figures/cosine_bell/eigs_HV_N4096_n101_k8_gamma5e_m2_SCALED.pdf}
-\label{fig:cosine_eigs_hv}
-}
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=2.75in]{figures/paper1/figures/cosine_bell/eigs_N4096_n101_noHV_SCALED.pdf}
+	\caption{No Hyperviscosity}
+	\label{fig:cosine_eigs_nohv}
+\end{subfigure}
+\begin{subfigure}[b]{0.45\textwidth}
+	\includegraphics[width=2.75in]{figures/paper1/figures/cosine_bell/eigs_HV_N4096_n101_k8_gamma5e_m2_SCALED.pdf}
+	\caption{With Hyperviscosity}
+	\label{fig:cosine_eigs_hv}
+\end{subfigure}
 \caption{Eigenvalues of (\ref{eq:cosine_with_hyperviscosity}) for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=8$ and $\gamma_c = 5*10^{-2}$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.  
 }
 \label{fig:eig_cosine}
@@ -193,16 +197,16 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 
 \begin{figure}[ht!]
 \begin{center}
-\subfigure[10 Revolutions]
-{
-\includegraphics[width=2.4in]{figures/paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
-\label{fig:cosine_approx}
-}
-\subfigure[Absolute Error at 10 revolutions]
-{
-\includegraphics[width=2.6in]{figures/paper1/figures/cosine_bell/trimmed_Error_CoveredScale2.pdf}
-\label{fig:cosine_abserror}
-}
+\begin{subfigure}[b]{0.45\textwidth}
+	\includegraphics[width=2.4in]{figures/paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
+	\caption{10 Revolutions}
+	\label{fig:cosine_approx}
+\end{subfigure}
+\begin{subfigure}[b]{0.45\textwidth}
+	\includegraphics[width=2.6in]{figures/paper1/figures/cosine_bell/trimmed_Error_CoveredScale2.pdf}
+	\caption{Absolute Error at $10$ Revolutions}
+	\label{fig:cosine_abserror}
+\end{subfigure}
 \caption{Cosine bell solution after 10 revolutions with $N=10201$ nodes and stencil size $n=101$.
 Hyperviscosity parameters are $k = 8$, $\gamma_c = 5(10^{-2})$. 
 }

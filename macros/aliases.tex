@@ -1,4 +1,23 @@
 \newcommand{\mathsym}[1]{{}}
 \newcommand{\unicode}[1]{{}}
 \newcommand{\ep}{\epsilon}
+\newcommand{\vv}{\mathbf{v}}
+\newcommand{\vu}{\mathbf{u}}
 \newcommand{\vx}{\mathbf{x}}
+
+\newcommand{\Laplacian}[1]{\nabla^2 #1}
+\newcommand{\LaplaceBeltrami}[1]{\Delta_S #1}
+
+% set of all nodes received and contained on GPU
+\newcommand{\setAllNodes}[0]{\mathcal{G}}
+% set of stencil centers on GPU
+\newcommand{\setCenters}[0]{\mathcal{Q}}
+% set of stencil centers with nodes in \setDepend
+\newcommand{\setBoundary}[0]{\mathcal{B}}
+% set of nodes received by other GPUs
+\newcommand{\setDepend}[0]{\mathcal{R}}
+% set of nodes sent to other GPUs
+\newcommand{\setProvide}[0]{\mathcal{O}}
+
+
+
