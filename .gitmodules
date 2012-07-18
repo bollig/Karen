@@ -3,7 +3,7 @@
 	url = ssh://pamd.sc.fsu.edu/~efb06/repos/paper1.git
 [submodule "keeneland_benchmarks"]
 	path = keeneland_benchmarks
-	url = git@github.com:bollig/Benchmarks.git
+	url = git@github.com:bollig/keeneland_benchmarks.git
 [submodule "spear_benchmarks"]
 	path = spear_benchmarks
 	url = ssh://pamd.sc.fsu.edu/~efb06/repos/spear_benchmarks.git
