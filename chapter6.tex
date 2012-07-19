@@ -66,9 +66,9 @@ For decades, a major push has been executed in science to parallelize algorithms
 
 To prepare the RBF community for the future, we develop algorithms employing two levels of parallelization: first the MPI standard spans computation across multiple CPUs, and second computation is distributed across the many processing cores of GPU accelerators. 
 
-The two level parallelization can even be extended to three level parallelism with pThreads or OpenMP \cite{NVidia multi-gpu example}. While OpenCL provides the means to target parallelism on either multi-core CPUs or many-core GPUs, it does not allow a parallel kernel on one hardware interact with a parallel kernel on the another. That is to say, an OpenCL kernel on the CPU cannot launch kernels on the GPU s 
+The two level parallelization can even be extended to three level parallelism with pThreads or OpenMP \cite{NVidia_multi-gpu_example}. While OpenCL provides the means to target parallelism on either multi-core CPUs or many-core GPUs, it does not allow a parallel kernel on one hardware interact with a parallel kernel on the another. That is to say, an OpenCL kernel on the CPU cannot launch kernels on the GPU s 
 
-Our goal is to demonstrate to the geosciences that RBF-FD can function well on both hyperbolic and elliptic problems. In \cite{BolligFlyerErlebacher2011} we introduced a multi-GPU implementation of RBF-FD and demonstrated the method's strong ability to stably advect solid bodies on the sphere. In this paper we continue toward the goal of RBF-FD solutions for fluid flow problems with a multi-GPU Poisson solver for steady-state Stokes flow. In this context, speed is not a paramount issue. 
+Our goal is to demonstrate to the geosciences that RBF-FD can function well on both hyperbolic and elliptic problems. In \cite{bolligFlyerErlebacher2011} we introduced a multi-GPU implementation of RBF-FD and demonstrated the method's strong ability to stably advect solid bodies on the sphere. In this paper we continue toward the goal of RBF-FD solutions for fluid flow problems with a multi-GPU Poisson solver for steady-state Stokes flow. In this context, speed is not a paramount issue. 
 
 Related work on RBF methods targeting the GPU is quite limited. Schmidt et al. \cite{Schmidt2009b} solve an implicit system for a global RBF method using Accelerys Jacket in Matlab. Our work in \cite{Bollig2011} introduced the first parallel implementation of RBF-FD for explicit advection capable of spanning multiple CPUs as well as multiple GPUs. 
 
@@ -411,7 +411,7 @@ and the pressure function:
 P = Y_6^4 
 \end{align} 
 
-The manufactured solution is shown in Figure~\ref{fig:manufactured_solution}. A Mollweide projection \cite{Mollweide ref} maps the sphere onto the plane. 
+The manufactured solution is shown in Figure~\ref{fig:manufactured_solution}. A Mollweide projection \cite{Mollweide_ref} maps the sphere onto the plane. 
 
 \begin{figure} 
 \centering
