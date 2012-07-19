@@ -39,7 +39,8 @@ The motivation behind RBF-FD is generality/functionality in the numerical method
 
 \chapter{Introduction}
 
-\section{Introduction}
+\section{Research Statement} 
+What motivated this research?
 \label{sec:intro}
 
 The goal of this dissertation is to present a unified approach
@@ -189,6 +190,16 @@ weights are exact for RBFs rather than polynomials.
 As in FD, increasing the stencil size $n$  increases the accuracy of the approximation.
 Given $N$ total nodes in the domain (such as on the surface of a sphere), $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$---much lower than for the global RBF method of $O(N^3)$---with derivative evaluations on the order of $O(nN) \implies O(N)$ FLOPs. 
 
+\section{Related Work}
+
+\subsection{  GPUS for explicit and implicit methods }
+\subsection{  GPUS/RBF }
+\subsection{  RBF/Finite-Difference }
+\subsection{  Preconditionners (info on that) }
+\subsection{   Sparse matrix libraries }
+\subsection{  Various GPU/based libraries }
+\subsection{  Parallel implementations of RBF (there are any?)}
+
 RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
 
@@ -213,7 +224,7 @@ We present our explicit and implicit solutions to PDEs with our multi-GPU RBF-FD
 
 %The remainder of this paper is organized as follows:  Chapter~\ref{chap:rbffd} introduces RBF-FD via interpolation. Chapter~\ref{chap:gpu} details our parallelization strategies for the Keeneland system, including data partitions that are handled concurrently by different CPU processes and the data-parallel explicit time stepping scheme for the GPU. In Section~\ref{sec:validation}, our implementation is verified against well-known hyperbolic PDE test cases on the sphere, advection of a cosine bell and vortex wrap-up. Finally, performance benchmarks and results are presented in Section~\ref{sec:performance}, followed by conclusions and proposals for future optimization strategies in Section~\ref{sec:conclusion}.
 
-\section{Cut from Paper1}
+\section{Fragments (integrate above) }
 
 
 
