@@ -1,54 +1,95 @@
-%!TEX root = prospectus.tex
+%!TEX root = karen.tex
 
-We propose the implementation of an efficient multi-node, multi-GPU RBF PDE package to run on a heterogeneous cluster of compute nodes, 
-each with one or more GPUs attached. Specifically, we will utilize hardware available in the Department of Scientific 
-Computing: the ACM cluster. As will be explained, the ACM cluster is moderately sized, but for true scaling tests a larger cluster 
-such as the TeraGrid Lincoln cluster will be required. For a survey of heterogeneous clusters that leverage co-processors like GPUs, refer to \cite{Goeddeke:2007}.
+We propose the implementation of an efficient multi-node, multi-GPU RBF PDE package to run on clusters of GPU compute nodes. Each compute node has one or more GPUs attached. Specifically, we utilize the hardware available in the FSU HPC Spear cluster and the NFS funded Keeneland project. While the Spear cluster is only a handful of nodes with 2 GPUs each, Keeneland boasts a total of 240 CPUs and 320 GPUs. The large scale of Keeneland allows us to verify the scaling of our method. 
+
+\section{OpenCL}
+We leverage the OpenCL language for functional portability. 
+
+Our dedication to OpenCL is a hedged bet that the future architectures will merge in the middle between many and multi-core architectures with co-processors alongside CPUs. By selecting an open standard parallel programming language, we increase the likelihood for future support of our programs. 
+
+\subsection{OpenCL vs CUDA}
+The market is volatile. Companies survive by investing margins in their next great product. If a product fails or the company faces a recall, their survival may come into question. Thus far, NVidia's CUDA has been wildly popular, but for the longest time (until May 2012) it was closed source. The closed source limited the language to NVidia hardware. As such, the OpenCL language gained popularity due to its support for AMD, Intel, mobile devices, web browsers, etc. NVidia's push to provide an open source compiler may be an attempt to regain the market share, but OpenCL appears to be on good footing. One other point: with an open source NVidia compiler, OpenCL can be optimized by the more mature NVidia compiler for their proprietary hardware. OpenCL compilers are also becoming more sophisticated at auto-optimization. 
+
+\subsection{Asynchronous Queuing} 
+Provide details and simple example of how asynchronous queueing can be used. 
+
+
+\section{Fermi Architecture}
+
+In the Spring of 2010 NVidia publicly released a new architecture code named ``Fermi"
+
+\subsection{Double Precision}
+Double precision operations take XXX cycles
+
+
+\subsection{Local Caching}
+Local caching allows us to bypass the need for 
+
+\subsection{Multiple Kernel Scheduling}
+
+
+\subsection{Future NVidia Hardware}
+The latest hardware is the Kepler. It supports the following features
+
+\section{HPC Spear Cluster} 
+
+\section{Keeneland}
+
+
+%
+%heterogeneous cluster of compute nodes, 
+%each with one or more GPUs attached. Specifically, we will utilize hardware available in the Department of Scientific 
+%Computing: the ACM cluster. As will be explained, the ACM cluster is moderately sized, but for true scaling tests a larger cluster 
+%such as the TeraGrid Lincoln cluster will be required. For a survey of heterogeneous clusters that leverage co-processors like GPUs, refer to \cite{Goeddeke:2007}.
 
 %The term \emph{heterogeneous} 
 
-\section{ACM Cluster (FSU)}
 
- The ACM cluster at Florida State University is funded by SCREM-NSF 0724273 titled
-"SCREMS: High Performance Computing and Visualization",
-with PI Gordon Erlebacher of the Department of Scientific Computing, and other faculty in the Department of Mathematics. The 
-cluster of one head node and 20 compute nodes %(one is currently missing) 
-is composed of homogenous CPUs. Each node 
-contains two dual-core Opteron 2.2 GHz CPUs (4 cores total) and 4 GB of RAM. Nodes are connected via 4X DDR Infiniband. 
-%(5 Gbit/s).  
 
-The homogeneity of the cluster is lost when 
-computing on with GPUs (see Table~\ref{tbl:acm_gpus}).  
-With each Tesla C1060 capable of roughly 933 GFLOPS in single precision, the peak performance of ACM in multi-core 
-compute mode is about 16 TFLOPS. Double precision is reduced to roughly 78 GFLOPS on the 
-C1060s \cite{TeslaSpec:2008}. At 20 compute nodes, ACM is a small cluster sufficient for development, but not large 
-enough to thoroughly test scaling properties.
+%\section{ACM Cluster (FSU)}
+%
+% The ACM cluster at Florida State University is funded by SCREM-NSF 0724273 titled
+%"SCREMS: High Performance Computing and Visualization",
+%with PI Gordon Erlebacher of the Department of Scientific Computing, and other faculty in the Department of Mathematics. The 
+%cluster of one head node and 20 compute nodes %(one is currently missing) 
+%is composed of homogenous CPUs. Each node 
+%contains two dual-core Opteron 2.2 GHz CPUs (4 cores total) and 4 GB of RAM. Nodes are connected via 4X DDR Infiniband. 
+%%(5 Gbit/s).  
+%
+%The homogeneity of the cluster is lost when 
+%computing on with GPUs (see Table~\ref{tbl:acm_gpus}).  
+%With each Tesla C1060 capable of roughly 933 GFLOPS in single precision, the peak performance of ACM in multi-core 
+%compute mode is about 16 TFLOPS. Double precision is reduced to roughly 78 GFLOPS on the 
+%C1060s \cite{TeslaSpec:2008}. At 20 compute nodes, ACM is a small cluster sufficient for development, but not large 
+%enough to thoroughly test scaling properties.
+%
+%\begin{table}[t]
+%\begin{center}
+%\begin{tabular}{|C|C|c|C|C|}
+%\# of Nodes & \# GPUs per Node & GPU Name & Global Device Memory Size & Compute Capability \\
+%\hline
+%16 & 1 & Tesla C1060 & 4 GB & 1.3 \\
+%3 & 1 & Tesla C870 & 1.5 GB & 1.0 \\
+%1 & 1 & GeForce 8500 GT & 0.25 GB & 1.1\\
+%1 & 0 & (ACM head-node) & N/A & N/A 
+%\end{tabular}
+%\end{center}
+%\caption{Heterogeneous configuration of ACM cluster. The last entry represents the ACM head node which has no GPU 
+%attached. }
+%\label{tbl:acm_gpus}
+%\end{table}%
+%
+%The Compute Capability listed in Table~\ref{tbl:acm_gpus} specifies the GPU's support for advancements such as atomic functions (introduced in 1.1) and double IEEE754 floating point precision (introduced in 1.3) \cite{CudaGuide:2008}. When programming in CUDA, we will only use the homogeneous component of the cluster. On the other hand, we might experiment with homogeneous computing with the OpenCL version of the code. 
+%
 
-\begin{table}[t]
-\begin{center}
-\begin{tabular}{|C|C|c|C|C|}
-\# of Nodes & \# GPUs per Node & GPU Name & Global Device Memory Size & Compute Capability \\
-\hline
-16 & 1 & Tesla C1060 & 4 GB & 1.3 \\
-3 & 1 & Tesla C870 & 1.5 GB & 1.0 \\
-1 & 1 & GeForce 8500 GT & 0.25 GB & 1.1\\
-1 & 0 & (ACM head-node) & N/A & N/A 
-\end{tabular}
-\end{center}
-\caption{Heterogeneous configuration of ACM cluster. The last entry represents the ACM head node which has no GPU 
-attached. }
-\label{tbl:acm_gpus}
-\end{table}%
-
-The Compute Capability listed in Table~\ref{tbl:acm_gpus} specifies the GPU's support for advancements such as atomic functions (introduced in 1.1) and double IEEE754 floating point precision (introduced in 1.3) \cite{CudaGuide:2008}. When programming in CUDA, we will only use the homogeneous component of the cluster. On the other hand, we might experiment with homogeneous computing with the OpenCL version of the code. 
 
 %\toevan{mention the peak transfer rates for Infiniband, GPU-CPU, CPU-GPU, GPU-GPU}
 
-\section{Lincoln}
-
-One of the large heterogeneous GPU clusters made available through the TeraGrid is NCSA's Lincoln \cite{Lincoln:2009}. Lincoln sports 192 compute nodes containing Dell PowerEdge 1950 dual-socket nodes with quad-core Intel Harpertown 2.33GHz processors (8 cores per node) and 16GB of memory. This gives Lincoln a total of 1536 total CPU cores. Attached to the compute nodes are 96 NVIDIA Tesla S1070 accelerator units each containing 4 Tesla GPUs (compute capability 1.3) and 16 GB of Global Device Memory for a total of 384 GPU units. The peak performance of a Tesla S1070 is roughly 4 TFLOPS for single precision and 345 GFLOPS for double precision. Each of the 192 compute nodes in Lincoln is connected to two of the Tesla S1070s via PCI-e Gen2 X8. Compute nodes are connected via Infiniband SDR. The peak performance of Lincoln considering both GPU and CPU computation is 47.5 TFLOPS \cite{Lincoln:2009}. 
-
-Lincoln is a heterogeneous multi-core compute platform, with heterogeneity arising from the ability to compute on both the CPU and GPU. G\"{o}ddeke et al. \cite{Goeddeke:2007} call this \emph{local heterogeneity}, in contrast to ACM where the hardware attached to individual nodes is heterogeneous and called \emph{global heterogeneity}. 
+%\section{Lincoln}
+%
+%One of the large heterogeneous GPU clusters made available through the TeraGrid is NCSA's Lincoln \cite{Lincoln:2009}. Lincoln sports 192 compute nodes containing Dell PowerEdge 1950 dual-socket nodes with quad-core Intel Harpertown 2.33GHz processors (8 cores per node) and 16GB of memory. This gives Lincoln a total of 1536 total CPU cores. Attached to the compute nodes are 96 NVIDIA Tesla S1070 accelerator units each containing 4 Tesla GPUs (compute capability 1.3) and 16 GB of Global Device Memory for a total of 384 GPU units. The peak performance of a Tesla S1070 is roughly 4 TFLOPS for single precision and 345 GFLOPS for double precision. Each of the 192 compute nodes in Lincoln is connected to two of the Tesla S1070s via PCI-e Gen2 X8. Compute nodes are connected via Infiniband SDR. The peak performance of Lincoln considering both GPU and CPU computation is 47.5 TFLOPS \cite{Lincoln:2009}. 
+%
+%Lincoln is a heterogeneous multi-core compute platform, with heterogeneity arising from the ability to compute on both the CPU and GPU. G\"{o}ddeke et al. \cite{Goeddeke:2007} call this \emph{local heterogeneity}, in contrast to ACM where the hardware attached to individual nodes is heterogeneous and called \emph{global heterogeneity}. 
 %
 %\section{Performance, Efficiency and Saturation}
 
