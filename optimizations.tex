@@ -2,8 +2,9 @@
 
 These figures represent optimizations of the Cosine Bell and Vortex Roll-up test cases. Essentially, the optimizations here are general for multi-GPU SpMV. Improving these test cases improves all explicit schemes for RBF-FD (i.e., hyperbolic and parabolic equations, and various time stepping schemes like euler, RK4, Adams-Bashforth etc.). 
 
-
 \section{MPI\_Alltoallv}
+Change send/recv to alltoallv. Track wait time. Show limitation on scalability with GPU (sublinear) vs CPU (linear). How high can we get linear on CPU? 
+
 
 Communication between processors requires each processor to iterate through their neighboring processors and share information. This can be seen as a simple for loop allowing every processor to touch its neighbors in round-robin fashion. The benchmarks seen in \authnote{figures from paper1} show the strong scaling of our implementation with a for loop and send/recv. 
 
@@ -12,3 +13,25 @@ In Figs~\ref{figs:alltoall_scaling} we show the strong scaling of the cosine bel
 Alternatively
 
 an all to all collective. That is, all processors share some information with potentially every other processor. 
+
+\section{Asynchronous OpenCL}
+
+What are the limitations if using just async and not the queues?
+
+\section{Multi-Queue OpenCL}
+How does performance improve if we use two queues (one for Q and one for R)? 
+
+
+\section{Work-Group Size and Number of Stencils}
+What if a work-group is larger than a warp? What if the group was occupied by multiple stencils. What improvements to speedup do we see?
+
+How many stencils can each group handle (assuming values stay in shared memory? 
+Shared memory bank conflicts? How do we sort the values? 
+What is the occupancy of the GPU?
+
+\section{Parallel Reduction in Shared Memory}
+What significant gain do we see from adding a segmented scan to the shared memory? 
+
+What other improvements can we think of? 
+
+\section{Comparison: custom SpMV for explicit schemes vs ViennaCL}
