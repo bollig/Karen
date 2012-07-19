@@ -4,12 +4,18 @@
 
 \label{sec:validation}
 
+\section{Stencil Generation} 
+\subsection{kD-Tree vs LSH}
+\section{Choosing $\epsilon$}
+Present our attemps to get the right support parameter
+
+\section{Hyperbolic} 
+
 Here, we present the first results in the literature for parallelizing RBF-FDs on multi-CPU and multi-GPU architectures for solving PDEs. 
  To verify our multi-CPU, single GPU and multi-GPU implementations, two hyperbolic PDEs on the surface of the sphere are tested: 1) vortex roll-up \cite{NairTransport05, NairJablonowski08} and 2) solid body rotation \cite{JakobChien1995}. These tests were chosen since they are not only standard in the numerical literature, but also
 for the development of RBFs in solving PDEs on the sphere \cite{FlyerWright07, Fornberg2008, FlyerLehto10, Fornberg2011a}. Although any `approximately evenly' distributed nodes on the sphere would suffice for our purposes, maximum determinant (MD) node distributions on the sphere are used (see \cite{Sloan2003} for details) in order to be consistent with previously published results (see e.g., \cite{FlyerWright07} and \cite{FornbergLehto11}). Node sets from 1024 to 27,556 are considered with stencil sizes ranging from 17 to 101.
 
 All results in this section are produced by the single-GPU implementation. Multi-CPU and multi-GPU implementations are verified to produce these same results. Synchronization of the solution at each time-step and the use of double precision on both the CPU and GPU ensure consistent results regardless of the number and/or choice of CPU vs GPU. Eigenvalues are computed on the CPU by the Armadillo library \cite{armadillo2010}.
-
 
 \subsection{Vortex Rollup}
 \label{sec:numerical_validation}

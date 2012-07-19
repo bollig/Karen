@@ -1,7 +1,6 @@
 %!TEX root = karen.tex
 
-\chapter{Targeting Multiple GPUs}
-
+\chapter{Parallel Solvers}
 
 \label{sec:rbffd_gpu}
 
@@ -15,8 +14,14 @@ Evaluation of the right hand side of Equation~(\ref{eq:evaluation_with_hypervisc
 Our current implementation assumes that we are computing on a cluster of CPUs, with one GPU attached to each CPU. The CPU maintains control of execution and launches kernels on the GPU that execute in parallel. Under the OpenCL standard \cite{OpenCL2009}, a tiered memory hierarchy is available on the GPU with \textit{global device memory} as the primary and most abundant memory space. The memory space for GPU kernels is separate from the memory available to a CPU, so data must be explicitly copied to/from global device memory on the GPU. 
 
 
-\subsection{Memory Layout}
+\section{Distributed Solvers}
+Need partitioning, global and local index maps, and local ordering for a distributed \cite{Saad2003} 
 
+\subsection{Node Partitioning}
+
+\subsection{Global and Local Indices}
+
+\subsection{Local Node Ordering} 
 After partitioning, each CPU/GPU is responsible for its own subset of nodes. 
 To simplify accounting, we track nodes in two ways. Each node is assigned
 a global index, that uniquely identifies it. This index follows the node 
@@ -127,8 +132,20 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 \end{center}
 \end{figure}
 
+\section{Relation to the Restrictive Additive Schwarz Decomposition}
 
-\subsection{Targeting the GPU}
+\section{Parallel Linear Algebra Primitives}
+The basic primitives necessary to parallelize our problems: SpMV, AXPY and 
+
+
+
+
+
+
+\section{Targeting the GPU}
+
+\subsection{Explicit Solvers}
+
 
 Our implementation leverages the GPU for acceleration of the standard fourth order Runge-Kutta (RK4) scheme. Nodes are stationary, so stencil weights are calculated once at the beginning of the simulation, and reused in every iteration. To avoid the cost of calculating stencil weights each time a test case is run, they are written to disk and loaded from file on subsequent runs. There is one set of weights computed for each new grid.  Ignoring code initialization, the cost of the algorithm is simply the explicit time advancement of the solution. 
 
@@ -223,7 +240,7 @@ As part of future work on optimization, we will consider a parallel reduction in
 
 
 
-\section{Cut from Paper1}
+\subsection{Fragments (integrate above)}
 
 
 %The term \textit{General Purpose Computing on GPUs} (GPGPU) refers to the application of a Graphics Processing Unit (GPU) 
@@ -297,3 +314,7 @@ Sharing information across multiprocessors is possible in \textit{global device 
 %Under OpenCL, the equivalent to CUDA local memory is called \textit{private memory} and is also reserved read-only per work-item in global device memory. CUDA's shared memory is labeled \textit{local memory} and shared by threads of a work-group. The CUDA texture and constant caches are known as \textit{Global/Constant Cache}, and similar to CUDA, exist outside of developer control. OpenCL refers to \textit{global memory} and \textit{constant memory} when referring to read/write and read-only sections of CUDA's global device memory (respectively). Finally, CUDA textures are equivalent to OpenCL \textit{buffers} (1D arrays) or \textit{images} (2D/3D arrays) \cite{OpenCL:2009}.
 
 %Based on \cite{Behr:2009, OpenCL:2009}, Figure~\ref{fig:opencl_memory} compares the underlying implementation of the OpenCL memory hierarchy on GPUs and CPUs. Notably, on current CPUs most of the memory is reserved in System RAM, whereas the hierarchy naturally fits on the deep memory hierarchy of the GPU.  
+
+\subsection{Implicit Solvers}
+
+Perhaps this section should move up. I think it might be best to discuss GMRES and iterative methods before Distributed Solvers (that way we can say the general solution form is ``matrix form''. but in parallel we need to use distributed algorithms.

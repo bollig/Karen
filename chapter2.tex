@@ -1,7 +1,9 @@
 %!TEX root = karen.tex
 
 
-\chapter{RBF Methods}
+\chapter{The RBF-generate Finite Differences Method}
+
+\section{RBF-FD as an interpolation problem}
 
 %!TEX root =  paper_draft.tex
 \section{Calculating RBF-FD weights}
@@ -56,7 +58,7 @@ corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}
 
 For each of the $N$ small system solves of Equation~(\ref{syst}), the $n$ nearest neighbors to $\vx_j$ need to be located. This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. 
 
-\subsection{Hyperviscosity}
+\section{Stabilization: Hyperviscosity}
 
 For RBF-FD, differentiation matrices encode convective operators of the form 
 \begin{equation}
@@ -100,7 +102,7 @@ Given a choice of $\epsilon$ (see Section~\ref{sec:numerical_validation}), it wa
 In general, the larger the stencil size, the higher the order of the Laplacian.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \cite{FornbergLehto11,FlyerLehto11}.
 
 
-\section{Cut from Paper1}
+\section{Fragments (integrate above)}
 
 Global RBF collocation methods pose the problem of interpolating a multivariate function $f : \domain
     \rightarrow \R$ where $\domain \subset \R^m$. Given a set of sample values
