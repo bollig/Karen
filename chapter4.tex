@@ -5,9 +5,16 @@
 \label{sec:validation}
 
 \section{Stencil Generation} 
-\subsection{kD-Tree vs LSH}
+\subsection{kD-Tree vs LSH} 
 \section{Choosing $\epsilon$}
 Present our attemps to get the right support parameter
+
+
+\section{Parabolic} 
+
+Include figure tracking max temperature and min temperature. If we have zero flux conditions then they should average out. If we have Dirichlet BCs the temperature will converge to 0. 
+
+
 
 \section{Hyperbolic} 
 
@@ -240,7 +247,7 @@ Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolu
 \end{figure}
 
 
-\section{Cut from Paper1}
+\section{Fragments (integrate above)}
 To verify our multi-CPU and multi-CPU+GPU implementations, two hyperbolic PDEs on the surface of the sphere are tested. For both cases a spherical coordinate system is used in terms of latitude $\lambda$ and longitude $\theta$:
 \begin{eqnarray*} 
 x & = & \rho \cos \lambda \cos \theta, 	\\
@@ -268,3 +275,6 @@ where the bell of radius $R = \frac{a}{3}$ is centered at $(\lambda_c, \theta_c)
 We assume $a = 1$, $h_0 = 1$, and $(\lambda_c, \theta_c) = (^{3\pi}/_{2}, 0)$. The angle $\alpha =\ ^{\pi}/_{2}$ is chosen to transport the bell over the poles of the coordinate system, and $u_0 =\ ^{2 \pi a}/_{1036800}$. 
 
 \authnote{Include figures from NCL or Paraview}
+
+
+\section{Elliptic}
