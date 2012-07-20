@@ -111,16 +111,64 @@ The standard first derivatives $\pd{}{x}, \pd{}{y}, \pd{}{z}$:
 \end{itemize} 
 
 Since many of our test cases are PDEs solved on the unit sphere, a projection operator is necessary to compute derivatives constrained to the surface of the sphere. The projection operator provided by \cite{FlyerWright07}  is given by: 
-$$ 
-\mathbf{P} = 
-$$
-which leads to the constrained first derivatives on the sphere: 
-\begin{itemize} 
-	\item $P\pd{\phi}{x} = $
-\end{itemize} 
+
+\subsection{Laplacian ($\Laplacian$)}
+
+\subsection{Sphere Surface Laplacian ($\LaplaceBeltrami$)}
+
+Most models treat the Earth as if it is a sphere. Our tests are scaled to the unit sphere. 
+
+For PDEs solved on the surface of the sphere, the $\Laplacian$ operator (Euclidean Laplacian) can represented in spherical polar coordinates for $\mathbb{R}^3$: 
+\begin{align} 
+\Laplacian = \underbrace{\frac{1}{r} \pd{}{r} \left( r^{2} \pd{}{r}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{r^2} \Delta_{S}}_{\mathsf{angular}} , \label{eq:laplacian_in_spherical}
+\end{align}
+where $\LaplaceBeltrami$ is the Laplace-Beltrami operator---i.e., the Laplacian constrained to the surface of the sphere. This form nicely illustrates the components of the $\Laplacian$ corresponding to the radial and angular terms. 
+
+Noting that our geometry is the periphery of the unit sphere, and there is no radial term, we have:
+\begin{align}
+\Laplacian    \equiv \LaplaceBeltrami , 
+\end{align}
+and although this originated in the spherical coordinate system, we can use the following RBF operator from \cite{WrightFlyerYuen10}---Equation (20): 
+\begin{align} 
+\LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{}{r} + \frac{4-3r^2}{r} \pd{}{r} \right],
+\end{align} 
+where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
 
 
-Laplacian
+Additionally following \cite{FlyerWright09, FlyerLehto11}, the off-diagonal blocks in Equation~\ref{eq:stokes_linear_system} corresponding to the components of a gradient operator must also be constrained to the sphere with this projection matrix: 
+%\frac{1}{||\mathbf{x}||}
+\begin{align}
+P = I - \mathbf{x} \mathbf{x}^T =  \begin{pmatrix} 
+(1-x_1^2) & -x_1 x_2 & -x_1 x_3 \\
+-x_1 x_2 & (1-x_2^2) & -x_2 x_3 \\ 
+-x_1 x_3 & -x_2 x_3 & (1-x_3^2) 
+\end{pmatrix} = \begin{pmatrix} P_{x_1} \\ P_{x_2} \\ P_{x_3} \end{pmatrix}
+\label{eq:project_gradient}
+\end{align}
+where $\mathbf{x}$ is the unit normal at the stencil center. 
+
+
+The direct method of computing RBF-FD weights for the projected gradient for $\mathbf{P} \cdot \nabla $ is presented in \cite{FlyerWright09}. When solving for the weights, we apply the projection on the right hand side of our small linear system. We let $\vx = \begin{pmatrix} x_1, x_2, x_3 \end{pmatrix} $ be the stencil center, and $\vx_k=\begin{pmatrix} x_{1,k}, x_{2,k}, x_{3,k}\end{pmatrix}$ indicate an RBF-FD stencil node. 
+
+Using the chain rule, and assumption that $r(\vx_k-\vx)=\vectornorm{\vx_k-\vx} = \sqrt{(x_{1,k}-x_1)^2 + (x_{2,k}-x_2)^2 + (x_{3,k}-x_3)^2}$, we obtain the unprojected gradient of $\phi$ as
+$$\nabla \phi(r(\vx_k - \vx)) = \pd{r}{\vx} \pd{\phi(r(\vx_k - \vx))}{r} = - (\vx_k - \vx)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r}$$. 
+
+Applying the projection matrix gives 
+\begin{align}
+\mathbf{P} \nabla \phi(r(\vx_k - \vx)) & = - (\mathbf{P} \cdot \vx_k - \mathbf{P}\cdot\vx)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} =  - (\mathbf{P}\cdot\vx_k - 0)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} \\
+& = - (I-\vx\vx^T)(\vx_k
+)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} \\
+& = \begin{pmatrix} x \vx^T \vx_k - x_k \\ y \vx^T \vx_k -  y_k \\ z \vx^T \vx_k -z_k \end{pmatrix} \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} 
+ \end{align}
+Thus, when computing RBF-FD weights for the projected gradient we directly compute the weights using these RHS for the small stencil weight linear systems: 
+\begin{align} 
+P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j} \\
+P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j} \\
+P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j}
+\end{align}
+
+
+
 
 
 \section{Fragments (integrate above)}
