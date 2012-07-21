@@ -1,6 +1,7 @@
+%!TEX root = karen.tex
 \chapter{Avoiding Pole Singularities with RBF-FD}
 
-This content is a summary of \cite{FlyerWright07}. 
+This content follows \cite{FlyerWright07}. 
 
 Let $r = || x - x_j ||$ be the Euclidean distance which is invariant of the coordinate system. In Cartesian coordinates, we have
 $$
@@ -8,24 +9,24 @@ r = \sqrt{(x-x_j)^2 + (y-y_j)^2 + (z-z_j)^2}.
 $$
 For the spherical coordinate system defined by
 \begin{align}
-x = \cos{\theta}\cos{\lambda}
-y = \cos{\theta}\sin{\lambda} 
-z = \sin{\theta}
+x & = \cos{\theta}\cos{\lambda} \\
+y & = \cos{\theta}\sin{\lambda} \\
+z & = \sin{\theta}
 \end{align}
-where $\theta \in (-\frac{\pi}{2}, \frac{\pi}{2})$ is the elevation angle and $\lambda \in (-\pi,\pi)$ the azimuthal angle, we have
+where $\theta \in (-\frac{\pi}{2}, \frac{\pi}{2})$ is the elevation angle and $\lambda \in (-\pi,\pi)$ is the azimuthal angle, we have
 $$
-r = \sqrt{2(1-\cos{\theta}\cos{\theta_j}\cos{\lambda-\lambda_j} - \sin{\theta}\sin{\theta_j})}
+r = \sqrt{2(1-\cos{\theta}\cos{\theta_j}\cos{(\lambda-\lambda_j)} - \sin{\theta}\sin{\theta_j})}
 $$
 
-\authnote{Finish: 1) $\grad$ operator in spherical. 2) the chain rule. 3) then finish with 
+\authnote{Finish: 1) $\grad$ operator in spherical. 2) the chain rule. 3) then finish with }
 
 Note that in the code if one computes the \emph{true weights} to approximate $\d{}{\lambda}$, then they have an explicit system that takes the form: 
 
 $$
-\d{h}{t} = \frac{u}{\cos{\theta}} ( \cos{\theta}\cos{\theta_j}\sin{\lambda - \lambda_j} \frac{1}{r} \d{\phi_j}{r}) + v (\sin{\theta}\cos{\theta_j}\cos{\lambda-\lambda_j} - \cos{\theta}\sin{\theta_j} \frac{1}{r} \d{\phi}{r})
+\d{h}{t} = \frac{u}{\cos{\theta}} ( \cos{\theta}\cos{\theta_j}\sin{(\lambda - \lambda_j)} \frac{1}{r} \d{\phi_j}{r}) + v (\sin{\theta}\cos{\theta_j}\cos{(\lambda-\lambda_j)} - \cos{\theta}\sin{\theta_j} \frac{1}{r} \d{\phi}{r})
 $$
 
-\authnote{In the computer the expression $\frac{1}{\cos{\theta}$ evaluates to a very large number ($1*10^32$) but is not ``inf" or ``NaN". The large value allows the $\cos{\frac{\pi}{2}}$ in the operator to null out the term rather than appear as a singularity. The latter two values (``inf" and ``NaN" would not null out, but instead corrupt the solution. Therefore, while it functions to write code generally following Eq\ref{need_ref_here}, it is better practice to analytically remove the singularity and evaluate the system as: }
+In double precision the computer evaluate the expression $\frac{1}{\cos{\theta}}$ to some very large number ($1.6 * 10^{16}$) but is not ``inf" or ``NaN". The large value allows the $\cos{(\frac{\pi}{2}) = 6.1 * 10^{-17}}$ in the operator to cancel the term rather than appear as a singularity. The latter two values (``inf" and ``NaN" would not null out, but instead corrupt the solution. Therefore, while it functions to write code generally following Eq\ref{need_ref_here}, it is better practice to analytically remove the singularity and evaluate the system as: 
 
 The proper way to solve this in code, however, is to analytically cancel the $\frac{1}{\cos{\theta}}$ in order to avoid singularities at the pole, so we are left with the following weight operators: 
 
