@@ -22,22 +22,24 @@ We solve PDEs of this form with \emph{collocation}. That is, given a number of p
 
 The RBF-FD method is similar to classical Finite Differences in that differential quantities at a single node referred to as a \emph{center}, $\vx_{j}$, is approximated by weighted combinations of function values at $n-1$ neighboring nodes. The center node and its neighbors define a \emph{stencil}, $\{\vx\}_{i=1}^{n}$, in a localized (small) region or \emph{neighborhood} of the domain. 
 
+Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color the red and blue disks represent the magnitude and sign of the RBF-FD weights determined to calculate a derivative quantity at the stencil center. 
 
-We define a \emph{stencil} is generated connecting the center node and its nearest neighbors.  Figure~\ref{fig:stencil_example} provides two examples of stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color the red and blue disks represent the magnitude and sign of the RBF-FD weights determined to calculate a derivative quantity at the stencil center. 
+Weights for both classical Finite Difference and RBF-FD can be obtained through the solution of linear systems. In the case of Finite Difference, the system is a Vandermonde matrix. For RBF-FD the system is based on a symmetric distance matrix. \authnote{Need better description and ref:} The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
+
 
 \begin{figure}[htbp]
 	\centering
-	\begin{subfigure}[m]{0.35\textwidth}
-		\centering
-		\includegraphics[width=1.0\textwidth]{figures/chapter1/RBFFD_single-eps-converted-to.pdf}
-		\caption{A 75 node RBF-FD stencil with blue (negative) and red (positive) differentiation weights to approximate advective operator at the square. Stencils weights indicated by scale of disk radii. (Image courtesy of Bengt Fornberg and Natasha Flyer)}
-		\label{fig:stencil_example_sphere}
-	\end{subfigure}
 	\begin{subfigure}[m]{0.6\textwidth}
 		\centering
 		\includegraphics[width=1.0\textwidth]{figures/chapter1/preview_stencils_example.png}
 		\caption{A 13 node RBF-FD stencil of randomly distributed nodes. The stencil centered at the green square contains the 12 nearest neighbors contained within the minimum covering circle drawn in purple.}
 		\label{fig:stencil_example_random}
+	\end{subfigure}
+	\begin{subfigure}[m]{0.35\textwidth}
+		\centering
+		\includegraphics[width=1.0\textwidth]{figures/chapter1/RBFFD_single-eps-converted-to.pdf}
+		\caption{A 75 node RBF-FD stencil with blue (negative) and red (positive) differentiation weights to approximate advective operator at the square. Stencils weights indicated by scale of disk radii. (Image courtesy of Bengt Fornberg and Natasha Flyer)}
+		\label{fig:stencil_example_sphere}
 	\end{subfigure}
 	\caption{Examples of stencils computable with RBF-FD \authnote{Consider: show example FD stencil (5pt with regular grid)}}
 	\label{fig:stencil_example}
