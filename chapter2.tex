@@ -3,12 +3,30 @@
 
 \chapter{The RBF-generated Finite Differences Method}
 
-\section{RBF-FD as an interpolation problem}
+This chapter introduces our numerical method of choice, the Radial Basis Function-generated Finite Differences (RBF-FD). We start with a simple explanation of the method in terms of function expansion and interpolation, then provide examples operators used to calculate weights within this work. 
 
-If we start by describing global RBF methods and how they approximate the derivative by forming an expansion of the function in terms of weighted basis function, then take the derivatives of the basis functions to approximate the 
+\section{Stencil-based Derivative Approximation}
+
+The RBF-FD method approximates derivatives at a single node with a weighted combination of functions values at the node and its neighbors. 
+
+Similar to standard Finite Differences, a stencil is generated connecting the center node and its nearest neighbors. In Figure~\ref{fig:stencil_example} we
+
+\begin{figure}[htbp]
+	\centering
+	\begin{subfigure}[b]{0.40\textwidth}
+		\centering
+		\includegraphics[width=1.0\textwidth]{figures/chapter1/RBFFD_single-eps-converted-to.pdf}
+		\caption{A 75 node RBF-FD stencil with blue (negative) and red (positive) differentiation weights to approximate advective operator at the square.}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.55\textwidth}
+		\centering
+		\includegraphics[width=1.0\textwidth]{figures/chapter1/preview_stencils_example.png}
+		\caption{A 13 node RBF-FD stencil in a square domain of randomly distributed nodes. Stencil is centered at the green square.}
+	\end{subfigure}
+\end{figure}
 
 
-\section{Calculating RBF-FD weights}
+\section{RBF-FD weights}
 \label{sec:rbffd}
 
 Given a set of function values, $\{u(\vx_j)\}_{j=1}^{N}$, on a set of $N$ nodes $\{\vx_j\}_{j=1}^{N}$, the operator $\diffop$ acting on $u(\vx)$ evaluated at 
