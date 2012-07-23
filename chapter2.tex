@@ -7,9 +7,9 @@ This chapter introduces our numerical method of choice, the Radial Basis Functio
 
 \section{Stencil-based Derivative Approximation}
 
-The RBF-FD method approximates derivatives at a single node with a weighted combination of functions values at the node and its neighbors. 
+The RBF-FD method is similar to classical Finite Differences in that differential quantities at nodes are approximated by weighted combinations of functions values a stencil nodes. 
 
-Similar to standard Finite Differences, a stencil is generated connecting the center node and its nearest neighbors. In Figure~\ref{fig:stencil_example} we
+We define a \emph{stencil} is generated connecting the center node and its nearest neighbors. In Figure~\ref{fig:stencil_example} we
 
 \begin{figure}[htbp]
 	\centering
@@ -362,3 +362,6 @@ p_k(r) &= 4((\epsilon r)^2 - 2(k-1) - \frac{d}{2})  p_{k-1}(r) - 8(k-1)(2(k-1) -
 \end{cases}
 \end{align*}
 where $d$ is the dimension of the problem. We assume $d=2$ below when working on the surface of the sphere.
+
+
+Many algorithms exist to query the $k$-nearest neighbors (equivalently all noes in the minimum/smallest enclosing circle). Some algorithms overlay a grid similar to Locality Sensitive Hashing and query such as \cite{HarPeledMazumdar2003}.
