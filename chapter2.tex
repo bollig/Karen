@@ -3,13 +3,27 @@
 
 \chapter{The RBF-generated Finite Differences Method}
 
-This chapter introduces our numerical method of choice, the Radial Basis Function-generated Finite Differences (RBF-FD). We start with a simple explanation of the method in terms of function expansion and interpolation, then provide examples operators used to calculate weights within this work. 
+The process of solving PDEs using RBFs dates back to 1990 \cite{Kansa1990a,Kansa1990b}. This chapter starts with a description of the general approximation problem and provides background on RBF scattered data interpolation that will be required for the remainder of the chapter. This is followed by a description of Radial Basis Function-generated Finite Differences and examples of operators approximated by the method within this work.
+
+We categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at nodes in the domain. Local methods limit the influence of basis functions and seek an interpolant at each node defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD). \authnote{list references of each type} \authnote{Do I need to define global collocation in the dissertation? The only purpose would be to compare complexity of RBF-FD with it}
+
+\section{Background}
+
+Consider a PDE expressed in terms of (linear) differential operators, $\diffop$ and $\boundop{}$: 
+\begin{eqnarray}
+\diffop{u} & = & f \on{\Interior}, \nonumber \\
+\boundop{u} &=& g \on{\Boundary} 
+\end{eqnarray}
+where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{WrightFornberg06}); of course, this increases the complexity of a single time step. 
+
+We solve PDEs of this form with \emph{collocation}. That is, given a number of points in the domain, derivative and solution values are sought to best satisfy $f, g$ at node locations. \authnote{Not clear yet. Review Lynch2005 for a better explanation}\cite{Lynch2005}
 
 \section{Stencil-based Derivative Approximation}
 
-The RBF-FD method is similar to classical Finite Differences in that differential quantities at nodes are approximated by weighted combinations of functions values a stencil nodes. 
+The RBF-FD method is similar to classical Finite Differences in that differential quantities at a single node referred to as a \emph{center}, $\vx_{j}$, is approximated by weighted combinations of function values at $n-1$ neighboring nodes. The center node and its neighbors define a \emph{stencil}, $\{\vx\}_{i=1}^{n}$, in a localized (small) region or \emph{neighborhood} of the domain. 
 
-We define a \emph{stencil} is generated connecting the center node and its nearest neighbors. In Figure~\ref{fig:stencil_example} we
+
+We define a \emph{stencil} is generated connecting the center node and its nearest neighbors.  Figure~\ref{fig:stencil_example} provides two examples of stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color the red and blue disks represent the magnitude and sign of the RBF-FD weights determined to calculate a derivative quantity at the stencil center. 
 
 \begin{figure}[htbp]
 	\centering
@@ -25,7 +39,7 @@ We define a \emph{stencil} is generated connecting the center node and its neare
 		\caption{A 13 node RBF-FD stencil of randomly distributed nodes. The stencil centered at the green square contains the 12 nearest neighbors contained within the minimum covering circle drawn in purple.}
 		\label{fig:stencil_example_random}
 	\end{subfigure}
-	\caption{Examples of stencils computable with RBF-FD}
+	\caption{Examples of stencils computable with RBF-FD \authnote{Consider: show example FD stencil (5pt with regular grid)}}
 	\label{fig:stencil_example}
 \end{figure}
 
