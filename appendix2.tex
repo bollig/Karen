@@ -35,6 +35,58 @@ Alternatively, I have found that if we have computed the weights corresponding t
 
 
 
+\begin{figure}[htbp]
+	\centering
+	\begin{subfigure}[b]{0.425\textwidth}
+	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/sph32_times_sin20x.pdf}
+	\caption{Manufactured test function: \\  $f(\vx) = Y_{3}^{2}(\vx)\sin(20x)$.  }
+	\end{subfigure}
+	\begin{subfigure}[b]{0.425\textwidth}
+	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/pdx_sph32_times_sin20x.pdf}
+	\caption{$x$-component of the projected gradient: \\  $\mathbf{p}_{x} \cdot \nabla f(\vx)$.  }
+	\end{subfigure}
+	\begin{subfigure}[b]{0.425\textwidth}
+	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/lsfc_sph32_times_sin20x.pdf}
+	\caption{$\LaplaceBeltrami$ of function: $(\mathbf{p}_{x} \cdot \nabla) \cdot (\mathbf{p}_{x} \cdot \nabla) f(\vx)$.  }
+	\end{subfigure}
+	\caption{Test function and its projected $x$ derivatives. }
+\end{figure}
+
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error.pdf}
+\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32/direct_rel_l2_error.pdf}
+\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/direct_rel_l2_error.pdf}
+
+	\caption{Relative $\ell_{2}$ error in differentiation.}
+\end{figure}
+
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/diff_of_rel_l2_errors.pdf}
+
+	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32/diff_of_rel_l2_errors.pdf}
+\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/diff_of_rel_l2_errors.pdf}
+
+	
+		\caption{Signed differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
+\end{figure}
+
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/abs_diff_of_rel_l2_errors.pdf}
+	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/abs_diff_of_rel_l2_errors.pdf}
+
+		\caption{Absolute differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
+\end{figure}
+
+\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32/condest_dm_xsfc.pdf}
+
+\section{Conclusions}
+
 Although it is clear the indirect method functions well compared to the direct method, we must consider its usefulness. Typically, weights are computed only as necessary for the PDE. If the PDE is on the sphere, then directly computing the $\mathbf{P}\nabla$ operator would be most efficient for both memory and computation. However, one could imagine a scenario such as a 3-D spherical shell domain with physics on the boundaries that must be constrained to the surface, while the interior requires only an unprojected $\nabla$ operator. In such cases, by simply computing for the $\nabla$ operator, we assemble all necessary operators with minimal loss of accuracy and significant savings ($3Nn$ doubles) in storage. 
 
 \authnote{Plot file size of matrix market file to give an idea of how much memory is saved by cutting out operators} 
