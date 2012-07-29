@@ -482,3 +482,9 @@ We want to express benchmarks in terms of the number of GMRES iterations per sec
 		\item plot: number of GMRES iterations per second w.r.t. number of processors
 	\end{itemize} 
 \end{itemize} 
+
+
+\section{Fragments}
+Need to describe the solver. 
+
+State that the conditions under which a problem is solved determines how quickly it will converge. For example, nodes too close together on delaunay meshes cause higher condition numbers and require more iterations. Proper choice of preconditioners can dramatically reduce the number of iterations required to converge. Although preconditioners incur an additional cost in preprocessing and at each iteration of the solver, 
