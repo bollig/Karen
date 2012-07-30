@@ -18,7 +18,7 @@ From \cite{FlyerWright09}, the projected RBF gradient operator is:
 & = -\mathbf{P} \vx_{k}\frac{1}{r(\vx)} \d{\phi_{k}(r(\vx))}{r(\vx)} \label{eq:xsfc_negative} \\
 & = \begin{bmatrix} x \vx^{T} \vx_{k} - x_{k} \\  y \vx^{T} \vx_{k} - y_{k} \\  z \vx^{T} \vx_{k} - z_{k} \end{bmatrix} \frac{1}{r(\vx)} \d{\phi(r(\vx))}{r} \label{eq:sfc_gradient_operator}.
 \end{align}
-It is stated in \cite{FlyerWright09} that the operator $\mathbf{I} - \vx \vx^{T}$ for $\vx = (x,y,z)$ projects a vector onto the plane tangent to the unit sphere at $(x,y,z)$. Therefore, Equation~\ref{eq:sfc_gradient_operator} gives the projection of the gradient operator at $\vx_{k}$ onto the plane tangent to $\vx$. 
+The operator $\mathbf{I} - \vx \vx^{T}$ for $\vx = (x,y,z)$ projects a vector onto the plane tangent to the unit sphere at $(x,y,z)$. Therefore, Equation~\ref{eq:sfc_gradient_operator} gives the projection of the gradient operator at $\vx_{k}$ onto the plane tangent to $\vx$. 
 
 \section{Direct Weights} 
 
@@ -31,8 +31,7 @@ and so forth for the $\mathbf{p}_{y}, \mathbf{p}_{z}$ operators, where $\vx_{c}$
 
 \section{Indirect Weights} 
 
-Alternatively, I have found that if we have computed the weights corresponding to the unprojected $\nabla$ operator, we can \emph{indirectly} generate weights for the projected operator by applying the project to the weights rather than the RHS of Equation~\ref{eq:rbffd_weight_system}. 
-
+Alternatively, one could compute weights \emph{indirectly} by first assembling differentiation matrices for the unprojected $\nabla$ operator, and then apply the projection $\mathbf{P}$ to the differentiation matrices rather than the RHS of Equation~\ref{eq:rbffd_weight_system}. 
 
 
 \begin{figure}[htbp]
@@ -43,7 +42,8 @@ Alternatively, I have found that if we have computed the weights corresponding t
 	\end{subfigure}
 	\begin{subfigure}[b]{0.425\textwidth}
 	\includegraphics[width=1.0\textwidth]{figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/pdx_sph32_times_sin20x.pdf}
-	\caption{$x$-component of the projected gradient: $\mathbf{p}_{x} \cdot \nabla f(\vx)$.  }
+	\caption{$x$-component of the projected gradient: 
+	$\mathbf{p}_{x} \cdot \nabla f(\vx)$.  }
 	\end{subfigure}
 	
 	\begin{subfigure}[b]{0.425\textwidth}
