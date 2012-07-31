@@ -31,7 +31,15 @@ and so forth for the $\mathbf{p}_{y}, \mathbf{p}_{z}$ operators, where $\vx_{c}$
 
 \section{Indirect Weights} 
 
-Alternatively, one could compute weights \emph{indirectly} by first assembling differentiation matrices for the unprojected $\nabla$ operator, and then apply the projection $\mathbf{P}$ to the differentiation matrices rather than the RHS of Equation~\ref{eq:rbffd_weight_system}. 
+Alternatively, one could compute weights \emph{indirectly} by first assembling differentiation matrices for the unprojected $\nabla$ operator, 
+$$
+\D_{\nabla} = \begin{bmatrix} \D_{\d{}{x}} \\ \D_{\d{}{y}} \\ \D_{\d{}{z}} \end{bmatrix}
+$$
+where the matrices contain weights for the operators of Equation~\ref{eq:rbffd_grad_weights}, and then apply the projection $\mathbf{P}$ to the differentiation matrices: 
+\begin{equation}
+\mathbf{P} \cdot \D_{\nabla} = \begin{bmatrix} \D_{\mathbf{p_{x}}} \\  \D_{\mathbf{p_{y}}} \\  \D_{\mathbf{p_{z}}} \end{bmatrix}
+\end{equation}
+ 
 
 In other words, we have the system 
 
