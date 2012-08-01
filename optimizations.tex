@@ -59,7 +59,6 @@ These results were run on Keeneland. The changes to MPI communication are the re
 \end{subfigure} 
 \end{figure} 
 
-
 Figure~\ref{fig:alltoall_1proc_warp} shows that our GPU kernel is not much different than in the paper. I have a list of optimizations I'm going through, but this test case focuses on improving the communication. 
 
 Figure~\ref{fig:alltoall_multicpu_scaling}  shows the strong scalability of our method on Multiple CPUs. In distributed computing, ideal scaling is linear. This figure demonstrates that our method does scale linearly (almost super-linearly) as the number of CPUs increases, so our prospect for spanning all CPUs on Keeneland is within reach for problem sizes large enough. The super-linear speedup seen for 10 processors results from improved caching on processors as their individual problem sizes decrease and the processors are able to keep a larger percentage of the problem within fast cache memory.
@@ -80,7 +79,8 @@ I am generating another set of figures that demonstrate the scaling when we over
     
 
 
-
+\authnote{Need to test weak scaling (problem size stays fixed per processor). This will require a modified code, but we can fill the weight matrices with anything and run the kernels.}
+\authnote{Need to compare one warp of threads to a full block of size $n$}
 
 \section{Asynchronous OpenCL}
 
