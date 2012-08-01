@@ -19,6 +19,24 @@ Need partitioning, global and local index maps, and local ordering for a distrib
 
 \subsection{Node Partitioning}
 
+Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of $N=10,201$ nodes on the unit sphere onto four CPUs. Each partition, illustrated as a unique color, represents set $\setAllNodes$ for a single CPU. 
+Alternating representations between node points and interpolated surfaces illustrates the overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes requiring MPI communication) reside. As stencil size increases, the width of the overlap regions relative to total number of nodes on the sphere also increases. 
+\authnote{Q: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil}
+
+The linear partitioning in Figure~\ref{fig:decomposed_sphere} was chosen for ease of implementation. Communication is limited for each
+processor to left and right neighbors only, which simplifies parallel debugging. This partitioning, however, does not guarantee properly balanced computational work-loads. Other partitionings of the sphere exist but are not studied here because this paper's focus is neither on efficiency nor on selecting a partitioning strategy for maximum accuracy. Examples of alternative approaches include a cubed-sphere \cite{Ivan2011} or icosahedral geodesic grid \cite{Randall2002}, which can evenly balance the computational load across partitions. Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
+
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/4procs_N10K_n31.pdf}
+\caption{Partitioning of $N=10,201$ nodes to span four processors with stencil size $n=31$.  }
+\label{fig:decomposed_sphere}
+\end{center}
+\end{figure}
+
+\authnote{Need to flesh detail on ParMETIS, two dimensional partitioning and case when a node value is required by multiple processors}
+
+
 \subsection{Global and Local Indices}
 
 \subsection{Local Node Ordering} 
@@ -118,19 +136,6 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
 		processors, since the individual processors do not require the 
 		full mapping between RBF nodes and CPUs. 
 
-Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of $N=10,201$ nodes on the unit sphere onto four CPUs. Each partition, illustrated as a unique color, represents set $\setAllNodes$ for a single CPU. 
-Alternating representations between node points and interpolated surfaces illustrates the overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes requiring MPI communication) reside. As stencil size increases, the width of the overlap regions relative to total number of nodes on the sphere also increases. 
-
-The linear partitioning in Figure~\ref{fig:decomposed_sphere} was chosen for ease of implementation. Communication is limited for each
-processor to left and right neighbors only, which simplifies parallel debugging. This partitioning, however, does not guarantee properly balanced computational work-loads. Other partitionings of the sphere exist but are not studied here because this paper's focus is neither on efficiency nor on selecting a partitioning strategy for maximum accuracy. Examples of alternative approaches include a cubed-sphere \cite{Ivan2011} or icosahedral geodesic grid \cite{Randall2002}, which can evenly balance the computational load across partitions. Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
-
-\begin{figure}[ht!]
-\begin{center}
-\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/4procs_N10K_n31.pdf}
-\caption{Partitioning of $N=10,201$ nodes to span four processors with stencil size $n=31$.  }
-\label{fig:decomposed_sphere}
-\end{center}
-\end{figure}
 
 \section{Relation to the Restrictive Additive Schwarz Decomposition}
 
