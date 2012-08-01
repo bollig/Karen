@@ -2,6 +2,20 @@
 
 We present our implementation of an efficient multi-node, multi-GPU RBF PDE package to run on clusters of GPU compute nodes. Each compute node has one or more GPUs attached. Specifically, we utilize the hardware available in the FSU HPC Spear cluster and the NFS funded Keeneland project. While the Spear cluster is only a handful of nodes with 2 GPUs each, Keeneland boasts a total of 240 CPUs and 320 GPUs. The large scale of Keeneland allows us to verify the scaling of our method. 
 
+
+\section{Metrics} 
+
+The code produces the same results on CPUs and GPUs. However, their performance differs, so we analyze this difference with the speedup metric: 
+$$ 
+S_{p} =\ ^{T_{\text{serial}}} /_{T_{\text{parallel}}}
+$$
+
+\authnote{Include efficiency}: 
+$$ 
+E_{p} =\ ^{S_{p}} /_{\# \text{\ of processors}}
+$$
+
+
 \section{OpenCL}
 We leverage the OpenCL language for functional portability. 
 
