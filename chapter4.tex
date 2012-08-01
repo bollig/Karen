@@ -4,11 +4,22 @@
 
 \label{sec:validation}
 
-\section{Stencil Generation} 
-\subsection{kD-Tree vs LSH} 
 \section{Choosing $\epsilon$}
 Present our attemps to get the right support parameter
 
+We duplicate some results of \cite{FlyerLehto11} by choosing the same epsilon values specified in Table~\ref{tbl:vortex_hv_params}. 
+
+I also produced a Matlab script to generate the contours for any stencil size and produced the following figures. 
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{figures/chapter4/epsilon_contours/labeled_contour_n20.pdf}
+\includegraphics[width=0.45\textwidth]{figures/chapter4/epsilon_contours/labeled_contour_n40.pdf}
+\includegraphics[width=0.45\textwidth]{figures/chapter4/epsilon_contours/labeled_contour_n60.pdf}
+\includegraphics[width=0.45\textwidth]{figures/chapter4/epsilon_contours/labeled_contour_n80.pdf}
+\includegraphics[width=0.45\textwidth]{figures/chapter4/epsilon_contours/labeled_contour_n100.pdf}
+\caption{Contours for choosing $\epsilon$ for $n=20$, 40, 60, 80 and 100 on the unit sphere as a function of $\sqrt{N}$. Contours assume near uniform distribution of nodes (e.g., maximum determinant nodes, icosahedral grids and spherical centroidal voronoi tessellations)}
+\end{figure}
 
 \section{Parabolic} 
 
