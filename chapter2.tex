@@ -102,10 +102,12 @@ For each of the $N$ small system solves of Equation~(\ref{eq:rbffd_weight_system
 \section{Weight Operators}
 Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs. Here we provide a list of operators we have tested and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system} necessary to compute RBF-FD weights. 
 
-The standard first derivatives $\pd{}{x}, \pd{}{y}, \pd{}{z}$:
-\begin{itemize}
-	\item $\pd{\phi}{x}  $
-\end{itemize} 
+The standard first derivatives $\pd{}{x}, \pd{}{y}, \pd{}{z}$ are produced by the chain rule
+	\begin{align} 
+	 \pd{\phi}{x} = \d{r}{x} \d{\phi}{r} = \frac{(x-x_{j})}{r} \d{\phi}{r} \\
+	 \pd{\phi}{y} = \d{r}{y} \d{\phi}{r} = \frac{(y-y_{j})}{r} \d{\phi}{r} \\
+	 \pd{\phi}{z} = \d{r}{z} \d{\phi}{r} = \frac{(z-z_{j})}{r} \d{\phi}{r}
+	\end{align}
 
 where $\pd{\phi}{r}$ for the Gaussian RBFs is given by: 
 
