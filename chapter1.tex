@@ -39,7 +39,7 @@ The motivation behind RBF-FD is generality/functionality in the numerical method
 
 \chapter{Introduction}
 
-\section{Research Statement} 
+\subsubsection{Research Statement} 
 What motivated this research?
 \label{sec:intro}
 
@@ -190,18 +190,34 @@ weights are exact for RBFs rather than polynomials.
 As in FD, increasing the stencil size $n$  increases the accuracy of the approximation.
 Given $N$ total nodes in the domain (such as on the surface of a sphere), $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$---much lower than for the global RBF method of $O(N^3)$---with derivative evaluations on the order of $O(nN) \implies O(N)$ FLOPs. 
 
-\section{Related Work}
+\chapter{Related Work}
 
-\subsection{  GPUS for explicit and implicit methods }
-\subsection{  GPUS/RBF }
-\subsection{  RBF/Finite-Difference }
-\subsection{  Preconditionners (info on that) }
-\subsection{   Sparse matrix libraries }
-\subsection{  Various GPU/based libraries }
-\subsection{  Parallel implementations of RBF}
+\section{  GPUS for explicit and implicit methods }
+\section{  GPUS/RBF }
+\section{  RBF/Finite-Difference }
 
+\subsection{RBF-FD}
 RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
+
+\section{  Preconditioners }
+
+Many preconditioners are based on physical properties of the domain, PDE and the spectral properties of the numerical method. 
+
+\section{   Sparse matrix libraries }
+\section{  Various GPU/based libraries }
+
+\subsection{CUSP}
+
+GMRES in CUSP is based on the Givens rotations for the Arnoldi process. 
+
+\subsection{ViennaCL}
+
+GMRES in ViennaCL is based on Householder reflections for the Arnoldi process. 
+
+We opted to leverage the ViennaCL package in most of our implementations. 
+
+\section{  Parallel implementations of RBF}
 
 As $N$ grows larger, it behooves us to work on parallel architectures, be it CPUs or GPUs. With regard to the latter, there is some research on leveraging RBFs on GPUs in the fields of visualization \cite{Cuntz2007,Weiler2005},  surface reconstruction \cite{Corrigan2005,Carr2003}, and neural networks \cite{Brandstetter2008}. However, research on the parallelization of RBF algorithms to solve PDEs on multiple CPU/GPU architectures is essentially non-existent. We have found three studies that have addressed this topic, none of which implement RBF-FD but rather take the avenue of domain decomposition for global RBFs (similar to a spectral element approach). In \cite{Divo2007}, Divo and Kassab introduce subdomains with artificial boundaries that are processed independently. Their implementation was designed for a 36 node cluster, but benchmarks and scalability tests are not provided. Kosec and \v{S}arler \cite{Kosec2008} parallelize coupled heat transfer and fluid flow models using OpenMP on a single workstation with one dual-core processor. They achieved a speedup factor of 1.85x over serial execution, although there were
 no results from scaling tests. Yokota, Barba and Knepley \cite{Yokota2010} apply a restrictive additive Schwarz domain decomposition to parallelize global RBF interpolation of more then 50 million nodes on 1024 CPU processors. Only Schmidt et al. \cite{Schmidt2009b} have accelerated a global RBF method for PDEs on the GPU. Their MATLAB implementation applies global RBFs to solve the linearized shallow water equations utilizing the AccelerEyes Jacket \cite{JacketGuide2009} library to target a single GPU.
@@ -214,6 +230,7 @@ no results from scaling tests. Yokota, Barba and Knepley \cite{Yokota2010} apply
     \label{fig:rbfInterpolation}
 \end{figure}
 
+\section{ Contributions of this Work }
 %To our knowledge, this paper presents the first implementation of RBF-FD
 
 Within this dissertation, we have developed the first implementation of RBF-FD
@@ -227,7 +244,7 @@ We present our explicit and implicit solutions to PDEs with our multi-GPU RBF-FD
 
 %The remainder of this paper is organized as follows:  Chapter~\ref{chap:rbffd} introduces RBF-FD via interpolation. Chapter~\ref{chap:gpu} details our parallelization strategies for the Keeneland system, including data partitions that are handled concurrently by different CPU processes and the data-parallel explicit time stepping scheme for the GPU. In Section~\ref{sec:validation}, our implementation is verified against well-known hyperbolic PDE test cases on the sphere, advection of a cosine bell and vortex wrap-up. Finally, performance benchmarks and results are presented in Section~\ref{sec:performance}, followed by conclusions and proposals for future optimization strategies in Section~\ref{sec:conclusion}.
 
-\section{Fragments (integrate above) }
+\chapter{Fragments (integrate above) }
 
 with the goal of solving coupled fluid flows modelling the physics (?) in the interior of the earth. We require both advective terms and diffusive terms. The components of a good pressure fluid solver are explicit and implicit differentiation. Whether we solve a steady-state PDE implicitly or a hyperbolic PDE with an implicit time-scheme, we require an \emph{implicit solver}. An implicit solver is nothing but a method of assembling a differentiation matrix, forcing terms on the RHS and then solving the linear system. A direct LU factorization would suffice if our system is dense, but with RBF-FD the system is sparse. Sparse systems can be efficiently solved under the right conditions through sparse iterative solvers. :
 

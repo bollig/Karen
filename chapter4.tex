@@ -294,5 +294,17 @@ We assume $a = 1$, $h_0 = 1$, and $(\lambda_c, \theta_c) = (^{3\pi}/_{2}, 0)$. T
 
 \authnote{Include figures from NCL or Paraview}
 
+\subsection{CFL}
+We constrict our timesteps according to the Courant-Friedrich-Lewy (CFL) condition: 
+
+$$
+C_{\text{max}} \frac{\Delta x_{\text{min}}}{v_{\text{max}}} < \Delta t
+$$
+where $\Delta x_{\text{min}}$ is the minimum distance between any two nodes in the domain, and the $v_{\text{max}}$ is the maximum velocity 
+
+For the cosine bell test cases we use a conservative $C_{\text{max}} = 0.4$ to ensure stable transport in all cases with $n=101$. However, in testing it was found that $n=17$ is capable of stably advecting with $C_{\text{max}} > 1$ for $n=17$; $n=101$ can go up to $C_{\text{max}} = 0.51$ for $N=27556$ (e.g. 650 timesteps per revolution). 
+
+
+apparently, canceling the cosine analytically causes the conditioning of the system to change slightly. The hyperviscosity parameters I have in the paper are for the case with the cosine present. The parameters continue to function well for the other cases, but their impact on the eigenvalue distributions is noticeably higher (further span to the left). 
 
 \section{Elliptic}
