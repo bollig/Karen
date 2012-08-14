@@ -1,13 +1,36 @@
+
 %!TEX root = karen.tex
 
+%introduction
+%	- argue what we show within (i.e., first GPGPU, first multi-CPU, approximate nearest neighbors, etc.)
+%numerical method
+%	- Explain status entering the field
+%		- global RBFs formulation, applications
+%		- compact RBFs formulation, applications
+%	- which brings us to our method of choice, RBF-FD
+%		- Benefits in complexity, versatility
+%		- inherits global RBFs
+%		- new method with limited application
+%implementation
+%	- describe our neighbor queries
+%		- approximate neighbors are good enough
+%		- benchmark performance of kDTree vs LSH Raster
+%		- Plot bandwidth of each method vs N on sphere
+%		- 
 
-\chapter{The RBF-generated Finite Differences Method}
+The choice to study RBF-FD within this dissertation is motivated by two factors. First, RBF-FD represents one of the latest developments within the RBF community. The method was formally introduced in 2003 but has yet to obtain the critical-mass following necessary for the method's use in large-scale scientific models. Our goal throughout the dissertation has been to scale RBF-FD to complex problems on high resolution meshes, and to lead the way for its adoption in high performance computational geophysics. Second, RBF-FD inherits many of the positive features from global and local collocation schemes, but sacrifices others for the sake of significantly reduced computational complexity and increased parallelism. We capitalize on the inherent parallelism to develop a collection of multi-GPU test cases that span the compute nodes of a Top 500 supercomputer. Our effort leads the way for application of RBF-FD in the modern field of high performance computing where GPU accelerators will be key to breaching the exa-scale barrier in computing \cite{GPUandExascale2011}.
 
+
+Rather than solely focus on the optimizations of said algorithms on the GPU, we dedicate significant attention to the practical application of RBF-FD to interesting problems in geophysics. This means we have walked a fine line between research topics to both apply the method to 
+
+\chapter{RBF Methods for PDE Solutions} 
 The process of solving PDEs using RBFs dates back to 1990 \cite{Kansa1990a,Kansa1990b}. This chapter starts with a description of the general approximation problem and provides background on RBF scattered data interpolation that will be required for the remainder of the chapter. This is followed by a description of Radial Basis Function-generated Finite Differences and examples of operators approximated by the method within this work.
 
-We categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at nodes in the domain. Local methods limit the influence of basis functions and seek an interpolant at each node defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD). \authnote{list references of each type} \authnote{Do I need to define global collocation in the dissertation? The only purpose would be to compare complexity of RBF-FD with it}
+We categorize existing methods for solving PDEs with RBFs as either global or local. Global methods are based on collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at nodes in the domain. Local methods limit the influence of basis functions and seek an interpolant at each node defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD). 
 
-\section{Background}
+The selling points of RBF-FD are numerous. While not a panacea for PDEs, the method combines many inherited traits of global RBF methods with lower computational complexity. As demonstrated here, the method is simple to code, easily extensible for higher accuracy and dimensions, and powerful in its ability to avoid singularities introduced by the coordinate system that might impact other methods.  
+
+\section{Global RBF Method}
 
 Consider a PDE expressed in terms of (linear) differential operators, $\diffop$ and $\boundop{}$: 
 \begin{eqnarray}
@@ -16,7 +39,161 @@ Consider a PDE expressed in terms of (linear) differential operators, $\diffop$ 
 \end{eqnarray}
 where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{WrightFornberg06}); of course, this increases the complexity of a single time step. 
 
-We solve PDEs of this form with \emph{collocation}. That is, given a number of points in the domain, derivative and solution values are sought to best satisfy $f, g$ at node locations. \authnote{Not clear yet. Review Lynch2005 for a better explanation}\cite{Lynch2005}
+We solve PDEs of this form with \emph{collocation}. That is, given a number of points in the domain, we seek the derivative and solution values that best satisfy $f, g$ at node locations. \authnote{Not clear yet. Review Lynch2005 for a better explanation}\cite{lynch2004numerical}
+
+Global RBF collocation methods pose the problem of interpolating a multivariate function $f : \domain
+    \rightarrow \R$ where $\domain \subset \R^m$. Given a set of sample values
+    $\{f(x_j)\}_{j=1}^{N}$ on a discrete set of nodes $X = \{x_j\}_{j=1}^{N}
+    \subset \domain$, an approximation $\hat{f}_N$ can be constructed through
+    linear combinations of interpolation functions. Here, we choose univariate,
+    radially symmetric functions based on Euclidean distance ($\vnorm{\cdot}$), and use
+    translates $\phi(x-x_j)$ of a single continuous real
+    valued function $\phi$ defined on $\R$ and centered at $x_j$:
+         \begin{equation*} 
+         \phi(x) := \varphi(\vnorm{x}).
+         \end{equation*} 
+    %with a continuous function $\varphi$ on $\R_0^{+}$. 
+    Here, $\varphi$ is a
+    Radial Basis Function and $\phi$ the
+    associated kernel. For simplification $\phi_j(x)$ refers to a kernel centered at $x_j$; i.e., $\varphi(\vectornorm{x-x_j})$.
+
+   The interpolant $\hat{f}_N(x)$ requires a linear combination of translates:  
+        \begin{equation*}
+      %  \hat{f}_N(x) = \sum_{j=1}^{N} c_j \varphi(\vnorm{x-x_j})
+        \hat{f}_N(x) = \sum_{j=1}^{N} c_j \phi_j(x)
+        \end{equation*}
+    with real coefficients $\{c_j\}_{j=1}^{N}$. Assuming the interpolant passes through
+    known values of $f$; i.e., 
+        \begin{equation*} 
+        \hat{f}_N(x_i) = f(x_i),\ \ \ \ \ 1 \leq i \leq N, 
+        \end{equation*}
+    allows one to solve for coefficients if the following linear system is uniquely
+    solvable: 
+        \begin{equation*} 
+        %\sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) = f(x_i),\ \ \ \ \ 1
+        \sum_{j=1}^{N} c_j \phi_j(x_i) = f(x_i),\ \ \ \ \ 1
+        \leq i \leq N. 
+        \end{equation*} 
+    This is true if the $N \by N$ matrix $\Phi$ produced by the linear system
+%        \begin{align} 
+%          \begin{pmatrix}  
+%            \varphi(\vnorm{x_1 - x_1}) & \varphi(\vnorm{x_1 - x_2}) & \cdots & \varphi(\vnorm{x_1 - x_N}) \\ 
+%            \varphi(\vnorm{x_2 - x_1}) & \varphi(\vnorm{x_2 - x_2}) & \cdots & \varphi(\vnorm{x_2 - x_N}) \\ 
+%            \vdots & \ddots & \ddots & \vdots \\
+%            \varphi(\vnorm{x_N - x_1}) & \varphi(\vnorm{x_N - x_2}) & \cdots & \varphi(\vnorm{x_N - x_N})
+%                \end{pmatrix} 
+%                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
+%               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
+%                         \Phi \vec{c} &= \vec{f} 
+%        \end{align} 
+        \begin{align*} 
+          \begin{pmatrix}  
+            \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_N(x_1) \\ 
+            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_N(x_2) \\ 
+            \vdots & \ddots & \ddots & \vdots \\
+            \phi_1(x_N) & \phi_2(x_N) & \cdots & \phi_N(x_N)
+                \end{pmatrix} 
+                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
+               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
+                         \Phi \vec{c} &= \vec{f} 
+        \end{align*} 
+is nonsingular.
+
+ When choosing an appropriate basis function for interpolation, a
+    subset of RBFs have been shown to produce symmetric positive definite
+    $\Phi$, while others are only conditionally positive definite (for more details see
+    \cite{Fasshauer2007}).  With
+    the latter set, additional polynomial terms are added to constrain the
+    system and enforce positive definiteness, resulting in this expanded system of equations: 
+        \begin{align} 
+       % \sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) + \sum_{k=1}^{t}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
+        \sum_{j=1}^{N} c_j \phi_j(x_i) + \sum_{k=1}^{M}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
+        \leq i \leq N, \nonumber \\ 
+        \sum_{j=1}^{N} c_j p_k(x_j) &=  0,\ \ \ \ \ \ \ \ \ \ 1 \leq k \leq M. \nonumber \\
+          \begin{pmatrix} \Phi & P \\ P^T & 0 \end{pmatrix} \begin{bmatrix} c \\ d \end{bmatrix} &= \begin{bmatrix} \vec{f} \\ 0 \end{bmatrix}
+	\label{eq:additional_constraints}
+        \end{align} 
+        where $\{p_k\}_{k=1}^{M}$ is a basis for $\Pi_{p}^{m} $ (the set of polynomials in $m$ variables of degree $\leq p$) and 
+       \begin{equation*}
+       M = {{p+m}\choose{m}}       .
+       \end{equation*} 
+      %\authnote{Add table? or cut:} Table~\ref{tbl:rbfoptions} provides example RBF functions and notes their (conditionally) positive definiteness. 
+
+
+Given the coefficients $\vec{c}$, the function value at a test point $x$ is interpolated by
+\begin{align}	 
+	\hat{f}_N(x) &= \sum_{j=1}^{N}c_j \Phi_j(x) + \sum_{l=1}^{M}d_l P_l(x)  \nonumber \\
+	&=  \left[\begin{array}{cc}
+        \Phi & \PP
+	\end{array} \right] 
+	 \begin{bmatrix}	c \\
+					d
+		 \end{bmatrix} \nonumber \\
+						 &= \vec{\Phi}_x^T \vec{c} \nonumber \\
+						 &= \vec{\Phi}_x^T \Phi^{-1}\vec{f}	
+						 \label{eq:rbf_interpolate_pt}
+\end{align}
+where $\vec{c}$ is substituted by the solution to Equation~\ref{eq:additional_constraints}. In Equation~\ref{eq:rbf_interpolate_pt} the term $\Phi_{x}^T\Phi^{-1}$, dependent only on node positions, can be evaluated prior to knowing $f$. 
+
+
+
+\section{The RBF-generated Finite Differences Method}
+
+
+For the RBF-FD method, derivatives of $u(x)$ are weighted combinations of a small neighborhood of $N_s$ nodes (i.e., a stencil with $N_s \ll N$):
+ %derivative of u (i.e., $\diffop{u}$) at the stencil center ($x_1$) as a weighted combination of neighbors (like typical Finite Differencing): 
+        \begin{align} 
+        \diffop{u(x_1)} &\approx \sum_{j=1}^{N_s} c_j u(x_j) \nonumber 
+        \label{eq:derivFromFDWeights}
+        \end{align}
+where $\diffop{u}$ denotes a linear differential quantity over $u$ (e.g., $\diffop{u} = \d{u}{x}$). Here, ${c_j}$ are unknown, and obtained by enforcing the reconstruction:
+	\begin{align}
+	        \diffop{\phi_j(x_1)} = \sum_{i=1}^{N_s} c_i \phi_j(x_i) \ \ \ \ \ \ \textrm{for }j=1,2,...,N_s \nonumber 
+	\end{align}
+with $\diffop{\phi}_j$ provided by analytically applying the differential operator to the kernel function.
+This is equivalent to: 
+	\begin{align}        
+          \begin{pmatrix}  
+            \phi_1(x_1) & \phi_1(x_2) & \cdots & \phi_1(x_{N_s}) \\ 
+            \phi_2(x_1) & \phi_2(x_2) & \cdots & \phi_2(x_{N_s}) \\ 
+            \vdots & \ddots & \ddots & \vdots \\
+            \phi_{N_s}(x_1) & \phi_{N_s}(x_2) & \cdots & \phi_{N_s}(x_{N_s})
+                \end{pmatrix} 
+                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
+               &=                \begin{bmatrix} \diffop{\phi_1}(x_1) \\  \diffop{\phi_2}(x_1) \\ \vdots \\  \diffop{\phi_{N_s}}(x_1) 
+               \end{bmatrix} \\
+                         \Phi_{s} \vec{c} &= \vec{\Phi_{\diffop{}_s}}.% (x_1)
+                         \label{eqn:rbffd_simplified}
+                         % \Phi_{i,j} \vec{c} &= \vec{\diffop{\phi_j}} 
+        \end{align} 
+Solving Equation~\ref{eqn:rbffd_simplified} for stencils weights, $\vec{c}$, and substituting into Equation~\ref{eq:derivFromFDWeights} reveals the similarity between RBF-FD and the general problem of RBF interpolation (see Equation~\ref{eq:rbf_interpolate_pt} and discussion): 
+        \begin{align*} 
+        \diffop{u(x_1)} &\approx (\Phi^{-1}_s \vec{\Phi}_{\diffop{}_s})^T \vec{u} \\
+        &\approx \vec{\Phi}_{\diffop{}_s}^T \Phi^{-T}_s \vec{u}
+        \label{eq:rbffd_approx_derivs}
+        \end{align*}
+        
+	
+Again, based on the choice of RBF, positive definiteness of the system is ensured by adding the same constraints as Equation~\ref{eq:additional_constraints}, but note differential quantities for $\vec{\PP}$ on the right hand side: 
+	\begin{align}
+		\begin{pmatrix}
+		\Phi_s & \PP \\
+		\PP^T & 0
+		\end{pmatrix} \begin{bmatrix}
+							c \\ 
+							d
+							\end{bmatrix}
+				 &= \begin{bmatrix}
+							\vec{\Phi}_{\diffop{}_s} \\
+							\vec{\PP}_{\diffop{}}
+							 \end{bmatrix}.
+	\end{align}
+	%\authnote{must have things mixed up in my head. Cannot justify the reason to have $\PP_{\diffop{}}$ and not $0$. Perhaps because I dont fully understand the cardinal point derivation of RBFFD.}
+Equation~\ref{eq:rbffd_approx_derivs} is strictly for the stencil centered at node $x_1$. To obtain weights for all stencils in the domain, a total of $N$ such systems must be solved. %Following the discussion of Equation~\ref{eq:rbf_interpolate_pt}, stencils weights are computed given only node positions. 
+
+
+
+
 
 \section{Stencil-based Derivative Approximation}
 
@@ -223,152 +400,6 @@ In general, the larger the stencil size, the higher the order of the Laplacian. 
 
 \section{Fragments (integrate above)}
 
-Global RBF collocation methods pose the problem of interpolating a multivariate function $f : \domain
-    \rightarrow \R$ where $\domain \subset \R^m$. Given a set of sample values
-    $\{f(x_j)\}_{j=1}^{N}$ on a discrete set of nodes $X = \{x_j\}_{j=1}^{N}
-    \subset \domain$, an approximation $\hat{f}_N$ can be constructed through
-    linear combinations of interpolation functions. Here, we choose univariate,
-    radially symmetric functions based on Euclidean distance ($\vnorm{\cdot}$), and use
-    translates $\phi(x-x_j)$ of a single continuous real
-    valued function $\phi$ defined on $\R$ and centered at $x_j$:
-         \begin{equation*} 
-         \phi(x) := \varphi(\vnorm{x}).
-         \end{equation*} 
-    %with a continuous function $\varphi$ on $\R_0^{+}$. 
-    Here, $\varphi$ is a
-    Radial Basis Function and $\phi$ the
-    associated kernel. For simplification $\phi_j(x)$ refers to a kernel centered at $x_j$; i.e., $\varphi(\vectornorm{x-x_j})$.
-
-   The interpolant $\hat{f}_N(x)$ requires a linear combination of translates:  
-        \begin{equation*}
-      %  \hat{f}_N(x) = \sum_{j=1}^{N} c_j \varphi(\vnorm{x-x_j})
-        \hat{f}_N(x) = \sum_{j=1}^{N} c_j \phi_j(x)
-        \end{equation*}
-    with real coefficients $\{c_j\}_{j=1}^{N}$. Assuming the interpolant passes through
-    known values of $f$; i.e., 
-        \begin{equation*} 
-        \hat{f}_N(x_i) = f(x_i),\ \ \ \ \ 1 \leq i \leq N, 
-        \end{equation*}
-    allows one to solve for coefficients if the following linear system is uniquely
-    solvable: 
-        \begin{equation*} 
-        %\sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) = f(x_i),\ \ \ \ \ 1
-        \sum_{j=1}^{N} c_j \phi_j(x_i) = f(x_i),\ \ \ \ \ 1
-        \leq i \leq N. 
-        \end{equation*} 
-    This is true if the $N \by N$ matrix $\Phi$ produced by the linear system
-%        \begin{align} 
-%          \begin{pmatrix}  
-%            \varphi(\vnorm{x_1 - x_1}) & \varphi(\vnorm{x_1 - x_2}) & \cdots & \varphi(\vnorm{x_1 - x_N}) \\ 
-%            \varphi(\vnorm{x_2 - x_1}) & \varphi(\vnorm{x_2 - x_2}) & \cdots & \varphi(\vnorm{x_2 - x_N}) \\ 
-%            \vdots & \ddots & \ddots & \vdots \\
-%            \varphi(\vnorm{x_N - x_1}) & \varphi(\vnorm{x_N - x_2}) & \cdots & \varphi(\vnorm{x_N - x_N})
-%                \end{pmatrix} 
-%                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
-%               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
-%                         \Phi \vec{c} &= \vec{f} 
-%        \end{align} 
-        \begin{align*} 
-          \begin{pmatrix}  
-            \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_N(x_1) \\ 
-            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_N(x_2) \\ 
-            \vdots & \ddots & \ddots & \vdots \\
-            \phi_1(x_N) & \phi_2(x_N) & \cdots & \phi_N(x_N)
-                \end{pmatrix} 
-                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
-               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
-                         \Phi \vec{c} &= \vec{f} 
-        \end{align*} 
-is nonsingular.
-
- When choosing an appropriate basis function for interpolation, a
-    subset of RBFs have been shown to produce symmetric positive definite
-    $\Phi$, while others are only conditionally positive definite (for more details see
-    \cite{Fasshauer2007}).  With
-    the latter set, additional polynomial terms are added to constrain the
-    system and enforce positive definiteness, resulting in this expanded system of equations: 
-        \begin{align} 
-       % \sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) + \sum_{k=1}^{t}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
-        \sum_{j=1}^{N} c_j \phi_j(x_i) + \sum_{k=1}^{M}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
-        \leq i \leq N, \nonumber \\ 
-        \sum_{j=1}^{N} c_j p_k(x_j) &=  0,\ \ \ \ \ \ \ \ \ \ 1 \leq k \leq M. \nonumber \\
-          \begin{pmatrix} \Phi & P \\ P^T & 0 \end{pmatrix} \begin{bmatrix} c \\ d \end{bmatrix} &= \begin{bmatrix} \vec{f} \\ 0 \end{bmatrix}
-	\label{eq:additional_constraints}
-        \end{align} 
-        where $\{p_k\}_{k=1}^{M}$ is a basis for $\Pi_{p}^{m} $ (the set of polynomials in $m$ variables of degree $\leq p$) and 
-       \begin{equation*}
-       M = {{p+m}\choose{m}}       .
-       \end{equation*} 
-      %\authnote{Add table? or cut:} Table~\ref{tbl:rbfoptions} provides example RBF functions and notes their (conditionally) positive definiteness. 
-
-
-Given the coefficients $\vec{c}$, the function value at a test point $x$ is interpolated by
-\begin{align}	 
-	\hat{f}_N(x) &= \sum_{j=1}^{N}c_j \Phi_j(x) + \sum_{l=1}^{M}d_l P_l(x)  \nonumber \\
-	&=  \left[\begin{array}{cc}
-        \Phi & \PP
-	\end{array} \right] 
-	 \begin{bmatrix}	c \\
-					d
-		 \end{bmatrix} \nonumber \\
-						 &= \vec{\Phi}_x^T \vec{c} \nonumber \\
-						 &= \vec{\Phi}_x^T \Phi^{-1}\vec{f}	
-						 \label{eq:rbf_interpolate_pt}
-\end{align}
-where $\vec{c}$ is substituted by the solution to Equation~\ref{eq:additional_constraints}. In Equation~\ref{eq:rbf_interpolate_pt} the term $\Phi_{x}^T\Phi^{-1}$, dependent only on node positions, can be evaluated prior to knowing $f$. 
-
-For the RBF-FD method, derivatives of $u(x)$ are weighted combinations of a small neighborhood of $N_s$ nodes (i.e., a stencil with $N_s \ll N$):
- %derivative of u (i.e., $\diffop{u}$) at the stencil center ($x_1$) as a weighted combination of neighbors (like typical Finite Differencing): 
-        \begin{align} 
-        \diffop{u(x_1)} &\approx \sum_{j=1}^{N_s} c_j u(x_j) \nonumber 
-        \label{eq:derivFromFDWeights}
-        \end{align}
-where $\diffop{u}$ denotes a linear differential quantity over $u$ (e.g., $\diffop{u} = \d{u}{x}$). Here, ${c_j}$ are unknown, and obtained by enforcing the reconstruction:
-	\begin{align}
-	        \diffop{\phi_j(x_1)} = \sum_{i=1}^{N_s} c_i \phi_j(x_i) \ \ \ \ \ \ \textrm{for }j=1,2,...,N_s \nonumber 
-	\end{align}
-with $\diffop{\phi}_j$ provided by analytically applying the differential operator to the kernel function.
-This is equivalent to: 
-	\begin{align}        
-          \begin{pmatrix}  
-            \phi_1(x_1) & \phi_1(x_2) & \cdots & \phi_1(x_{N_s}) \\ 
-            \phi_2(x_1) & \phi_2(x_2) & \cdots & \phi_2(x_{N_s}) \\ 
-            \vdots & \ddots & \ddots & \vdots \\
-            \phi_{N_s}(x_1) & \phi_{N_s}(x_2) & \cdots & \phi_{N_s}(x_{N_s})
-                \end{pmatrix} 
-                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
-               &=                \begin{bmatrix} \diffop{\phi_1}(x_1) \\  \diffop{\phi_2}(x_1) \\ \vdots \\  \diffop{\phi_{N_s}}(x_1) 
-               \end{bmatrix} \\
-                         \Phi_{s} \vec{c} &= \vec{\Phi_{\diffop{}_s}}.% (x_1)
-                         \label{eqn:rbffd_simplified}
-                         % \Phi_{i,j} \vec{c} &= \vec{\diffop{\phi_j}} 
-        \end{align} 
-Solving Equation~\ref{eqn:rbffd_simplified} for stencils weights, $\vec{c}$, and substituting into Equation~\ref{eq:derivFromFDWeights} reveals the similarity between RBF-FD and the general problem of RBF interpolation (see Equation~\ref{eq:rbf_interpolate_pt} and discussion): 
-        \begin{align*} 
-        \diffop{u(x_1)} &\approx (\Phi^{-1}_s \vec{\Phi}_{\diffop{}_s})^T \vec{u} \\
-        &\approx \vec{\Phi}_{\diffop{}_s}^T \Phi^{-T}_s \vec{u}
-        \label{eq:rbffd_approx_derivs}
-        \end{align*}
-        
-	
-Again, based on the choice of RBF, positive definiteness of the system is ensured by adding the same constraints as Equation~\ref{eq:additional_constraints}, but note differential quantities for $\vec{\PP}$ on the right hand side: 
-	\begin{align}
-		\begin{pmatrix}
-		\Phi_s & \PP \\
-		\PP^T & 0
-		\end{pmatrix} \begin{bmatrix}
-							c \\ 
-							d
-							\end{bmatrix}
-				 &= \begin{bmatrix}
-							\vec{\Phi}_{\diffop{}_s} \\
-							\vec{\PP}_{\diffop{}}
-							 \end{bmatrix}.
-	\end{align}
-	%\authnote{must have things mixed up in my head. Cannot justify the reason to have $\PP_{\diffop{}}$ and not $0$. Perhaps because I dont fully understand the cardinal point derivation of RBFFD.}
-Equation~\ref{eq:rbffd_approx_derivs} is strictly for the stencil centered at node $x_1$. To obtain weights for all stencils in the domain, a total of $N$ such systems must be solved. %Following the discussion of Equation~\ref{eq:rbf_interpolate_pt}, stencils weights are computed given only node positions. 
-
-
 Stabilization of the RBF-FD method is achieved through the application of a hyperviscosity filter \cite{Fornberg2011b}. By assuming the use of Gaussian RBFs, $\phi(r) = e^{-(\epsilon r)^2}$, the hyperviscosity operator simplifies to
 \begin{equation}
 \Delta^{k}\phi(r) = \epsilon^{2k} p_k(r) \phi(r).
@@ -385,4 +416,46 @@ p_k(r) &= 4((\epsilon r)^2 - 2(k-1) - \frac{d}{2})  p_{k-1}(r) - 8(k-1)(2(k-1) -
 where $d$ is the dimension of the problem. We assume $d=2$ below when working on the surface of the sphere.
 
 
-Many algorithms exist to query the $k$-nearest neighbors (equivalently all noes in the minimum/smallest enclosing circle). Some algorithms overlay a grid similar to Locality Sensitive Hashing and query such as \cite{HarPeledMazumdar2003}.
+Many algorithms exist to query the $k$-nearest neighbors (equivalently all nodes in the minimum/smallest enclosing circle). Some algorithms overlay a grid similar to Locality Sensitive Hashing and query such as... \cite{HarPeledMazumdar2003}.
+
+
+\subsubsection{Conditioning} 
+Conditioning is defined as: 
+
+With condition number estimates we can choose a proper support parameter for uniformly distributed node sets.
+
+Alternative algorithms exist for solving for RBF-FD weights when the systems are overly ill-conditioned. Currently, we have an unpublished algorithm ContourSVD available to play with (demonstrate accuracy improvements). 
+
+\subsubsection{Node Placement -- Centroidal Voronoi Tessellation}
+We make the assumption for now that we use regularly distributed nodes. Centroidal Voronoi tessellations provide reasonably good distributions for solutions. Examples (heat ellipse, ellipsoid, sphere, square cavity).
+
+The motivation behind RBF-FD is generality/functionality in the numerical method. Scattered nodes are supported. Distribution requires proper choice of support, and tight nodes result in increased conditioning
+
+
+
+\section{Approximate Nearest Neighbor (ANN) Query}
+
+RBF methods are traditionally described as general and meshless in that they apply to unstructured clouds of points in arbitrary dimensions. However, although the term meshless implies a method capable of operating with no node connectivity, all numerical methods---meshless RBF methods included---connect nodes in the domain. For example, the ``meshless'' global RBF method connects every node in the domain to all other nodes. Compact support or local RBF methods like RBF-FD limit connections to nodes that lie within a predetermined radius.
+
+The connections between nodes form a directed adjacency graph with edges that dictate the paths along which data/phenomena can travel. For example, a plus shaped stencil of five points with a center node and four neighboring nodes allows values to propagate north, south, east and west; not northeast, southeast, etc.
+
+
+They are robust and function on scattered point clouds. RBF-FD in particular requires stencils to be generated from $n$ nearest neighbors to a stencil center. The cost of these neighbor queries can vary greatly depending on the choice of algorithm or data-structure used to make the query. 
+
+For example, in general brute force is inefficient 
+The author of \cite{Fasshauer2007} queries $n$ nearest neighbors for a compact-support RBF partition of unity example with a $k$-D tree. In \cite{FlyerLehto11,FornbergLehto11} a $k$-D Tree is leveraged for all neighbor queries for RBF-FD. 
+
+In our work in \cite{BolligFlyerErlebacher2012} an alternative to $k$-D tree was leveraged, based loosely on Locality Sensitive Hashing.
+
+\subsection{$k$-D Tree}
+
+Most of the RBF community leverages the $k$-D tree, due to its low computational complexity for querying neighbors and its wide availability as standalone software in the public domain (e.g., matlab central has a few implementations for download, and the MATLAB Statistics Toolbox includes an efficient k-D Tree). 
+
+The complexity of assembling he tree is
+
+The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
+
+While the $k$-D Tree functions well for queries, its downfall is a large cost in preprocessing to build the tree. For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
+
+Approximate nearest neighbors will be nearly balanced. 
+We observe that RBF-FD functions as well on stencils of true nearest neighbors as it does on approximate nearest neighbors. 
