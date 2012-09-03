@@ -1,15 +1,37 @@
 %!TEX root = karen.tex
 
 \chapter{Parallel Solvers}
-
 \label{sec:rbffd_gpu}
 
 
-Parallelization of the RBF-FD method is achieved at two levels. First, the physical domain of the problem---in this case, the unit sphere---is partitioned into overlapping subdomains, each handled by a different CPU process. All CPUs operate independently to compute/load RBF-FD stencil weights, run diagnostic tests and perform other initialization tasks. A CPU computes only weights corresponding to stencils centered in the interior of its partition. After initialization, CPUs continue concurrently to solve the problem with explicit time-stepping. Communication barriers ensure that the CPUs execute in lockstep to maintain consistent solution values in regions where partitions overlap. 
+Solving PDEs in a distributed computing environment requires three design decisions \cite{Saad2003}. First, the domain is partitioned and distributed across compute nodes in some fashion. Intelligent partitioning impacts load balancing on processors to minimize computation to communication ratio; imbalanced computation across processors can cause excessive delay per iteration as processors wait to receive information. Second, one must decide what information each processor is able to access regarding node information, solution values, etc and establish index mappings that translate between a processor's local context and the global problem. In situations where processors are not aware of all nodes/solution values in the global domain, the index mappings are essential to maintaining solution consistency at each time-step. Last but not least, each processor can re-order nodes locally in an effort to improve solver efficiency and local system conditioning. Node ordering also allows us to minimize data transfer between CPU and GPU. 
+
+
+Parallelization of the RBF-FD method is achieved at two levels. First, the physical domain of the problem---in this case, the unit sphere---is partitioned into overlapping subdomains, each handled by a different CPU process. All CPUs operate independently to compute/load RBF-FD stencil weights, run diagnostic tests and perform other initialization tasks. A CPU computes only weights corresponding to stencils centered in the interior of its partition. After initialization, CPUs continue concurrently to solve the PDE. Communication barriers ensure that the CPUs execute in lockstep to maintain consistent solution values in regions where partitions overlap. 
 The second level of parallelization offloads time-stepping of the PDE to the GPU.
 Evaluation of the right hand side of Equation~(\ref{eq:evaluation_with_hyperviscosity}) is data-parallel: the solution derivative at each stencil center is evaluated independently of the other stencils. This maps well to the GPU, offering decent speedup even in unoptimized kernels. Although the stencil weight calculation is also data-parallel, we assume that in this context that the  weights are precomputed and loaded once from disk during the initialization phase. 
 
 
+\section{Paritioning}
+
+We partition the domain assuming that domains overlap. Processor views of the domain are limited to only nodes required by stencils under processor control. Subset of the grid. Subset of the stencils. 
+
+Preliminary decomposition is slicing horizontally in the domain. 
+
+Load balancing important and can be handled by METIS.
+
+\section{Global and local index maps}
+Due to the local view of each processor, local index maps are much shorter than global maps. They run from 0 to $N_{p}$. 
+
+STL Maps based
+
+\section{Local node ordering}
+
+The local index set is ordered as ${QmB, BmO, O, R}$ 
+
+Domain boundary nodes appear at beginning of the list 
+
+\section{Two level parallelism}
 
 Our current implementation assumes that we are computing on a cluster of CPUs, with one GPU attached to each CPU. The CPU maintains control of execution and launches kernels on the GPU that execute in parallel. Under the OpenCL standard \cite{OpenCL2009}, a tiered memory hierarchy is available on the GPU with \textit{global device memory} as the primary and most abundant memory space. The memory space for GPU kernels is separate from the memory available to a CPU, so data must be explicitly copied to/from global device memory on the GPU. 
 
@@ -136,8 +158,6 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
 		processors, since the individual processors do not require the 
 		full mapping between RBF nodes and CPUs. 
 
-
-\section{Relation to the Restrictive Additive Schwarz Decomposition}
 
 \section{Overlapping Computation and Communication} 
 Need to describe our approach to launch 
@@ -266,8 +286,8 @@ For stencil sizes smaller than 32, some threads in the warp always remain idle. 
 As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. 
 
 
-\subsubsection{Boundary Conditions} 
-Boundary conditions are handled on the GPU in the following way: 
+%\subsubsection{Boundary Conditions} 
+%Boundary conditions are handled on the GPU in the following way: 
 
 dirichlet: kernel copies dirichlet values into place \authnote{Need to dust off code}
 

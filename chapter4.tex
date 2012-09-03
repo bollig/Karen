@@ -22,6 +22,15 @@ I also produced a Matlab script to generate the contours for any stencil size an
 \label{fig:epsilon_contours}
 \end{figure}
 
+\subsection{CVT epsilon tests}
+
+\cite{FlyerLehto11} consider epsilon as a function of the number of nodes on the sphere. However, this assumption requires nodes to be distributed as MD nodes. When we apply the same functions to CVTs of larger problems we get varying results. The subtle perturbations in nodes 
+
+\hl{test on icosahedral grid}
+
+\hl{function based on min enclosing circle instead. Will be finer tuned to the grid. if nodes are uniform in stencil and stencil size locked then the only things that can influence epsilon and conditioning is the enclosing circle radius.}
+
+
 \section{Parabolic} 
 
 Include figure tracking max temperature and min temperature. If we have zero flux conditions then they should average out. If we have Dirichlet BCs the temperature will converge to 0. 
