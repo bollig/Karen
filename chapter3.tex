@@ -3,50 +3,66 @@
 \chapter{Parallel Solvers}
 \label{sec:rbffd_gpu}
 
-
-Solving PDEs in a distributed computing environment requires three design decisions \cite{Saad2003}. First, the domain is partitioned and distributed across compute nodes in some fashion. Intelligent partitioning impacts load balancing on processors to minimize computation to communication ratio; imbalanced computation across processors can cause excessive delay per iteration as processors wait to receive information. Second, one must decide what information each processor is able to access regarding node information, solution values, etc and establish index mappings that translate between a processor's local context and the global problem. In situations where processors are not aware of all nodes/solution values in the global domain, the index mappings are essential to maintaining solution consistency at each time-step. Last but not least, each processor can re-order nodes locally in an effort to improve solver efficiency and local system conditioning. Node ordering also allows us to minimize data transfer between CPU and GPU. 
-
-
-Parallelization of the RBF-FD method is achieved at two levels. First, the physical domain of the problem---in this case, the unit sphere---is partitioned into overlapping subdomains, each handled by a different CPU process. All CPUs operate independently to compute/load RBF-FD stencil weights, run diagnostic tests and perform other initialization tasks. A CPU computes only weights corresponding to stencils centered in the interior of its partition. After initialization, CPUs continue concurrently to solve the PDE. Communication barriers ensure that the CPUs execute in lockstep to maintain consistent solution values in regions where partitions overlap. 
-The second level of parallelization offloads time-stepping of the PDE to the GPU.
-Evaluation of the right hand side of Equation~(\ref{eq:evaluation_with_hyperviscosity}) is data-parallel: the solution derivative at each stencil center is evaluated independently of the other stencils. This maps well to the GPU, offering decent speedup even in unoptimized kernels. Although the stencil weight calculation is also data-parallel, we assume that in this context that the  weights are precomputed and loaded once from disk during the initialization phase. 
-
-
-\section{Paritioning}
-
-We partition the domain assuming that domains overlap. Processor views of the domain are limited to only nodes required by stencils under processor control. Subset of the grid. Subset of the stencils. 
-
-Preliminary decomposition is slicing horizontally in the domain. 
-
-Load balancing important and can be handled by METIS.
-
-\section{Global and local index maps}
-Due to the local view of each processor, local index maps are much shorter than global maps. They run from 0 to $N_{p}$. 
-
-STL Maps based
-
-\section{Local node ordering}
-
-The local index set is ordered as ${QmB, BmO, O, R}$ 
-
-Domain boundary nodes appear at beginning of the list 
-
-\section{Two level parallelism}
-
-Our current implementation assumes that we are computing on a cluster of CPUs, with one GPU attached to each CPU. The CPU maintains control of execution and launches kernels on the GPU that execute in parallel. Under the OpenCL standard \cite{OpenCL2009}, a tiered memory hierarchy is available on the GPU with \textit{global device memory} as the primary and most abundant memory space. The memory space for GPU kernels is separate from the memory available to a CPU, so data must be explicitly copied to/from global device memory on the GPU. 
+Parallel solution of PDEs in a distributed computing environment requires three
+design decisions \cite{Saad2003}. First, partitioning the domain and
+distributing work across compute nodes requires knowledge of \emph{neighboring processors} with which communication will occur. Intelligent partitioning
+impacts load balancing on processors and the computation to communication
+ratio; imbalanced computation can cause excessive delay per
+iteration as processors wait to receive information. Second, one must decide
+what information each processor is able to access regarding node information,
+solution values, etc and establish index mappings that translate between a
+processor's local context and the global problem. In situations where
+processors are not aware of all nodes/solution values in the global domain, the
+index mappings are essential to maintaining solution consistency at each
+time-step. Last but not least, each processor can re-order nodes locally in an
+effort to improve solver efficiency and local system conditioning. Node
+ordering also allows us to minimize data transfer between CPU and GPU. 
 
 
-\section{Distributed Solvers}
-Need partitioning, global and local index maps, and local ordering for a distributed \cite{Saad2003} 
+Parallelization of the RBF-FD method is achieved at two levels. First, the
+physical domain of the problem\hl{---in this case, the unit sphere---}is partitioned
+into overlapping subdomains, each handled by a different CPU process. All CPUs
+operate independently to compute/load RBF-FD stencil weights, run diagnostic
+tests and perform other initialization tasks. A CPU computes only weights
+corresponding to stencils centered in the interior of its partition. After
+initialization, CPUs continue concurrently to solve the PDE. Communication
+barriers ensure that the CPUs execute in lockstep to maintain consistent
+solution values in regions where partitions overlap.  The second level of
+parallelization offloads time-stepping of the PDE to the GPU.  Evaluation of
+the right hand side of Equation~(\ref{eq:evaluation_with_hyperviscosity}) is
+data-parallel: the solution derivative at each stencil center is evaluated
+independently of the other stencils. This maps well to the GPU, offering decent
+speedup even in unoptimized kernels. Although the stencil weight calculation is
+also data-parallel, we assume that in this context that the weights are
+precomputed and loaded once from disk during the initialization phase. 
 
-\subsection{Node Partitioning}
+\authnote{}Need partitioning, global and local index maps, and local ordering for a distributed matrix operation \cite{Saad2003} 
 
-Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of $N=10,201$ nodes on the unit sphere onto four CPUs. Each partition, illustrated as a unique color, represents set $\setAllNodes$ for a single CPU. 
-Alternating representations between node points and interpolated surfaces illustrates the overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes requiring MPI communication) reside. As stencil size increases, the width of the overlap regions relative to total number of nodes on the sphere also increases. 
+\section{On the use of libraries for parallel solvers}
+
+Since our focus within this work is to lay the foundation for parallel computing with RBF-FD, we have made several simplifying assumptions in our code design. Libraries like PETsc, Hypre, Trilinos and Deal.ii distribute sparse matrix operations in similar fashion to our approach. When work initially began on this dissertation, none of these competing libraries contained support for the GPU. PETsc is currently developing support for the GPU, but we have not had the chance to consider it yet. 
+
+Our codebase began as a prototype demonstrating the feasibility of RBF-FD operating on the GPU. Starting from the perspective of RBF-FD as a Lagrangian method with stationary nodes, the code was developed as $N$ independent dot products of weights and solution values to approximate derivatives. Weights were stored linearly in memory, with the solution values read randomly. On the GPU, stencils were evaluated independently by threads, or shared by a warp of threads. Operating on stencils in this way implied that GPU kernels were to be hand written, tuned and optimized. 
+
+Much later, our perspective evolved to see derivative approximation and time-stepping as sparse matrix operations. This opened new possibilities for optimization and allowed us to forego hand optimization and fine-tuning of GPU kernels. With all of the effort put into optimizing sparse operations within libraries like CUSP \cite{Bell2009}, ViennaCL \cite{Rupp2010} and even the NVidia provided CUSPARSE \cite{CUSPARSE}, formulating the problem in terms of sparse matrix operations allows us to quickly prototype on the GPU and leverage all of the optimizations available within the third party libraries. 
+
+In the most recent version of ViennaCL a set of auto-tuning options were introduced. We have not investigated these options, but the idea is that they would only improve the efficiency of our code. 
+
+
+\section{Partitioning}
+
+For ease of development and parallel debugging, partitioning is initially assumed to be linear within one physical direction (typically the $x$-direction). Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of $N=10,201$
+nodes on the unit sphere onto four CPUs. Each partition, illustrated as a
+unique color, represents set $\setAllNodes$ for a single CPU.  Alternating
+representations between node points and interpolated surfaces illustrates the
+overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e.,
+nodes requiring MPI communication) reside. As stencil size increases, the width
+of the overlap regions relative to total number of nodes on the sphere also
+increases. 
 \authnote{Q: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil}
 
 The linear partitioning in Figure~\ref{fig:decomposed_sphere} was chosen for ease of implementation. Communication is limited for each
-processor to left and right neighbors only, which simplifies parallel debugging. This partitioning, however, does not guarantee properly balanced computational work-loads. Other partitionings of the sphere exist but are not studied here because this paper's focus is neither on efficiency nor on selecting a partitioning strategy for maximum accuracy. Examples of alternative approaches include a cubed-sphere \cite{Ivan2011} or icosahedral geodesic grid \cite{Randall2002}, which can evenly balance the computational load across partitions. Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
+processor to left and right neighbors only, which simplifies parallel debugging. This partitioning, however, does not guarantee properly balanced computational work-loads. \authnote{Update w/ ParMETIS} Other partitionings of the sphere exist but are not studied here because this paper's focus is neither on efficiency nor on selecting a partitioning strategy for maximum accuracy. Examples of alternative approaches include a cubed-sphere \cite{Ivan2011} or icosahedral geodesic grid \cite{Randall2002}, which can evenly balance the computational load across partitions. Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
 
 \begin{figure}[ht!]
 \begin{center}
@@ -59,9 +75,9 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 \authnote{Need to flesh detail on ParMETIS, two dimensional partitioning and case when a node value is required by multiple processors}
 
 
-\subsection{Global and Local Indices}
 
-\subsection{Local Node Ordering} 
+\section{Local node ordering}
+
 After partitioning, each CPU/GPU is responsible for its own subset of nodes. 
 To simplify accounting, we track nodes in two ways. Each node is assigned
 a global index, that uniquely identifies it. This index follows the node 
@@ -139,6 +155,9 @@ The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices co
    
  The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap of communication and computation. This will be considered as part of future research on algorithm optimization.  Distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ while waiting on $\mathcal{R}$. 
 
+\authnote{} The local index set is ordered as ${QmB, BmO, O, R}$ 
+
+\authnote{} Domain boundary nodes appear at beginning of the list 
 
 
 When targeting the GPU, communication of solution or intermediate values is a four step process:
@@ -159,7 +178,26 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
 		full mapping between RBF nodes and CPUs. 
 
 
-\section{Overlapping Computation and Communication} 
+
+\section{Two level parallelism}
+
+Our current implementation assumes that we are computing on a cluster of CPUs,
+with one GPU attached to each CPU. The CPU maintains control of execution and
+launches kernels on the GPU that execute in parallel. Under the OpenCL standard
+\cite{OpenCL2009}, a tiered memory hierarchy is available on the GPU with
+\textit{global device memory} as the primary and most abundant memory space.
+The memory space for GPU kernels is separate from the memory available to a
+CPU, so data must be explicitly copied to/from global device memory on the GPU. 
+
+\begin{itemize} 
+\item How to copy to/from GPU
+\item Where are the synchronization points (lockstep and overlapping)
+\end{itemize}
+
+\authnote{The basic primitives necessary to parallelize our problems: SpMV, AXPY and }
+
+
+\subsection{Overlapping Computation and Communication} 
 Need to describe our approach to launch 
 
 In simplest form (\& indicates an overlapped execution; overlapping is possible by non-blocking launches to the GPU before comm is started): 
@@ -190,9 +228,6 @@ Note that there is no non-blocking version of MPI\_alltoallv within the MPI stan
 %K. Kandalla, H. Subramoni, K. Tomko, D. Pekurovsky, S. Sur and D.K. Panda, "High-performance and scalable non-blocking all-to-all with collective offload on InfiniBand clusters: a study with parallel 3D FFT", Computer Science - Research and Development, vol. 26(3-4):237-246, 2011.
 %T. Hoefler, A. Lumsdaine and W. Rehm, "Implementation and Performance Analysis of Non-Blocking Collective Operations for MPI", International Conference for High Performance Computing, Networking, Storage and Analysis (SC07), Reno, USA, 2007.
 
-\section{Targeting the GPU}
-
-\authnote{The basic primitives necessary to parallelize our problems: SpMV, AXPY and }
 
 \subsection{Explicit Solvers}
 

@@ -5,11 +5,20 @@
 
 \section{Neighbor Queries} 
 
-As part of the preprocessing stage for RBF-FD, the scattered point cloud must be analyzed to generate stencils. To generate a stencil, any collection of nodes can be selected. However, by choosing nodes close to the stencil center and well balanced around it, we stand to get the best possible approximations to derivatives. 
+As part of the preprocessing stage for RBF-FD, the scattered point cloud must
+be analyzed to generate stencils. To generate a stencil, any collection of
+nodes can be selected. However, by choosing nodes close to the stencil center
+and well balanced around it, we stand to get the best possible approximations
+to derivatives. 
 
-Why? well, the approximations are based on differences. Similar to classic FD, draw a secant connecting two nodes of a stencil. The slope of the secant determines the gradient at either point or a point in between. In the limit as the points are moved closer to the same spot, the approximation to the derivative at that point becomes exact. 
+Why? well, the approximations are based on differences. Similar to classic FD,
+draw a secant connecting two nodes of a stencil. The slope of the secant
+determines the gradient at either point or a point in between. In the limit as
+the points are moved closer to the same spot, the approximation to the
+derivative at that point becomes exact. 
 
-So ideally every RBF-FD stencil will operate on nearest neighbors. One way to generate nearest neighbors is brute force $O(N^{2})$; very inefficient. 
+So ideally every RBF-FD stencil will operate on nearest neighbors. One way to
+generate nearest neighbors is brute force $O(N^{2})$; very inefficient. 
 
 Alternatives exist including k-D Tree
 
