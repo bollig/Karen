@@ -18,6 +18,7 @@ time-step. Last but not least, each processor can re-order nodes locally in an
 effort to improve solver efficiency and local system conditioning. Node
 ordering also allows us to minimize data transfer between CPU and GPU. 
 
+
 Parallelization of the RBF-FD method is achieved at two levels. First, the
 physical domain of the problem\hl{---in this case, the unit sphere---}is partitioned
 into overlapping subdomains, each handled by a different CPU process. All CPUs
@@ -39,25 +40,48 @@ precomputed and loaded once from disk during the initialization phase.
 
 \section{On the use of libraries for parallel solvers}
 
-Since our focus within this work is to lay the foundation for parallel computing with RBF-FD, we have made several simplifying assumptions in our code design. Libraries like PETsc, Hypre, Trilinos and Deal.ii distribute sparse matrix operations in similar fashion to our approach. When work initially began on this dissertation, none of these competing libraries contained support for the GPU. PETsc is currently developing support for the GPU, but we have not had the chance to consider it yet. 
+Since our focus within this work is to lay the foundation for parallel computing
+with RBF-FD, we have made several simplifying assumptions in our code design.
+Libraries like PETsc, Hypre, Trilinos and Deal.ii distribute sparse matrix
+operations in similar fashion to our approach. When work initially began on this
+dissertation, none of these competing libraries contained support for the GPU.
+PETsc is currently developing support for the GPU, but we have not had the
+chance to consider it yet. 
 
-Our codebase began as a prototype demonstrating the feasibility of RBF-FD operating on the GPU. Starting from the perspective of RBF-FD as a Lagrangian method with stationary nodes, the code was developed as $N$ independent dot products of weights and solution values to approximate derivatives. Weights were stored linearly in memory, with the solution values read randomly. On the GPU, stencils were evaluated independently by threads, or shared by a warp of threads. Operating on stencils in this way implied that GPU kernels were to be hand written, tuned and optimized. 
+Our codebase began as a prototype demonstrating the feasibility of RBF-FD
+operating on the GPU. Starting from the perspective of RBF-FD as a Lagrangian
+method with stationary nodes, the code was developed as $N$ independent dot
+products of weights and solution values to approximate derivatives. Weights were
+stored linearly in memory, with the solution values read randomly. On the GPU,
+stencils were evaluated independently by threads, or shared by a warp of
+threads. Operating on stencils in this way implied that GPU kernels were to be
+hand written, tuned and optimized. 
 
-Much later, our perspective evolved to see derivative approximation and time-stepping as sparse matrix operations. This opened new possibilities for optimization and allowed us to forego hand optimization and fine-tuning of GPU kernels. With all of the effort put into optimizing sparse operations within libraries like CUSP \cite{Bell2009}, ViennaCL \cite{Rupp2010} and even the NVidia provided CUSPARSE \cite{CUSPARSE}, formulating the problem in terms of sparse matrix operations allows us to quickly prototype on the GPU and leverage all of the optimizations available within the third party libraries. 
+Much later, our perspective evolved to see derivative approximation and
+time-stepping as sparse matrix operations. This opened new possibilities for
+optimization and allowed us to forego hand optimization and fine-tuning of GPU
+kernels. With all of the effort put into optimizing sparse operations within
+libraries like CUSP \cite{Bell2009}, ViennaCL \cite{Rupp2010} and even the
+NVidia provided CUSPARSE \cite{CUSPARSE}, formulating the problem in terms of
+sparse matrix operations allows us to quickly prototype on the GPU and leverage
+all of the optimizations available within the third party libraries. 
 
-In the most recent version of ViennaCL a set of auto-tuning options were introduced. We have not investigated these options, but the idea is that they would only improve the efficiency of our code. 
+In the most recent version of ViennaCL a set of auto-tuning options were
+introduced. We have not investigated these options, but the idea is that they
+would only improve the efficiency of our code. 
 
 
 \section{Partitioning}
 
-For ease of development and parallel debugging, partitioning is initially assumed to be linear within one physical direction (typically the $x$-direction). Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of $N=10,201$
-nodes on the unit sphere onto four CPUs. Each partition, illustrated as a
-unique color, represents set $\setAllNodes$ for a single CPU.  Alternating
+For ease of development and parallel debugging, partitioning is initially
+assumed to be linear within one physical direction (typically the
+$x$-direction). Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
+$N=10,201$ nodes on the unit sphere onto four CPUs. Each partition, illustrated
+as a unique color, represents set $\setAllNodes$ for a single CPU.  Alternating
 representations between node points and interpolated surfaces illustrates the
-overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e.,
-nodes requiring MPI communication) reside. As stencil size increases, the width
-of the overlap regions relative to total number of nodes on the sphere also
-increases. 
+overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes
+requiring MPI communication) reside. As stencil size increases, the width of the
+overlap regions relative to total number of nodes on the sphere also increases. 
 \authnote{Q: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil}
 
 The linear partitioning in Figure~\ref{fig:decomposed_sphere} was chosen for ease of implementation. Communication is limited for each
