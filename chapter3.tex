@@ -18,7 +18,6 @@ time-step. Last but not least, each processor can re-order nodes locally in an
 effort to improve solver efficiency and local system conditioning. Node
 ordering also allows us to minimize data transfer between CPU and GPU. 
 
-
 Parallelization of the RBF-FD method is achieved at two levels. First, the
 physical domain of the problem\hl{---in this case, the unit sphere---}is partitioned
 into overlapping subdomains, each handled by a different CPU process. All CPUs
@@ -152,7 +151,6 @@ The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices co
             \label{fig:stencilSets2CPU}
         \end{figure}	
 
-   
  The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap of communication and computation. This will be considered as part of future research on algorithm optimization.  Distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ while waiting on $\mathcal{R}$. 
 
 \authnote{} The local index set is ordered as ${QmB, BmO, O, R}$ 
