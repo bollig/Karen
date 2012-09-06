@@ -316,4 +316,29 @@ For the cosine bell test cases we use a conservative $C_{\text{max}} = 0.4$ to e
 
 apparently, canceling the cosine analytically causes the conditioning of the system to change slightly. The hyperviscosity parameters I have in the paper are for the case with the cosine present. The parameters continue to function well for the other cases, but their impact on the eigenvalue distributions is noticeably higher (further span to the left). 
 
+
+\section{GFLOP Throughput}
+In order to quantify the performance of our implementation, we can measure two
+factors. First, we can check the speedup achieved on the GPU relative to the
+CPU to get an idea of how much return of investment is to be expected by all
+the effort in porting the application to the GPU. Speedup is measured as the
+time to execute on the CPU divided by the time to execute on the GPU. 
+
+The second quantification is to check the throughput of the process. By
+quantifying the GFLOP throughput we have a measure that tells us two things:
+first, a concrete number quantifying the amount of work performed per second by
+either hardware, and second because we can calculate the peak throughput possible on
+each hardware, we also have a measure of how occupied our CPU/GPU units are.
+With the GFLOPs we can also determine the cost per watt for computation and
+conclude on what problem sizes the GPU is cost effective to target and use. 
+
+Now, as we parallelize across multiple GPUs, these same numbers can come into
+play. However we are also interested in the efficiency. Efficiency is the
+speedup divided by the number of processors. With efficiency we have a measure
+of how well-utilized processors are as we scale either the problem size (weak)
+or the number of processors (strong). As the efficiency diminishes we can
+conclude on how many stencils/nodes per processor will keep our processors
+occupied balanced with the shortest compute time possible (i.e., we are
+maximizing return of investment). 
+
 \section{Elliptic}
