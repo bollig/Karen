@@ -1,0 +1,15 @@
+\chapter{ViennaCL}
+
+\authnote{4 pages}
+
+The ViennaCL project \cite{Rupp2010a, Rupp2010} is a sparse matrix library built on OpenCL that provides templated C++ API to easily and efficiently solve large sparse matrix problems. 
+
+Our decision to utilize ViennaCL stems from its 
+
+The API provides containers for sparse and dense matrices, vectors and views. The sparse formats available are COO, CSR, (...) ELL and HYB
+
+Matrix and Vector Views provide slices and subranges of containers. Subviews were recently added in version 1.2 with full functionality in v1.3. These views are essential to our work on multi-GPUs since we need to operate on views with full vectors containing the ghost values. (Show example of view). 
+
+Algorithms are provided for GMRES, CG, etc. 
+
+To build multi-GPU algorithms for GMRES we discard the ViennaCL arnoldi process in favor of the Givens rotations. Then we add MPI communication. 
