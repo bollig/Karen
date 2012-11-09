@@ -1,0 +1,15 @@
+\section{RBF-FD as SpMV}
+
+From the definition of RBF-FD we can formulate the problem computationally in two ways. 
+
+Stencil operations are independent. Therefore in the first approach we can write kernels with perfect parallelism by writing kernels to dedicate a thread per stencil or a warp per stencil. 
+
+Unfortunately, perfect concurrency does not imply perfect or even ideal concurrency on the GPU. 
+
+We first demonstrate the case where one thread is dedicated to each stencil. This is followed by dedicating a group of thread to the stencil. In each case we are operating under the assumption that each stencil is independent on the GPU. 
+
+To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sparse Matrix-Vector Mulitply (SpMV). When we consider the problem in this light we generate a single Differentiation Matrix that can see two optimizations not possible with our stencil-based view: 
+\begin{itemize} 
+\item First, the sparse containers used in SpMV allow for their own unique optimizations to compress storage and leverage hardware cache.
+\item Evaluation of multiple derivatives can be accumulated by association into one matrix operation. This reduces the total number of floating point operations required per iteration. 
+\end{itemize}
