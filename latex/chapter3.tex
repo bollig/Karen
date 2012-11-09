@@ -91,7 +91,7 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 
 \begin{figure}[ht!]
 \begin{center}
-\includegraphics[width=2.5in]{figures/paper1/figures/vortex_rollup/4procs_N10K_n31.pdf}
+\includegraphics[width=2.5in]{../figures/paper1/figures/vortex_rollup/4procs_N10K_n31.pdf}
 \caption{Partitioning of $N=10,201$ nodes to span four processors with stencil size $n=31$.  }
 \label{fig:decomposed_sphere}
 \end{center}
@@ -171,7 +171,7 @@ The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices co
 
         \begin{figure}[ht] 
             \centering
-            \includegraphics[width=3.5in]{figures/paper1/figures/omnigraffle/SimpleExample.pdf} 
+            \includegraphics[width=3.5in]{../figures/paper1/figures/omnigraffle/SimpleExample.pdf} 
             \caption{Partitioning, index mappings and memory transfers for nine stencils ($n=5$) spanning two CPUs and two GPUs. Top: the directed graph created by stencil edges is partitioned for two CPUs. Middle: the partitioned stencil centers are reordered locally by each CPU to keep values sent to/received from other CPUs contiguous in memory. Bottom: to synchronize GPUs, CPUs must act as intermediaries for communication and global to local index translation. Middle and Bottom: color coding on indices indicates membership in sets from Table~\ref{tbl:stencil_sets}: $\setCenters \backslash \setBoundary$ is white, $\setBoundary \backslash \setProvide$ is yellow, $\setProvide$ is green and $\setDepend$ is red.
             }
             \label{fig:stencilSets2CPU}
@@ -260,7 +260,7 @@ Our implementation leverages the GPU for acceleration of the standard fourth ord
 
 \begin{figure}[t]
       \centering
-       \includegraphics[width=5in]{figures/paper1/figures/omnigraffle/RK4_multi_GPU_flow.pdf}
+       \includegraphics[width=5in]{../figures/paper1/figures/omnigraffle/RK4_multi_GPU_flow.pdf}
       \caption{Workflow for RK4 on multiple GPUs. }
       \label{fig:multi_GPU_flow}
 \end{figure}
@@ -320,7 +320,7 @@ However, with stencils sharing many common nodes, and the Fermi hardware providi
 
 \begin{figure}[htbp]
       \centering
-       \includegraphics[width=3in]{figures/paper1/figures/omnigraffle/oneThreadPerStencil_GRAY.pdf}
+       \includegraphics[width=3in]{../figures/paper1/figures/omnigraffle/oneThreadPerStencil_GRAY.pdf}
       \caption{Naive approach to sparse matrix-vector multiply. Each thread is responsible for the sparse vector dot product of weights and solution values for derivatives at a single stencil.  }
       \label{fig:oneThreadPerStencil}
 \end{figure}
@@ -330,7 +330,7 @@ However, with stencils sharing many common nodes, and the Fermi hardware providi
 
 \begin{figure}[htbp]
       \centering
-       \includegraphics[width=3in]{figures/paper1/figures/omnigraffle/oneWarpPerStencil_GRAY.pdf}
+       \includegraphics[width=3in]{../figures/paper1/figures/omnigraffle/oneWarpPerStencil_GRAY.pdf}
       \caption{Alternative approach. A full warp (32 threads) collaborate to apply weights  and compute the derivative at a stencil center. }
       \label{fig:oneWarpPerStencil}
 \end{figure}
@@ -403,7 +403,7 @@ Sharing information across multiprocessors is possible in \textit{global device 
 
 %\begin{figure}[t] %  figure placement: here, top, bottom, or page
 %   \centering
-%   \includegraphics[width=4.5in]{figures/paper1/figures/opencl_memory_model.pdf} 
+%   \includegraphics[width=4.5in]{../figures/paper1/figures/opencl_memory_model.pdf} 
 %   \caption{Comparison of GPU and CPU implementations underlying the OpenCL memory model for a single compute device.}
 %   \label{fig:opencl_memory}
 %\end{figure}
