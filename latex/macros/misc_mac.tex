@@ -30,16 +30,16 @@
 %usage of newfig:
 %  \newfig{file.ps}{3in}{Fig1: this is a figure}
 
-\input{epsf}
-\def\newfig#1#2#3{
-  \begin{figure}[htbp]
-  \vspace{1ex}
-  \setlength{\epsfxsize}{#2}
-  \centerline{\epsfbox{#1}}
-  \vspace{-.1in}\caption{\small #3}\break\vspace{.2in}
-  \label{#1}
-  \end{figure}
-}
+%\input{epsf}
+%\def\newfig#1#2#3{
+%  \begin{figure}[htbp]
+%  \vspace{1ex}
+%  \setlength{\epsfxsize}{#2}
+%  \centerline{\epsfbox{#1}}
+%  \vspace{-.1in}\caption{\small #3}\break\vspace{.2in}
+%  \label{#1}
+%  \end{figure}
+%}
 
 %usage of newfigtwo: 2 figures, vertically stacked
 % \newfig
@@ -195,8 +195,8 @@
 %  macros borrowed from viewgraph package
 %
 
-\newenvironment{LETTRS}[3]{\begin{letter}{#1}
-\input{origin}\opening{Dear #2:}\input{#3}\closing{Sincerely yours,}\end{letter}}{\clearpage}
+%\newenvironment{LETTRS}[3]{\begin{letter}{#1}
+%\input{origin}\opening{Dear #2:}\input{#3}\closing{Sincerely yours,}\end{letter}}{\clearpage}
 
 \newenvironment{VIEW}[1]{{\BC\Huge\bf #1 \EC}\LARGE\VS{.05in}}{\clearpage}
 
