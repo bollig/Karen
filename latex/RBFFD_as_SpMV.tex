@@ -1,8 +1,6 @@
 \section{RBF-FD as SpMV}
 
-From the definition of RBF-FD we can formulate the problem computationally in two ways. 
-
-Stencil operations are independent. Therefore in the first approach we can write kernels with perfect parallelism by writing kernels to dedicate a thread per stencil or a warp per stencil. 
+From the definition of RBF-FD we can formulate the problem computationally in two ways. First, stencil operations are independent. Therefore, we can write kernels with perfect parallelism by dedicating a single thread per stencil or a group of threads per stencil.  
 
 Unfortunately, perfect concurrency does not imply perfect or even ideal concurrency on the GPU. 
 
@@ -13,3 +11,7 @@ To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sp
 \item First, the sparse containers used in SpMV allow for their own unique optimizations to compress storage and leverage hardware cache.
 \item Evaluation of multiple derivatives can be accumulated by association into one matrix operation. This reduces the total number of floating point operations required per iteration. 
 \end{itemize}
+
+
+
+We compare the performance of our custom kernel to ViennaCL kernels (ELL, CSR, COO, HYB, DIAG), UBlas (COO, CSR) and Eigen (COO, CSR, ELL)

@@ -1,3 +1,26 @@
 \chapter{Sparse Matrix Multiplication on the GPU} 
 
 With the generalization of RBF-FD derivative computation formulated as a sparse matrix multiplication, we can 
+consider the various sparse formats provided by CUSP and ViennaCL. 
+
+Consider the performance of the problem given 
+	\begin{itemize} 
+	\item All stencils with uniform size
+	\item All stencils with non-uniform size
+	\end{itemize}
+What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
+
+Compare formats: 
+\begin{itemize}
+\item JAD
+\item ELL
+\item HYB
+\item COO
+\item CSR
+\item DIA
+\end{itemize}
+
+How is communication overlap handled with each format? 
+
+
+Conclude: sparse containers allow increased efficiency compared to our custom kernels. The custom kernels compete with CSR and COO. 
