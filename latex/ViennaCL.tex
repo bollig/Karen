@@ -13,3 +13,23 @@ Matrix and Vector Views provide slices and subranges of containers. Subviews wer
 Algorithms are provided for GMRES, CG, etc. 
 
 To build multi-GPU algorithms for GMRES we discard the ViennaCL arnoldi process in favor of the Givens rotations. Then we add MPI communication. 
+
+
+
+\section{ViennaCL Limitations}
+ViennaCL is a young library. When we began working with the library, it supported only CSR and COO formats. It has no support for multi-GPU computing. According to the author there were no intentions to extend it multiple GPUs due to the limited return of investment. 
+
+\section{ViennaCL Additions}
+Added support for distributed SpMV and SAXPY with MPI communication. 
+
+Extended library to support rectangular systems rather than just square systems. 
+
+Introduced alternative GMRES algorithm based on Givens Rotations
+
+Introduced preconditioner ILU0. 
+
+\section{ViennaCL Matrix Formats}
+
+ViennaCL supports numerous sparse matrix formats. 
+
+Assemble once in CSR format using direct access notation (e.g., mat(row,col) = val), internally convert to more efficient sparse representation. 

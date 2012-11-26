@@ -1,0 +1,46 @@
+
+Core concepts in thesis: 
+
+performance on GPU, scalability on multiple GPUs, application of GPU to 
+existing and new problems (HPC problems), and new algorithms useful to this 
+field (neighbor queries). 
+
+Performance
+    - SpMV comparison (VCL, UBLAS, Eigen, Custom)
+      - TODO: Eigen
+      - TODO: simulate matrix fill
+        - Random fill
+        - Optimal Fill (N first diags)
+        - Typical Fill (Existing nodes sets)
+    - TODO: given time, size, calculate GFLOPs
+    - TODO: hardware limits (GFLOPs)
+        - CPU
+        - GPU
+
+Scalability
+    - TODO: VCL Cosine multi
+    - TODO: Overlap comm, comp within framework (dont generalize yet)
+
+Application
+    - TODO: benchmark coupled stokes
+    - TODO: Stokes with boundary
+
+Neighbor Query Optimization
+    - TODO: number of stencils / second
+
+
+
+
+
+Eigen needs to be installed and an SpMV benchmark run to compare against
+    - UBLAS, VCL formats
+    - Multiple stencil sizes
+    - Multiple neighbor queries
+
+
+
+
+Extra questions to answer: 
+    - Do Eigen/UBlas sort? How does neighbor query impact spmv?
+    - VCL sorts when sending to GPU. how does the neighbor query impact copy 
+    and spmv? 
