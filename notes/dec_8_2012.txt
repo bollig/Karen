@@ -1,0 +1,98 @@
+I need to get this thesis going again. 
+
+My status report to the NSF is required by the end of the day tomorrow. What I 
+need to write up: 
+
+    - First we need to describe RBF-FD as a SpMV problem. When we formulate the 
+    problem based on stencils we have the sum(a*w). From the stencil perspective 
+    this equates to perfect parallelism in the stencils. However, from a 
+    meta-perspective we see that the stencils are rows of a matrix. Reviewing 
+    PDE literature, the SpMV is the most necessary component for PDE solutions. 
+    It is essential for explicit evaluations (du/dt = A*u), and implicit 
+    evaluations (A*u = F). The SpMV then can be optimized independent of RBF-FD 
+    and we will see the benefits in our method as well as others. 
+
+    - The RBF-FD method is straightforward to formulate. Once we have the 
+    weights calculated we assemble a linear system corresponding to the meshed 
+    domain for our computation. 
+
+    - The literature refers to RBF-FD as if it is a meshless method, but in fact 
+    it is meshed by a directed graph lattice formed by the stencils. In 
+    contrast to this, the Finite Difference method would be an undirected 
+    graph since stencils are symmetric. 
+
+    - 
+
+
+    - Decomposition was done manually as a single thread and the pieces are 
+    broadcast to the neighboring threads. This is inefficient. With libraries 
+    like METIS we can decompose the grid prior to computation, load in the 
+    fragments by thread and then compute directly. This would greatly simplify 
+    the code base because we wouldnt need to write C/C++ code to load grid, 
+    decompose, write files, broadcast etc. We could have a shell script that 
+    utilizes METIS, then launches the independent C++ threads to load their work 
+    and communicate with one-another. 
+
+    - Also, if we assembled one large matrix in memory, then dedicated multiply 
+    threads to it we can slice the matrix by ROW or by COL or by BOTH. There is 
+    a lot of research into such decomposition methods. My thesis is NOT on 
+    decomposition, so we should leverage METIS where possible for the best 
+    load-balancing and then tweak the decomposition for RBF-FD. 
+
+
+
+    - Questions for the thesis: 
+        - How do we formulate RBF-FD as a high level algorithm (SpMV, SAXPY, 
+        Reduction, etc)? 
+        - What is the work to memory ratio of our problem? 
+        - What is the peak efficiency capable of our code?
+        - How do we optimize the code to solve the problem?
+        - How do we load balance? What is the optimal load balancing?
+        - How can the neighbor query improve load balancing?
+    
+
+    1) Formulate RBF-FD problem for application: 
+        - Explicit is SpMV with SAXPY and Reduction
+        - Implicit is GMRES iteration with 
+            - SpMV, SAXPY and Reduction
+    2) Describe distribution
+        - SpMV in slices (rows) across multiple GPUs (corresponds to 
+        decomposition in prospectus)
+        - Use METIS to decompose (work has already been done on this front).
+*       - Novelty could be in overlapping communication and computaton (test 
+        model with GPUs overlapping and model with CPUs overlapping (libNBC)
+    3) Describe optimization
+        - SpMV optimizations (Our Kernel vs VCLs kernels)
+        - Matrix Reorderings (Conditioning, performance, etc)  
+    4) Other Bottlenecks
+        - Neighbor queries and stencil weights
+            - Calculated once, but might dominate unless very large number of 
+            iterations are required by PDE in time (How many iterations?) 
+        - Communication? More than just overlap? Can we reformulate the problem 
+    5) Other applications?
+        - 
+
+
+
+
+Whats been done: 
+
+    - Zhou, Hon and Li applied Domain Decomposition to RBF (global) collocation. 
+    The investigated both the application of Additive and Multiplicative Schwarz 
+    methods. We could reapply these methods to RBF-FD. How? Well the domain 
+    decompositions describe how to partition a matrix and compute in a 
+    distributed system (each thread/processor would take a partition of the 
+    matrix). No one has yet applied Schwarz methods to RBF-FD althought Knepley 
+    and Yokota applied them to Compact Support RBF Collocation
+
+    - PETSc integrated GPGPU SpMV. Leveraging their existing distributed matrix 
+    multiply code, multi-GPU SpMV is already complete. Our approach is 
+    independent and can be compared to theirs. Perhaps with the overlapping 
+    communication and computation we have something they don't?
+
+    - Neighbor queries for RBF methods use KDTree as the fastest algorithm (see 
+
+
+    - what is the optimal partitioning? According to Book by Wilkinson and 
+    Allen, the optimal partitioning is diamond for 9 point stencil (See Terrano, 
+    Dunn ad Peters (1989) for details). Perhaps we can reapply this knowledge? 

@@ -1,0 +1,6 @@
+- Compare GFLOPS throughput for JAD, CSR, COO, HYB, ELL, (any others I can come 
+up with) on GPU vs COO/CSR UBlas (optimized). Find ELL (Eigen?)
+    => Assume stencil size 50 (average size for RBF-FD), repeat for 101 and 31
+    => Need: ELL CPU. Other Formats
+
+- 

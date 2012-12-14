@@ -1,0 +1,74 @@
+The NSF update is missing the following information: 
+
+- SpMV optimizations
+    --> Figure comparing VCL ELL to UBLAS, other formats, custom. 
+        --> TODO: Add custom to benchmark file.
+    --> TODO: Performance of coupled test with and without interleaving. 
+    --> TODO: Figures showing speedup compared to hand CPU and UBLAS
+    --> TODO: Figure showing GFLOPs
+    --> TODO: Theoretical limits
+
+- Scalability
+    --> Figures sent to Natasha
+    --> TODO: Theoretical limits
+
+- Choosing epsilon
+
+- Node ordering
+    --> TODO: Matlab figures for different orderings (apply code to input matrix)
+    --> TODO: test spmv (load matrix and multiply with VCL) on various 
+    orderings. 
+
+- GMRES
+    --> Algorithm with comm points
+    --> TODO: Scalability benchmark
+        --> Test on spear (up to 8 nodes)
+    --> TODO: Describe Preconditioner ILU
+
+- Future: 
+    --> Final optimizations
+    --> 
+    --> Large problems beyond sphere
+
+
+
+
+In the NSF report for the previous year, a two facet approach was proposed for 
+research. First, we proposed node ordering (per GPU) based on a space-filling 
+curve to find out if there is efficiency improvement. Second, we proposed 
+solving the Stokes problem. During the 2012 year our actual research took us 
+through the following tasks: 
+
+1) We formulated and solved the steady-state Stokes equation on the sphere using the GPU. The 
+   steady-state problem is formulated implicitly requiring an implicit GPU 
+   solver. To this end we: 
+   a) Formulated the steady-state stokes equation on the sphere and generated 
+   exact solutions based on project operators.
+   b) Implemented a multi-GPU GMRES algorithm in OpenCL to solve our Stokes 
+   equation to solve the implicit equation on both single and multi-GPU contexts. 
+   c) To simplify prototyping of future systems we implemented our algorithm 
+   within the framework of ViennaCL. 
+   d) Investigated various preconditioners for RBF-FD resulting in an 
+   implementation of ILU0 preconditioner 
+
+2) Reconsidered various bottlenecks in our previous work to accelerate solutions 
+   of both explicit and implicit solutions. This includes: 
+   a) leveraging alternative sparse matrix containers that minimize memory loads 
+   and increase efficiency in sparse matrix multiplication.
+   b) MPI communication for increased scalability 
+
+3) Limited research into alternative node orderings including U, X and Z 
+   orderings. 
+
+
+In the coming year we will 
+
+- conclude research into node orderings and 
+- Simulate problems with billions of unknowns. At the moment, RBF-FD weight 
+calculation for huge problem sizes depends on advanced weight calculation 
+(RBF-QR, ContourSVD, etc.). Until research on these methods is complete we can 
+simulate RBF-FD solutions to very large problems by assembling synthetic 
+matrices and  
+- additional coupled equations
+
+
