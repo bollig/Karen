@@ -1,0 +1,14 @@
+- Overlap comm & comp (Friday-Sunday) 
+
+- LU w/ Pivoting for weights (Need to demonstrate GFLOPs boost)
+
+- ILU GPU
+
+- Node orderings U, X, Z code
+
+- Metis decompose to disk, load parts and execute (Unified)
+
+- clSpMV multi-GPU (how to handle overlap? impact of orderings on disabled/override sorting?)
+
+- SIMPLE fluid algorithm to simulate mantle 
+
