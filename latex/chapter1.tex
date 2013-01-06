@@ -1,7 +1,39 @@
 %!TEX root =  karen.tex
 
-
 \chapter{Introduction}
+outline:
+\begin{itemize} 
+\item high performance computing demand for numerical modeling
+\begin{itemize} 
+\item complexity of physics terms plus the complexity of numerical methods push the limits of hardware
+\item problem since the dawn of computing: limited registers/ALUs, unlimited computation. how do we triage?
+\item utilize every available piece of hardware, parallelism, etc.
+\item new algorithms think smarter, not just faster.
+\end{itemize}
+\item a new era of numerical methods ushered by Radial Basis functions
+\begin{itemize} 
+\item scattered nodes
+\begin{itemize}
+\item place samples where they are necessary, not where the grid requires
+\item maximize the representation of nodes and minimize interpolation error
+\item higher order accuracy than standard 
+\end{itemize}
+
+\item 
+\end{itemize}
+
+\end{itemize}
+
+Unanswered Questions: 
+\begin{itemize} 
+\item If RBF-FD is higher order accurate than FV, why would anyone opt for FV?
+\begin{itemize} 
+\item the conservative form FV is preferred in physical science since it does not allow loss of (what? mass/energy/???)
+\item FV are typically low-order. what is the trade-off in complexity between methods. For a much higher-order RBF-FD if it is not conservative, how many iterations is it accurate consistent with the low-order FV? l
+\end{itemize}
+
+\end{itemize}
+
 
 
 \subsubsection{Background on GPUs} 

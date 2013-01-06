@@ -12,3 +12,37 @@
 
 - SIMPLE fluid algorithm to simulate mantle 
 
+
+
+
+Overlap didnt happen. However, I can still finish some writing. I will have to document what the code does at the current moment. 
+
+Start by describing the RBF-FD method. 
+Cover details of distributed SpMV, SAXPY, reductions, etc.
+Cover details neighbor queries.
+Cover details of GPUs
+Cover details of anything else the is currently in the code. 
+Then start working on new stuff. I need to play catch-up so I need to parse through related works and find how they are related to my work. 
+
+
+My goal with this thesis is to: 
+	be the first to apply RBF-FD to massive problems deserving of supercomputers. 
+		That involves workign out details of how to parallelize as much as possible. 
+		Including new algorithms to tackle tasks like stencil generation and weight calculation
+	once on the supercomputers, we need
+		to Find a way to load balance calculations and minimize cost of communication (w/ overlap)
+		to find a way to minimize compute time even if the cost of communication is not negligible (w/ GPUs)
+	assuming we have performant code, what applications can we work on that no one has been able to do?
+		any modeling code will involve both implicit and explicit solves
+			start with advection and demonstrate stable advection in parallel on multi-GPUs (paper1)
+				* Include clSpMV for comparison and MOST efficient to-date. 
+			implicit solutions with multi-GPU GMRES and introduction of coupled systems
+		* mantle convection is the end goal. rbf-ps was applied, but not rbf-fd
+		*	need annulus first
+		*	need 3D shell
+
+Conclusions we should be able to draw: 
+	- Implemented first RBF-FD on GPU
+	- Implicit/Explicit
+	- Utilized efficient algorithms
+	* Mantle model 
