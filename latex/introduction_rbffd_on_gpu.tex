@@ -1,0 +1,88 @@
+\section{Motivation for RBF-FD on the GPU} 
+The choice to study RBF-FD within this dissertation is motivated by two factors. First, RBF-FD represents one of the latest developments within the RBF community. The method was formally introduced in 2003 but has yet to obtain the critical-mass following necessary for the method's use in large-scale scientific models. Our goal throughout the dissertation has been to scale RBF-FD to complex problems on high resolution meshes, and to lead the way for its adoption in high performance computational geophysics. Second, RBF-FD inherits many of the positive features from global and local collocation schemes, but sacrifices others for the sake of significantly reduced computational complexity and increased parallelism. We capitalize on the inherent parallelism to develop a collection of multi-GPU test cases that span the compute nodes of a Top 500 supercomputer. Our effort leads the way for application of RBF-FD in the modern field of high performance computing where GPU accelerators will be key to breaching the exa-scale barrier in computing \cite{GPUandExascale2011}.
+
+
+Rather than solely focus on the optimizations of said algorithms on the GPU, we dedicate significant attention to the practical application of RBF-FD to interesting problems in geophysics. This means we have walked a fine line between research topics to both apply the method to 
+
+
+
+\begin{itemize} 
+	\item Introduction
+	\begin{itemize}
+		\item relatively new method: RBF-FD 
+		\begin{itemize} 
+			\item related methods (predecessors)
+			\item features/benefits
+			\item limitations: small problems, limited parallelism, no work to target HPC
+		\end{itemize}
+		\item relatively new paradigm: GPU computing
+		\begin{itemize} 
+			\item new standard in HPC
+			\item benefits
+			\item success stories
+		\end{itemize} 
+		\item this thesis: application of multiple GPUs to RBF-FD
+		\begin{itemize} 
+			\item two core concepts: solve and communicate
+			\item leverage accelerated GPU primitives to achieve high performance (RK4, GMRES, if time permits: SIMPLE?)
+			\item applications: some seen (hyperbolic), some not seen (elliptic); final goal (if time permits): mantle?
+		\end{itemize} 
+	\end{itemize}
+\end{itemize}
+
+
+\begin{itemize}
+	\item Chapter 1: RBF-generated Finite Differences
+	\begin{itemize} 
+		\item G
+	\end{itemize} 
+\end{itemize}
+	
+\begin{itemize}
+	\item Chapter 2: RBF-FD on GPUs
+	\begin{itemize} 
+		\item G
+	\end{itemize} 
+\end{itemize}
+
+\begin{itemize}
+	\item Chapter 3: Distributed Computing with MPI
+	\begin{itemize} 
+		\item G
+	\end{itemize} 
+\end{itemize}
+
+\begin{itemize}
+	\item Chapter 4: Application of RBF-FD: Stable Advection on the Sphere
+	\begin{itemize} 
+		\item Distributed SpMV
+		\item Hyperviscosity
+		\item Convergence Studies
+		\item Benchmarks
+	\end{itemize} 
+\end{itemize}
+
+\begin{itemize}
+	\item Chapter 5: Application of RBF-FD: Implicit Solutions with Preconditioned GMRES
+	\begin{itemize} 
+		\item Annulus
+		\item Coupled System on Sphere
+	\end{itemize} 
+\end{itemize}
+
+\begin{itemize}
+	\item Chapter 6: Approximate Nearest Neighbors, Node Ordering and Conditioning
+	\begin{itemize} 
+		\item a
+		\item b
+	\end{itemize} 
+\end{itemize}
+
+\begin{itemize}
+	\item Chapter 7: Future Work
+	\begin{itemize} 
+		\item Annulus mantle convection model (requires: SIMPLE method)
+		\item Lid Driven Cavity. 
+	\end{itemize}
+\end{itemize}
+

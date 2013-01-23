@@ -59,7 +59,7 @@
 
 \input{macros/macros.tex}
 \input{macros/authnote_macros.tex}
-%\input{macros/track_changes_macros.tex}
+\input{macros/track_changes_macros.tex}
 \input{macros/misc_mac.tex}
 \input{macros/aliases.tex}
 \input{macros/table_macros.tex} 
@@ -82,11 +82,21 @@
 %\input{symbols.tex}
 %\input{abbreviations.tex}
 	%
-	\input{abstract.tex}
+	%\input{abstract.tex}
 
 \mainmatter
 
-\input{chapter1.tex}
+\chapter{Introduction}
+	\input{introduction_rbffd_on_gpu.tex}
+
+\chapter{RBF Methods for PDE Solutions} 
+	\input{chapter_rbffd.tex}
+	
+\chapter{RBF-FD on the GPU}
+
+
+%\input{chapter1.tex}
+%\input{hpc_challenges_lead_to_gpu.tex}
 %\input{RBFFD_as_SpMV.tex}
 %\input{SpMV_GPU.tex}
 %\input{GMRES.tex}
@@ -100,11 +110,8 @@
 %\input{chapter7.tex}
 %\input{publications.tex}
 
-%\input{introduction.tex} 
 %\input{grid_generation.tex}
-%\input{parabolic_equations.tex}
-%\input{hyperbolic_equations.tex}
-%\input{parallel_gmres.tex} 
+
 %
 %\appendix
 %\input{appendix1.tex}

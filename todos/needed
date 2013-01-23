@@ -46,3 +46,20 @@ Conclusions we should be able to draw:
 	- Implicit/Explicit
 	- Utilized efficient algorithms
 	* Mantle model 
+
+
+
+
+
+
+Things to review: 
+	- Domain Decomposition (high level)
+	- GPU optimization (Deep)
+	- SpMV (Deep)
+	- Mat solve, LUP (Deep)
+	- Communication (Deep)
+
+
+The problem is i need to prototype my solves on a single node, spanning one GPU and two procs. Then I need to test on the cluster for benchmarks. Its not about profiling and optimization because its scratch code. I need to breach this barrier. 
+
+I also need to get some food. Id prefer to sit in a warm office and write, but oh well. I need to keep pushing through as fast as possible. My office I cant stand unless I put the computer on top of the cabinet/shelves and it might be too high. Worth a shot at least. And this free write is getting me going. I should transfer now. 
