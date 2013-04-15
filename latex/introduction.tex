@@ -1,11 +1,16 @@
-%!TEX root =  karen.tex
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass[11pt]{report}
+\input{all_usepackages}
 
-
-\chapter{Introduction}
-
+\begin{document}
+\fi
 
 \subsubsection{Background on GPUs} 
-
+Hello
 GPUs were introduced in 80's \hl{see master's thesis}.
 
 Originally GPUs were designed as parallel rasterizing units. They had limited logic control in contrast to the serial CPUs and their advanced branching and looping logic. 
@@ -370,5 +375,11 @@ their appropriateness for our task. This is followed by a
 discussion in Chapter~\ref{chap:hardware} of GPU hardware and the large scale clusters with integrated GPUs which will be used for heterogeneous multi-core computing. Finally, in Chapter~\ref{chap:proposal} we present our proposal for research into efficient PDE 
 solutions on multi-node, multi-GPU compute clusters using radial basis functions for Tsunami simulation.
 
-
-
+\ifstandalone
+%Bei direkter Übersetzung sollte gleich noch das Literaturverzeichnis rein.
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi

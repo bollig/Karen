@@ -1,17 +1,26 @@
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
 
-%!TEX root = prospectus.tex
+\input{all_usepackages} 
+
+\begin{document}
+\fi
 
 This chapter outlines the process of solving PDEs using RBFs and a few methods developed since 1990. We start with a description of the general approximation problem and provide background on RBF scattered data interpolation that will be required for the remainder of the chapter. We categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
 
 We present three collocation methods: Kansa's method, Fasshauer's method and Direct collocation, and discuss extensions that lead to local interpolation matrices instead of a single global interpolation matrix. Finally, we discuss RBF-FD, the most recent method for solving PDEs. 
 
 \section{PDE as an Interpolation Problem}
-Following \cite{Mouat:2002}, consider a PDE expressed in terms of a (linear) differential operator, $\diffop$: 
+Following \cite{Mouat2002}, consider a PDE expressed in terms of a (linear) differential operator, $\diffop$: 
 \begin{eqnarray}
 \diffop{u} & = & f \on{\Interior} \\
 u &=& g \on{\Boundary}
 \end{eqnarray}
-where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{Wright:2006}); of course, this increases the complexity of a single time step. Then, the unknown solution, $u$, which produces the observations on the right hand side can be approximated by an interpolant function $u_{\Phi}$ expressed as a linear combination of radial basis functions, $\{\Phi_j(x) = \Phi(\vectornorm{x-x_j})\}_{j=1}^{N}$, and polynomial functions$\{P_l(x)\}_{l=1}^{M}$:
+where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{Wright2006}); of course, this increases the complexity of a single time step. Then, the unknown solution, $u$, which produces the observations on the right hand side can be approximated by an interpolant function $u_{\Phi}$ expressed as a linear combination of radial basis functions, $\{\Phi_j(x) = \Phi(\vectornorm{x-x_j})\}_{j=1}^{N}$, and polynomial functions$\{P_l(x)\}_{l=1}^{M}$:
 \begin{equation}
 	u_{\Phi}(x) = \sum_{j=1}^{N} c_{j}  \Phi_j(x) + \sum_{l=1}^{M} d_{l} P_l(x), \hskip1.5em P_l(x) \in \Pi^{D}_{p}
 	\label{eqn:pde_approx}
@@ -31,7 +40,7 @@ the $x_i$'s (data points) points as \emph{collocation points}, usually taken as 
 
 To clarify the role of the polynomial part in Equation~\ref{eqn:pde_approx}, it is necessary to
 put aside the PDE for the moment and consider only the problem of \emph{scattered data 
-interpolation} with Radial Basis Functions. Borrowing notation from \cite{Fasshauer:2007, Iske:2004}, 
+interpolation} with Radial Basis Functions. Borrowing notation from \cite{Fasshauer2007, Iske2004}, 
 we seek an interpolant, $\mathcal{P}_f$ of the form
 %\toevan{Why put a vector on something that is not a vector? $\Phi_j(x)$ is a scalar isn't it? I have removed the vector on $f$ and put it on $\Phi$}
 \begin{eqnarray*}
@@ -552,3 +561,13 @@ For initial value problems with moving nodes, the coefficients must be updated a
 %To solve the linear systems we use Cholesky, but a conjugate gradient is better for systems that are too large for Cholesky. In our case we have many small matrices so its ok for the former. 
 
 %Multiple levels for decomposition: 1) domain decomposition to reduce conditioning number in global RBF; 2) parallel decomposition to reduce compute time. \cite{Divo:2007} uses 2). 
+
+%Dokumentende
+\ifstandalone
+%Bei direkter Übersetzung sollte gleich noch das Literaturverzeichnis rein.
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi

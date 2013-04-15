@@ -1,0 +1,44 @@
+\usepackage{textcase}
+\usepackage[pdftex]{graphicx}
+%\usepackage{hyperref}
+%\hypersetup{breaklinks=true}
+
+
+% Added packages
+\usepackage[usenames]{color}
+\usepackage{amsfonts, amsmath, amssymb, graphics}
+
+% NOTE: bibentry MUST appear before the hyperref or build will fail
+\usepackage{bibentry}
+\nobibliography*
+
+\usepackage[
+    hyperindex=true,		% Make numbers of index links as well
+   	backref=page, 		% Provide page listing where refs occur in the bibliography
+	%breaklinks=true,
+    colorlinks,%
+    citecolor=green,%
+    filecolor=blue,%
+    linkcolor=red,%
+    urlcolor=red, 
+]{hyperref}
+
+\usepackage{dsfont}
+%%%% USEPACKAGES for MACROS %%%%%
+%\usepackage{algpseudocode}
+%\usepackage[chapter]{algorithm}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{url}
+
+\usepackage{array}
+\usepackage{arydshln}
+\usepackage{multirow}
+\usepackage{multicol}
+
+\input{macros/macros.tex}
+\input{macros/authnote_macros.tex}
+%\input{macros/track_changes_macros.tex}
+\input{macros/misc_mac.tex}
+\input{macros/aliases.tex}
+\input{macros/table_macros.tex} 
