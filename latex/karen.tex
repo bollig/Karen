@@ -1,32 +1,8 @@
 \documentclass[11pt]{fsuthesis}
 
-\usepackage{textcase}
-\usepackage[pdftex]{graphicx}
-%\usepackage{hyperref}
-%\hypersetup{breaklinks=true}
-
-
-% Added packages
-\usepackage[usenames]{color}
-\usepackage{amsfonts, amsmath, amssymb, graphics}
-
-% NOTE: bibentry MUST appear before the hyperref or build will fail
-\usepackage{bibentry}
-\nobibliography*
-
-\usepackage[
-    hyperindex=true,		% Make numbers of index links as well
-   	backref=page, 		% Provide page listing where refs occur in the bibliography
-	%breaklinks=true,
-    colorlinks,%
-    citecolor=green,%
-    filecolor=blue,%
-    linkcolor=red,%
-    urlcolor=red, 
-]{hyperref}
-
-\usepackage{dsfont}
 \usepackage{standalone}
+\input{all_usepackages}
+
 
 \title{Multi-GPU Solutions of Geophysical PDEs with Radial Basis Function-generated Finite Differences}
 \author{Evan F. Bollig}
@@ -46,24 +22,6 @@
 \committeeperson{Dennis Slice}{Committee Member}
 \committeeperson{Ming Ye}{Committee Member}
 
-%%%% USEPACKAGES for MACROS %%%%%
-\usepackage{algpseudocode}
-\usepackage[chapter]{algorithm}
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage{url}
-
-\usepackage{array}
-\usepackage{arydshln}
-\usepackage{multirow}
-\usepackage{multicol}
-
-\input{macros/macros.tex}
-\input{macros/authnote_macros.tex}
-%\input{macros/track_changes_macros.tex}
-\input{macros/misc_mac.tex}
-\input{macros/aliases.tex}
-\input{macros/table_macros.tex} 
 
 \begin{document}
 
@@ -89,23 +47,23 @@
 
 \include{introduction}
 \include{related_work}
-%\input{RBFFD_as_SpMV.tex}
-%\input{SpMV_GPU.tex}
-%\input{GMRES.tex}
-%\input{ViennaCL.tex}
-%\input{future_of_gpus.tex}
-%\input{chapter2.tex}
-%\input{chapter3.tex} 
-%\input{chapter4.tex} 
-%\input{chapter5.tex} 
-%\input{chapter6.tex}
-%\input{chapter7.tex}
-%\input{publications.tex}
-%
-%\appendix
+\include{rbffd_method}
+\include{choosing_epsilon}
+\include{distributed_solver}
+\include{RBFFD_as_SpMV}
+\include{SpMV_GPU}
+\include{GMRES}
+\include{ViennaCL.tex}
+\include{future_of_gpus.tex}
+\include{implicit_pde_solutions}
+\include{performance_analysis} 
+\include{ordering_and_preconditioning}
+\include{publications}
+
+\appendix
 %\input{notation_and_symbols.tex}
-%\input{appendix1.tex}
-%\input{appendix2.tex}
+\include{rbffd_avoid_pole_singularities}
+\include{rbffd_weights_on_sphere}
 
 % The BibTeX bibliography/references section.  View the file
 % 'myrefs.bib' to get a feel for what these entries may look like.

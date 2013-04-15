@@ -1,3 +1,15 @@
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
+
+\input{all_usepackages} 
+
+\begin{document}
+\fi
+
 \chapter{Sparse Matrix Multiplication on the GPU} 
 
 With the generalization of RBF-FD derivative computation formulated as a sparse matrix multiplication, we can 
@@ -24,3 +36,13 @@ How is communication overlap handled with each format?
 
 
 Conclude: sparse containers allow increased efficiency compared to our custom kernels. The custom kernels compete with CSR and COO. 
+
+
+
+\ifstandalone
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi

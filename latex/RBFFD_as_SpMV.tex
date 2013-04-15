@@ -1,3 +1,15 @@
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
+
+\input{all_usepackages} 
+
+\begin{document}
+\fi
+
 \section{RBF-FD as SpMV}
 
 From the definition of RBF-FD we can formulate the problem computationally in two ways. First, stencil operations are independent. Therefore, we can write kernels with perfect parallelism by dedicating a single thread per stencil or a group of threads per stencil.  
@@ -19,3 +31,10 @@ We compare the performance of our custom kernel to ViennaCL kernels (ELL, CSR, C
 
 
 
+\ifstandalone
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi

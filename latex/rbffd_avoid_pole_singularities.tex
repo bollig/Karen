@@ -1,0 +1,82 @@
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
+
+\input{all_usepackages} 
+
+\begin{document}
+\fi
+
+\chapter{Avoiding Pole Singularities with RBF-FD}
+This content follows \cite{FlyerWright07,FlyerWright09}. 
+
+Within the test cases of this dissertation, we solve convective PDEs on the unit sphere with the form: 
+$$
+\pd{h}{t} = \vu \cdot \nabla h
+$$
+where $\vu$ is velocity. For example, the cosine bell advection has this particular form:
+\begin{equation}
+\pd{h}{t} = \frac{u}{\cos{\theta}} \pd{h}{\lambda} + v \pd{h}{\theta} \label{eq:cosine_bell_appendix}
+\end{equation}
+in the spherical coordinate system defined by
+\begin{align*}
+x & = \cos{\theta}\cos{\lambda} \\
+y & = \cos{\theta}\sin{\lambda} \\
+z & = \sin{\theta}
+\end{align*}
+where $\theta \in (-\frac{\pi}{2}, \frac{\pi}{2})$ is the elevation angle and $\lambda \in (-\pi,\pi)$ is the azimuthal angle.
+Observe that as $\theta \rightarrow \pm \frac{\pi}{2}$, the $\frac{1}{\cos{\theta}}$ term goes to infinity as a discontinuity. 
+
+One of the many selling points for RBF-FD and other RBF methods is their ability analytically avoid pole singularities, which arise from the choice of coordinate system and not from the methods themselves. Since RBFs are inherently based on Euclidean distance between nodes, and not geodesic distance, it is said that they do not ``feel'' the effects of the geometry or recognize singularities naturally inherent in the coordinate system \cite{FlyerWright07}. 
+Here we demonstrate how pole singularities are analytically avoided with RBF-FD for cosine bell advection.  
+
+
+Let $r = || \vx - \vx_j ||$ be the Euclidean distance which is invariant of the coordinate system. In Cartesian coordinates, we have
+$$
+r = \sqrt{(x-x_j)^2 + (y-y_j)^2 + (z-z_j)^2}.
+$$
+In spherical coordinates we have:
+$$
+r = \sqrt{2(1-\cos{\theta}\cos{\theta_j}\cos{(\lambda-\lambda_j)} - \sin{\theta}\sin{\theta_j})}.
+$$
+
+The RBF-FD operators for $\d{}{\lambda}, \d{}{\theta}$ are discretized with the chain rule: 
+
+\begin{align}
+\d{\phi_{j}(r)}{\lambda} = \d{r}{\lambda} \d{\phi_{j}(r)}{r} & = \frac{\cos{\theta}\cos{\theta_j}\sin{(\lambda - \lambda_j)}}{r} \d{\phi_j(r)}{r}, \label{eq:rbfffd_d_dlambda} \\
+\d{\phi_{j}(r)}{\theta} = \d{r}{\theta} \d{\phi_{j}(r)}{r} & = \frac{\sin{\theta}\cos{\theta_j}\cos{(\lambda-\lambda_j)} - \cos{\theta}\sin{\theta_j}}{r} \d{\phi}{r}, \label{eq:rbfffd_d_dtheta}
+\end{align}
+where $\phi_{j}(r)$ is the RBF centered at $\vx_{j}$. 
+
+Plugging \ref{eq:rbfffd_d_dlambda} and \ref{eq:rbfffd_d_dtheta} into \ref{eq:cosine_bell_appendix}, produces the following explicit form: 
+\begin{align*}
+\d{h}{t} = u(\cos{\theta_j}\sin{(\lambda - \lambda_j)} \frac{1}{r} \d{\phi_j}{r}) + v (\sin{\theta}\cos{\theta_j}\cos{(\lambda-\lambda_j)} - \cos{\theta}\sin{\theta_j} \frac{1}{r} \d{\phi}{r}) 
+\end{align*}
+where $\cos{\theta}$ from \ref{eq:rbfffd_d_dlambda} analytically cancels with the $\frac{1}{\cos{\theta}}$ in \ref{eq:cosine_bell_appendix}.
+
+
+Then, formally, one would assemble differentiation matrices containing weights for the following operators: 
+\begin{align}
+\D_\lambda & = \cos{\theta_j}\sin{(\lambda - \lambda_j)} \frac{1}{r} \d{\phi_j}{r}, \label{eq:dm_lambda} \\
+\D_\theta &=  \sin{\theta}\cos{\theta_j}\cos{(\lambda-\lambda_j)} - \cos{\theta}\sin{\theta_j} \frac{1}{r} \d{\phi}{r}, \label{eq:dm_theta}
+\end{align} 
+and solve the explicit method of lines problem:
+$$
+\d{h}{t} = u \D_\lambda h + v \D_\theta h
+$$
+where now the system is completely free of singularities at the poles \cite{FlyerWright09}. 
+
+We note that the expression $\cos{(\frac{\pi}{2})}$ evaluates on some systems to a very small number rather than zero (e.g., $6.1(10^{-17}$) on the Keeneland system with the GNU gcc compiler). The small value in turn allows $\frac{1}{\cos{\theta}}$ to evaluate to a large value (e.g., $1.6(10^{16})$) rather than ``inf" or ``NaN". A large value allows the cosine terms to cancel in double precision, whereas an ``inf'' or ``NaN'' would corrupt the numerics. Rather than avoid placing nodes at the poles, or assuming the machine will numerically cancel the singularities, it is preferred to use operators \ref{eq:dm_lambda}, \ref{eq:dm_theta} on the RHS of Equation~\ref{eq:rbffd_weight_system} to compute RBF-FD weights. 
+
+
+
+\ifstandalone
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi

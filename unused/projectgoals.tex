@@ -1,0 +1,38 @@
+ 
+\section{Project goals}
+\begin{itemize} 
+	\item RBF-FD Method and Stabilization
+	\item Parallelization within RBF-FD
+	\begin{itemize} 
+		\item MPI based
+		\item OpenCL
+		\item CUDA (?)
+	\end{itemize} 
+	\item Porting to GPU requires tests for different classes of PDEs
+	\begin{itemize} 
+		\item Parabolic (*)
+		\item Hyperbolic
+		\item Elliptic (*)
+		\item Coupled
+		\item With and without boundary conditions (*)
+	\end{itemize} 
+	\item Neighbor queries are time consuming at initialization 
+	\begin{itemize} 
+		\item k-D Tree
+		\item Locality Sensitive Hashing 
+		\item Node ordering and sparsity patterns (*)
+	\end{itemize} 
+	\item Conditioning is a major issue. Need Preconditioners (*)
+	\begin{itemize} 
+		\item Node ordering as a preconditioner 
+		\item Matrix Preconditioners (ILU0, etc.)
+		\item Parallel preconditioners (from Saad)
+	\end{itemize} 
+	\item Test cases: 
+	\begin{itemize} 
+		\item Heat (*)
+		\item Poisson (*)
+		\item Advection 
+		\item Stokes
+	\end{itemize} 
+\end{itemize} 
