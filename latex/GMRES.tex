@@ -1,3 +1,15 @@
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
+
+\input{all_usepackages} 
+
+\begin{document}
+\fi
+
 \chapter{GMRES}
 
 The GMRES algorithm follows Algorithm~\ref{alg:gmres_general}. 
@@ -7,3 +19,12 @@ The Arnoldi process can be completed using in a variety of ways. Some libraries 
 Others like [...] prefer to use an alternate algorithm. This algorithm is demonstrated in Algorithm~\ref{alg:gmres_h}.
 
 Parallelizing the algorithm is possible with communication points listed in red (*). 
+
+
+\ifstandalone
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi

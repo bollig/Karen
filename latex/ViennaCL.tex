@@ -1,3 +1,16 @@
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
+
+\input{all_usepackages} 
+
+\begin{document}
+\fi
+
+
 \chapter{ViennaCL}
 
 \authnote{4 pages}
@@ -33,3 +46,12 @@ Introduced preconditioner ILU0.
 ViennaCL supports numerous sparse matrix formats. 
 
 Assemble once in CSR format using direct access notation (e.g., mat(row,col) = val), internally convert to more efficient sparse representation. 
+
+
+\ifstandalone
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi

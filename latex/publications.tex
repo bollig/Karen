@@ -1,4 +1,14 @@
-%!TEX root = karen.tex
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
+
+\input{all_usepackages} 
+
+\begin{document}
+\fi
 
 \chapter{Community Outreach}
 
@@ -12,3 +22,14 @@
         \item \bibentry{BolligMA2011}
 \end{itemize}
 TODO: add survey of goals stated in prospectus and whether they were completed or not (Probably part of slides, not actual dissertation)
+
+
+
+
+\ifstandalone
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi
