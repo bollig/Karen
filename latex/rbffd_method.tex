@@ -176,6 +176,110 @@ Here we substitute $A_\diffop{}$ for the right hand side row vector. Also, Equat
 \end{eqnarray}
 where the vector-matrix inner product $(A_\diffop{} A^{-1})$ is a row-vector.  Since the coefficient vectors ${c}$ and ${d}$ are the same for all $x_i$, we can group the evaluation of $\diffop{u(x_i)}$ for $i=1,...,n$ as a matrix-vector multiplication where the matrix rows correspond to $(A_\diffop{} A^{-1})$ for each $x_i$. 
 
+\section{Global RBF Method}
+%todo: integrate above...this content is repeated, but better formatted
+Consider a PDE expressed in terms of (linear) differential operators, $\diffop$ and $\boundop{}$: 
+\begin{eqnarray}
+\diffop{u} & = & f \on{\Interior}, \nonumber \\
+\boundop{u} &=& g \on{\Boundary} 
+\end{eqnarray}
+where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{WrightFornberg06}); of course, this increases the complexity of a single time step. 
+
+We solve PDEs of this form with \emph{collocation}. That is, given a number of points in the domain, we seek the derivative and solution values that best satisfy $f, g$ at node locations. \authnote{Not clear yet. Review Lynch2005 for a better explanation}\cite{lynch2004numerical}
+
+Global RBF collocation methods pose the problem of interpolating a multivariate function $f : \domain
+    \rightarrow \R$ where $\domain \subset \R^m$. Given a set of sample values
+    $\{f(x_j)\}_{j=1}^{N}$ on a discrete set of nodes $X = \{x_j\}_{j=1}^{N}
+    \subset \domain$, an approximation $\hat{f}_N$ can be constructed through
+    linear combinations of interpolation functions. Here, we choose univariate,
+    radially symmetric functions based on Euclidean distance ($\vnorm{\cdot}$), and use
+    translates $\phi(x-x_j)$ of a single continuous real
+    valued function $\phi$ defined on $\R$ and centered at $x_j$:
+         \begin{equation*} 
+         \phi(x) := \varphi(\vnorm{x}).
+         \end{equation*} 
+    %with a continuous function $\varphi$ on $\R_0^{+}$. 
+    Here, $\varphi$ is a
+    Radial Basis Function and $\phi$ the
+    associated kernel. For simplification $\phi_j(x)$ refers to a kernel centered at $x_j$; i.e., $\varphi(\vectornorm{x-x_j})$.
+
+   The interpolant $\hat{f}_N(x)$ requires a linear combination of translates:  
+        \begin{equation*}
+      %  \hat{f}_N(x) = \sum_{j=1}^{N} c_j \varphi(\vnorm{x-x_j})
+        \hat{f}_N(x) = \sum_{j=1}^{N} c_j \phi_j(x)
+        \end{equation*}
+    with real coefficients $\{c_j\}_{j=1}^{N}$. Assuming the interpolant passes through
+    known values of $f$; i.e., 
+        \begin{equation*} 
+        \hat{f}_N(x_i) = f(x_i),\ \ \ \ \ 1 \leq i \leq N, 
+        \end{equation*}
+    allows one to solve for coefficients if the following linear system is uniquely
+    solvable: 
+        \begin{equation*} 
+        %\sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) = f(x_i),\ \ \ \ \ 1
+        \sum_{j=1}^{N} c_j \phi_j(x_i) = f(x_i),\ \ \ \ \ 1
+        \leq i \leq N. 
+        \end{equation*} 
+    This is true if the $N \by N$ matrix $\Phi$ produced by the linear system
+%        \begin{align} 
+%          \begin{pmatrix}  
+%            \varphi(\vnorm{x_1 - x_1}) & \varphi(\vnorm{x_1 - x_2}) & \cdots & \varphi(\vnorm{x_1 - x_N}) \\ 
+%            \varphi(\vnorm{x_2 - x_1}) & \varphi(\vnorm{x_2 - x_2}) & \cdots & \varphi(\vnorm{x_2 - x_N}) \\ 
+%            \vdots & \ddots & \ddots & \vdots \\
+%            \varphi(\vnorm{x_N - x_1}) & \varphi(\vnorm{x_N - x_2}) & \cdots & \varphi(\vnorm{x_N - x_N})
+%                \end{pmatrix} 
+%                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
+%               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
+%                         \Phi \vec{c} &= \vec{f} 
+%        \end{align} 
+        \begin{align*} 
+          \begin{pmatrix}  
+            \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_N(x_1) \\ 
+            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_N(x_2) \\ 
+            \vdots & \ddots & \ddots & \vdots \\
+            \phi_1(x_N) & \phi_2(x_N) & \cdots & \phi_N(x_N)
+                \end{pmatrix} 
+                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
+               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
+                         \Phi \vec{c} &= \vec{f} 
+        \end{align*} 
+is nonsingular.
+
+ When choosing an appropriate basis function for interpolation, a
+    subset of RBFs have been shown to produce symmetric positive definite
+    $\Phi$, while others are only conditionally positive definite (for more details see
+    \cite{Fasshauer2007}).  With
+    the latter set, additional polynomial terms are added to constrain the
+    system and enforce positive definiteness, resulting in this expanded system of equations: 
+        \begin{align} 
+       % \sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) + \sum_{k=1}^{t}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
+        \sum_{j=1}^{N} c_j \phi_j(x_i) + \sum_{k=1}^{M}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
+        \leq i \leq N, \nonumber \\ 
+        \sum_{j=1}^{N} c_j p_k(x_j) &=  0,\ \ \ \ \ \ \ \ \ \ 1 \leq k \leq M. \nonumber \\
+          \begin{pmatrix} \Phi & P \\ P^T & 0 \end{pmatrix} \begin{bmatrix} c \\ d \end{bmatrix} &= \begin{bmatrix} \vec{f} \\ 0 \end{bmatrix}
+	\label{eq:additional_constraints}
+        \end{align} 
+        where $\{p_k\}_{k=1}^{M}$ is a basis for $\Pi_{p}^{m} $ (the set of polynomials in $m$ variables of degree $\leq p$) and 
+       \begin{equation*}
+       M = {{p+m}\choose{m}}       .
+       \end{equation*} 
+      %\authnote{Add table? or cut:} Table~\ref{tbl:rbfoptions} provides example RBF functions and notes their (conditionally) positive definiteness. 
+
+
+Given the coefficients $\vec{c}$, the function value at a test point $x$ is interpolated by
+\begin{align}	 
+	\hat{f}_N(x) &= \sum_{j=1}^{N}c_j \Phi_j(x) + \sum_{l=1}^{M}d_l P_l(x)  \nonumber \\
+	&=  \left[\begin{array}{cc}
+        \Phi & \PP
+	\end{array} \right] 
+	 \begin{bmatrix}	c \\
+					d
+		 \end{bmatrix} \nonumber \\
+						 &= \vec{\Phi}_x^T \vec{c} \nonumber \\
+						 &= \vec{\Phi}_x^T \Phi^{-1}\vec{f}	
+						 \label{eq:rbf_interpolate_pt}
+\end{align}
+where $\vec{c}$ is substituted by the solution to Equation~\ref{eq:additional_constraints}. In Equation~\ref{eq:rbf_interpolate_pt} the term $\Phi_{x}^T\Phi^{-1}$, dependent only on node positions, can be evaluated prior to knowing $f$. 
 
 
 %In comparison, calculating the coefficient vectors $c$ and $d$ requires evaluating the basis functions and polynomial part at a set of known collocation points. 
@@ -621,110 +725,6 @@ Rather than solely focus on the optimizations of said algorithms on the GPU, we 
 %
 %The selling points of RBF-FD are numerous. While not a panacea for PDEs, the method combines many inherited traits of global RBF methods with lower computational complexity. As demonstrated here, the method is simple to code, easily extensible for higher accuracy and dimensions, and powerful in its ability to avoid singularities introduced by the coordinate system that might impact other methods.  
 
-\section{Global RBF Method}
-
-Consider a PDE expressed in terms of (linear) differential operators, $\diffop$ and $\boundop{}$: 
-\begin{eqnarray}
-\diffop{u} & = & f \on{\Interior}, \nonumber \\
-\boundop{u} &=& g \on{\Boundary} 
-\end{eqnarray}
-where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{WrightFornberg06}); of course, this increases the complexity of a single time step. 
-
-We solve PDEs of this form with \emph{collocation}. That is, given a number of points in the domain, we seek the derivative and solution values that best satisfy $f, g$ at node locations. \authnote{Not clear yet. Review Lynch2005 for a better explanation}\cite{lynch2004numerical}
-
-Global RBF collocation methods pose the problem of interpolating a multivariate function $f : \domain
-    \rightarrow \R$ where $\domain \subset \R^m$. Given a set of sample values
-    $\{f(x_j)\}_{j=1}^{N}$ on a discrete set of nodes $X = \{x_j\}_{j=1}^{N}
-    \subset \domain$, an approximation $\hat{f}_N$ can be constructed through
-    linear combinations of interpolation functions. Here, we choose univariate,
-    radially symmetric functions based on Euclidean distance ($\vnorm{\cdot}$), and use
-    translates $\phi(x-x_j)$ of a single continuous real
-    valued function $\phi$ defined on $\R$ and centered at $x_j$:
-         \begin{equation*} 
-         \phi(x) := \varphi(\vnorm{x}).
-         \end{equation*} 
-    %with a continuous function $\varphi$ on $\R_0^{+}$. 
-    Here, $\varphi$ is a
-    Radial Basis Function and $\phi$ the
-    associated kernel. For simplification $\phi_j(x)$ refers to a kernel centered at $x_j$; i.e., $\varphi(\vectornorm{x-x_j})$.
-
-   The interpolant $\hat{f}_N(x)$ requires a linear combination of translates:  
-        \begin{equation*}
-      %  \hat{f}_N(x) = \sum_{j=1}^{N} c_j \varphi(\vnorm{x-x_j})
-        \hat{f}_N(x) = \sum_{j=1}^{N} c_j \phi_j(x)
-        \end{equation*}
-    with real coefficients $\{c_j\}_{j=1}^{N}$. Assuming the interpolant passes through
-    known values of $f$; i.e., 
-        \begin{equation*} 
-        \hat{f}_N(x_i) = f(x_i),\ \ \ \ \ 1 \leq i \leq N, 
-        \end{equation*}
-    allows one to solve for coefficients if the following linear system is uniquely
-    solvable: 
-        \begin{equation*} 
-        %\sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) = f(x_i),\ \ \ \ \ 1
-        \sum_{j=1}^{N} c_j \phi_j(x_i) = f(x_i),\ \ \ \ \ 1
-        \leq i \leq N. 
-        \end{equation*} 
-    This is true if the $N \by N$ matrix $\Phi$ produced by the linear system
-%        \begin{align} 
-%          \begin{pmatrix}  
-%            \varphi(\vnorm{x_1 - x_1}) & \varphi(\vnorm{x_1 - x_2}) & \cdots & \varphi(\vnorm{x_1 - x_N}) \\ 
-%            \varphi(\vnorm{x_2 - x_1}) & \varphi(\vnorm{x_2 - x_2}) & \cdots & \varphi(\vnorm{x_2 - x_N}) \\ 
-%            \vdots & \ddots & \ddots & \vdots \\
-%            \varphi(\vnorm{x_N - x_1}) & \varphi(\vnorm{x_N - x_2}) & \cdots & \varphi(\vnorm{x_N - x_N})
-%                \end{pmatrix} 
-%                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
-%               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
-%                         \Phi \vec{c} &= \vec{f} 
-%        \end{align} 
-        \begin{align*} 
-          \begin{pmatrix}  
-            \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_N(x_1) \\ 
-            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_N(x_2) \\ 
-            \vdots & \ddots & \ddots & \vdots \\
-            \phi_1(x_N) & \phi_2(x_N) & \cdots & \phi_N(x_N)
-                \end{pmatrix} 
-                \begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{bmatrix}
-               &=                \begin{bmatrix} f(x_1) \\ f(x_2) \\ \vdots \\ f(x_N) \end{bmatrix} \\
-                         \Phi \vec{c} &= \vec{f} 
-        \end{align*} 
-is nonsingular.
-
- When choosing an appropriate basis function for interpolation, a
-    subset of RBFs have been shown to produce symmetric positive definite
-    $\Phi$, while others are only conditionally positive definite (for more details see
-    \cite{Fasshauer2007}).  With
-    the latter set, additional polynomial terms are added to constrain the
-    system and enforce positive definiteness, resulting in this expanded system of equations: 
-        \begin{align} 
-       % \sum_{j=1}^{N} c_j \varphi(\vnorm{x_i-x_j}) + \sum_{k=1}^{t}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
-        \sum_{j=1}^{N} c_j \phi_j(x_i) + \sum_{k=1}^{M}d_k p_k(x_i) &= f(x_i),\ \ \ \ \ 1
-        \leq i \leq N, \nonumber \\ 
-        \sum_{j=1}^{N} c_j p_k(x_j) &=  0,\ \ \ \ \ \ \ \ \ \ 1 \leq k \leq M. \nonumber \\
-          \begin{pmatrix} \Phi & P \\ P^T & 0 \end{pmatrix} \begin{bmatrix} c \\ d \end{bmatrix} &= \begin{bmatrix} \vec{f} \\ 0 \end{bmatrix}
-	\label{eq:additional_constraints}
-        \end{align} 
-        where $\{p_k\}_{k=1}^{M}$ is a basis for $\Pi_{p}^{m} $ (the set of polynomials in $m$ variables of degree $\leq p$) and 
-       \begin{equation*}
-       M = {{p+m}\choose{m}}       .
-       \end{equation*} 
-      %\authnote{Add table? or cut:} Table~\ref{tbl:rbfoptions} provides example RBF functions and notes their (conditionally) positive definiteness. 
-
-
-Given the coefficients $\vec{c}$, the function value at a test point $x$ is interpolated by
-\begin{align}	 
-	\hat{f}_N(x) &= \sum_{j=1}^{N}c_j \Phi_j(x) + \sum_{l=1}^{M}d_l P_l(x)  \nonumber \\
-	&=  \left[\begin{array}{cc}
-        \Phi & \PP
-	\end{array} \right] 
-	 \begin{bmatrix}	c \\
-					d
-		 \end{bmatrix} \nonumber \\
-						 &= \vec{\Phi}_x^T \vec{c} \nonumber \\
-						 &= \vec{\Phi}_x^T \Phi^{-1}\vec{f}	
-						 \label{eq:rbf_interpolate_pt}
-\end{align}
-where $\vec{c}$ is substituted by the solution to Equation~\ref{eq:additional_constraints}. In Equation~\ref{eq:rbf_interpolate_pt} the term $\Phi_{x}^T\Phi^{-1}$, dependent only on node positions, can be evaluated prior to knowing $f$. 
 
 
 
