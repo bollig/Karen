@@ -47,7 +47,12 @@ We present three collocation methods: Kansa's method, Fasshauer's method and Dir
 
 In Radial Basis Function methods, radially symmetric functions provide a non-orthogonal basis used to interpolate between 
 nodes of a point cloud. RBFs are univariate and a function of distance from a center point defined in $\R^N$, so 
-they easily extend into higher dimensions without significant change in programming complexity. Commonly used RBFs from the literature are provided in Table~\ref{tbl:rbfs}. \authnote{Include figure from poster: RBFs in higher dimensions (curve, bell, jaw-breaker)}.
+they easily extend into higher dimensions without significant change in programming complexity. Commonly used RBFs from the literature are provided in Table~\ref{tbl:rbfs}; visuals of the same functions can be found in Figure~\ref{fig:rbf_examples}. \authnote{Include figure from poster: RBFs in higher dimensions (curve, bell, jaw-breaker)}.
+
+
+\input{rbffd_methods_content/rbf_table}
+
+\input{rbffd_methods_content/rbf_examples}
 
 RBFs have been shown in 
 some cases to have exponential convergence for function approximation \cite{Fasshauer2007}. It is also possible to 
@@ -57,9 +62,6 @@ fail \cite{Fasshauer2006}. However, as with all methods, RBFs come with certain 
 Schaback \cite{Schaback1995} observed an \emph{Uncertainty Relation}: none of the commonly used RBFs combine 
 good approximation with numerically stable interpolation. In other words, increasing accuracy can result in worse conditioning, 
 whereas improving conditioning reduces accuracy \cite{Schaback1995, Iske2004}. 
-
-
-\input{rbffd_methods_content/rbf_table}
 
 We seek the solution to a PDE with the form
 \begin{eqnarray*}
@@ -129,9 +131,6 @@ We note that three types of collocation occur throughout the RBF literature:
 Kansa's unsymmetric collocation method \cite{Kansa1990a, Kansa1990b}, Fasshauer's symmetric collocation method \cite
 {Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}. While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  A full explanation of RBF based collocation is deferred to 
 Chapter~\ref{chap:rbf_pde}. 
-
-\input{rbffd_methods_content/rbftype_table}
-\input{rbffd_methods_content/rbf_examples}
 
 \subsection{Global RBF Methods}
 %TODO: improve collocation definition 
@@ -204,6 +203,7 @@ Fasshauer's method called \emph{local Hermitian interpolation}. The authors have
 problems based on transient Richards' equations \cite{Stevens2008a, Stevens2009a, Stevens2009b}.
 
 
+\input{rbffd_methods_content/rbftype_table}
 
 \subsection{RBF-FD}
 
