@@ -36,9 +36,9 @@
 
 \chapter{RBF Methods for PDEs}
 
-The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, at the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF collocation) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions when approximating weights for finite-differencing schemes. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
+The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, at the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions indirectly by generating weights for finite-differencing stencils that are used in-turn to approximate derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
 
-This chapter is dedicated to summarizing the 40 year history of RBF methods leading up to the development of the RBF-generated Finite Differences (RBF-FD) method. Beginning with a description of the general approximation problem and RBF scattered-data interpolation, we then categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
+This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the RBF-generated Finite Differences (RBF-FD) method. Beginning with a description of the general approximation problem and RBF scattered-data interpolation, we then categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
 
 %TODO: follow timeline of methods. how did they evolve into RBF-FD? 
 We present three collocation methods: Kansa's method, Fasshauer's method and Direct collocation, and discuss extensions that lead to local interpolation matrices instead of a single global interpolation matrix. Finally, we discuss the most recent methods for solving PDEs, emphasizing RBF-FD as the focus of this work. 
@@ -48,6 +48,7 @@ We present three collocation methods: Kansa's method, Fasshauer's method and Dir
 %TODO: expand with new literature since 2009
 %TODO: any new classifications? 
 %TODO: any new methods?
+\authnote{Should I crop the intro on what RBFs are and stash it in a previous chapter (e.g., intro)?} 
 
 In Radial Basis Function methods, radially symmetric functions provide a non-orthogonal basis used to interpolate between 
 nodes of a point cloud. RBFs are univariate and a function of distance from a center point defined in $\R^N$, so 
@@ -62,6 +63,8 @@ whereas improving conditioning reduces accuracy \cite{Schaback1995, Iske2004}.
 
 
 \input{rbffd_methods_content/rbf_table}
+
+\authnote{(end intro in question)}
 
 RBF methods for interpolation first appeared in 1971 with Hardy's seminal research on multiquadrics
 \cite{Hardy1971}. In his 1982 survey of scattered data interpolation methods \cite{Franke1982}, Franke rated multiquadrics first-in-class against 28 other methods (3 of which were RBFs) \cite{Franke1982}. Many other RBFs, 
