@@ -9,7 +9,7 @@
 	url = ssh://pamd.sc.fsu.edu/~efb06/repos/spear_benchmarks.git
 [submodule "prospectus"]
 	path = prospectus
-	url = ssh://pamd.sc.fsu.edu/~efb06/repos/prospectus.git
+	url = ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/prospectus.git
 [submodule "fsu_2012"]
 	path = fsu_2012
 	url = git@github.com:bollig/fsu_2012.git

@@ -1,0 +1,45 @@
+%Kansa collocation
+\newcommand{\kansaglobalrbf}[0]{\cite{Kansa:1990a, Kansa:1990b, Fasshauer:2006, Fornberg:2004, Mouat:2002, Hon:2001, Franke:1982, Flyer:2009b, Flyer:2007, Hon:1999, Fornberg:2008, Larsson:2003}}
+\newcommand{\kansacsrbf}[0]{\cite{Fornberg:2008, Wang:2002}}
+\newcommand{\kansalocalrbf}[0]{\cite{Divo:2007, Kosec:2008, Sarler:2006, Vertnik:2006}}
+
+% Fasshauer collocation
+\newcommand{\fassglobalrbf}[0]{\cite{Fasshauer:2006, Fasshauer:1997, Larsson:2003}}
+\newcommand{\fasscsrbf}[0]{\cite{Liu:2005}}
+\newcommand{\fasslocalrbf}[0]{\cite{Stevens:2008a, Stevens:2009a, Stevens:2009b}}
+
+% Direct collocation
+\newcommand{\directglobalrbf}[0]{\cite{Fedoseyev:2002, Larsson:2003}}
+\newcommand{\directcsrbf}[0]{}
+\newcommand{\directlocalrbf}[0]{}
+
+
+% RBF-FD
+\newcommand{\rbffdglobalrbf}[0]{N/A}
+\newcommand{\rbffdcsrbf}[0]{N/A}
+\newcommand{\rbffdlocalrbf}[0]{\cite{Wright:2006,Wright:2003, Shu:2003, Cecil:2004, Wright:2004, Shu:2006, Chandhini:2007}}
+
+
+%\begin{sidewaystable}
+\begin{table}[t]
+\begin{center}
+	\begin{tabular}{@{} R|C|C|C|}
+		& \multicolumn{3}{c|}{RBF Interpolation Type} \\
+		\hline
+		Method & Global (Dense) & Compact (Sparse Global) & Local \\
+		\hline \hline
+		Kansa's Method &\kansaglobalrbf & \kansacsrbf & \kansalocalrbf \\
+		\hdashline
+		Fasshauer's Method &\fassglobalrbf & \fasscsrbf & \fasslocalrbf \\
+		\hdashline
+		Direct Collocation &\directglobalrbf & \directcsrbf & \directlocalrbf \\
+		\hdashline
+		RBF-FD & \rbffdglobalrbf & \rbffdcsrbf & \rbffdlocalrbf \\
+		\hline
+	\end{tabular}
+\end{center}
+\caption{Classification of references based on choice of RBF interpolation types and method for solving PDEs. References may appear in multiple cells according to the breadth of their research.}
+\label{tbl:rbfcolloctypes}
+\end{table}
+%\end{sidewaystable}
+

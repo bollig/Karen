@@ -1,0 +1,12 @@
+In matlab run: 
+
+plotRBFs()
+
+to print out 5 eps files to PWD.
+
+To convert eps to PDF without extra page consumption (caused by ps2pdf), use preview: 
+
+open *.eps
+[close the window and it will prompt to save all as PDF]
+
+ 

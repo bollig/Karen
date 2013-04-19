@@ -1,0 +1,28 @@
+%%%%%%%%%%%%%%%
+% Show a list of items "todo" or "done" 
+% USAGE: 
+% \begin{todolist} 
+% 	\todo Something not finished
+% 	\done Something finished
+% \end{todolist} 
+\newenvironment{todolist}{%
+  \begin{list}{}{}% whatever you want the list to be
+  \let\olditem\item
+  \renewcommand\item{\olditem \textcolor{red}{(TODO)}: }
+  \newcommand\todo{\olditem \textcolor{red}{(TODO)}: }
+   \newcommand\done{\olditem \textcolor{forestgreen}{(DONE)}: }
+}{%
+  \end{list}
+} 
+%%%%%%%%%%%%%%%
+\definecolor{light-gray}{gray}{0.95}
+
+\newcommand{\cbox}[3]{
+\ \\
+\fcolorbox{#1}{#2}{
+\parbox{\textwidth}{
+#3
+}
+}
+}
+

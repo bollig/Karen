@@ -1,0 +1,16 @@
+
+\newcommand{\rbf}[4]{#1 & #2 & #3 & #4}
+\begin{table}[t]
+   \centering
+   \begin{tabular}{L | C | c |C| } % Column formatting, @{} suppresses leading/trailing space
+   \rbf{Name}{Abbrev.}{Formula}{Order (p)} \\
+   \hline\hline
+   \rbf{Multiquadric}{MQ}{$\sqrt{1+(\varepsilon r)^2}$}{1} \\
+   \rbf{Inverse Multiquadric}{IMQ}{$\frac{1}{\sqrt{1+(\varepsilon r)^2}}$}{0} \\
+   \rbf{Gaussian}{GA}{$e^{-(\varepsilon r)^2}$}{0} \\
+   \rbf{Thin Plate Splines}{TPS}{$r^2 ln |r|$}{2} \\
+   \rbf{Wendland ($C^2$)}{W2}{$(1-\varepsilon r)^4 (4\varepsilon r + 1)$}{0}
+   \end{tabular}
+   \caption{Examples of frequently used RBFs based on \cite{Fornberg:2008, Fasshauer:2007}. $\varepsilon$ is the support parameter. For details on orders refer to Chapter~\ref{chap:rbf_pde} and \cite{Iske:2004}. All RBFs have global support. For compact support, enforce a cut-off radius (see Equation~\ref{eqn:csrbf}).}
+   \label{tbl:rbfs}
+\end{table}
