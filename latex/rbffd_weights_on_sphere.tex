@@ -1,14 +1,14 @@
-\makeatletter
-\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
-\@ifundefined{section}{\standalonetrue}{\standalonefalse}
-\makeatother
-\ifstandalone
-\documentclass{report}
-
-\input{all_usepackages} 
-
-\begin{document}
-\fi
+%\makeatletter
+%\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+%\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+%\makeatother
+%\ifstandalone
+%\documentclass{report}
+%
+%\input{all_usepackages} 
+%
+%\begin{document}
+%\fi
 
 
 \chapter{Projected Weights on the Sphere} 
@@ -61,7 +61,7 @@ diag(1-X^{2}) \D_{\d{}{x}} - diag(XY) \D_{\d{}{y}} - diag(XZ) \D_{\d{}{z}} \\
 \authnote{Cleanup:}
 This concept equates to classical Finite Differences where for example, the standard 5-point finite difference formula for approximating the Laplacian can be expressed a weighted combination of differences for 
 
-Have not found in literature any mention of the fact that RBF-FD weights can be used to compose operators like this. Generally, its easier to directly compute weights and assumed to be more accurate. But how much more accurate?  
+\authnote{Have not found in literature any mention of the fact that RBF-FD weights can be used to compose operators like this. Generally, its easier to directly compute weights and assumed to be more accurate. But how much more accurate?}
 
 One benefit of indirect weights is conservation of memory. For example, for complex operators, a single DM on $N=1 \text{million}$ nodes and $n=101$ requires roughly $1.6$ GB of memory. If the PDE is coupled and requires 
 
@@ -152,7 +152,7 @@ But the question is, how accurate is it? In situations where memory is critical 
 
 
 
-\section{Test Cases} 
+\subsection{Comparison of Direct and Indirect Weights} 
 
 We computed direct and indirect approaches for the MD-node sets with size $N = \{121, 256, 400, 841, 1024, 2500, 4096, 6400, 8100, 10201, 16384, 27556\}$.
 
@@ -170,19 +170,18 @@ We find that our indirect approach functions well compared to the direct method.
 
 Although it is clear the indirect method functions well compared to the direct method, we must consider its usefulness. Typically, weights are computed only as necessary for the PDE. If the PDE is on the sphere, then directly computing the $\mathbf{P}\cdot \nabla$ operator would be most efficient for both memory and computation. However, one could imagine a scenario such as a 3-D spherical shell domain with physics on the boundaries that must be constrained to the surface, while the interior requires only an unprojected $\nabla$ operator. In such cases, by simply computing for the $\nabla$ operator, we assemble all necessary operators with minimal loss of accuracy and significant savings ($3Nn$ doubles) in storage. 
 
-\authnote{Plot file size of matrix market file to give an idea of how much memory is saved by cutting out operators} 
+%TODO: Table for GB saved to get an idea of how much memory is saved by cutting out and re-using operators
 
 With $N=1e6$ nodes and stencil size $n=101$, the matrix market file for weights is approximately 1.6 GB on disk. For a GPU with only 6 GB of global memory space available, it is worthwhile to consider possibilities for memory conservation. 
 
 
-\authnote{Check to see $\nabla \cdot \nabla$ accuracy for heat equation.} 
+%TODO: Check to see $\nabla \cdot \nabla$ accuracy for heat equation.
 
 
-
-\ifstandalone
-\bibliographystyle{plain}
-\bibliography{merged_references}
-\end{document}
-\else
-\expandafter\endinput
-\fi
+%\ifstandalone
+%\bibliographystyle{plain}
+%\bibliography{merged_references}
+%\end{document}
+%\else
+%\expandafter\endinput
+%\fi
