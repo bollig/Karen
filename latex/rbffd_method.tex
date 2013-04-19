@@ -36,23 +36,20 @@
 
 \chapter{RBF Methods for PDEs}
 
-The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, at the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions indirectly by generating weights for finite-differencing stencils that are used in-turn to approximate derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
+The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, at the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions indirectly by generating weights for finite-differencing stencils, used in turn to for derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
 
 This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the RBF-generated Finite Differences (RBF-FD) method. Beginning with a description of the general approximation problem and RBF scattered-data interpolation, we then categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
 
 %TODO: follow timeline of methods. how did they evolve into RBF-FD? 
 We present three collocation methods: Kansa's method, Fasshauer's method and Direct collocation, and discuss extensions that lead to local interpolation matrices instead of a single global interpolation matrix. Finally, we discuss the most recent methods for solving PDEs, emphasizing RBF-FD as the focus of this work. 
 
-\section{Survey of Related Work}
-
-%TODO: expand with new literature since 2009
-%TODO: any new classifications? 
-%TODO: any new methods?
-\authnote{Should I crop the intro on what RBFs are and stash it in a previous chapter (e.g., intro)?} 
+\section{General Problem}
 
 In Radial Basis Function methods, radially symmetric functions provide a non-orthogonal basis used to interpolate between 
 nodes of a point cloud. RBFs are univariate and a function of distance from a center point defined in $\R^N$, so 
-they easily extend into higher dimensions without significant change in programming complexity. RBFs have been shown in 
+they easily extend into higher dimensions without significant change in programming complexity. Commonly used RBFs from the literature are provided in Table~\ref{tbl:rbfs}. \authnote{Include figure from poster: RBFs in higher dimensions (curve, bell, jaw-breaker)}.
+
+RBFs have been shown in 
 some cases to have exponential convergence for function approximation \cite{Fasshauer2007}. It is also possible to 
 reformulate RBF methods as pseudospectral methods that have 
 generated solutions to ill-posed problems for which Chebyshev-based and other pseudospectral methods 
@@ -64,20 +61,6 @@ whereas improving conditioning reduces accuracy \cite{Schaback1995, Iske2004}.
 
 \input{rbffd_methods_content/rbf_table}
 
-\authnote{(end intro in question)}
-
-RBF methods for interpolation first appeared in 1971 with Hardy's seminal research on multiquadrics
-\cite{Hardy1971}. In his 1982 survey of scattered data interpolation methods \cite{Franke1982}, Franke rated multiquadrics first-in-class against 28 other methods (3 of which were RBFs) \cite{Franke1982}. Many other RBFs, 
-including those presented in Table~\ref{tbl:rbfs} have been applied in literature, but for PDEs in particular, none have rivaled the 
-attention received by multiquadrics. 
-
-
-By 1990, the understanding of the scientific community regarding RBFs was sufficiently developed for application to PDEs through 
-collocation. In Table~\ref{tbl:rbfcolloctypes} we classify references according to their choice of collocation method and RBF 
-interpolation type. 
-
-%\togordon{general problem statement:} 
-%\togordon{added purpose stmt} 
 We seek the solution to a PDE with the form
 \begin{eqnarray*}
 (\diffop{u})(x_i) = \sum_{j=1}^{N} c_j \Phi_j(x_i) = f(x_i)
@@ -87,7 +70,8 @@ $$
 u(x) = \sum_{i=1}^N c_i \Phi_i(x)
 $$
 In the above expression, 
-$ \vec{c} = \{c_j\} $ is the unknown coefficient vector. Once one assumes $\mathcal{L}$ is a linear operator, one has several choices. One can collocate the differential equation equation, or one can express individual derivative operators as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). In all cases, one ends up with a linear system of equations to invert, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While we restrict the $\Phi_j(x)$ to RBFs or various operators applied to the RBFs, we note that spectral methods, finite-element or spectral-element methods can be formulated in a similar way with different choices of basis functions.  Of course, $u$ can be a vector of unknown variables ($c$ then becomes a matrix). In what follows, we refer to the matrix to invert as $A$. 
+$ \vec{c} = \{c_j\} $ is the unknown coefficient vector. Once one assumes $\mathcal{L}$ is a linear operator. %One can collocate the differential equation equation, or one can express individual derivative operators as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
+In all cases, one ends up with a linear system of equations to invert, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While we restrict the $\Phi_j(x)$ to RBFs or various operators applied to the RBFs, we note that spectral methods, finite-element or spectral-element methods can be formulated in a similar way with different choices of basis functions.  Of course, $u$ can be a vector of unknown variables ($c$ then becomes a matrix). In what follows, we refer to the matrix to invert as $A$. 
 %
 %I read your general purpose statement (p. 6). Not quite: what you write is more or less ok, but you expand u in a terms of basis functions (not specified, which is fine), but then you assume collocation. That is too early since you then cannot do FD-RBF. So I will say that we there are many ways to determine the coefficients, which we will analyze, and that in the methods we use, the $\Phi$ are either RBFs, operators applied to RBFs, or monomial functions.  (YOU FOLLOW?) I"ll mention that methods such as spectral methods, finite-element methods and finite-volume methods correspond to different choices of the $\Phi's$. (YOU UNDERSTAND THIS?)
 %
@@ -103,6 +87,24 @@ $ \vec{c} = \{c_j\} $ is the unknown coefficient vector. Once one assumes $\math
 %\vec{f} = \{f(x_i)\}& &\hskip1.5em\textrm{(Known Function Values)} \\
 %N& &\hskip1.5em\textrm{(Total Number of Basis Functions)}
 %\end{eqnarray*}
+
+\section{Survey of Related Work}
+
+%TODO: expand with new literature since 2009
+%TODO: any new classifications? 
+%TODO: any new methods?
+
+
+RBF methods for interpolation first appeared in 1971 with Hardy's seminal research on multiquadrics
+\cite{Hardy1971}. In his 1982 survey of scattered data interpolation methods \cite{Franke1982}, Franke rated multiquadrics first-in-class against 28 other methods (3 of which were RBFs) \cite{Franke1982}. Many other RBFs, 
+including those presented in Table~\ref{tbl:rbfs} have been applied in literature, but for PDEs in particular, none have rivaled the 
+attention received by multiquadrics. 
+
+
+By 1990, the understanding of the scientific community regarding RBFs was sufficiently developed for application to PDEs through 
+collocation. In Table~\ref{tbl:rbfcolloctypes} we classify references according to their choice of collocation method and RBF 
+interpolation type. 
+
 
 There are three main categories of RBF interpolation; we list them in Table~\ref{tbl:interp_types}. The first is \emph{Global} in the case that a single, large ($N\times N$) and 
 dense matrix corresponding to globally supported RBFs is inverted; second, \emph{Compact} if compactly supported RBFs are used to 
