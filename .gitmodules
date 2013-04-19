@@ -1,12 +1,12 @@
 [submodule "paper1"]
 	path = paper1
-	url = ssh://pamd.sc.fsu.edu/~efb06/repos/paper1.git
+	url = ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/paper1.git
 [submodule "keeneland_benchmarks"]
 	path = keeneland_benchmarks
 	url = git@github.com:bollig/keeneland_benchmarks.git
 [submodule "spear_benchmarks"]
 	path = spear_benchmarks
-	url = ssh://pamd.sc.fsu.edu/~efb06/repos/spear_benchmarks.git
+	url = ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/spear_benchmarks.git
 [submodule "prospectus"]
 	path = prospectus
 	url = ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/prospectus.git
@@ -18,4 +18,4 @@
 	url = ssh://efb06@pamd.sc.fsu.edu/~/repos/locality_sensitive_hashing.git
 [submodule "paper2"]
 	path = paper2
-	url = ssh://pamd.sc.fsu.edu/~efb06/repos/paper2.git
+	url = ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/paper2.git

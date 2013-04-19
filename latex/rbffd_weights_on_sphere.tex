@@ -51,13 +51,14 @@ where each matrix contains weights computed with the operators of Equation~\ref{
 The differentiation matrices for $\mathbf{P} \cdot \nabla$ can then be assembled as a weighted combination of the differentiation matrices for the unprojected operator: 
 \begin{equation}
 \D_{\mathbf{P} \cdot \nabla} = \begin{bmatrix} \D_{\mathbf{p_{x} \cdot \nabla}} \\  \D_{\mathbf{p_{y}\cdot \nabla}} \\  \D_{\mathbf{p_{z}\cdot \nabla}} \end{bmatrix} = \begin{bmatrix} 
-diag(1-X^{2}) \D_{\d{}{x}} - diag(XY) \D_{\d{}{y}} - diag(XZ) \D_{\d{}{z}} \\
+diag(1-X^{2}) \D_{\pd{x}{x}} - diag(XY) \D_{\d{}{y}} - diag(XZ) \D_{\d{}{z}} \\
 - diag(XY)\D_{\d{}{x}} + diag(1-Y^{2}) \D_{\d{}{y}} - diag(YZ) \D_{\d{}{z}} \\
 - diag(XZ)\D_{\d{}{x}} - diag(YZ) \D_{\d{}{y}} + diag(1-Y^{2}) \D_{\d{}{z}} 
 \end{bmatrix}
 \end{equation}
+\authnote{make it "partial x" instead of d/dx}
  where $X = \{x_{c,i}\}_{i=1}^{N}$, $Y = \{y_{c,i}\}_{i=1}^{N}$, $Z = \{z_{c,i}\}_{i=1}^{N}$ are all x-components, y-components and z-components of the stencil centers $\{\vx_{c,i}\}_{i=1}^{N}$ respectively. 
-
+\authnote{Gordon discussion: B1: explain why we use this manufactured solution. what was it designed to check. }
 \authnote{Cleanup:}
 This concept equates to classical Finite Differences where for example, the standard 5-point finite difference formula for approximating the Laplacian can be expressed a weighted combination of differences for 
 
