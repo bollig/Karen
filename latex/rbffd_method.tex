@@ -32,10 +32,16 @@
 
 \chapter{RBF Methods for PDEs}
 
-The process of solving PDEs using RBFs dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, the  This chapter starts with a description of the general approximation problem and provide background on RBF scattered data interpolation that will be required for the remainder of the chapter. We categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
+The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, at the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF collocation) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions when approximating weights for finite-differencing schemes. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
+
+This chapter is dedicated to summarizing the 40 year history of RBF methods leading up to the development of the RBF-generated Finite Differences (RBF-FD) method. Beginning with a description of the general approximation problem and RBF scattered-data interpolation, we then categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
 
 %TODO: follow timeline of methods. how did they evolve into RBF-FD? 
 We present three collocation methods: Kansa's method, Fasshauer's method and Direct collocation, and discuss extensions that lead to local interpolation matrices instead of a single global interpolation matrix. Finally, we discuss RBF-FD, the most recent method for solving PDEs. 
+
+% TODO: add partition of unity discussion
+% TODO: add hermite discussion
+% TODO: add whatever Fasshauer's latest method is. 
 
 \section{PDE as an Interpolation Problem}
 Following \cite{Mouat2002}, consider a PDE expressed in terms of a (linear) differential operator, $\diffop$: 
@@ -72,8 +78,9 @@ we seek an interpolant, $\mathcal{P}_f$ of the form
 \vec{\mathcal{P}_f} & = & {\Phi}^T(x) c = f(x)
 \end{eqnarray*}
 where $\mathcal{P}_f$ is expressed as a scalar product between the unknown coeffient weights $c_j$ and the radial basis functions $\Phi_j(x)$.
-% \toevan{Verify:} Here the interpolant will pass through the known RBF centers but has of degree 0. 
 
+
+% TODO: verify that choose has correct vars
 In many cases it is desirable to exactly reproduce functions of degree less than or equal to some order $m$. For RBF scattered data interpolation in one dimension, this can be achieved by adding a polynomial of order $m$ with $M =$${m+1}\choose{1}$ terms (e.g., $x^0, x^1, \cdots, x^{m}$). In 2D, the terms would be: $1, x, y, xy, x^2y, xy^2, \cdots, x^{m}y^{m-1}, x^{m-1}y^{m}, x^my^m$. In $\R^D$, $M =$${m+D}\choose{D}$ \cite{Iske:2004}, giving
 \begin{eqnarray}
 f(x) & = & \sum_{j=1}^{N} c_{j}  \Phi_j(x)  +  \sum_{l=1}^{M} d_{l} P_l(x),  \hskip1.5em  P_l(x) \in \Pi^{D}_{m} \\
