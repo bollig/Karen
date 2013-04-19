@@ -38,10 +38,14 @@
 
 The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, at the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions indirectly by generating weights for finite-differencing stencils, used in turn to for derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
 
-This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the RBF-generated Finite Differences (RBF-FD) method. Beginning with a description of the general approximation problem and RBF scattered-data interpolation, we then categorize existing methods for solving PDEs with RBFs as either global or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
+This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the 
+RBF-generated Finite Differences (RBF-FD) method. Beginning with a brief introduction to RBFs and a historical survey, we attempt to classify related work into three three types: global, compact and local methods. Following this, the general approximation problem is introduced with a look at the core of all three method classificiations: RBF scattered-data interpolation. %We categorize existing methods for solving PDEs with RBFs as either global 
+%or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies 
+%the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant 
+%at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
 
 %TODO: follow timeline of methods. how did they evolve into RBF-FD? 
-We present three collocation methods: Kansa's method, Fasshauer's method and Direct collocation, and discuss extensions that lead to local interpolation matrices instead of a single global interpolation matrix. Finally, we discuss the most recent methods for solving PDEs, emphasizing RBF-FD as the focus of this work. 
+Three collocation methods are presented: Kansa's method, Fasshauer's method and Direct collocation. Within the historical context of RBF methods we highlight extensions that lead to local interpolation matrices instead of a single global interpolation matrix. Finally, we discuss the most recent methods for solving PDEs, emphasizing RBF-FD as the focus of this work. 
 
 \section{General Problem}
 
@@ -72,8 +76,8 @@ $$
 u(x) = \sum_{i=1}^N c_i \Phi_i(x)
 $$
 In the above expression, 
-$ \vec{c} = \{c_j\} $ is the unknown coefficient vector. Once one assumes $\mathcal{L}$ is a linear operator. %One can collocate the differential equation equation, or one can express individual derivative operators as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
-In all cases, one ends up with a linear system of equations to invert, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While we restrict the $\Phi_j(x)$ to RBFs or various operators applied to the RBFs, we note that spectral methods, finite-element or spectral-element methods can be formulated in a similar way with different choices of basis functions.  Of course, $u$ can be a vector of unknown variables ($c$ then becomes a matrix). In what follows, we refer to the matrix to invert as $A$. 
+$ \vec{c} = \{c_j\} $ is the unknown coefficient vector. Under the assumption that $\mathcal{L}$ is a linear operator, one can collocate the differential equation equation, or express individual derivative operators as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
+In all cases, a linear system of equations arises, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While we restrict the $\Phi_j(x)$ to RBFs or various operators applied to the RBFs, we note that spectral methods, finite-element or spectral-element methods can be formulated in a similar way with different choices of basis functions.  Of course, $u$ can be a vector of unknown variables ($c$ then becomes a matrix). In what follows, we refer to the matrix to invert as $A$. 
 %
 %I read your general purpose statement (p. 6). Not quite: what you write is more or less ok, but you expand u in a terms of basis functions (not specified, which is fine), but then you assume collocation. That is too early since you then cannot do FD-RBF. So I will say that we there are many ways to determine the coefficients, which we will analyze, and that in the methods we use, the $\Phi$ are either RBFs, operators applied to RBFs, or monomial functions.  (YOU FOLLOW?) I"ll mention that methods such as spectral methods, finite-element methods and finite-volume methods correspond to different choices of the $\Phi's$. (YOU UNDERSTAND THIS?)
 %
@@ -129,8 +133,7 @@ dense matrices with one corresponding to each collocation point. In all three ca
 
 We note that three types of collocation occur throughout the RBF literature: 
 Kansa's unsymmetric collocation method \cite{Kansa1990a, Kansa1990b}, Fasshauer's symmetric collocation method \cite
-{Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}. While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  A full explanation of RBF based collocation is deferred to 
-Chapter~\ref{chap:rbf_pde}. 
+{Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}. While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  %A full explanation of RBF based collocation is deferred to Chapter~\ref{chap:rbf_pde}. 
 
 \subsection{Global RBF Methods}
 %TODO: improve collocation definition 
@@ -162,6 +165,7 @@ the differential operator applied to the boundary. Aside from the survey on RBF 
 work was found that applied, or investigated, this method further. 
 %Also, it appears that Fasshauer \cite{Fasshauer2007} 
 %made the mistake of equating Kansa's method and the Direct method.
+
 
 
 %
@@ -284,7 +288,7 @@ In this work, we will add to the above experiences, with the added twist of inco
 % TODO: add hermite discussion
 % TODO: add whatever Fasshauer's latest method is. 
 
-\section{PDE as an Interpolation Problem}
+\section{At the Core of RBF Methods: Scattered Data Interpolation}
 Following \cite{Mouat2002}, consider a PDE expressed in terms of a (linear) differential operator, $\diffop$: 
 \begin{eqnarray}
 \diffop{u} & = & f \on{\Interior} \\
