@@ -282,6 +282,7 @@ data points through which the interpolant is required to pass with zero residual
 the $x_i$'s (data points) points as \emph{collocation points}, usually taken as the RBF centers; although this is not a requirement.
 %$P_l(x)$ is needed to eliminate degrees of freedom for well-posedness \cite{Iske:2004}. 
 
+\subsection{RBF Scattered Data Interpolation}
 To clarify the role of the polynomial part in Equation~\ref{eqn:pde_approx}, it is necessary to
 put aside the PDE for the moment and consider only the problem of \emph{scattered data 
 interpolation} with Radial Basis Functions. Borrowing notation from \cite{Fasshauer2007, Iske2004}, 
@@ -399,7 +400,7 @@ Consider a PDE expressed in terms of (linear) differential operators, $\diffop$ 
 \end{eqnarray}
 where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{WrightFornberg06}); of course, this increases the complexity of a single time step. 
 
-We solve PDEs of this form with \emph{collocation}. That is, given a number of points in the domain, we seek the derivative and solution values that best satisfy $f, g$ at node locations. \authnote{Not clear yet. Review Lynch2005 for a better explanation}\cite{lynch2004numerical}
+%We solve PDEs of this form with \emph{collocation}. That is, given a number of points in the domain, we seek the derivative and solution values that best satisfy $f, g$ at node locations. \authnote{Not clear yet. Review Lynch2005 for a better explanation}\cite{lynch2004numerical}merical}
 
 Global RBF collocation methods pose the problem of interpolating a multivariate function $f : \domain
     \rightarrow \R$ where $\domain \subset \R^m$. Given a set of sample values
@@ -529,7 +530,7 @@ We can now reformulate Kansa's method as the linear system:
 where $\phi_\diffop{} = \diffop{\phi}$, $P_\diffop{} = \diffop{P}$ are the interior components (Equation~\ref{eqn:kansa_interior}), $\phi_\boundop{}$ and $P_\boundop{}$ are the boundary components (Equation~\ref{eqn:kansa_boundary}), and $P^T = \left[P_\diffop{}^T \ \ P_\boundop{}^T\right]$ are moment constraints for both interior and boundary polynomial parts (Equation~\ref{eqn:kansa_moments}). From Equation~\ref{eqn:kansa_method} it should be clear why Kansa's method is also known as the \emph{Unsymmetric} collocation method. 
 
 %\toevan{Isn't $N+M=n$? For each case, you must put the proper relationships between $N$, $M$, $n_I$, $n$ so that the number of constraints equals the number of relations.}
-Recall from Chapter~\ref{chap:related} that the matrix in Equation~\ref{eqn:kansa_method} has no guarantee of non-singularity \cite{Fasshauer1997}; however, singularities are rare in practice \cite{Larsson2003}.
+Recall that the matrix in Equation~\ref{eqn:kansa_method} has no guarantee of non-singularity \cite{Fasshauer1997}; however, singularities are rare in practice \cite{Larsson2003}. 
 
 \subsubsection{Fasshauer's Method}
 
@@ -604,9 +605,10 @@ careful inspection of the index $i$ in Equations~\ref{eqn:kansa_interior} and \r
 %TODO: RBF-PS
 \subsubsection{RBF-PS}
 
+\authnote{Bookmark (Completed above this line)} RBF-PS applies the same logic as Kansa's and Fasshauer's collocation methods. However, rather than explicitly form the interpolant coefficients prior to approximating derivatives everywhere with the smooth interpolant, RBF-PS assembles a discrete differentiation matrix to approximate derivatives only at the collocation points. 
 
 \subsection{Local Methods}
-In all three cases above, the collocation required interpolation with globally supported RBFs. However, the latest trend is to use RBFs defined with some cut-off radius to enforce compact support. In some cases, authors have used the compact support to produce a single (large) sparse system for interpolation (see e.g., \cite{Wang2002, Liu2005, Correa2007, Yang2008, Lin2009}). Other approaches use compact support to produce local linear systems defined at each collocation point. Examples of this include \cite{Sarler2006, Vertnik2006} for Kansa's method, \cite{Stevens2008a, Stevens2009a, Stevens2009b} for Fasshauer's method. To our knowledge no one has considered local Direct collocation.  Also, instead of specifying a cut-off radius, some authors specify the exact stencil size (i.e., number of neighboring points to include); see e.g., \cite{Divo2007, Stevens2009b}. 
+In the methods above, globally supported RBFs were required. However, the latest trend is to use RBFs defined with some cut-off radius to enforce compact support. In some cases, authors have used the compact support to produce a single (large) sparse system for interpolation (see e.g., \cite{Wang2002, Liu2005, Correa2007, Yang2008, Lin2009}). Other approaches use compact support to produce local linear systems defined at each collocation point. Examples of this include \cite{Sarler2006, Vertnik2006} for Kansa's method, \cite{Stevens2008a, Stevens2009a, Stevens2009b} for Fasshauer's method. To our knowledge no one has considered local Direct collocation.  Also, instead of specifying a cut-off radius, some authors specify the exact stencil size (i.e., number of neighboring points to include); see e.g., \cite{Divo2007, Stevens2009b}. 
 
 After observing the general structure of the symmetric and unsymmetric collocation methods above, it is necessary only to present the symmetric (i.e. Fasshauer's) local method and note that in the unsymmetric case certain blocks will be zero allowing the system to shrink. 
 
@@ -643,7 +645,9 @@ Note that because the interpolants are local, there is no notion of global conti
 \subsection{RBF-FD}
 
 % TODO: how does the RBF-FD method expand on existing?
-While most of the literature surrounding RBFs for PDEs involves collocation, an alternative method does exist: RBF-FD. RBF-FD is a hybrid of RBF scattered data interpolation and Finite Difference stencils.The idea behind finite-difference stencils is to express various derivative operators as a linear combination of the unknown functional values in the neighborhood of the point where an approximation to the derivative operator is desired. Common approximations such as upwind differencing, center differencing, higher order approximations, and even spectral operators, are of this form. A common approach to building such discrete operators is to form a local interpolant in a neighborhood of the target point, and simply differentiate it analytically. This is the approach taken in RBF-FD,   which  allows for stencils with irregular placement and number of nodes, and assigns their weights based on an RBF \cite{Wright2003}. For a detailed derivation of the method see \cite{Wright2004, Wright2003, WrightFornberg06, Chandhini2007}. Such an approach leads to very simple implementations of time-advancement schemes, whether explicit or implicit. The solution at the new time step is simply some linear (if $\diffop()$ is linear), nonlinear otherwise, combination of the unknown functional values (if implicit scheme) or known functional value (if explicit scheme). 
+While most of the literature surrounding RBFs for PDEs involves collocation, an alternative method does exist: RBF-FD. RBF-FD is a hybrid of RBF scattered data interpolation and Finite Difference stencils.The idea behind finite-difference stencils is to express various derivative operators as a linear combination of the unknown functional values in the neighborhood of the point where an approximation to the derivative operator is desired. Common approximations such as upwind differencing, center differencing, higher order approximations, and even spectral operators, are of this form. A common approach to building such discrete operators is to form a local interpolant in a neighborhood of the target point, and simply differentiate it analytically. This is the approach taken in RBF-FD,   which  allows for stencils with irregular placement and number of nodes, and assigns their weights based on an RBF \cite{Wright2003}. 
+A detailed derivation is provided in the next chapter. %For a detailed derivation of the method see \cite{Wright2004, Wright2003, WrightFornberg06, Chandhini2007}. 
+Such an approach leads to very simple implementations of time-advancement schemes, whether explicit or implicit. The solution at the new time step is simply some linear (if $\diffop()$ is linear), nonlinear otherwise, combination of the unknown functional values (if implicit scheme) or known functional value (if explicit scheme). 
 
 Key challenges lie in the choice of grid, the choice of stencil, whether or not to change the support as a function of the stencil, how to guaranty the stability of the differentiation  operator after discretizaiton, etc. 
 
