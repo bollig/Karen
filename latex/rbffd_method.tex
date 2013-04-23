@@ -140,19 +140,17 @@ We note that three types of collocation occur throughout the RBF literature:
 Kansa's unsymmetric collocation method \cite{Kansa1990a, Kansa1990b}, Fasshauer's symmetric collocation method \cite
 {Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}. While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  %A full explanation of RBF based collocation is deferred to Chapter~\ref{chap:rbf_pde}. 
 
-Prior to launching into derivation and comparison of RBF methods, we first survey each classification to highlight benefits, shortcomings, and to provide a brief historical context. A survey of related work in the RBF community that involves parallelization and optimization is deferred to Chapter~\ref{chap:parallel_rbf}. 
+Prior to launching into derivation each RBF method, we first survey the classifications to highlight benefits, shortcomings, and to provide a brief historical context. A survey of related work in the RBF community that involves parallelization and optimization is deferred to Chapter~\ref{chap:parallel_rbf}. 
 
 \subsection{Global RBF Methods}
 %TODO: improve collocation definition 
 
-\emph{Kansa's method} \cite{Kansa1990a, Kansa1990b} (a.k.a. unsymmetric collocation) was the first RBF method for PDEs, and is still the most frequently used collocation type. The idea behind Kansa's method is that an 
+\emph{Kansa's method} \cite{Kansa1990a, Kansa1990b} (a.k.a. unsymmetric collocation) was the first RBF method for PDEs, and is still the most frequently used method. The idea behind Kansa's method is that an 
 approximate solution to the PDE can be found by finding an interpolant which satisfies the differential operator with zero residual at a set of \emph{collocation points} (these coincide with the RBF centers). To find the interpolant, the differential equation is formulated as a two block (unsymmetric) linear system with: 1) the approximation of values 
 at boundary 
-points with boundary data only, and 2) the approximation of interior points by directly applying the differential operator. Hon et al. \cite{Hon1999} employed Kansa's method to solve shallow water equations for Typhoon simulation. In 
-\cite{FlyerWright09}, Flyer and Wright employed Kansa's method for the solution of shallow water equations on a sphere. Their 
-results show that RBFs allow for longer time steps with spectral accuracy. It was 
+points with boundary data only, and 2) the approximation of interior points by directly applying the differential operator. It was 
 shown in \cite{Fasshauer1997, Hon2001} that the unsymmetric linear system produced by Kansa's method does not guarantee 
-non-singularity; although it is noted that in practice singularities are rare encounters \cite{Larsson2003}. 
+non-singularity; although it is also noted that in practice singularities are rare encounters \cite{Larsson2003}. 
 
 The second alternative for RBF collocation, is based on Hermite scattered 
 data interpolation (see \cite{Wu1992}). The so-called \emph{Fasshauer} or \emph{Symmetric Collocation} method (\cite{Fasshauer1997}) 
@@ -166,14 +164,19 @@ and b) the linear system is larger and more complex to form
 the possible existence of a singularity in Kansa's method is not enough to justify the added difficulties of using Fasshauer's 
 method.
 
-The last method, \emph{Direct Collocation}, was introduced by Fedoseyev, Friedman and Kansa
+The last collocation method, \emph{Direct Collocation}, was introduced by Fedoseyev, Friedman and Kansa
  \cite{Fedoseyev2002} and satisfies the differential operator on the interior and the boundary. Larsson and Fornberg \cite{Larsson2003} observe that this third method has a matrix structure similar to that found in Kansa's method; however, it is noted that the dimensions of the matrix blocks for each method differ. This is due to collocation constraints added for 
 the differential operator applied to the boundary. Aside from the survey on RBF collocation presented by Larsson and Fornberg \cite{Larsson2003}, no related 
 work was found that applied, or investigated, this method further. 
-%Also, it appears that Fasshauer \cite{Fasshauer2007} 
-%made the mistake of equating Kansa's method and the Direct method.
 
-As discussed in \cite{FlyerWright09}, global RBF methods result in differentiation matrices that are full. The methods then scale on the order of $O(N^3)$ floating point operations (FLOPs) in preprocessing to assemble and compute an LU-decomposition for a given node layout, and subsequently $O(N^2)$ operations at each time-step to perform forward- and back-solves. For mid- to large-scale problems, in the unlikely event that conditioning of the system is not a limiting factor, the cost of the method is still seen as prohibitively high. %While not in mainstream use by the RBF community, \cite{Morse2005} correctly points out that the use of iterative solvers can reduce complexity of preprocessing to the order of $O(N^2)$ in preprocessing. 
+%TODO: add RBF-PS clarification in next section
+In \cite{Fasshauer2006}, Fasshauer demonstrated that RBF collocation methods can be modified to fit well in the framework of pseudo-spectral methods and coined the name RBF-PS (pseudo-spectral). At first glance, RBF-PS and Kansa's method appear to be interchangeable, and have frequently been confused in literature. While Kansa's method explicitly computes the coefficients for a continuous derivative approximation, the RBF-PS method never explicitly computes the interpolant coefficients. Instead, a differentiation matrix (DM) is used to approximate derivates at the collocation points only \cite{FasshauerZhang2007}. 
+
+As discussed in \cite{FlyerWright09}, global RBF methods result in differentiation matrices that are full. The methods then scale on the order of $O(N^3)$ floating point operations (FLOPs) in preprocessing to assemble and compute an LU-decomposition for a given node layout, and subsequently $O(N^2)$ operations at each time-step to perform forward- and back-solves. While not in mainstream use by the RBF community, \cite{Morse2005} correctly points out that the use of iterative solvers could reduce complexity of preprocessing to the order of $O(N^2)$ in preprocessing. For mid- to large-scale problems, in the unlikely event that conditioning of the system is not a limiting factor, the cost of the method is still seen as prohibitively high. 
+
+Hon et al. \cite{Hon1999} employed Kansa's method to solve shallow water equations for Typhoon simulation.
+In \cite{FlyerWright09}, Flyer and Wright employed RBF-PS (Kansa method) for the solution of shallow water equations on a sphere. Their 
+results show that RBFs allow for longer time steps with spectral accuracy. The survey \cite{FlyerFornberg11} by Flyer and Fornberg showcases RBF-PS (Kansa method) out-performing some of the of the best available methods in geosciences, namely: Finite Volume, Spectral Elements, Double Fourier, and Spherical Harmonics. When applied to problems such as transport on the sphere \cite{FlyerWright07}, shallow water equations \cite{FlyerWright09}, and 3D mantle convection\cite{WrightFlyerYuen10}, RBF-PS consistently required fewer time steps, and a fraction of the nodes for similar accuracy \cite{FlyerFornberg11}. 
 
 %
 %In the survey on RBF collocation presented by Larsson and Fornberg \cite{Larsson2003}, it was found that performance of the 
@@ -193,7 +196,7 @@ Thus far, all cases of collocation and interpolation mentioned have assumed glob
 \end{cases}
 \label{eqn:csrbf}
 \end{equation}
-where a radius is defined past which the RBF has no influence on the interpolant. Note that the radius can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} approximates $O(nN)$ FLOPs as a reasonable estimate for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate from their choice of sparse solver package. Fasshauer \cite{Fasshauer2007} provides a stationary multilevel collocation method based on CSRBF with $O(N)$ complexity, but the method is plagued by poor convergence. In the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
+where a radius is defined past which the RBF has no influence on the interpolant. Note that the radius can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} approximates the complexity as dominated by $O(N)$ for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate provided by their choice of general sparse solver package. Fasshauer \cite{Fasshauer2007} provides a stationary multilevel collocation method based on CSRBF with $O(N)$ complexity, but the method is plagued by poor convergence. In the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
 
 CSRBFs have attracted a lot of attention in applications. For example, in the field of dynamic surface and image deformation, compact support allows for local transformations which do not induce global deformation (see e.g., \cite{Yang2008, Lin2009, Correa2007}). 
 
@@ -221,7 +224,7 @@ problems based on transient Richards' equations \cite{Stevens2008a, Stevens2009a
 RBF-generated Finite Differences (RBF-FD) were first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
 but it was the simultaneous, yet independent,
 efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. 
-The RBF-FD method is similar in concept to classical 
+The RBF-FD method (and the RBF-HFD, ``Hermite" equivalent \cite{WrightFornberg06}) is similar in concept to classical 
 finite-differences (FD) but differs in that the underlying differentiation 
 weights are exact for RBFs rather than polynomials. The method contrasts with global RBF methods in the sense that it does not interpolate the differential operator of the PDE. Instead, the RBF-FD method applies the differential operator to translates of the RBF in a small stencil/neighborhood of nodes. Solving the interpolation system in RBF-FD results in the set of generalized FD weights that approximate the differential quantity at the stencil center.
 
@@ -229,27 +232,22 @@ RBF-FD
 share many advantages with global RBF methods, 
 like the ability to function without an underlying mesh, easily extend to higher dimensions and afford large time steps; however spectral accuracy is lost. 
 Other advantages of RBF-FD 
-include high computational speed together with high-order accuracy
+include lower computational complexity together with high-order accuracy
 (6th to 10th order accuracy is common). 
-As in FD, increasing the stencil size $n$ increases the accuracy of the approximation.
+As in FD, increasing the stencil size, $n$, increases the accuracy of the approximation.
 % TODO: rbffd has the opportunity for parallelization.
 
-In some ways, RBF-FD and global RBF methods are plagued by the same difficulties. For example, as the stencil size increases, so too does the ill-conditioning of the 
+In some ways, RBF-FD and global RBF methods are plagued by the same difficulties. For example, as the number of nodes in the stencil increases, so too does the ill-conditioning of the linear systems to be solved. Similarly, the most accurate weights occur when $\epsilon \rightarrow 0$, but values in that regime beget additional ill-conditioning problems---a recurrence of the \emph{Uncertainty Relation} \cite{Schaback1995}. One key difference in the multiple independent RBF-FD origins was that Wright \cite{Wright2003} was able to bypass ill-conditioning of RBF-FD and investigate its behavior in the limit as $\epsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm. 
 
-Given $N$ total nodes in the domain (such as on the surface of a sphere), $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$, much lower than the global RBF method ($O(N^3)$), with the cost per time step also being $O(N)$. RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
+Given $N$ total nodes in the domain, $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$; significantly lower than the global RBF method ($O(N^3)$). The cost per time step is also $O(N)$. 
+
+RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
-
-A key difference between investigations was that Wright \cite{Wright2003} was able to bypass ill-conditioning of RBF-FD and investigate its behavior in the limit as $\varepsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm.
-
-
-Another local alternative for solving PDEs with RBFs was presented by Wright and Fornberg \cite{Wright2004, WrightFornberg06}. The method, called RBF-FD, combines scattered data interpolation to approximate function values and generalized finite difference stencils to approximate differential operators. This approach avoids collocation in the sense that the interpolant need not satisfy the differential operator of the PDE at a set of collocation points. In contrast, the RBF-FD method applies the differential operator to RBF translates in a small neighborhood. The translates' centers form a stencil of nodes. Solving for the interpolant that passes through the stencil results in a set of generalized Finite Difference weights that approximate the differential quantity at the stencil center when combined with the solution values at each stencil node.
+%Another local alternative for solving PDEs with RBFs was presented by Wright and Fornberg \cite{Wright2004, WrightFornberg06}. 
 %However, in the limit as RBF-FD stencils include all nodes in the domain, Kansa's method is reproduced \cite{Shu2006}. 
 %\togordon{Statement about RBF-FD and Kansa's method is given without proof.}
-
-According to Wright and Fornberg \cite{Wright2004}, RBF-FD (and \emph{RBF-HFD} for the Hermite version) was independently 
-proposed by many authors including Wright \cite{Wright2003} in his dissertation, Tolstykh \cite{Tolstykh2000,Tolstykh2003a, Tolstykh2003b}, Shu et al. \cite{Shu2003}, and Cecil et al. \cite{Cecil2004}. 
-
-
+%According to Wright and Fornberg \cite{Wright2004}, RBF-FD (and \emph{RBF-HFD} for the Hermite version) was i%ndependently 
+%proposed by many authors including Wright \cite{Wright2003} in his dissertation, Tolstykh \cite{Tolstykh2000,Tolstykh2003a, Tolstykh2003b}, Shu et al. \cite{Shu2003}, and Cecil et al. \cite{Cecil2004}. 
 Shu et al. \cite{Shu2006} compared the RBF-FD method to Least Squares FD (LSFD) in context of 2D incompressible viscous 
 cavity flow, and found that under similar conditions, the RBF-FD method was more accurate than LSFD, but the solution required 
 more iterations of an iterative solver. RBF-FD was applied to Poisson's 
@@ -940,12 +938,12 @@ For initial value problems with moving nodes, the coefficients must be updated a
 Recently, Fornberg and Wright 
 \cite{Fornberg2004} presented the \emph{Contour--Pad\'{e} algorithm}, which allows for numerically stable 
 computation of highly 
-accurate interpolants for (very small) cases typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\varepsilon \rightarrow 0$). Larsson and Fornberg \cite{Larsson2003} 
+accurate interpolants for (very small) cases typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). Larsson and Fornberg \cite{Larsson2003} 
 applied the 
 algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method. Note that currently, the Contour-Pad\'{e} 
 algorithm was only studied for global RBF interpolation, not for compact or local methods. 
 
-The \emph{RBF-QR} method, an alternative for numerically stable computation in the limit as $\varepsilon \rightarrow 0$, was introduced by Fornberg  and 
+The \emph{RBF-QR} method, an alternative for numerically stable computation in the limit as $\epsilon \rightarrow 0$, was introduced by Fornberg  and 
 Piret \cite{Fornberg2007} in context of a sphere, and later extended to planar 2D problems in \cite{Fornberg2009b}. The 
 RBF-QR 
 method is simple 
