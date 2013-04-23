@@ -39,7 +39,7 @@
 
 The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, at the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions to generate weights for finite-differencing stencils, utilizing the weights in turn to approximate derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
 
-Being a meshless method, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $n$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
+As ``meshless" methods, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $n$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
 
 This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the 
 RBF-generated Finite Differences (RBF-FD) method. Beginning with a brief introduction to RBFs and a historical survey, we attempt to classify related work into three three types: global, compact, and local methods. Following this, the general approximation problem is introduced, with a look at the core of all three method classificiations: RBF scattered-data interpolation. %We categorize existing methods for solving PDEs with RBFs as either global 
@@ -114,6 +114,7 @@ As in the problem of RBF scattered data interpolation, $ \vw = \{w_j\} $ is the 
 Under the assumption that $\mathcal{L}$ is a linear operator, one can collocate the differential equation. Alternatively, individual derivative operators can be expressed as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
 In all cases, a linear system of equations arises, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While we restrict the $\phi_j(x)$ to RBFs or various operators applied to the RBFs, we note that spectral methods, finite-element or spectral-element methods can be formulated in a similar way with different choices of basis functions.  Of course, $u$ can be a vector of unknown variables ($\vw$ then becomes a matrix). %In what follows, we refer to the matrix to invert as $A$.
 
+
 In Table~\ref{tbl:rbfcolloctypes} we classify references according to their choice of collocation method and RBF 
 interpolation type. 
 There are three main categories of RBF interpolation; we list them in Table~\ref{tbl:interp_types}. The first is \emph{Global} in the case that a single, large ($N\times N$) and 
@@ -139,7 +140,7 @@ We note that three types of collocation occur throughout the RBF literature:
 Kansa's unsymmetric collocation method \cite{Kansa1990a, Kansa1990b}, Fasshauer's symmetric collocation method \cite
 {Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}. While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  %A full explanation of RBF based collocation is deferred to Chapter~\ref{chap:rbf_pde}. 
 
-Prior to launching into derivation and comparison of RBF methods, we first survey each classification to highlight benefits, shortcomings, and to provide a brief historical context. 
+Prior to launching into derivation and comparison of RBF methods, we first survey each classification to highlight benefits, shortcomings, and to provide a brief historical context. A survey of related work in the RBF community that involves parallelization and optimization is deferred to Chapter~\ref{chap:parallel_rbf}. 
 
 \subsection{Global RBF Methods}
 %TODO: improve collocation definition 
@@ -217,12 +218,37 @@ problems based on transient Richards' equations \cite{Stevens2008a, Stevens2009a
 
 \subsection{RBF-FD}
 
+RBF-generated Finite Differences (RBF-FD) were first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
+but it was the simultaneous, yet independent,
+efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. 
+The RBF-FD method is similar in concept to classical 
+finite-differences (FD) but differs in that the underlying differentiation 
+weights are exact for RBFs rather than polynomials. The method contrasts with global RBF methods in the sense that it does not interpolate the differential operator of the PDE. Instead, the RBF-FD method applies the differential operator to translates of the RBF in a small stencil/neighborhood of nodes. Solving the interpolation system in RBF-FD results in the set of generalized FD weights that approximate the differential quantity at the stencil center.
+
+RBF-FD 
+share many advantages with global RBF methods, 
+like the ability to function without an underlying mesh, easily extend to higher dimensions and afford large time steps; however spectral accuracy is lost. 
+Other advantages of RBF-FD 
+include high computational speed together with high-order accuracy
+(6th to 10th order accuracy is common). 
+As in FD, increasing the stencil size $n$ increases the accuracy of the approximation.
+% TODO: rbffd has the opportunity for parallelization.
+
+In some ways, RBF-FD and global RBF methods are plagued by the same difficulties. For example, as the stencil size increases, so too does the ill-conditioning of the 
+
+Given $N$ total nodes in the domain (such as on the surface of a sphere), $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$, much lower than the global RBF method ($O(N^3)$), with the cost per time step also being $O(N)$. RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
+incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
+
+A key difference between investigations was that Wright \cite{Wright2003} was able to bypass ill-conditioning of RBF-FD and investigate its behavior in the limit as $\varepsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm.
+
+
 Another local alternative for solving PDEs with RBFs was presented by Wright and Fornberg \cite{Wright2004, WrightFornberg06}. The method, called RBF-FD, combines scattered data interpolation to approximate function values and generalized finite difference stencils to approximate differential operators. This approach avoids collocation in the sense that the interpolant need not satisfy the differential operator of the PDE at a set of collocation points. In contrast, the RBF-FD method applies the differential operator to RBF translates in a small neighborhood. The translates' centers form a stencil of nodes. Solving for the interpolant that passes through the stencil results in a set of generalized Finite Difference weights that approximate the differential quantity at the stencil center when combined with the solution values at each stencil node.
 %However, in the limit as RBF-FD stencils include all nodes in the domain, Kansa's method is reproduced \cite{Shu2006}. 
 %\togordon{Statement about RBF-FD and Kansa's method is given without proof.}
 
 According to Wright and Fornberg \cite{Wright2004}, RBF-FD (and \emph{RBF-HFD} for the Hermite version) was independently 
-proposed by many authors including Wright \cite{Wright2003} in his dissertation, Tolstykh \cite{Tolstykh2000,Tolstykh2003a, Tolstykh2003b}, Shu et al. \cite{Shu2003}, and Cecil et al. \cite{Cecil2004}. A key difference between investigations was that Wright \cite{Wright2003} was able to bypass ill-conditioning of RBF-FD and investigate its behavior in the limit as $\varepsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm.
+proposed by many authors including Wright \cite{Wright2003} in his dissertation, Tolstykh \cite{Tolstykh2000,Tolstykh2003a, Tolstykh2003b}, Shu et al. \cite{Shu2003}, and Cecil et al. \cite{Cecil2004}. 
+
 
 Shu et al. \cite{Shu2006} compared the RBF-FD method to Least Squares FD (LSFD) in context of 2D incompressible viscous 
 cavity flow, and found that under similar conditions, the RBF-FD method was more accurate than LSFD, but the solution required 
@@ -1307,6 +1333,16 @@ While the $k$-D Tree functions well for queries, its downfall is a large cost in
 
 Approximate nearest neighbors will be nearly balanced. 
 We observe that RBF-FD functions as well on stencils of true nearest neighbors as it does on approximate nearest neighbors. 
+
+
+
+\chapter{Distributed/Parallel RBF Methods}
+\label{chap:parallel_rbf} 
+
+RBFs on GPU work: \cite{Schmidt2009a, Schmidt2009b} (global), \cite{Yokota2010} (compact)
+
+
+
 
 }
 
