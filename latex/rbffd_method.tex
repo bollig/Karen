@@ -8,6 +8,16 @@
 
 \input{all_usepackages} 
 \usepackage[margin=1.25in]{geometry}
+\usepackage{xcolor}
+
+% Sepia
+%\definecolor{myBGcolor}{HTML}{F6F0D6}
+%\definecolor{myTextcolor}{HTML}{4F452C}
+
+\definecolor{myBGcolor}{HTML}{3E3535}
+\definecolor{myTextcolor}{HTML}{CFECEC}
+\pagecolor{myBGcolor}
+\color{myTextcolor}
 
 \begin{document}
 \fi
@@ -154,12 +164,13 @@ and b) the linear system is larger and more complex to form
 the possible existence of a singularity in Kansa's method is not enough to justify the added difficulties of using Fasshauer's 
 method.
 
+Both Kansa's method and Fasshauer's methods were shown in \cite{Fasshauer2006} to fit well in the generalized framework of pseudo-spectral methods with a subtle change in algorithm. While collocation methods explicitly compute the coefficients for a continuous derivative approximation, their alternates, referred to in literature as RBF-pseudospectral (RBF-PS) methods, never explicitly computes the interpolant coefficients. Instead, a differentiation matrix (DM) is assembled and used to approximate derivates at the collocation points only \cite{FasshauerZhang2007}. Since most computational models are simply concerned with the solution at collocation points, the step to assemble DMs as in RBF-PS is organic. We observe that much of the RBF literature on global methods insufficiently 
+%TODO: refs that refer to global RBF methods and RBF-PS as just RBF methods. 
+
 The last collocation method, \emph{Direct Collocation}, was introduced by Fedoseyev, Friedman and Kansa
  \cite{Fedoseyev2002} and satisfies the differential operator on the interior and the boundary. Larsson and Fornberg \cite{Larsson2003} observe that this third method has a matrix structure similar to that found in Kansa's method; however, it is noted that the dimensions of the matrix blocks for each method differ. This is due to collocation constraints added for 
 the differential operator applied to the boundary. Aside from the survey on RBF collocation presented by Larsson and Fornberg \cite{Larsson2003}, no related 
-work was found that applied, or investigated, this method further. 
-
-In \cite{Fasshauer2006}, Fasshauer demonstrated that RBF collocation methods can be modified to fit well in the framework of pseudo-spectral methods and coined the name RBF-PS (pseudo-spectral). At first glance, RBF-PS and Kansa's method appear to be interchangeable, and have frequently been confused in literature. While Kansa's method explicitly computes the coefficients for a continuous derivative approximation, the RBF-PS method never explicitly computes the interpolant coefficients. Instead, a differentiation matrix (DM) is used to approximate derivates at the collocation points only \cite{FasshauerZhang2007}. 
+work was found that applied, or investigated, this method further.  
 
 As discussed in \cite{FlyerWright09}, global RBF methods result in differentiation matrices that are full. The methods then scale on the order of $O(N^3)$ floating point operations (FLOPs) in preprocessing to assemble and compute an LU-decomposition for a given node layout, and subsequently $O(N^2)$ operations at each time-step to perform forward- and back-solves. While not in mainstream use by the RBF community, \cite{Morse2005} correctly points out that the use of iterative solvers could reduce complexity of preprocessing to the order of $O(N^2)$ in preprocessing. For mid- to large-scale problems, in the unlikely event that conditioning of the system is not a limiting factor, the cost of the method is still seen as prohibitively high. 
 
@@ -199,7 +210,7 @@ collocation matrix from Kansa's method, can be avoided altogether in favor of sm
 each node. Local collocation still faces possible ill-conditioning and singularities 
 like global collocation, but make it easier to distribute computation across parallel systems. Also, the smaller linear systems can be 
 solved 
-with more ease and less ill-conditioning. In \cite{Sarler2006}, the authors consider 2D diffusion problems. Divo and Kassab \cite{Divo2007} 
+with less conditioning issues. In \cite{Sarler2006}, the authors consider 2D diffusion problems. Divo and Kassab \cite{Divo2007} 
 employ the 
 method for Poisson-like PDEs including fluid flow and heat transfer. Kosec and \v{S}arler \cite{Kosec2008} apply the 
 same technique to solve coupled heat transfer and fluid flow problems.
@@ -214,7 +225,7 @@ RBF-generated Finite Differences (RBF-FD) were first introduced by Tolstykh in 2
 but it was the simultaneous, yet independent,
 efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. 
 The RBF-FD method (and the RBF-HFD, ``Hermite" equivalent \cite{WrightFornberg06}) is similar in concept to classical 
-finite-differences (FD) but differs in that the underlying differentiation 
+finite-differences (FD), but differs in that the underlying differentiation 
 weights are exact for RBFs rather than polynomials. The method contrasts with global RBF methods in the sense that it does not interpolate the differential operator of the PDE. Instead, the RBF-FD method applies the differential operator to translates of the RBF in a small stencil/neighborhood of nodes. Solving the interpolation system in RBF-FD results in the set of generalized FD weights that approximate the differential quantity at the stencil center.
 
 RBF-FD 
@@ -259,6 +270,9 @@ including Navier-Stokes equations \cite{Shu2003} have all been considered.
 
 
 \section{Comparison of RBF Methods}
+
+We now detail the definition of RBF methods related to the solution of PDEs. 
+
 Following \cite{Mouat2002}, consider a PDE expressed in terms of a (linear) differential operator, $\diffop$: 
 \begin{eqnarray}
 \diffop{u} & = & f \on{\Interior} \\
@@ -286,26 +300,23 @@ the $x_i$'s (data points) points as \emph{collocation points}, usually taken as 
 To clarify the role of the polynomial part in Equation~\ref{eqn:pde_approx}, it is necessary to
 put aside the PDE for the moment and consider only the problem of \emph{scattered data 
 interpolation} with Radial Basis Functions. Borrowing notation from \cite{Fasshauer2007, Iske2004}, 
-we seek an interpolant, $\mathcal{P}_f$ of the form
-%\toevan{Why put a vector on something that is not a vector? $\phi_j(x)$ is a scalar isn't it? I have removed the vector on $f$ and put it on $\phi$}
+we seek an interpolant, $\mathcal{P}_f$, of the form
 \begin{eqnarray*}
 \mathcal{P}_f  & = & \sum_{j=1}^{N} c_{j}  \phi_j(x) = f(x) \\
 			& = & \sum_{j=1}^{N} \phi_j(x) c_{j} = f(x) \\
 \vec{\mathcal{P}_f} & = & {\phi}^T(x) c = f(x)
 \end{eqnarray*}
-where $\mathcal{P}_f$ is expressed as a scalar product between the unknown coeffient weights $c_j$ and the radial basis functions $\phi_j(x)$.
+where $\mathcal{P}_f$ is expressed as a scalar product between the unknown coefficient weights $c_j$ and the radial basis functions $\phi_j(x)$.
 
 %TODO: add RBF-PS clarification 
 % TODO: verify that choose has correct vars
-In many cases it is desirable to exactly reproduce functions of degree less than or equal to some order $m$. For RBF scattered data interpolation in one dimension, this can be achieved by adding a polynomial of order $m$ with $M =$${m+1}\choose{1}$ terms (e.g., $x^0, x^1, \cdots, x^{m}$). In 2D, the terms would be: $1, x, y, xy, x^2y, xy^2, \cdots, x^{m}y^{m-1}, x^{m-1}y^{m}, x^my^m$. In $\R^D$, $M =$${m+D}\choose{D}$ \cite{Iske2004}, giving
+In many cases it is desirable to exactly reproduce functions of degree less than or equal to some order $m$. For RBF scattered data interpolation in one dimension, this can be achieved by adding a polynomial of order $m$ with $M =$${m+1}\choose{1}$ terms (e.g., $x^0, x^1, \cdots, x^{m}$). In higher dimensions, the terms would be: $1, x, y, xy, x^2y, xy^2, \cdots, x^{m}y^{m-1}, x^{m-1}y^{m}, x^my^m$. In $\R^D$, $M =$${m+D}\choose{D}$ \cite{Iske2004}, giving
 \begin{eqnarray}
 f(x) & = & \sum_{j=1}^{N} c_{j}  \phi_j(x)  +  \sum_{l=1}^{M} d_{l} P_l(x),  \hskip1.5em  P_l(x) \in \Pi^{D}_{m} \\
 f & = & \phi^T c + P^T d
 \label{eqn:interpolation_constraints}
 \end{eqnarray}
-%\toevan{WHY DO YOU NEED VECTORS AT ALL? Why not define $P(x)$ to be the column vector $(P_1, P_2, ...)$ ? Everything is then simpler? You are copying older notation. Use current notation. }
 where the second summation (referred to as \emph{interpolation conditions} \cite{Iske2004}) ensures the minimum degree of the interpolant.  Notice, however, that the interpolation conditions add $M$ new degrees of freedom, so we must provide $M$ \emph{moment conditions} or constraints:
-%\toevan{Flaw: above, $P$ is the vector $(P_1(x),P_2(x),...)$ and below, $P$ is the old $P$ evaluated at $x_j$. Can't do that. You need different symbols. Of course, you could have put a vector above the old $P$, but then, one needs a vector above all vectors. Or one can make the $P$ matrix bold, to differentiate from the vector. But then, all matrices should ideally be bold. Or the vectors can be bold.}
 $$
 \sum_{j=1}^{N} c_{j} P_l(x_j) = 0,  \hskip1.5em  l=1,..., M 
 $$
@@ -860,6 +871,15 @@ The choice to study RBF-FD within this dissertation is motivated by two factors.
 
 Rather than solely focus on the optimizations of said algorithms on the GPU, we dedicate significant attention to the practical application of RBF-FD to interesting problems in geophysics. This means we have walked a fine line between research topics to both apply the method to 
 
+\section{Related Works}
+
+The following are related works on RBF-FD. Each needs to be incorporated in this text: 
+
+\begin{itemize} 
+\item 
+\end{itemize}
+
+
 
 \chapter{RBF Methods for PDE Solutions} 
 
@@ -1013,6 +1033,7 @@ corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}
 
 For each of the $N$ small system solves of Equation~(\ref{eq:rbffd_weight_system}), the $n$ nearest neighbors to $\vx_j$ need to be located. This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. 
 
+\authnote{Use of the 1's constraint is highly recommended. It keeps weights within magnitude 100, whereas not providing the constraint results in much higher magnitudes in the thousands or tens of thousands. Using first order monomials does not add benefit. Include examples of weights in 2D with 5 to 10 nodes.} 
 
 \section{Weight Operators}
 Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs. Here we provide a list of operators we have tested and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system} necessary to compute RBF-FD weights. 

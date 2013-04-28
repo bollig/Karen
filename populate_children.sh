@@ -1,7 +1,29 @@
-git clone -b cleanup_jcp_typeset ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/paper1.git 
-git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/paper2.git 
-git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/locality_sensitive_hashing.git 
-git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/prospectus.git
-git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/spear_benchmarks.git
-git clone -b master git@github.com:bollig/fsu_2012.git
-git clone -b master git@github.com:bollig/keeneland_benchmarks.git
+#!/bin/bash 
+
+if [ ! -d "paper1/" ]; then 
+	git clone -b cleanup_jcp_typeset ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/paper1.git 
+fi
+if [ ! -d "paper2/" ]; then 
+	git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/paper2.git 
+fi 
+if [ ! -d "locality_sensitive_hashing/" ]; then 
+	git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/locality_sensitive_hashing.git 
+fi 
+if [ ! -d "prospectus/" ]; then 
+	git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/prospectus.git
+fi 
+if [ ! -d "spear_benchmarks/" ]; then 
+	git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/spear_benchmarks.git
+fi 
+if [ ! -d "fsu_2012/" ]; then 
+	git clone -b master git@github.com:bollig/fsu_2012.git
+fi 
+if [ ! -d "ncar_2011/" ]; then 
+	git clone -b master git@github.com:bollig/ncar_2011.git
+fi 
+if [ ! -d "keeneland_benchmarks/" ]; then 
+	git clone -b master git@github.com:bollig/keeneland_benchmarks.git
+fi 
+if [ ! -d "rbffd_gpu_doc/" ]; then 
+	git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/rbffd_gpu_doc.git
+fi 
