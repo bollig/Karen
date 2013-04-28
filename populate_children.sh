@@ -27,3 +27,9 @@ fi
 if [ ! -d "rbffd_gpu_doc/" ]; then 
 	git clone -b master ssh://efb06@pamd.sc.fsu.edu/~efb06/repos/rbffd_gpu_doc.git
 fi 
+if [ ! -d "rbffd_gpu/" ]; then 
+	git clone -b master git@github.com:bollig/rbffd_gpu.git
+fi 
+if [ ! -d "rbffd_gpu_scripts/" ]; then 
+	git clone -b master git@github.com:bollig/rbffd_gpu_scripts.git
+fi 
