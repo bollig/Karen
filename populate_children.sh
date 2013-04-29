@@ -32,4 +32,7 @@ if [ ! -d "rbffd_gpu/" ]; then
 fi 
 if [ ! -d "rbffd_gpu_scripts/" ]; then 
 	git clone -b master git@github.com:bollig/rbffd_gpu_scripts.git
+fi  
+if [ ! -d "karen_references/" ]; then 
+	git clone -b master git@github.com:bollig/karen_references.git
 fi 
