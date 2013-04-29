@@ -52,7 +52,7 @@ The RBF-FD chapter needs:•	Related papers on RBF-FD specifically (i.e., the c
 % TODO: how does the RBF-FD method expand on existing?
 While most of the literature surrounding RBFs for PDEs involves collocation, an alternative method does exist: RBF-generated Finite Differences (RBF-FD). RBF-FD is a hybrid of RBF scattered data interpolation and Finite Difference (FD) stencils. 
 
-The idea behind FD stencils is to express various derivative operators as a linear combination of unknown functional values in the neighborhood of a point where an approximation to the derivative operator is desired. Common approximations such as upwind differencing, center differencing, higher order approximations, and even spectral operators, are of this form. 
+The idea behind FD stencils is to express various derivative operators as a linear combination of known functional values in the neighborhood of a point where an approximation to the derivative operator is desired. Common approximations such as upwind differencing, center differencing, higher order approximations, and even spectral operators, are of this form. 
 
 A common approach to building such discrete operators is to form a local interpolant in a neighborhood of the target point, and simply differentiate it analytically. This is the approach taken in RBF-FD,   which  allows for stencils with irregular placement and number of nodes, and assigns their weights based on an RBF \cite{Wright2003}. 
 %A detailed derivation is provided in the next chapter. 
@@ -128,29 +128,59 @@ including Navier-Stokes equations \cite{Shu2003} have all been considered.
 
 
 \section{The RBF-generated Finite Differences Method}
-
-
-For the RBF-FD method, derivatives of $u(x)$ are approximated by weighted combinations of a small neighborhood of $N_s$ nodes (i.e., a stencil with $N_s \ll N$):
+%TODO: follow fornberg and flyer book 
+The RBF-FD method is similar to classical Finite Differences in that the RBF-FD method allows derivatives of a function $u(x)$ to be approximated by weighted combinations of $n$ function values in a small neighborhood (i.e., $n \ll N$) around a \emph{center} node, $x_c$. That is: 
  %derivative of u (i.e., $\diffop{u}$) at the stencil center ($x_1$) as a weighted combination of neighbors (like typical Finite Differencing): 
         \begin{align} 
-        \left. \diffop{u(x)} \ \right|_{x = x_i} &\approx \sum_{j=1}^{N_s} c_j u(x_j) \nonumber 
+        \left. \diffop{u(x)} \ \right|_{x = x_c} &\approx \sum_{j=1}^{n} c_j u(x_j) \nonumber 
         \label{eq:derivFromFDWeights}
         \end{align}
-where $\diffop{u}$ denotes a linear differential quantity over $u$ (e.g., $\diffop{u} = \d{u}{x}$). Here, ${c_j}$ are unknown, and obtained by enforcing the reconstruction:
-	\begin{align}
-	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_1} = \sum_{j=1}^{N_s} c_j \phi_i(x_j)  \ \ \ \ \ \ \textrm{for }i=1,2,...,N_s \nonumber 
+where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \d{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil}. While not necessary, in practice one typically considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; in practice, Euclidean distance is preferred. 
+
+Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center, $x_c$, is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color the red and blue disks represent the magnitude and sign of coefficients, $c_j$, determined to calculate a derivative quantity at the stencil center. 
+
+\begin{figure}[htbp]
+	\centering
+	\begin{subfigure}[m]{0.6\textwidth}
+		\centering
+		\includegraphics[width=1.0\textwidth]{../figures/chapter2/preview_stencils_example.png}
+		\caption{A 13 node RBF-FD stencil of randomly distributed nodes. The stencil centered at the green square contains the 12 nearest neighbors contained within the minimum covering circle drawn in purple.}
+		\label{fig:stencil_example_random}
+	\end{subfigure}
+	\begin{subfigure}[m]{0.35\textwidth}
+		\centering
+		\includegraphics[width=1.0\textwidth]{../figures/chapter2/RBFFD_single-eps-converted-to.pdf}
+		\caption{A 75 node RBF-FD stencil with blue (negative) and red (positive) differentiation weights to approximate advective operator at the square. Stencils weights indicated by scale of disk radii. (Image courtesy of Bengt Fornberg and Natasha Flyer)}
+		\label{fig:stencil_example_sphere}
+	\end{subfigure}
+	\caption{Examples of stencils computable with RBF-FD}
+	%TODO: Consider: show example FD stencil (5pt with regular grid)
+	\label{fig:stencil_example}
+\end{figure}
+
+
+
+% The center node and its neighbors define a \emph{stencil}, $\{\vx\}_{i=1}^{n}$, in a localized (small) region or \emph{neighborhood} of the domain. 
+
+
+%TODO: Weights for both classical Finite Difference and RBF-FD can be obtained through the solution of linear systems. In the case of Finite Difference, the system is a Vandermonde matrix. 
+%TODO: For RBF-FD the system is based on a symmetric distance matrix. 
+%TODO: \authnote{Need better description and ref:} The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
+
+ To approximate $\diffop{u(x)}$, one requires the \emph{stencil weights} (coefficients), ${c_j}$. These are obtained by enforcing that they be exact within the space spanned by the RBFs at stencil nodes, $\phi_j(x)$, such that	\begin{align}
+	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i)  \ \ \ \ \ \ \textrm{for }i=1,2,...,n \nonumber 
 	\end{align}
 with $\diffop{\phi}_i$ provided by analytically applying the differential operator to the kernel function.
 This is equivalent to: 
 	\begin{align}        
           \begin{bmatrix}  
-            \phi_1(x_1) & \phi_1(x_2) & \cdots & \phi_1(x_{N_s}) \\ 
-            \phi_2(x_1) & \phi_2(x_2) & \cdots & \phi_2(x_{N_s}) \\ 
+            \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_n(x_{1}) \\ 
+            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_n(x_{2}) \\ 
             \vdots & \ddots & \ddots & \vdots \\
-            \phi_{N_s}(x_1) & \phi_{N_s}(x_2) & \cdots & \phi_{N_s}(x_{N_s})
+            \phi_{1}(x_n) & \phi_{2}(x_n) & \cdots & \phi_{n}(x_{n})
                 \end{bmatrix} 
                 \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{pmatrix}
-               &=                \begin{pmatrix} \diffop{\phi_1}(x_1) \\  \diffop{\phi_2}(x_1) \\ \vdots \\  \diffop{\phi_{N_s}}(x_1) 
+               &=                \begin{pmatrix} \left.\diffop{\phi_1}(x)\ \right|_{x=x_c} \\  \left.\diffop{\phi_2}(x)\ \right|_{x=x_c} \\ \vdots \\  \left.\diffop{\phi_{n}}(x)\ \right|_{x=x_c} 
                \end{pmatrix} \\
                          \begin{bmatrix} \phi_{s} \end{bmatrix} \begin{pmatrix} c \end{pmatrix} &= \begin{pmatrix} \phi_{\diffop{}_s} \end{pmatrix}.
                          \label{eqn:rbffd_simplified}
@@ -181,35 +211,6 @@ Again, based on the choice of RBF, positive definiteness of the system is ensure
 Equation~\ref{eq:rbffd_approx_derivs} is strictly for the stencil centered at node $x_1$. To obtain weights for all stencils in the domain, a total of $N$ such systems must be solved. %Following the discussion of Equation~\ref{eq:rbf_interpolate_pt}, stencils weights are computed given only node positions. 
 
 
-
-
-
-\section{Stencil-based Derivative Approximation}
-
-The RBF-FD method is similar to classical Finite Differences in that differential quantities at a single node referred to as a \emph{center}, $\vx_{j}$, is approximated by weighted combinations of function values at $n-1$ neighboring nodes. The center node and its neighbors define a \emph{stencil}, $\{\vx\}_{i=1}^{n}$, in a localized (small) region or \emph{neighborhood} of the domain. 
-
-Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color the red and blue disks represent the magnitude and sign of the RBF-FD weights determined to calculate a derivative quantity at the stencil center. 
-
-Weights for both classical Finite Difference and RBF-FD can be obtained through the solution of linear systems. In the case of Finite Difference, the system is a Vandermonde matrix. For RBF-FD the system is based on a symmetric distance matrix. \authnote{Need better description and ref:} The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
-
-
-\begin{figure}[htbp]
-	\centering
-	\begin{subfigure}[m]{0.6\textwidth}
-		\centering
-		\includegraphics[width=1.0\textwidth]{../figures/chapter2/preview_stencils_example.png}
-		\caption{A 13 node RBF-FD stencil of randomly distributed nodes. The stencil centered at the green square contains the 12 nearest neighbors contained within the minimum covering circle drawn in purple.}
-		\label{fig:stencil_example_random}
-	\end{subfigure}
-	\begin{subfigure}[m]{0.35\textwidth}
-		\centering
-		\includegraphics[width=1.0\textwidth]{../figures/chapter2/RBFFD_single-eps-converted-to.pdf}
-		\caption{A 75 node RBF-FD stencil with blue (negative) and red (positive) differentiation weights to approximate advective operator at the square. Stencils weights indicated by scale of disk radii. (Image courtesy of Bengt Fornberg and Natasha Flyer)}
-		\label{fig:stencil_example_sphere}
-	\end{subfigure}
-	\caption{Examples of stencils computable with RBF-FD \authnote{Consider: show example FD stencil (5pt with regular grid)}}
-	\label{fig:stencil_example}
-\end{figure}
 
 
 \section{RBF-FD weights}
