@@ -135,9 +135,9 @@ The RBF-FD method is similar to classical Finite Differences in that the RBF-FD 
         \left. \diffop{u(x)} \ \right|_{x = x_c} &\approx \sum_{j=1}^{n} c_j u(x_j) \nonumber 
         \label{eq:derivFromFDWeights}
         \end{align}
-where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \d{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil}. While not necessary, in practice one typically considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; in practice, Euclidean distance is preferred. 
+where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \d{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil}. While not necessary, in practice one typically considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; here, Euclidean distance is preferred. 
 
-Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center, $x_c$, is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color the red and blue disks represent the magnitude and sign of coefficients, $c_j$, determined to calculate a derivative quantity at the stencil center. 
+Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center, $x_c$, is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color of the red and blue disks represent the magnitude and alternating sign of coefficients, $c_j$, determined to calculate a derivative quantity at the stencil center. 
 
 \begin{figure}[htbp]
 	\centering
@@ -167,29 +167,30 @@ Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First
 %TODO: For RBF-FD the system is based on a symmetric distance matrix. 
 %TODO: \authnote{Need better description and ref:} The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
 
- To approximate $\diffop{u(x)}$, one requires the \emph{stencil weights} (coefficients), ${c_j}$. These are obtained by enforcing that they be exact within the space spanned by the RBFs at stencil nodes, $\phi_j(x)$, such that	\begin{align}
-	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i)  \ \ \ \ \ \ \textrm{for }i=1,2,...,n \nonumber 
+ To approximate $\diffop{u(x)}$, one requires the \emph{stencil weights} (coefficients), ${c_j}$. These are obtained by enforcing that they be exact within the space spanned by the RBFs centered at stencil nodes (i.e., $\phi_j(x)$). Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
+interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align}
+	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i) + c_{n+1} p_0 \ \ \ \ \ \ \textrm{for }i=1,2,...,n \nonumber 
 	\end{align}
-with $\diffop{\phi}_i$ provided by analytically applying the differential operator to the kernel function.
-This is equivalent to: 
-	\begin{align}        
-          \begin{bmatrix}  
-            \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_n(x_{1}) \\ 
-            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_n(x_{2}) \\ 
-            \vdots & \ddots & \ddots & \vdots \\
-            \phi_{1}(x_n) & \phi_{2}(x_n) & \cdots & \phi_{n}(x_{n})
-                \end{bmatrix} 
-                \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_N \end{pmatrix}
-               &=                \begin{pmatrix} \left.\diffop{\phi_1}(x)\ \right|_{x=x_c} \\  \left.\diffop{\phi_2}(x)\ \right|_{x=x_c} \\ \vdots \\  \left.\diffop{\phi_{n}}(x)\ \right|_{x=x_c} 
-               \end{pmatrix} \\
-                         \begin{bmatrix} \phi_{s} \end{bmatrix} \begin{pmatrix} c \end{pmatrix} &= \begin{pmatrix} \phi_{\diffop{}_s} \end{pmatrix}.
-                         \label{eqn:rbffd_simplified}
-        \end{align} 
-Solving Equation~\ref{eqn:rbffd_simplified} for stencils weights, $c$, and substituting into Equation~\ref{eq:derivFromFDWeights} reveals the similarity between RBF-FD and the general problem of RBF interpolation (see Equation~\ref{eq:rbf_interpolate_pt} and discussion): 
+with $\diffop{\phi}_i$ provided by analytically applying the differential operator to the kernel function. Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}c_i=\diffop{p_0}|_{x=x_{c}}=0$ completes the system: 
+	\begin{eqnarray}        
+          \begin{bmatrix} \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_n(x_{1}) & 1 \\ 
+            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_n(x_{2}) & 1\\ 
+            \vdots & \ddots & \ddots & \vdots & \vdots \\ 
+            \phi_{1}(x_n) & \phi_{2}(x_n) & \cdots & \phi_{n}(x_{n}) & 1 
+            \\ 1 & 1 & \cdots & 1 & 0 \end{bmatrix} 
+            \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_n \\ c_{n+1} \end{pmatrix} = \begin{pmatrix} \left.\diffop{\phi_1}(x)\ \right|_{x=x_c} \\  \left.\diffop{\phi_2}(x)\ \right|_{x=x_c} \\ \vdots \\  \left.\diffop{\phi_{n}}(x)\ \right|_{x=x_c} \\ 0 \end{pmatrix} \label{eq:rbffd_two_weight_system}
+   \end{eqnarray} 
+
+Solving Equation~\ref{eq:rbffd_weight_system}
+               %                         A c  &= B
+%                         \label{eqn:rbffd_simplified}
+
+
+
+%Solving Equation~\ref{eqn:rbffd_simplified} for stencils weights, $c$, and substituting into Equation~\ref{eq:derivFromFDWeights} reveals the similarity between RBF-FD and the general problem of RBF interpolation (see Equation~\ref{eq:rbf_interpolate_pt} and discussion): 
         \begin{align*} 
         \diffop{u(x_1)} &\approx (\phi^{-1}_s \phi_{\diffop{}_s})^T \begin{pmatrix} u \end{pmatrix} \\
         &\approx \vec{\phi}_{\diffop{}_s}^T \phi^{-T}_s \begin{pmatrix} u \end{pmatrix}
-        \label{eq:rbffd_approx_derivs}
         \end{align*}
         
 	
