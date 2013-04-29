@@ -64,15 +64,14 @@ In Radial Basis Function methods, radially symmetric functions provide a non-ort
 nodes of a point cloud. RBFs are univariate and a function of distance from a center point defined in $\R^D$, so 
 they easily extend into higher dimensions without significant change in programming complexity. Examples of commonly used RBFs from the literature are provided in Table~\ref{tbl:rbfs}; 2D representations of the same functions can be found in Figure~\ref{fig:rbf_examples}. 
 %When solving PDEs, infinitely smooth RBFs (e.g., MQ, IMQ, and GA) are usually preferred over non-smooth and compactly supported RBFs (e.g., TPS and W2), which suffer from slow convergence rates \cite{Chen2002}. 
-Figure~\ref{fig:rbf_dimension_example} illustrates the radial symmetry of RBFs---in this case, a Gaussian RBF---in the first three dimensions (i.e., $\R^{1,2,3}$). 
+Figure~\ref{fig:rbf_dimension_example} illustrates the radial symmetry of RBFs---in this case, a Gaussian RBF---in the first three dimensions. 
 
 RBF methods are based on a superposition of translates of these radially symmetric functions, providing a linearly independent but non-orthogonal basis used to interpolate between nodes in $D$-dimensional space. The interpolation problem---referred to as \emph{RBF scattered data interpolation}---seeks the unknown coefficients, $\vc = \{c_j\}$, that satisfy: 
  
 \begin{eqnarray*}
     \sum_{j=1}^{N} \phi_j(r(\vx)) c_{j}   = f(\vx),
 \end{eqnarray*}
-where $\phi_j(r(\vx))$ is an RBF centered at $\{\vx_j\}_{j=1}^{n}$, and the radial coordinate $r(\vx) = ||\vx-\vx_j||_2$ (i.e., Euclidean distance). The coefficients $\vc$ result in a smooth interpolant that collocates sample values $f(\vx_j)$. An example of RBF interpolation in 2D using 15 Gaussians is shown in Figure~\ref{fig:rbfInterpolation}.
-%, where  $\phi_j(r(\vx))$ is a Gaussian RBF centered at $\{\vx_j\}_{j=1}^{n}$. The radial coordinate is $r = \sqrt{(x-x_j)^2 + (y-y_j)^2}$.
+where $\phi_j(r(\vx))$ is an RBF centered at $\{\vx_j\}_{j=1}^{n}$. In theory the radial coordinate, $r(\vx)$, could be any distance metric, but is most often assumed to be $r(\vx) = ||\vx-\vx_j||_2$ (i.e., Euclidean distance), as it is here. The coefficients $\vc$ result in a smooth interpolant that collocates sample values $f(\vx_j)$. An example of RBF interpolation in 2D using 15 Gaussians is shown in Figure~\ref{fig:rbfInterpolation}. 
 
 
 %Infinitely smooth 
@@ -83,7 +82,7 @@ reformulate RBF methods as pseudospectral methods that have
 generated solutions to ill-posed problems for which Chebyshev-based and other pseudospectral methods 
 fail \cite{Fasshauer2006}. However, as with all methods, RBFs come with certain limitations. For example, RBF interpolation is---in general---not a well-posed problem, so it requires careful choice of positive definite or conditionally positive definite basis functions (see \cite{Iske2004, Fasshauer2007} for details). 
 
-RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon r)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. This inverse relationship is widely known as the \emph{Uncertainty Relation} \cite{Schaback1995, Iske2004}. 
+RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon\  r(\vx))$. For simplicity in what follows, we use the notation $\phi_j(\vx)$ to imply $\phi(\epsilon ||\vx-\vx_j||_2)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. This inverse relationship is widely known as the \emph{Uncertainty Relation} \cite{Schaback1995, Iske2004}. 
 Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2007, Fornberg2011a} allow for numerically stable computation of interpolants in the nearly flat RBF regime (i.e., $\epsilon \rightarrow 0$) where high accuracy has been observed \cite{Larsson2003, Fornberg2008}. 
 
 
@@ -105,11 +104,11 @@ attention received by multiquadrics.
 
 By 1990, the understanding of the scientific community regarding RBFs was sufficiently developed for collocating PDEs \cite{Kansa1990a,Kansa1990b}. PDE collocation seeks a solution of the form
 \begin{eqnarray*}
-(\diffop{u})(x_i) = \sum_{j=1}^{N} c_j \phi_j(x_i) = f(x_i)
+(\diffop{u})(x_i) = \sum_{j=1}^{N} \phi_j(x_i) c_j = f(x_i)
 \end{eqnarray*}
 where $\diffop{}$ is, in general, a nonlinear differential operator acting on $u(x)$. The solution $u(x)$ is expressed as a linear combination of $N$ basis functions $\phi_j(x)$, not necessarily RBFs: 
 $$
-u(x) = \sum_{i=1}^N c_i \phi_i(x)
+u(x) = \sum_{i=1}^N \phi_j(x) c_j 
 $$
 As in the problem of RBF scattered data interpolation, $ \vc = \{c_j\} $ is the unknown coefficient vector. 
 Under the assumption that $\mathcal{L}$ is a linear operator, one can collocate the differential equation. Alternatively, individual derivative operators can be expressed as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
@@ -201,7 +200,7 @@ Thus far, all cases of collocation and interpolation mentioned have assumed glob
 \end{cases}
 \label{eqn:csrbf}
 \end{equation}
-where a radius is defined past which the RBF has no influence on the interpolant. Note that the radius can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} approximates the complexity as dominated by $O(N)$ for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate provided by their choice of general sparse solver package. Fasshauer \cite{Fasshauer2007} provides a stationary multilevel collocation method based on CSRBF with $O(N)$ complexity, but the method is plagued by poor convergence. In the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
+where a radius is defined past which the RBF (in this case $\varphi(r)$) has no influence on the interpolant. Note that the radius can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} approximates the complexity as dominated by $O(N)$ for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate provided by their choice of general sparse solver package. Fasshauer \cite{Fasshauer2007} provides a stationary multilevel collocation method based on CSRBF with $O(N)$ complexity, but the method is plagued by poor convergence. In the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
 
 CSRBFs have attracted a lot of attention in applications. For example, in the field of dynamic surface and image deformation, compact support allows for local transformations which do not induce global deformation (see e.g., \cite{Yang2008, Lin2009, Correa2007}). 
 
@@ -276,16 +275,16 @@ including Navier-Stokes equations \cite{Shu2003} have all been considered.
 
 \section{Comparison of RBF Methods}
 
-We now detail the definition of RBF methods related to the solution of PDEs. 
+We now detail RBF methods for PDEs leading up to the derivation of RBF-FD. 
 
 Following \cite{Mouat2002}, consider a PDE expressed in terms of a (linear) differential operator, $\diffop$: 
-\begin{eqnarray}
+\begin{eqnarray*}
 \diffop{u} & = & f \on{\Interior} \\
 u &=& g \on{\Boundary}
-\end{eqnarray}
+\end{eqnarray*}
 where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{WrightFornberg06}); of course, this increases the complexity of a single time step. Then, the unknown solution, $u$, which produces the observations on the right hand side can be approximated by an interpolant function $u_{\phi}$ expressed as a linear combination of radial basis functions, $\{\phi_j(x) = \phi(\vectornorm{x-x_j})\}_{j=1}^{N}$, and polynomial functions$\{P_l(x)\}_{l=1}^{M}$:
 \begin{equation}
-	u_{\phi}(x) = \sum_{j=1}^{N} c_{j}  \phi_j(x) + \sum_{l=1}^{M} d_{l} P_l(x), \hskip1.5em P_l(x) \in \Pi^{D}_{p}
+	u_{\phi}(x) = \sum_{j=1}^{N}  \phi_j(x) c_{j} + \sum_{l=1}^{M}  P_l(x) d_{l}, \hskip1.5em P_l(x) \in \Pi^{D}_{p}
 	\label{eqn:pde_approx}
 \end{equation}
 where $\phi_j(x) = \vectornorm{x - x_j}$ ($\vectornorm{\cdot}$ is standard Euclidean distance). The 
@@ -296,85 +295,103 @@ second sum represents a linear combination of polynomials that enforces zero app
 To eliminate degrees of freedom for well-posedness, $p$ should be greater than or equal to the order of the chosen RBF
  (see Table~\ref{tbl:rbfs}) \cite{Iske2004}.  
 Note that Equation~\ref{eqn:pde_approx} is evaluated 
- at $x = \{x_i\}_{i=1}^{n}$ known 
+ at $\{x_j\}_{j=1}^{N}$ 
 data points through which the interpolant is required to pass with zero residual.  We refer to 
-the $x_i$'s (data points) points as \emph{collocation points}, usually taken as the RBF centers; although this is not a requirement.
+the $x_j$'s as \emph{collocation points} (a.k.a. trial points), taken as the RBF centers. The test points, $x$, usually coincide with collocation points, although this is not a requirement. 
 %$P_l(x)$ is needed to eliminate degrees of freedom for well-posedness \cite{Iske:2004}. 
 
-\subsection{RBF Scattered Data Interpolation}
 To clarify the role of the polynomial part in Equation~\ref{eqn:pde_approx}, it is necessary to
 put aside the PDE for the moment and consider only the problem of \emph{scattered data 
-interpolation} with Radial Basis Functions. Borrowing notation from \cite{Fasshauer2007, Iske2004}, 
+interpolation} with Radial Basis Functions.
+
+\subsection{RBF Scattered Data Interpolation}
+ Borrowing notation from \cite{Fasshauer2007, Iske2004}, 
 we seek an interpolant, $\mathcal{P}_f$, of the form
 \begin{eqnarray*}
-\mathcal{P}_f  & = & \sum_{j=1}^{N} c_{j}  \phi_j(x) = f(x) \\
-			& = & \sum_{j=1}^{N} \phi_j(x) c_{j} = f(x) \\
-\vec{\mathcal{P}_f} & = & {\phi}^T(x) c = f(x)
+\mathcal{P}_f = \sum_{j=1}^{N} \phi_j(x) c_{j} = f(x) \label{eq:rbf_scattered_data_interp}
 \end{eqnarray*}
 where $\mathcal{P}_f$ is expressed as a scalar product between the unknown coefficient weights $c_j$ and the radial basis functions $\phi_j(x)$.
 
+To obtain the unknown coefficients, $c_j$, form a linear system in terms of the trial points:
+\begin{eqnarray*}
+ \sum_{j=1}^{N} c_{j}  \phi_j(x) & = & f(x) \hskip1.5em  x = \{x_j\}_{j = 1}^{N} \\
+ \barray{c}{\phi}\parray{c}{ c } & = & \parray{c}{ f }
+\end{eqnarray*}
+The invertibility of this system depends on the choice of $\phi_j(x)$ and one typically chooses RBFs that are positive definite to avoid issues.
+
 %TODO: add RBF-PS clarification 
 % TODO: verify that choose has correct vars
-In many cases it is desirable to exactly reproduce functions of degree less than or equal to some order $m$. For RBF scattered data interpolation in one dimension, this can be achieved by adding a polynomial of order $m$ with $M =$${m+1}\choose{1}$ terms (e.g., $x^0, x^1, \cdots, x^{m}$). In higher dimensions, the terms would be: $1, x, y, xy, x^2y, xy^2, \cdots, x^{m}y^{m-1}, x^{m-1}y^{m}, x^my^m$. In $\R^D$, $M =$${m+D}\choose{D}$ \cite{Iske2004}, giving
+In many cases it is desirable to exactly reproduce functions of degree less than or equal to some order $m$ \cite{Fasshauer2007}. For RBF scattered data interpolation in one dimension, this can be achieved by adding a polynomial of order $m$ with $M =$${m+1}\choose{1}$ terms (e.g., $x^0, x^1, \cdots, x^{m}$). For $\R^2$, the terms would be: $1, x, y, xy, x^2y, xy^2, \cdots, x^{m}y^{m-1}, x^{m-1}y^{m}, x^my^m$. In $\R^D$, $M =$${m+D}\choose{D}$ \cite{Iske2004}, giving
 \begin{eqnarray}
-f(x) & = & \sum_{j=1}^{N} c_{j}  \phi_j(x)  +  \sum_{l=1}^{M} d_{l} P_l(x),  \hskip1.5em  P_l(x) \in \Pi^{D}_{m} \\
-f & = & \phi^T c + P^T d
+\sum_{j=1}^{N} c_{j}  \phi_j(x)  +  \sum_{l=1}^{M} d_{l} P_l(x) & = & f(x),  \hskip1.5em  P_l(x) \in \Pi^{D}_{m} \nonumber \\
+\left[ \begin{array}{c c} 
+	\phi & P
+	\end{array} \right] \left( \begin{array}{c}
+							c \\
+							d
+							 \end{array}
+						 \right) & = & \parray{c}{ f }
 \label{eqn:interpolation_constraints}
 \end{eqnarray}
-where the second summation (referred to as \emph{interpolation conditions} \cite{Iske2004}) ensures the minimum degree of the interpolant.  Notice, however, that the interpolation conditions add $M$ new degrees of freedom, so we must provide $M$ \emph{moment conditions} or constraints:
+where the second summation (referred to as \emph{interpolation conditions} \cite{Iske2004}) ensures the minimum degree of the interpolant.  Notice, however, that the interpolation conditions add $M$ new degrees of freedom, so we must provide $M$ 
+additional constraints to square the system. In this case:
 $$
 \sum_{j=1}^{N} c_{j} P_l(x_j) = 0,  \hskip1.5em  l=1,..., M 
 $$
 or 
-$$
-\PP^T {c}  = {0} 
-\label{eqn:moment_constraints}
-$$
-to guarantee that the moments of the interpolant vanish for the coefficients obtained, where the matrix
-$$ \PP^T = \parray{cccc}{P(x_1) & P(x_2) & \cdots & P(x_N)}  $$
-and 
-$$ P(x_j) = \parray{cccc}{P_1(x_j) & P_2(x_j) & \cdots & P_M(x_j)}^T . $$
-It is now possible again to write the interpolation as a linear system using Equations~\ref{eqn:interpolation_constraints} and \ref{eqn:moment_constraints}:%as
 \begin{eqnarray}
-\vec{\mathcal{P}_f} & = & \left[ \begin{array}{c c} 
-	\phi & \PP \\
-	\PP^T & 0
+P^T {c}  = {0}. 
+\label{eqn:extra_constraints}
+\end{eqnarray}
+It is now possible again to write the interpolation as a linear system using Equations~\ref{eqn:interpolation_constraints} and \ref{eqn:extra_constraints}:%as
+\begin{eqnarray}
+ \left[ \begin{array}{c c} 
+	\phi & P \\
+	P^T & 0
 	\end{array} \right] \left( \begin{array}{c}
-							\vec{c} \\
-							\vec{d}
+							c \\
+							d
 							 \end{array}
 						 \right) = \left( \begin{array}{c}
 							\vec{f} \\
 							0
 							 \end{array}
-						 \right) 
+						 \right) \label{eq:solve_rbf_scattered_interp}
 \end{eqnarray}
-%where it is assumed the collocation points coincide with RBF centers (giving $P = \PP$).
-This system then produces an interpolant capable of exactly approximating data from polynomials of degree less than or equal to $m$ \cite{Fasshauer2007}. 
+%This system then produces coefficients capable of exactly approximating data from polynomials of degree less than or equal to $m$ \cite{Fasshauer2007}. 
+Equation~\ref{eq:solve_rbf_scattered_interp}, typically a dense system except in the case of RBFs with compact support, can be solved efficiently via standard methods like LU-decomposition.
 
-Returning to the PDE, we postpone the issue of  achieving polynomial precision in approximation. However, it has been shown (see \cite{Fasshauer2007, Iske2004}) that some choices of RBFs (e.g. multiquadrics and thin-plate splines \cite{Hon2001}) are not positive definite and therefore there is no guarantee that the approximation is well-posed. A sufficient condition for well-posedness is that the matrix is \emph{conditionally positive definite}. In \cite{Fasshauer2007}, Fasshauer demonstrates that conditional positive definiteness of order $m$ is guaranteed when Equation~\ref{eqn:pde_approx} includes the full polynomial part (i.e., interpolation conditions) to match the order of the RBF. 
+After solving for the coefficients, the interpolant can be sampled at any test point $x_i$, which in general does not coincide with $\{x_j\}_{j=1}^{N}$, by returning to Equation~\ref{eq:rbf_scattered_data_interp}:
+\begin{eqnarray}
+u(x_i) = 
+\left[ \begin{array}{c c} 
+       \phi(x_i) &  P(x_i)
+	\end{array} \right]
+	  \left( \begin{array}{cc}  c \\ d  \end{array} \right) 
+	\label{eqn:interpolate_x}
+\end{eqnarray}
 
-Now, since $u_{\phi}(x)$ from Equation~\ref{eqn:pde_approx} cannot (in general) satisfy the PDE everywhere, we enforce the PDE at a set of collocation points, which are  distributed over both the interior and the boundary. Again, these points do not necessarily coincide with the RBF centers, but it is convenient for this to be true in practice. 
 
 \subsection{Reconstructing Solutions for PDEs}
-In the next few sections, we will generate collocation equations based on this general form: 
+In the next few subsections, we will generate collocation equations based on this general form: 
 \begin{eqnarray}
 \diffop{u_\phi(x)} &=& f(x) \on{\Interior} \label{eqn:colloc_interior}\\ 
 \boundop{u_\phi(x)} &=& g(x) \on{\Boundary}  \label{eqn:colloc_boundary} 
 \end{eqnarray}
-where the methods presented below will apply the differential operators, $\diffop{}$ and $\boundop{}$, to different choices of $u_\phi$ and different sets of collocation points. In many applications $\diffop{}$ is chosen as a differential operator (e.g., $\nabla$, $\nabla^2$) and $\boundop = I$ (i.e. identity operator for Dirichlet boundary conditions) for PDEs. There are also  applications where $\diffop{}$ is a convolution operator (see e.g., \cite{Carr2001, Carr2003}) capable of smoothing/de-noising a surface reconstructed from point clouds. 
+where the methods presented below will apply the differential operators, $\diffop{}$ and $\boundop{}$, to different choices of $u_\phi$ and different sets of collocation points. In many applications $\diffop{}$ is chosen as a differential operator (e.g., $\pd{}{x}$, $\nabla$, $\nabla^2$) and $\boundop = I$ (i.e. identity operator for Dirichlet boundary conditions) for PDEs. For RBF scattered data interpolation, $\diffop{} = I$. There are also  applications where $\diffop{}$ is a convolution operator (see e.g., \cite{Carr2001, Carr2003}) capable of smoothing/de-noising a surface reconstructed from point clouds. 
 
+%TODO: label x_j's as TRIAL and x_is as TEST points
 %\section{Approximating the Solution}
 For all the methods presented here a linear system is generated  
 $$
-A  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  =  \left( \begin{array}{cc}  f \\ 0  \end{array} \right) 
+A_{\diffop{}}  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  =  \left( \begin{array}{cc}  f \\ 0  \end{array} \right) 
 $$
 \begin{equation}
-  \left( \begin{array}{cc}  c \\ d  \end{array} \right) = A^{-1}  \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
+  \left( \begin{array}{cc}  c \\ d  \end{array} \right) = A^{-1}_{\diffop{}}  \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
   \label{eqn:solve_coeffs}
  \end{equation}
- where matrix $A$ depends on the choice of collocation method. 
-Once the linear system is solved, the value, $u(x_i)$, at an unknown point, $x_i$, can be reconstructed using the coefficients with the following inner product: 
+ where matrix $A_{\diffop{}}$ depends on the choice of collocation method. 
+Once the linear system is solved, the value, $u(x_i)$, at an unknown test point, $x_i$, can be reconstructed using the coefficients with the following inner product: 
 \begin{eqnarray}
 u(x_i) = 
 \left[ \begin{array}{c c} 
@@ -384,27 +401,23 @@ u(x_i) =
 	  \left( \begin{array}{cc}  c \\ d  \end{array} \right) 
 	\label{eqn:solve_u}
 \end{eqnarray}
-Likewise, to find differential quantities we have: 
+
+Here we substitute $A$ for the row vector in Equation~\ref{eqn:solve_u} to get the interpolated value
 \begin{eqnarray}
-\diffop{u(x_i)} = 
-%\left[ \begin{array}{c c c c | c c c c }
-\left[\begin{array}{cc}
-        \diffop(\phi^T)(x_i) &  \diffop(P^T)(x_i) 
-	%\diffop{\phi}_1(x_i) & \diffop{\phi}_2(x_i) & \cdots & \diffop{\phi}_N(x_i) & \diffop{P}_1(x_i) & \diffop{P}_2(x_i) & \cdots & \diffop{P}_M(x_i)
-	\end{array} \right] 
-	\left( \begin{array}{c}	{c} \\
-					{d}
-		 \end{array}
-						 \right) = A_\diffop{}  \left( \begin{array}{cc}  c \\ d  \end{array} \right)
-	\label{eqn:solve_uxx}
-\end{eqnarray}
-Relevant to the discussion of RBF-PS and computational and memory efficient global RBF methods, the interpolation problem can be rewritten independent of coefficients. Here we substitute $A_\diffop{}$ for the right hand side row vector. Also, Equation~\ref{eqn:solve_coeffs} can be substituted into Equation~\ref{eqn:solve_uxx} to get
-\begin{eqnarray}
-\diffop{u(x_i)} = A_\diffop{} A^{-1} \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
+\diffop{u(x_i)} = A A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
 	\label{eqn:solve_rbf}
 \end{eqnarray}
-where the vector-matrix inner product $(A_\diffop{} A^{-1})$ is a row-vector.  Since the coefficient vectors ${c}$ and ${d}$ are the same for all $x_i$, we can group the evaluation of $\diffop{u(x_i)}$ for $i=1,...,n$ as a matrix-vector multiplication where the matrix rows correspond to $(A_\diffop{} A^{-1})$ for each $x_i$. 
+where the vector-matrix inner product $(A A^{-1}_{\diffop{}})$ is a row-vector. Since the coefficient vectors ${c}$ and ${d}$ are the same for all $x_i$, we can group the evaluation of $\diffop{u(x_i)}$ for $i=1,...,n$ as a matrix-vector multiplication where the matrix rows correspond to $(A_\diffop{} A^{-1})$ for each $x_i$. 
 
+
+%TODO: mention equation~\ref{eqn:solve_rbf} can be precomputed DM applied to f for collocation points in pseudo-spectral method.  
+%Relevant to the discussion of RBF-PS and computational and memory efficient global RBF methods, if $A$ contains rows corresponding to the interpolation problem can be rewritten independent of coefficients by assembling a differentiation 
+
+\subsection{PDE Methods} 
+\authnote{Fix ref eq.} 
+Returning to the PDE, we postpone the issue of  achieving polynomial precision in approximation. However, it has been shown (see \cite{Fasshauer2007, Iske2004}) that some choices of RBFs (e.g. multiquadrics and thin-plate splines \cite{Hon2001}) are not positive definite and therefore there is no guarantee that the approximation is well-posed. A sufficient condition for well-posedness is that the matrix is \emph{conditionally positive definite}. In \cite{Fasshauer2007}, Fasshauer demonstrates that conditional positive definiteness of order $m$ is guaranteed when Equation~\ref{eqn:pde_approx} includes the full polynomial part (i.e., interpolation conditions) to match the order of the RBF. 
+
+Now, since $u_{\phi}(x)$ from Equation~\ref{eqn:pde_approx} cannot (in general) satisfy the PDE everywhere, we enforce the PDE at a set of collocation points, which are  distributed over both the interior and the boundary. Again, these points do not necessarily coincide with the RBF centers, but it is convenient for this to be true in practice. 
 
 \subsubsection{Kansa's Method}
 
@@ -412,17 +425,17 @@ The first global RBF method for PDEs, \emph{Kansa's method} \cite{Kansa1990a, Ka
 \begin{eqnarray}
 \diffop{u_\phi(x_i)} = \sum_{j=1}^{N}c_j\diffop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \diffop{P_l(x_i)} &=&f(x_i)  \hskip1.5em i = 1,...,n_I  \label{eqn:kansa_interior} \\ 
 \boundop{u_\phi(x_i)} = \sum_{j=1}^{N}c_j \boundop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \boundop{P_l(x_i)} &=& g(x_i)  \hskip1.5em i = n_I + 1, \cdots, n \label{eqn:kansa_boundary} \\
-\sum_{j=1}^{N} c_j P_l(x_j) & = & 0 \hskip3.0em l=1,\cdots,M \label{eqn:kansa_moments} 
+\sum_{j=1}^{N} c_j P_l(x_j) & = & 0 \hskip3.0em l=1,\cdots,M \label{eqn:kansa_constraints} 
 \end{eqnarray}
 where $n_I$ are the number of interior collocation points, with the number of boundary collocation points equal to $n - n_I$. First, observe that the differential operators are applied directly to the RBFs inside summations, rather than first solving the scattered data interpolation problem and then applying the operator to the interpolant.  Second, since the basis functions are known analytically, it is possible (although sometimes painful) to derive $\diffop{\phi}$ (refer to \cite{Fasshauer2007} for RBF derivative tables); the same is true for the polynomials $P_l$. 
 
 We can now reformulate Kansa's method as the linear system: 
 \begin{eqnarray}
-\left[ \begin{array}{c c} 
+\underbrace{\left[ \begin{array}{c c} 
 	\phi_\diffop{} & P_\diffop{} \\
 	\phi_\boundop{} & P_\boundop{} \\
 	P^T & 0
-	\end{array} \right]  \left( \begin{array}{c}
+	\end{array} \right]}_{A_{\diffop{}}}  \left( \begin{array}{c}
 							{c} \\
 							{d}
 							 \end{array}
@@ -434,7 +447,10 @@ We can now reformulate Kansa's method as the linear system:
 						 \right) 
 	\label{eqn:kansa_method}
 \end{eqnarray}
-where $\phi_\diffop{} = \diffop{\phi}$, $P_\diffop{} = \diffop{P}$ are the interior components (Equation~\ref{eqn:kansa_interior}), $\phi_\boundop{}$ and $P_\boundop{}$ are the boundary components (Equation~\ref{eqn:kansa_boundary}), and $P^T = \left[P_\diffop{}^T \ \ P_\boundop{}^T\right]$ are moment constraints for both interior and boundary polynomial parts (Equation~\ref{eqn:kansa_moments}). From Equation~\ref{eqn:kansa_method} it should be clear why Kansa's method is also known as the \emph{Unsymmetric} collocation method. 
+% TODO: add underline stating that matrix is A. 
+
+
+where $\phi_\diffop{} = \diffop{\phi}$, $P_\diffop{} = \diffop{P}$ are the interior components (Equation~\ref{eqn:kansa_interior}), $\phi_\boundop{}$ and $P_\boundop{}$ are the boundary components (Equation~\ref{eqn:kansa_boundary}), and $P^T = \left[P_\diffop{}^T \ \ P_\boundop{}^T\right]$ are constraints for both interior and boundary polynomial parts (Equation~\ref{eqn:kansa_constraints}). From Equation~\ref{eqn:kansa_method} it should be clear why Kansa's method is also known as the \emph{Unsymmetric} collocation method. 
 
 %\toevan{Isn't $N+M=n$? For each case, you must put the proper relationships between $N$, $M$, $n_I$, $n$ so that the number of constraints equals the number of relations.}
 Recall that the matrix in Equation~\ref{eqn:kansa_method} has no guarantee of non-singularity \cite{Fasshauer1997}; however, singularities are rare in practice \cite{Larsson2003}. 
@@ -448,19 +464,19 @@ u_\phi(x_i) & = & \sum_{j=1}^{N_I}  c_j \diffop{\phi_j(x_i)} + \sum_{j=N_{I} + 1
 \end{eqnarray}
 as the interpolant passing through collocation points. Note $N_I$ is used here to specify the number of RBF centers in the interior of $\Omega$. Here the interpolant is similar to Equation~\ref{eqn:pde_approx}, but a change of basis functions is used for the expansion: $\diffop{\phi_j(x)}$ on the interior and $\boundop{\phi_j(x)}$ on the boundary.
 
-Collocating (i.e., substituting Equation~\ref{eqn:fasshauer_approx} into Equations~\ref{eqn:kansa_interior}-\ref{eqn:kansa_moments}) we get: 
+Collocating (i.e., substituting Equation~\ref{eqn:fasshauer_approx} into Equations~\ref{eqn:kansa_interior}-\ref{eqn:kansa_constraints}) we get: 
 \begin{eqnarray}
 \sum_{j=1}^{N_I}c_j\diffop^2{\phi_j(x_i)} + \sum_{j=N_I+1}^{N}c_j\diffop{\boundop{\phi_j(x_i)}} + \sum_{l=1}^{M}d_l \diffop{P_l(x_i)} &=&f(x_i)  \hskip1.5em i = 1,...,n_I  \label{eqn:fasshauer_interior} \\ 
 \sum_{j=1}^{N_I}c_j\boundop{\diffop{\phi_j(x_i)}} + \sum_{j=N_I+1}^{N}c_j\boundop^2{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \boundop{P_l(x_i)} &=& g(x_i)  \hskip1.5em i = n_I + 1,..., n \label{eqn:fasshauer_boundary} \\
-\sum_{j=1}^{N_I} c_j \diffop{P_l(x_j)} + \sum_{j=N_I + 1}^{N} c_j \boundop{P_l(x_j)} &=& 0 \hskip3.0em l=1,...,M \label{eqn:fasshauer_moments} 
+\sum_{j=1}^{N_I} c_j \diffop{P_l(x_j)} + \sum_{j=N_I + 1}^{N} c_j \boundop{P_l(x_j)} &=& 0 \hskip3.0em l=1,...,M \label{eqn:fasshauer_constraints} 
 \end{eqnarray}
 which is reformatted as the linear system: 
 \begin{eqnarray}
-\left[ \begin{array}{c c c} 
+\underbrace{\left[ \begin{array}{c c c} 
 	\phi_{\diffop{}\diffop{}} & \phi_{\diffop{}\boundop{}} & P_\diffop{} \\
 	\phi_{\boundop{}\diffop{}} & \phi_{\boundop{}\boundop{}} & P_\boundop{} \\
 	P^T_{\diffop{}} & P^T_{\boundop{}} & 0 \\
-	\end{array} \right] \left( \begin{array}{c}
+	\end{array} \right]}_{A_{\diffop{}}} \left( \begin{array}{c}
 							{c} \\
 							{d}
 							 \end{array}
@@ -485,7 +501,7 @@ In \emph{Direct collocation} (see \cite{Larsson2003, Fedoseyev2002}, the interpo
 \begin{eqnarray}
 \sum_{j=1}^{N}c_j\diffop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \diffop{P_l(x_i)} &=&f(x_i)  \hskip1.5em i = 1,...,n  \label{eqn:direct_interior} \\ 
 \sum_{j=1}^{N}c_j\boundop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \boundop{P_l(x_i)} &=& g(x_i)  \hskip1.5em i = 1,..., n_B=n-n_I \label{eqn:direct_boundary} \\
- \sum_{j=1}^{N} c_j P_l(x_j) &=& 0 \hskip3.0em l=1,...,M \label{eqn:direct_moments} 
+ \sum_{j=1}^{N} c_j P_l(x_j) &=& 0 \hskip3.0em l=1,...,M \label{eqn:direct_constraints} 
 \end{eqnarray}
 Reformulating as a linear system we get: 
 \begin{eqnarray}
@@ -512,7 +528,8 @@ careful inspection of the index $i$ in Equations~\ref{eqn:kansa_interior} and \r
 %TODO: RBF-PS
 \subsubsection{RBF-PS}
 
-\authnote{Bookmark (Completed above this line)} RBF-PS applies the same logic as Kansa's and Fasshauer's collocation methods. However, rather than explicitly form the interpolant coefficients prior to approximating derivatives everywhere with the smooth interpolant, RBF-PS assembles a discrete differentiation matrix to approximate derivatives only at the collocation points. 
+RBF-PS applies the same logic as Kansa's and Fasshauer's collocation methods. However, rather than explicitly form the interpolant coefficients prior to approximating derivatives everywhere with the smooth interpolant, RBF-PS assembles a discrete differentiation matrix to approximate derivatives only at the collocation points. 
+\authnote{here} 
 
 \subsection{Local Methods}
 In the methods above, globally supported RBFs were required. However, the latest trend is to use RBFs defined with some cut-off radius to enforce compact support. In some cases, authors have used the compact support to produce a single (large) sparse system for interpolation (see e.g., \cite{Wang2002, Liu2005, Correa2007, Yang2008, Lin2009}). Other approaches use compact support to produce local linear systems defined at each collocation point. Examples of this include \cite{Sarler2006, Vertnik2006} for Kansa's method, \cite{Stevens2008a, Stevens2009a, Stevens2009b} for Fasshauer's method. To our knowledge no one has considered local Direct collocation.  Also, instead of specifying a cut-off radius, some authors specify the exact stencil size (i.e., number of neighboring points to include); see e.g., \cite{Divo2007, Stevens2009b}. 
@@ -831,8 +848,8 @@ Solving Equation~\ref{eqn:rbffd_simplified} for stencils weights, $\vec{c}$, and
 Again, based on the choice of RBF, positive definiteness of the system is ensured by adding the same constraints as Equation~\ref{eq:additional_constraints}, but note differential quantities for $\vec{\PP}$ on the right hand side: 
 	\begin{align}
 		\begin{pmatrix}
-		\phi_s & \PP \\
-		\PP^T & 0
+		\phi_s & P \\
+		P^T & 0
 		\end{pmatrix} \begin{bmatrix}
 							c \\ 
 							d
@@ -1043,7 +1060,6 @@ the equation solved takes the form
 \pd{u}{t} = - D u + H u,
 \label{eq:evaluation_with_hyperviscosity}
 \end{equation}
-%Address the issue of continuous versus discrete form. Use words operator and matrix properly. \authnote{Double check}
 where $D$ is the PDE operator, and $H$ is the hyperviscosity filter operator.
 Applying hyperviscosity shifts all the eigenvalues of D to the left half of the complex plane. 
 This shift is controlled by $k$, the order of the Laplacian, and a scaling parameter $\gamma_c$, defined by
