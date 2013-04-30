@@ -16,8 +16,8 @@
 
 \definecolor{myBGcolor}{HTML}{3E3535}
 \definecolor{myTextcolor}{HTML}{CFECEC}
-%\pagecolor{myBGcolor}
-%\color{myTextcolor}
+\pagecolor{myBGcolor}
+\color{myTextcolor}
 
 \begin{document}
 \fi
@@ -42,10 +42,536 @@
 %		- 
 
 
-%\input{related_work.tex} 
+
+\part{Preliminaries}
+
+
+\chapter{RBF Methods for PDEs}
+
+The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. However, at the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions to generate weights for finite-differencing stencils, utilizing the weights in turn to approximate derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
+
+As ``meshless" methods, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $D$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
+
+This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the 
+RBF-generated Finite Differences (RBF-FD) method. Beginning with a brief introduction to RBFs and a historical survey, we attempt to classify related work into three three types: global, compact, and local methods. Following this, the general approximation problem is introduced, with a look at the core of all three method classificiations: RBF scattered-data interpolation. %We categorize existing methods for solving PDEs with RBFs as either global 
+%or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies 
+%the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant 
+%at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
+
+Three global RBF collocation methods are presented: Kansa's method, Fasshauer's method and Direct collocation. Within the historical context of RBF methods we highlight extensions that lead to local interpolation matrices instead of a single global interpolation matrix. Additionally, the RBF-pseudospectral (RBF-PS) method is shown as an extension to fit global RBF methods into the framework of pseudo-spectral methods. %Finally, we discuss the most recent methods for solving PDEs, emphasizing RBF-FD as the focus of this work. 
+
+\section{Survey of Related Work}
+
+In Radial Basis Function methods, radially symmetric functions provide a non-orthogonal basis used to interpolate between 
+nodes of a point cloud. RBFs are univariate and a function of distance from a center point defined in $\R^D$, so 
+they easily extend into higher dimensions without significant change in programming complexity. Examples of commonly used RBFs from the literature are provided in Table~\ref{tbl:rbfs}; 2D representations of the same functions can be found in Figure~\ref{fig:rbf_examples}. 
+%When solving PDEs, infinitely smooth RBFs (e.g., MQ, IMQ, and GA) are usually preferred over non-smooth and compactly supported RBFs (e.g., TPS and W2), which suffer from slow convergence rates \cite{Chen2002}. 
+Figure~\ref{fig:rbf_dimension_example} illustrates the radial symmetry of RBFs---in this case, a Gaussian RBF---in the first three dimensions. 
+
+RBF methods are based on a superposition of translates of these radially symmetric functions, providing a linearly independent but non-orthogonal basis used to interpolate between nodes in $D$-dimensional space. The interpolation problem---referred to as \emph{RBF scattered data interpolation}---seeks the unknown coefficients, $\vc = \{c_j\}$, that satisfy: 
+ 
+\begin{eqnarray*}
+    \sum_{j=1}^{N} \phi_j(r(\vx)) c_{j}   = f(\vx),
+\end{eqnarray*}
+where $\phi_j(r(\vx))$ is an RBF centered at $\{\vx_j\}_{j=1}^{n}$. In theory the radial coordinate, $r(\vx)$, could be any distance metric, but is most often assumed to be $r(\vx) = ||\vx-\vx_j||_2$ (i.e., Euclidean distance), as it is here. The coefficients $\vc$ result in a smooth interpolant that collocates sample values $f(\vx_j)$. An example of RBF interpolation in 2D using 15 Gaussians is shown in Figure~\ref{fig:rbfInterpolation}. 
+
+
+%Infinitely smooth 
+
+RBFs have been shown in 
+some cases to have exponential convergence for function approximation \cite{Fasshauer2007}. It is also possible to 
+reformulate RBF methods as pseudospectral methods that have 
+generated solutions to ill-posed problems for which Chebyshev-based and other pseudospectral methods 
+fail \cite{Fasshauer2006}. However, as with all methods, RBFs come with certain limitations. For example, RBF interpolation is---in general---not a well-posed problem, so it requires careful choice of positive definite or conditionally positive definite basis functions (see \cite{Iske2004, Fasshauer2007} for details). 
+
+RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon\  r(\vx))$. For simplicity in what follows, we use the notation $\phi_j(\vx)$ to imply $\phi(\epsilon ||\vx-\vx_j||_2)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. This inverse relationship is widely known as the \emph{Uncertainty Relation} \cite{Schaback1995, Iske2004}. 
+Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2007, Fornberg2011a} allow for numerically stable computation of interpolants in the nearly flat RBF regime (i.e., $\epsilon \rightarrow 0$) where high accuracy has been observed \cite{Larsson2003, Fornberg2008}. 
+
+
+\input{rbffd_methods_content/rbf_table}
+
+\input{rbffd_methods_content/rbf_examples}
+
+\input{rbffd_methods_content/rbf_interp_example}
+
+%TODO: expand with new literature since 2009
+%TODO: any new methods?
+
+
+RBF methods for interpolation first appeared in 1971 with Hardy's seminal research on multiquadrics
+\cite{Hardy1971}. In his 1982 survey of scattered data interpolation methods \cite{Franke1982}, Franke rated multiquadrics first-in-class against 28 other methods (3 of which were RBFs) \cite{Franke1982}. Many other RBFs, 
+including those presented in Table~\ref{tbl:rbfs} have been applied in literature, but for PDEs in particular, none have rivaled the 
+attention received by multiquadrics. 
+
+
+By 1990, the understanding of the scientific community regarding RBFs was sufficiently developed for collocating PDEs \cite{Kansa1990a,Kansa1990b}. PDE collocation seeks a solution of the form
+\begin{eqnarray*}
+(\diffop{u})(x_i) = \sum_{j=1}^{N} \phi_j(x_i) c_j = f(x_i)
+\end{eqnarray*}
+where $\diffop{}$ is, in general, a nonlinear differential operator acting on $u(x)$. The solution $u(x)$ is expressed as a linear combination of $N$ basis functions $\phi_j(x)$, not necessarily RBFs: 
+$$
+u(x) = \sum_{i=1}^N \phi_j(x) c_j 
+$$
+As in the problem of RBF scattered data interpolation, $ \vc = \{c_j\} $ is the unknown coefficient vector. 
+Under the assumption that $\mathcal{L}$ is a linear operator, one can collocate the differential equation. Alternatively, individual derivative operators can be expressed as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
+In all cases, a linear system of equations arises, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While we restrict the $\phi_j(x)$ to RBFs or various operators applied to the RBFs, we note that spectral methods, finite-element or spectral-element methods can be formulated in a similar way with different choices of basis functions.  Of course, $u$ can be a vector of unknown variables ($\vc$ then becomes a matrix). 
+
+In Table~\ref{tbl:rbfcolloctypes} we classify references according to their choice of collocation method and RBF 
+interpolation type. 
+There are three main categories of RBF interpolation; we list them in Table~\ref{tbl:interp_types}. The first is \emph{Global} in the case that a single, large ($N\times N$) and 
+dense matrix corresponding to globally supported RBFs is inverted; second, \emph{Compact} if compactly supported RBFs are used to 
+produce a single, large, but sparse matrix; and third, \emph{Local} if compactly supported RBFs are used to produce many small but 
+dense matrices with one corresponding to each collocation point. In all three cases the matrices are symmetric and with the correct choice of RBF they are at least conditionally positive definite. 
+
+\begin{table}[t]
+   \centering
+   \begin{tabular}{E | C | C | C | c | } % Column formatting, @{} suppresses leading/trailing space
+   Interpolation Type & Dense/Sparse $A$ & Dim($A$) ($N_S \ll N$) &  \# of $A^{-1}$  & RBF Support \\ 
+   \hline \hline
+   Global & Dense & $N \times N$ & 1 & Global \\
+   Compact & Sparse & $N \times N$ & 1 & Compact \\
+   Local & Dense & $N_S \times N_S$ & N & Global/Compact
+   \end{tabular}
+   \caption{RBF interpolation types and properties, assuming a problem with $N$ nodes.}
+   \label{tbl:interp_types}
+\end{table}
+
+
+We note that three types of collocation occur throughout the RBF literature: 
+Kansa's unsymmetric collocation method \cite{Kansa1990a, Kansa1990b}, Fasshauer's symmetric collocation method \cite
+{Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}.% While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  %A full explanation of RBF based collocation is deferred to Chapter~\ref{chap:rbf_pde}. 
+
+Prior to launching into derivation each RBF method, we first survey the classifications to highlight benefits, shortcomings, and to provide a brief historical context. A survey of related work in the RBF community that involves parallelization and optimization is deferred to Chapter~\ref{chap:parallel_rbf}. 
+
+\subsection{Global RBF Methods}
+
+\emph{Kansa's method} \cite{Kansa1990a, Kansa1990b} (a.k.a. unsymmetric collocation) was the first RBF method for PDEs, and is still the most frequently used method. The idea behind Kansa's method is that an 
+approximate solution to the PDE can be found by finding an interpolant which satisfies the differential operator with zero residual at a set of \emph{collocation points} (these coincide with the RBF centers). To find the interpolant, the differential equation is formulated as a two block (unsymmetric) linear system with: 1) the approximation of values 
+at boundary 
+points with boundary data only, and 2) the approximation of interior points by directly applying the differential operator. It was 
+shown in \cite{Fasshauer1997, Hon2001} that the unsymmetric linear system produced by Kansa's method does not guarantee 
+non-singularity; although it is also noted that in practice singularities are rare encounters \cite{Larsson2003}. 
+
+The second alternative for RBF collocation, is based on Hermite scattered 
+data interpolation (see \cite{Wu1992}). The so-called \emph{Fasshauer} or \emph{Symmetric Collocation} method (\cite{Fasshauer1997}) 
+performs a change of basis for the interpolant by directly applying the differential operator to the RBFs. It then collocates using the same approach as Kansa's method \cite{Stevens2009b, Larsson2003}. The resulting block structure of the linear system is symmetric and 
+guaranteed to be non-singular \cite{Fasshauer1997}. In comparison to Kansa's method, the disadvantages of Fasshauer's method 
+include: a) requirement of higher order differentiability of the basis functions (to satisfy double application of the differential operator)
+% it has stronger regularity assumptions (it is Hermite interpolation), 
+and b) the linear system is larger and more complex to form
+%, and c) it is not ideally suited for non-linear problems
+ \cite{Fasshauer2007}. As \cite{Hon2001} points out, 
+the possible existence of a singularity in Kansa's method is not enough to justify the added difficulties of using Fasshauer's 
+method.
+
+%TODO: refs that refer to global RBF methods and RBF-PS as just RBF methods. 
+
+The last collocation method, \emph{Direct Collocation}, was introduced by Fedoseyev, Friedman and Kansa
+ \cite{Fedoseyev2002} and satisfies the differential operator on the interior and the boundary. Larsson and Fornberg \cite{Larsson2003} observe that this third method has a matrix structure similar to that found in Kansa's method; however, it is noted that the dimensions of the matrix blocks for each method differ. This is due to collocation constraints added for 
+the differential operator applied to the boundary. Aside from the survey on RBF collocation presented by Larsson and Fornberg \cite{Larsson2003}, no related 
+work was found that applied, or investigated, this method further.  
+
+Both Kansa's method and Fasshauer's methods were shown in \cite{Fasshauer2006} to fit well in the generalized framework of pseudo-spectral methods with a subtle change in algorithm. While collocation methods explicitly compute the coefficients for a continuous derivative approximation, their alternates, referred to in literature as RBF-pseudospectral (RBF-PS) methods, never explicitly compute the interpolant coefficients. Instead, a differentiation matrix (DM) is assembled and used to approximate derivates at the collocation points only \cite{FasshauerZhang2007}. Since most computational models are simply concerned with the solution at collocation points, the change to assemble DMs as in RBF-PS is organic. 
+
+
+Following the evolution of the RBF-PS algorithm, applications of global RBFs in the classic collocation sense (i.e., without the RBF-PS DMs) become impractical. This statement stems from the algorithmic complexity of each method. 
+%As discussed in \cite{Fasshauer2007, FlyerWright09}, RBF methods result in matrices that are full. The 
+Global RBF methods result in full matrices \cite{Fasshauer2007}. The global collocation methods then scale on the order of $O(N^3)$ floating point operations (FLOPs) to solve for weighting coefficients on a given node layout, plus $O(N^2)$ to apply the weights for derivatives. If time-stepping is required, global collocation methods must recompute the time-dependent coefficients with additional cost dominated by $O(N^3)$ operations. RBF-PS methods have similar requirements for $O(N^3)$ operations to assemble the differentiation matrix and $O(N^2)$ to apply for derivatives. However, by avoiding time-dependent coefficients, RBF-PS methods only apply the differentiation matrix each time-step for $O(N^2)$ operations. As an aside, the $O(N^3)$ complexity for each method---typically due to an LU-decomposition, with subsequent forward- and back-solves---could be reduced. While not in mainstream use by the RBF community, \cite{Morse2005} correctly points out that the use of iterative solvers could reduce complexity of preprocessing to the order of $O(N^2)$. 
+%For mid- to large-scale problems, in the unlikely event that conditioning of the system is not a limiting factor, the cost of the method is still seen as prohibitively high. 
+
+Hon et al. \cite{Hon1999} employed Kansa's method to solve shallow water equations for Typhoon simulation.
+In \cite{FlyerWright09}, Flyer and Wright employed RBF-PS (Kansa method) for the solution of shallow water equations on a sphere. Their 
+results show that RBFs allow for longer time steps with spectral accuracy. The survey \cite{FlyerFornberg11} by Flyer and Fornberg showcases RBF-PS (Kansa) out-performing some of the of the best available methods in geosciences, namely: Finite Volume, Spectral Elements, Double Fourier, and Spherical Harmonics. When applied to problems such as transport on the sphere \cite{FlyerWright07}, shallow water equations \cite{FlyerWright09}, and 3D mantle convection\cite{WrightFlyerYuen10}, RBF-PS consistently required fewer time steps, and a fraction of the nodes for similar accuracy \cite{FlyerFornberg11}. 
+%TODO: add \cite{Neves2009}
+
+%
+%In the survey on RBF collocation presented by Larsson and Fornberg \cite{Larsson2003}, it was found that performance of the 
+%collocation methods depends on the choice of RBFs (i.e., whether they are infinitely smooth or piecewise smooth). Their end 
+%conclusion, however, was that infinitely smooth RBFs are preferred for Elliptic PDEs as they do not require node placement 
+%optimization.
+
+\input{rbffd_methods_content/rbftype_table}
+
+
+\subsection{Compactly Support RBFs} 
+
+Thus far, all cases of collocation and interpolation mentioned have assumed globally supported RBFs. While global RBFs are well-studied and have nice properties, a major limitation is the large, dense system that must be solved. One alternative to global support is to use a set of compactly supported RBFs (CSRBFs) that are defined as: 
+\begin{equation}
+\phi(r) = \begin{cases} \varphi(r) & r \in [0,1]\\
+0 & r > 1
+\end{cases}
+\label{eqn:csrbf}
+\end{equation}
+where a radius is defined past which the RBF (in this case $\varphi(r)$) has no influence on the interpolant. Note that the radius can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} approximates the complexity as dominated by $O(N)$ for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate provided by their choice of general sparse solver package. Fasshauer \cite{Fasshauer2007} provides a stationary multilevel collocation method based on CSRBF with $O(N)$ complexity, but the method is plagued by poor convergence. In the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
+
+CSRBFs have attracted a lot of attention in applications. For example, in the field of dynamic surface and image deformation, compact support allows for local transformations which do not induce global deformation (see e.g., \cite{Yang2008, Lin2009, Correa2007}). 
+
+We note that sparsity and spectral accuracy cannot be achieved simultaneously. 
+
+
+\subsection{Local RBF Methods}
+% TODO: review these papers
+Around 2005, \v{S}arler and Vertnik \cite{Sarler2006, Vertnik2006} demonstrated that if compactly supported RBFs are chosen, the traditional global 
+collocation matrix from Kansa's method, can be avoided altogether in favor of small localized collocation matrices defined for 
+each node. Local collocation still faces possible ill-conditioning and singularities 
+like global collocation, but make it easier to distribute computation across parallel systems. Also, the smaller linear systems can be 
+solved 
+with less conditioning issues. In \cite{Sarler2006}, the authors consider 2D diffusion problems. Divo and Kassab \cite{Divo2007} 
+employ the 
+method for Poisson-like PDEs including fluid flow and heat transfer. Kosec and \v{S}arler \cite{Kosec2008} apply the 
+same technique to solve coupled heat transfer and fluid flow problems.
+
+In similar fashion, Stevens et al. \cite{Stevens2009a} introduced a local version of 
+Fasshauer's method called \emph{local Hermitian interpolation}. The authors have applied their method to 3D soil 
+problems based on transient Richards' equations \cite{Stevens2008a, Stevens2009a, Stevens2009b}.
+
+
+\subsection{Recent Advances in Conditioning}
+
+Recently, Fornberg and Wright 
+\cite{Fornberg2004} presented the \emph{Contour--Pad\'{e} algorithm}, which allows for numerically stable 
+computation of highly 
+accurate interpolants for (very small) cases typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). Larsson and Fornberg \cite{Larsson2003} 
+applied the 
+algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method. Note that currently, the Contour-Pad\'{e} 
+algorithm was only studied for global RBF interpolation, not for compact or local methods. 
+
+The \emph{RBF-QR} method, an alternative for numerically stable computation in the limit as $\epsilon \rightarrow 0$, was introduced by Fornberg  and 
+Piret \cite{Fornberg2007} in context of a sphere, and later extended to planar 2D problems in \cite{Fornberg2009b}. The 
+RBF-QR 
+method is simple 
+to implement (less than 100 lines of Matlab code), and it allows solution of large problems that are typically ill-conditioned. Fornberg, Larsson and Flyer \cite{Fornberg2009b} successfully applied RBF-QR on large problems with 6000 nodes for globally supported basis functions. 
+%TODO: add mention of bengt's latest on RBF-QR \cite{Fornberg2011a, Fornberg2011b}
+
+With these two algorithms, global RBF methods have overcome most ill-conditioning issues for small to mid-sized problems. Unfortunately, both Contour-Pad\'{e} and RBF-QR fail for large enough problems due to ill-conditioning. As the number of RBFs increases beyond a few thousand nodes it is impossible to avoid  ill-conditioning of the extremely large interpolation matrix.
+
+This reveals the benefit of local methods, which decrease the number of RBFs and ill-conditioning. However, in the limit as local stencil size increases to include all nodes in a domain, the local and global method are equivalent; thus it is known that local methods also suffer extreme ill-conditioning around 2000 nodes per stencil \cite{Shu2006}. To our our knowledge, no research has yet been published that applies the RBF-QR method to RBF-FD stencils.
+
+%
+%In 2002, Mouat and Beatson \cite{Mouat2002} suggested that Matern functions would be more accurate than the more 
+%commonly chosen multiquadrics. 
+%The authors also considered the problem of a large number of nodes with a discussion of a 
+%domain decomposition method for PDE solution. 
+
+
+\section{Comparison of RBF Methods}
+
+We now detail RBF methods for PDEs leading up to the derivation of RBF-FD. 
+
+Following \cite{Mouat2002}, consider a PDE expressed in terms of a (linear) differential operator, $\diffop$: 
+\begin{eqnarray*}
+\diffop{u} & = & f \on{\Interior} \\
+u &=& g \on{\Boundary}
+\end{eqnarray*}
+where $\Interior$ is the interior of the physical domain, $\Boundary$ is the boundary of $\Interior$ and $f,g$ are known explicitly. In the case of a non-linear differential operator, a Newton's iteration, or some other method, can be used to linearize the problem (see e.g., \cite{WrightFornberg06}); of course, this increases the complexity of a single time step. Then, the unknown solution, $u$, which produces the observations on the right hand side can be approximated by an interpolant function $u_{\phi}$ expressed as a linear combination of radial basis functions, $\{\phi_j(x) = \phi(\vectornorm{x-x_j})\}_{j=1}^{N}$, and polynomial functions$\{P_l(x)\}_{l=1}^{M}$:
+\begin{equation}
+	u_{\phi}(x) = \sum_{j=1}^{N}  \phi_j(x) c_{j} + \sum_{l=1}^{M}  P_l(x) d_{l}, \hskip1.5em P_l(x) \in \Pi^{D}_{p}
+	\label{eqn:pde_approx}
+\end{equation}
+where $\phi_j(x) = \vectornorm{x - x_j}$ ($\vectornorm{\cdot}$ is standard Euclidean distance). The 
+second sum represents a linear combination of polynomials that enforces zero approximation error
+ when $u(x)$ is a polynomial of degree less than or equal to $p$. The variable $D$ is the 
+ problem dimension (i.e., $u_{\phi}(x) \in \R^{D}$). 
+%\toevan{Finish to end of paragraph} 
+To eliminate degrees of freedom for well-posedness, $p$ should be greater than or equal to the order of the chosen RBF
+ (see Table~\ref{tbl:rbfs}) \cite{Iske2004}.  
+Note that Equation~\ref{eqn:pde_approx} is evaluated 
+ at $\{x_j\}_{j=1}^{N}$ 
+data points through which the interpolant is required to pass with zero residual.  We refer to 
+the $x_j$'s as \emph{collocation points} (a.k.a. trial points), taken as the RBF centers. The test points, $x$, usually coincide with collocation points, although this is not a requirement. 
+%$P_l(x)$ is needed to eliminate degrees of freedom for well-posedness \cite{Iske:2004}. 
+
+To clarify the role of the polynomial part in Equation~\ref{eqn:pde_approx}, it is necessary to
+put aside the PDE for the moment and consider only the problem of \emph{scattered data 
+interpolation} with Radial Basis Functions.
+
+\subsection{RBF Scattered Data Interpolation}
+ Borrowing notation from \cite{Fasshauer2007, Iske2004}, 
+we seek an interpolant of the form
+\begin{eqnarray*}
+f(x) = \sum_{j=1}^{N} \phi_j(x) c_{j}  \label{eq:rbf_scattered_data_interp}
+\end{eqnarray*}
+where $f(x)$ is expressed as a scalar product between the unknown coefficient weights $c_j$ and the radial basis functions $\phi_j(x)$.
+
+To obtain the unknown coefficients, $c_j$, form a linear system in terms of the $N$ RBF centers:
+\begin{eqnarray*}
+f(x) & = & \sum_{j=1}^{N} c_{j}  \phi_j(x)  \hskip1.5em \textrm{for\ } x = \{x_j\}_{j = 1}^{N} \\
+ \parray{c}{ f } & =&  \barray{c}{\phi}\parray{c}{ c } 
+\end{eqnarray*}
+The invertibility of this system depends on the choice of RBF, so one typically chooses a function that is positive definite to avoid issues. It has been shown (see \cite{Fasshauer2007, Iske2004}) that some choices of RBFs (e.g. multiquadrics and thin-plate splines \cite{Hon2001}) are not positive definite and therefore there is no guarantee that the approximation is well-posed. A sufficient condition for well-posedness is that the matrix be \emph{conditionally positive definite}. In \cite{Fasshauer2007}, Fasshauer demonstrates that conditional positive definiteness is guaranteed when Equation~\ref{eqn:pde_approx} exactly reproduces functions of degree less than or equal $m$. 
+For RBF scattered data interpolation in one dimension, this can be achieved by adding a polynomial of order $m$ with $M =$${m+1}\choose{1}$ terms (e.g., $x^0, x^1, \cdots, x^{m}$). For $\R^2$, the terms would be: $1, x, y, xy, x^2y, xy^2, \cdots, x^{m}y^{m-1}, x^{m-1}y^{m}, x^my^m$. In $\R^D$, $M =$${m+D}\choose{D}$ \cite{Iske2004}, giving
+\begin{eqnarray}
+\sum_{j=1}^{N} c_{j}  \phi_j(x)  +  \sum_{l=1}^{M} d_{l} P_l(x) & = & f(x),  \hskip1.5em  P_l(x) \in \Pi^{D}_{m} \label{eqn:interpolation_constraints} \\
+\left[ \begin{array}{c c} 
+	\phi & P
+	\end{array} \right] \left( \begin{array}{c}
+							c \\
+							d
+							 \end{array}
+						 \right) & = & \parray{c}{ f } \nonumber
+\end{eqnarray}
+where the second summation (referred to as \emph{interpolation conditions} \cite{Iske2004}) ensures the minimum degree of the interpolant. Refer to Table~\ref{tbl:rbfs} for a short list of recommended RBFs and minimally required orders of $m$. This document prefers the Gaussian RBF. Notice, in Equation~\ref{eq:interpolation_constraints}, that the interpolation conditions add $M$ new degrees of freedom, so we must provide $M$ 
+additional constraints to square the system. In this case:
+$$
+\sum_{j=1}^{N} c_{j} P_l(x_j) = 0,  \hskip1.5em  l=1,..., M 
+$$
+or 
+\begin{eqnarray}
+P^T {c}  = {0}. 
+\label{eqn:extra_constraints}
+\end{eqnarray}
+It is now possible again to write the interpolation problem as a linear system using Equations~\ref{eqn:interpolation_constraints} and ~\ref{eqn:extra_constraints}:%as
+\begin{eqnarray}
+ \underbrace{\left[ \begin{array}{c c} 
+	\phi & P \\
+	P^T & 0
+	\end{array} \right]}_{A_{\diffop{}}} \left( \begin{array}{c}
+							c \\
+							d
+							 \end{array}
+						 \right) = \left( \begin{array}{c}
+							f \\
+							0
+							 \end{array}
+						 \right) \label{eq:solve_rbf_scattered_interp}
+\end{eqnarray}
+%This system then produces coefficients capable of exactly approximating data from polynomials of degree less than or equal to $m$ \cite{Fasshauer2007}. 
+Equation~\ref{eq:solve_rbf_scattered_interp}, typically a dense system except in the case of RBFs with compact support, can be solved efficiently via standard methods like LU-decomposition.  With the coefficients, the interpolant can be sampled at any test points, $\{x_i\}_{i=1}^{n}$, by returning to Equation~\ref{eq:rbf_scattered_data_interp}:
+\begin{eqnarray}
+f(x_i) & = & \sum_{j=1}^{N} c_{j}  \phi_j(x_i) +  \sum_{l=1}^{M} d_{l} P_l(x_i)  \\
+ & = & \left. \underbrace{\left[ \begin{array}{c c} 
+       \phi &  P
+	\end{array} \right]}_{B} 
+	  \left( \begin{array}{cc}  c \\ d  \end{array} \right) \ \right|_{x={x_i}}
+	\label{eqn:interpolate_x}
+\end{eqnarray}
+
+
+\subsection{Reconstructing Solutions for PDEs}
+In the next few subsections, we will consider collocation equations based on this general form: 
+\begin{eqnarray*}
+\diffop{u_\phi(x)} &=& f(x) \on{\Interior} \label{eqn:colloc_interior}\\ 
+\boundop{u_\phi(x)} &=& g(x) \on{\Boundary}  \label{eqn:colloc_boundary} 
+\end{eqnarray*}
+where the methods presented below will apply the differential operators, $\diffop{}$ and $\boundop{}$, to different choices of $u_\phi$ and different sets of collocation points. In many applications $\diffop{}$ is chosen as a differential operator (e.g., $\pd{}{x}$, $\nabla$, $\nabla^2$) and $\boundop = I$ (i.e. identity operator for Dirichlet boundary conditions) for PDEs. For RBF scattered data interpolation, $\diffop{} = I$. There are also  applications where $\diffop{}$ is a convolution operator (see e.g., \cite{Carr2001, Carr2003}) capable of smoothing/de-noising a surface reconstructed from point clouds. 
+
+%TODO: label x_j's as TRIAL and x_is as TEST points
+%\section{Approximating the Solution}
+For all the methods to be presented a linear system is generated: 
+$$
+A_{\diffop{}}  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  =  \left( \begin{array}{cc}  f \\ 0  \end{array} \right) 
+$$
+\begin{equation}
+  \left( \begin{array}{cc}  c \\ d  \end{array} \right) = A^{-1}_{\diffop{}}  \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
+  \label{eqn:solve_coeffs}
+ \end{equation}
+ where matrix $A_{\diffop{}}$ depends on the choice of collocation method. 
+Once the linear system is solved, the value $u(x)$ is reconstructed at the test points following Equation~\ref{eqn:interpolate_x}:
+\begin{eqnarray}
+u(x) & = &  \left.
+\left[ \begin{array}{c c} 
+       \phi &  P
+	\end{array} \right]
+	  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  \ \right|_{x={x_i}} \nonumber\\
+	 & = & B A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right) 
+	\label{eqn:solve_u}
+\end{eqnarray}
+Likewise, to obtain differential quantities we have: 
+\begin{eqnarray*}
+\diffop{u}(x) & = & \left.
+\left[ \begin{array}{c c} 
+       \diffop{\phi} &  \diffop{P}
+	\end{array} \right]
+	  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  \ \right|_{x={x_i}} \\
+  	 & = & B_{\diffop{}} A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right).
+	\label{eqn:solve_uxx}
+\end{eqnarray*}
+
+%Here we substitute $B$ for test samples in Equation~\ref{eqn:solve_u} to get the reconstructed solution:
+%\begin{eqnarray}
+%u(x) = B A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
+%	\label{eqn:solve_rbf}
+%\end{eqnarray}
+%where the vector-matrix inner product $(A A^{-1}_{\diffop{}})$ is a row-vector. Since the coefficient vectors ${c}$ and ${d}$ are the same for all $x_i$, we can group the evaluation of $\diffop{u(x_i)}$ for $i=1,...,n$ as a matrix-vector multiplication where the matrix rows correspond to $(A_\diffop{} A^{-1})$ for each $x_i$. 
+
+
+%TODO: mention equation~\ref{eqn:solve_rbf} can be precomputed DM applied to f for collocation points in pseudo-spectral method.  
+%Relevant to the discussion of RBF-PS and computational and memory efficient global RBF methods, if $A$ contains rows corresponding to the interpolation problem can be rewritten independent of coefficients by assembling a differentiation 
+
+\subsection{PDE Methods} 
+
+Now, since $u_{\phi}(x)$ from Equation~\ref{eqn:pde_approx} cannot (in general) satisfy the PDE everywhere, we enforce the PDE at a set of collocation points, which are  distributed over both the interior and the boundary. Again, these points do not necessarily coincide with the RBF centers, but it is convenient for this to be true in practice. 
+
+\subsubsection{Kansa's Method}
+
+The first global RBF method for PDEs, \emph{Kansa's method} \cite{Kansa1990a, Kansa1990b}, collocates the solution through known values on the boundary, while constraining the interpolant to satisfy the PDE operator on the interior. This is equivalent to choosing $u_\phi$ according to Equation~\ref{eqn:pde_approx}. The resulting system is given by \cite{Mouat2002}; assuming that $\diffop{}$ is a linear operator, 
+\begin{eqnarray}
+\diffop{u_\phi(x_i)} = \sum_{j=1}^{N}c_j\diffop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \diffop{P_l(x_i)} &=&f(x_i)  \hskip1.5em i = 1,...,n_I  \label{eqn:kansa_interior} \\ 
+\boundop{u_\phi(x_i)} = \sum_{j=1}^{N}c_j \boundop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \boundop{P_l(x_i)} &=& g(x_i)  \hskip1.5em i = n_I + 1, \cdots, n \label{eqn:kansa_boundary} \\
+\sum_{j=1}^{N} c_j P_l(x_j) & = & 0 \hskip3.0em l=1,\cdots,M \label{eqn:kansa_constraints} 
+\end{eqnarray}
+where $n_I$ are the number of interior collocation points, with the number of boundary collocation points equal to $n - n_I$. First, observe that the differential operators are applied directly to the RBFs inside summations, rather than first solving the scattered data interpolation problem and then applying the operator to the interpolant.  Second, since the basis functions are known analytically, it is possible (although sometimes painful) to derive $\diffop{\phi}$ (refer to \cite{Fasshauer2007} for RBF derivative tables); the same is true for the polynomials $P_l$. 
+
+We can now reformulate Kansa's method as the linear system: 
+\begin{eqnarray}
+\underbrace{\left[ \begin{array}{c c} 
+	\phi_\diffop{} & P_\diffop{} \\
+	\phi_\boundop{} & P_\boundop{} \\
+	P^T & 0
+	\end{array} \right]}_{A_{\diffop{}}}  \left( \begin{array}{c}
+							{c} \\
+							{d}
+							 \end{array}
+						 \right) = \left( \begin{array}{c}
+							{f} \\
+							{g} \\
+							0
+							 \end{array}
+						 \right) 
+	\label{eqn:kansa_method}
+\end{eqnarray}
+% TODO: add underline stating that matrix is A. 
+
+
+where $\phi_\diffop{} = \diffop{\phi}$, $P_\diffop{} = \diffop{P}$ are the interior components (Equation~\ref{eqn:kansa_interior}), $\phi_\boundop{}$ and $P_\boundop{}$ are the boundary components (Equation~\ref{eqn:kansa_boundary}), and $P^T = \left[P_\diffop{}^T \ \ P_\boundop{}^T\right]$ are constraints for both interior and boundary polynomial parts (Equation~\ref{eqn:kansa_constraints}). From Equation~\ref{eqn:kansa_method} it should be clear why Kansa's method is also known as the \emph{Unsymmetric} collocation method. 
+
+%\toevan{Isn't $N+M=n$? For each case, you must put the proper relationships between $N$, $M$, $n_I$, $n$ so that the number of constraints equals the number of relations.}
+Recall that the matrix in Equation~\ref{eqn:kansa_method} has no guarantee of non-singularity \cite{Fasshauer1997}; however, singularities are rare in practice \cite{Larsson2003}. 
+
+\subsubsection{Fasshauer's Method}
+
+\emph{Fasshauer's method} \cite{Fasshauer1997} addresses the problem of singularity in Kansa's method by assuming the interpolation to be Hermite. That is, it requires higher differentiability of the basis functions (they must be at least $C^k$-continuous if $\diffop{}$ is of order $k$). Leveraging this assumption, Fasshauer's method chooses: 
+\begin{eqnarray}
+u_\phi(x_i) & = & \sum_{j=1}^{N_I}  c_j \diffop{\phi_j(x_i)} + \sum_{j=N_{I} + 1}^{N} c_j \boundop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l P_l(x_i)
+\label{eqn:fasshauer_approx}
+\end{eqnarray}
+as the interpolant passing through collocation points. Note $N_I$ is used here to specify the number of RBF centers in the interior of $\Omega$. Here the interpolant is similar to Equation~\ref{eqn:pde_approx}, but a change of basis functions is used for the expansion: $\diffop{\phi_j(x)}$ on the interior and $\boundop{\phi_j(x)}$ on the boundary.
+
+Collocating (i.e., substituting Equation~\ref{eqn:fasshauer_approx} into Equations~\ref{eqn:kansa_interior}-\ref{eqn:kansa_constraints}) we get: 
+\begin{eqnarray}
+\sum_{j=1}^{N_I}c_j\diffop^2{\phi_j(x_i)} + \sum_{j=N_I+1}^{N}c_j\diffop{\boundop{\phi_j(x_i)}} + \sum_{l=1}^{M}d_l \diffop{P_l(x_i)} &=&f(x_i)  \hskip1.5em i = 1,...,n_I  \label{eqn:fasshauer_interior} \\ 
+\sum_{j=1}^{N_I}c_j\boundop{\diffop{\phi_j(x_i)}} + \sum_{j=N_I+1}^{N}c_j\boundop^2{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \boundop{P_l(x_i)} &=& g(x_i)  \hskip1.5em i = n_I + 1,..., n \label{eqn:fasshauer_boundary} \nonumber \\
+\sum_{j=1}^{N_I} c_j \diffop{P_l(x_j)} + \sum_{j=N_I + 1}^{N} c_j \boundop{P_l(x_j)} &=& 0 \hskip3.0em l=1,...,M \label{eqn:fasshauer_constraints} \nonumber 
+\end{eqnarray}
+which is reformatted as the linear system: 
+\begin{eqnarray}
+\underbrace{\left[ \begin{array}{c c c} 
+	\phi_{\diffop{}\diffop{}} & \phi_{\diffop{}\boundop{}} & P_\diffop{} \\
+	\phi_{\boundop{}\diffop{}} & \phi_{\boundop{}\boundop{}} & P_\boundop{} \\
+	P^T_{\diffop{}} & P^T_{\boundop{}} & 0 \\
+	\end{array} \right]}_{A_{\diffop{}}} \left( \begin{array}{c}
+							{c} \\
+							{d}
+							 \end{array}
+						 \right) = \left( \begin{array}{c}
+							{f} \\
+							{g} \\
+							0
+							 \end{array}
+						 \right) 
+	\label{eqn:fasshauer_method}
+\end{eqnarray}
+Note that $\phi_{\diffop{}\diffop{}}$ represents the first summation in Equation~\ref{eqn:fasshauer_interior}. The linear system generated by Fasshauer's method reveals an interesting structure: namely, the subscripts $\diffop{}$ and $\boundop{}$ show blocks of influence in the matrix. For example, the interior RBF centers influence collocation on the interior collocation points ($\phi_{\diffop{}\diffop{}}$), boundary centers influence collocation on the interior ($\phi_{\diffop{}\boundop{}}$), interior centers influence collocation on the boundary($\phi_{\boundop{}\diffop{}}$), and so forth. In the case where the collocation points and RBF centers do not coincide, the subscripts would also indicate which set of points the operators are applied to \cite{Stevens2009b}. 
+
+The symmetry of Fasshauer's (\emph{symmetric collocation}) method is apparent in Equation~\ref{eqn:fasshauer_method}. Likewise, it is clear that the symmetric method requires more storage and computation to solve compared to Kansa's method. However, based on the assumption that collocation points coincide with RBF centers, the symmetry reduces storage requirements by half. 
+ 
+%\toevan{Its important to understand that Fasshauer's method reveals a general structure of collocation methods. Specifically, using the general notation in Equation~\ref{eqn:fasshauer_method}, we could separate the operators intended for RBF centers from those intended for the collocation points, which would allow reproduction of the cases: kansa, fasshauer, direct. Where kansa chooses $\diffop_{centers} = 1$,  $\diffop_{colloc} = \diffop$, and $\boundop_{both} = 1$. Fasshauer chooses  $\diffop_{centers} = \diffop{}$, $\diffop_{colloc} = \diffop$ and  $\boundop_{both}=1$. Direct chooses  $\diffop_{centers} = 1$ $\diffop_{colloc} = \diffop$, $\boundop_{centers}=1$, $\boundop_{colloc} = \diffop{}$. Thus Direct is a hybrid of Kansa and Fasshauer. Also, there are additional cases visible here which have not been considered in literature.} 
+ 
+\subsubsection{Direct Collocation}
+
+In \emph{Direct collocation} (see \cite{Larsson2003, Fedoseyev2002}, the interpolant is chosen as Equation~\ref{eqn:pde_approx} (the same as Kansa's method). However, the Direct method collocates both the interior and boundary operators at the boundary points:
+%\toevan{Add boundary term and specify that Kansa's method is a special case that sets boundary to 0 (i.e. Dirichlet)}  
+\begin{eqnarray}
+\sum_{j=1}^{N}c_j\diffop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \diffop{P_l(x_i)} &=&f(x_i)  \hskip1.5em i = 1,...,n  \label{eqn:direct_interior} \\ 
+\sum_{j=1}^{N}c_j\boundop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \boundop{P_l(x_i)} &=& g(x_i)  \hskip1.5em i = 1,..., n_B=n-n_I \label{eqn:direct_boundary} \nonumber \\
+ \sum_{j=1}^{N} c_j P_l(x_j) &=& 0 \hskip3.0em l=1,...,M \label{eqn:direct_constraints} \nonumber 
+\end{eqnarray}
+Reformulating as a linear system we get: 
+\begin{eqnarray}
+\left[ \begin{array}{c c} 
+	\phi_{\diffop{}} & P_\diffop{} \\
+	\phi_{\boundop{}} & P_\boundop{} \\
+	P^T  & 0 \\
+	\end{array} \right] \left( \begin{array}{c}
+							{c} \\
+							{d}
+							 \end{array}
+						 \right) = \left( \begin{array}{c}
+							{f} \\
+							{g} \\
+							0
+							 \end{array}
+						 \right) 
+	\label{eqn:direct_method}
+\end{eqnarray}
+
+While the final system in Equation~\ref{eqn:direct_method} is structured the same as Kansa's method (Equation~\ref{eqn:kansa_method}), %and is often confused with it (see e.g. \cite{Fasshauer2007}), 
+careful inspection of the index $i$ in Equations~\ref{eqn:kansa_interior} and \ref{eqn:direct_interior} reveals that Direct collocation produces a larger system. %Similar to Fasshauer's method, the larger system is due to additional information about influence of centers on collocation points (e.g.,  boundary on interior, interior on boundary, interior on interior, etc.). Unlike Fasshauer's method, the Direct collocation approach does not change the basis functions in the interpolant making it less obvious to readers when when a linear system represents Kansa's method or the Direct method. 
+
+
+%DONE: RBF-PS
+\subsubsection{RBF-PS}
+%DONE: shown to solve great things
+%DONE: in most cases nodes are constant
+
+The extension of global collocation to traditional pseudo-spectral form was introduced by Fasshauer in \cite{Fasshauer2006}. Dubbed RBF-PS, the method utilizes the same logic from Kansa's and Fasshauer's collocation methods to form matrix $A_{\diffop{}}$ (i.e., $A_\diffop{}$ can be either Equation~\ref{eqn:kansa_method} or \ref{eqn:fasshauer_method}). However, RBF-PS subtly assumes the solution, $u(x)$, is only required at collocation points \cite{Fasshauer2006, Fasshauer2007}. Then, extending Equation~\ref{eqn:solve_u}, RBF-PS gives:
+\begin{eqnarray}
+u(x) & = & \left( B A^{-1}_\diffop{} \right) \left( \begin{array}{cc}  f \\ 0  \end{array} \right) \nonumber \\
+& = & D^T_{\diffop{}} \left( \begin{array}{cc}  f \\ 0  \end{array} \right) \label{eq:rbf-ps}.
+\end{eqnarray}
+where $D_\diffop{}$ is a discrete differentiation matrix (DM) for the operator $\diffop{}$.
+Here, $D_\diffop{}$ is independent of the function $f(x)$ and is assembled by solving the system: 
+\begin{eqnarray}
+D_{\diffop{}} & = & A^{-T}_{\diffop{}} B^T
+\end{eqnarray}
+An LU-decomposition ($O(N^3)$) in preprocessing is fitting to efficiently solve the multiple RHS system \cite{WrightFlyerYuen10,Fasshauer2007}. Forward- and back-solves ($O(N^2)$), to complete assembly of $D_\diffop{}$, also occur in preprocessing. 
+
+Since matrix $D_{\diffop{}}$ is independent of functions $u(x)$ and $f(x)$, the matrix is only updated if the RBF centers move---a compelling benefit for time-dependent problems on stationary nodes; otherwise, the time-dependent solution is given by a matrix-vector multiply ($O(N^2)$). In contrast to RBF-PS, classic global RBF collocation methods also construct LU factors---in this case, for $A_{\diffop{}}^{-1}$---in preprocessing, but delay application of forward- and back-solves to occur at each time-step when resolving time-dependent weighting coefficients. An additional pre-multiply by $B$ ($O(N^2)$) is then required to complete the time-step under classic RBF collocation.
+ 
+
+
+%TODO: RBF-PS literature \cite{Fasshauer2006, Fasshauer2007}\cite{FasshauerZhang2007}\cite{WrightFlyerYuen10}
+
+
+\subsubsection{Local Methods}
+In the methods above, globally supported RBFs were required. However, another trend is to use RBFs defined with some cut-off radius to enforce compact support. In some cases, authors have used the compact support to produce a single (large) sparse system for interpolation (see e.g., \cite{Wang2002, Liu2005, Correa2007, Yang2008, Lin2009}). Other approaches use compact support to produce local linear systems defined at each collocation point. Examples of this include \cite{Sarler2006, Vertnik2006} for Kansa's method, \cite{Stevens2008a, Stevens2009a, Stevens2009b} for Fasshauer's method. To our knowledge no one has considered local Direct collocation.  Also, instead of specifying a cut-off radius, some authors specify the exact stencil size (i.e., number of neighboring points to include); see e.g., \cite{Divo2007, Stevens2009b}. 
+
+After observing the general structure of the symmetric and unsymmetric collocation methods above, it is necessary only to present the symmetric (i.e. Fasshauer's) local method and note that in the unsymmetric case certain blocks will be zero allowing the system to shrink. 
+
+The formula for the interpolant local to the $(k)$-th collocation point (i.e., RBF center) is given by: 
+\begin{eqnarray*}
+u^{(k)}_\phi(x_i) & = & \sum_{j(k)=1}^{N_{I}}  c_j^{(k)} \diffop{\phi_j(x_i)} + \sum_{j(k)=N_{I} + 1}^{N_{S}} c^{(k)}_j\boundop{\phi_j(x_i)} + \sum_{l=1}^{M}d^{(k)}_l P_l(x_i)
+%\label{eqn:fasshauer_local_approx}
+\end{eqnarray*}
+where $N_{S}$ represents the number of points that defines the local stencil; $N$ is possibly a function of the cut-off radius in the RBF, $N_{I}$ is the number of interior stencil points (those points of the stencil that lie in the interior of $\Omega$). The index $j$ is a function of the stencil center $k$ allowing the system to include a local neighborhood of stencil points.
+
+Collocating produces a linear system with similar structure to the global collocation problem, but the dimensions are much smaller:
+\begin{eqnarray}
+\underbrace{\left[ \begin{array}{c c c} 
+	\phi_{\diffop{}\diffop{}} & \phi_{\diffop{}\boundop{}} & P_\diffop{} \\
+	\phi_{\boundop{}\diffop{}} & \phi_{\boundop{}\boundop{}} & P_\boundop{} \\
+	P^T_{\diffop{}} & P^T_{\boundop{}} & 0 \\
+	\end{array} \right]}_{A_{\diffop{}}} \left( \begin{array}{c}
+							{c}^{(k)} \\
+							{d}^{(k)}
+							 \end{array}
+						 \right) = \left( \begin{array}{c}
+							{f} \\
+							{g} \\
+							0
+							 \end{array}
+						 \right) 
+	\label{eqn:local_method}
+\end{eqnarray}
+Solving this system gives an interpolant locally defined around the stencil center. Note that approximating the PDE solution $u(x)$ requires finding the stencil center nearest $x$, then using the local interpolant for that stencil. Since interpolation is local (i.e., $c_j^{(k)}$'s are unique to each RBF center), reconstructing the derivatives with Equation~\ref{eqn:solve_uxx} is limited to an inner product for each center rather than the matrix-vector grouping possible with global RBFs.  
+%In the event that a point lies on the perpendicular bisector between two stencils, one of them can be arbitrarily selected. 
+Note that because the interpolants are local, there is no notion of global continuity/smoothness of the solution.
+
+
+%TODO: time stepping integrated into global collocation? For now, cut (see toadd timestepping.tex)
 
 \part{The RBF-FD Method}
-The RBF-FD chapter needs:•	Related papers on RBF-FD specifically (i.e., the complete history; follow Flyer Fornberg book). o	Clearly state what every paper in the RBF-FD group accomplished•	Weight method•	Similarly to spectral and pseudospectral (only collocation points allow optimizations) modes, RBF-FD and FD are related and share much of the same approach. Use RBF-FD for general node placement and high order accuracy. Use FD for optimized solution, faster solvers (Fourier decomposition, Band solver, etc). •	Apply weights to single node (figure from Paper 1) or form a DM•	Solve PDEs with explicit/implicit form (solvers)o	Mention GMRES•	List of weight typeso	Projection operators•	Choosing epsilon•	Hyperviscosity stabilization
+%The RBF-FD chapter needs:%•	Related papers on RBF-FD specifically (i.e., the complete history; follow Flyer Fornberg book). %o	Clearly state what every paper in the RBF-FD group accomplished%•	Weight method%•	Similarly to spectral and pseudospectral (only collocation points allow optimizations) modes, RBF-FD and FD are related and share much of the same approach. Use RBF-FD for general node placement and high order accuracy. Use FD for optimized solution, faster solvers (Fourier decomposition, Band solver, etc). %•	Apply weights to single node (figure from Paper 1) or form a DM%•	Solve PDEs with explicit/implicit form (solvers)%o	Mention GMRES%•	List of weight types%o	Projection operators%•	Choosing epsilon%•	Hyperviscosity stabilization
 
 \chapter{Introduction to RBF-FD}
 
@@ -67,7 +593,7 @@ Key challenges lie in the choice of grid, the choice of stencil, whether or not 
 The choice to study RBF-FD within this dissertation is motivated by two factors. First, RBF-FD represents one of the latest developments within the RBF community. The method was first introduced in 2000 \cite{Tolstykh2000}.  Unfortunately, RBF-FD has yet to obtain the critical-mass following necessary for the method's use in large-scale scientific models. Our goal throughout the dissertation has been to scale RBF-FD to complex problems on high resolution meshes, and to lead the way for its adoption in high performance computational geophysics. Second, RBF-FD inherits many of the positive features from global and local collocation schemes, but sacrifices others for the sake of significantly reduced computational complexity and increased parallelism. Graphics Processing Units (GPUs), introduced in Chapter~\ref{chap:parallel_rbf}, are many-core accelerators capable of general purpose, embarrassingly parallel computations. GPUs represent the latest trend in high performance computing, where compute nodes are commonly supplemented by one or more accessory GPUs. %We capitalize on the inherent parallelism of RBF-FD to develop a collection of multi-GPU test cases that span the compute nodes of a Top 500 supercomputer. 
 Our effort leads the way for application of RBF-FD in an age when compute nodes with attached accelerator boards will be key to breaching the exa-scale barrier in computing \cite{GPUandExascale2011}.
 
-Prior to considering optimizations of RBF-FD on one or more GPUs, it is prudent to dedicate significant attention to the method definition and related works.
+Prior to considering implementation of RBF-FD and optimizations on one or more GPUs, it is prudent to dedicate significant attention to the method definition and related works.
 
 
 %Rather than solely focus on the optimizations of said algorithms on the GPU, we dedicate significant attention to the practical application of RBF-FD to interesting problems in geophysics. This means we have walked a fine line between research topics to both apply the method to 
@@ -111,7 +637,7 @@ accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cec
 including Navier-Stokes equations \cite{Shu2003} have all been considered. 
 
 
-\authnote{Expand description of each related work}
+%TODO: Expand description of each related work
 
 
 
@@ -132,12 +658,10 @@ including Navier-Stokes equations \cite{Shu2003} have all been considered.
 The RBF-FD method is similar to classical Finite Differences in that the RBF-FD method allows derivatives of a function $u(x)$ to be approximated by weighted combinations of $n$ function values in a small neighborhood (i.e., $n \ll N$) around a \emph{center} node, $x_c$. That is: 
  %derivative of u (i.e., $\diffop{u}$) at the stencil center ($x_1$) as a weighted combination of neighbors (like typical Finite Differencing): 
         \begin{align} 
-        \left. \diffop{u(x)} \ \right|_{x = x_c} &\approx \sum_{j=1}^{n} c_j u(x_j) \nonumber 
+        \left. \diffop{u(x)} \ \right|_{x = x_c} &\approx \sum_{j=1}^{n} c_j u(x_j) 
         \label{eq:derivFromFDWeights}
         \end{align}
-where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \d{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil}. While not necessary, in practice one typically considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; here, Euclidean distance is preferred. 
-
-Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center, $x_c$, is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color of the red and blue disks represent the magnitude and alternating sign of coefficients, $c_j$, determined to calculate a derivative quantity at the stencil center. 
+where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \d{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil}. While not necessary, in practice one typically considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; here, Euclidean distance ($||x-x_c||_2$) is preferred. 
 
 \begin{figure}[htbp]
 	\centering
@@ -158,6 +682,13 @@ Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First
 	\label{fig:stencil_example}
 \end{figure}
 
+Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center, $x_c$, is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color of the red and blue disks represent the magnitude and alternating sign of coefficients, $c_j$, determined to calculate a derivative quantity at the stencil center. 
+
+%TODO: stencil does not need to be regular distribution.
+%One of the most appealing benefits of RBF-FD is its built-in support for irregular and unstructured node distributions. 
+
+
+
 
 
 % The center node and its neighbors define a \emph{stencil}, $\{\vx\}_{i=1}^{n}$, in a localized (small) region or \emph{neighborhood} of the domain. 
@@ -165,51 +696,65 @@ Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First
 
 %TODO: Weights for both classical Finite Difference and RBF-FD can be obtained through the solution of linear systems. In the case of Finite Difference, the system is a Vandermonde matrix. 
 %TODO: For RBF-FD the system is based on a symmetric distance matrix. 
-%TODO: \authnote{Need better description and ref:} The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
+%TODO: Need better description and ref The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
 
  To approximate $\diffop{u(x)}$, one requires the \emph{stencil weights} (coefficients), ${c_j}$. These are obtained by enforcing that they be exact within the space spanned by the RBFs centered at stencil nodes (i.e., $\phi_j(x)$). Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
-interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align}
-	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i) + c_{n+1} p_0 \ \ \ \ \ \ \textrm{for }i=1,2,...,n \nonumber 
-	\end{align}
-with $\diffop{\phi}_i$ provided by analytically applying the differential operator to the kernel function. Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}c_i=\diffop{p_0}|_{x=x_{c}}=0$ completes the system: 
+interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align*}
+	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i) + c_{n+1} p_0 \ \ \ \ \ \ \textrm{for }i=1,2,...,n  
+	\end{align*}
+	with $\diffop{\phi}_i$ provided by analytically applying the differential operator to the RBF. Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}c_i=\diffop{p_0}|_{x=x_{c}}=0$ completes the system: 
 	\begin{eqnarray}        
           \begin{bmatrix} \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_n(x_{1}) & 1 \\ 
             \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_n(x_{2}) & 1\\ 
             \vdots & \ddots & \ddots & \vdots & \vdots \\ 
             \phi_{1}(x_n) & \phi_{2}(x_n) & \cdots & \phi_{n}(x_{n}) & 1 
             \\ 1 & 1 & \cdots & 1 & 0 \end{bmatrix} 
-            \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_n \\ c_{n+1} \end{pmatrix} = \begin{pmatrix} \left.\diffop{\phi_1}(x)\ \right|_{x=x_c} \\  \left.\diffop{\phi_2}(x)\ \right|_{x=x_c} \\ \vdots \\  \left.\diffop{\phi_{n}}(x)\ \right|_{x=x_c} \\ 0 \end{pmatrix} \label{eq:rbffd_two_weight_system}
-   \end{eqnarray} 
+            \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_n \\ c_{n+1} \end{pmatrix} & = & \begin{pmatrix} \left.\diffop{\phi_1}(x)\ \right|_{x=x_c} \\  \left.\diffop{\phi_2}(x)\ \right|_{x=x_c} \\ \vdots \\  \left.\diffop{\phi_{n}}(x)\ \right|_{x=x_c} \\ 0 \end{pmatrix} \label{eq:rbffd_weight_system} \\
+\underbrace{\begin{bmatrix} \phi & P \\
+		P^T & 0 \end{bmatrix}}_{A} \begin{pmatrix} c_\diffop{} \\ 
+							d_\diffop{} \end{pmatrix} & = & \underbrace{\begin{pmatrix} \phi_{\diffop{}} \\
+							0 \end{pmatrix}}_{B_{\diffop{}}}. \nonumber
+	\end{eqnarray}	
 
-Solving Equation~\ref{eq:rbffd_weight_system}
-               %                         A c  &= B
-%                         \label{eqn:rbffd_simplified}
+The small $(n + 1) \times (n + 1)$ system in Equation~\ref{eq:rbffd_weight_system} is solved at a cost of $O(n^3)$ operations. The resulting stencil weights, $c_\diffop{} = \{c_j\}_{j=1}^n$ can be substituted into Equation~\ref{eq:derivFromFDWeights} for the derivative approximation at $x_c$; coefficient $c_{n+1}$, included in the solution of Equation~\ref{eq:rbffd_weight_system}, is of no use and discarded. 
 
+\authnote{HERE} 
+Equation~\ref{eq:rbffd_weight_system} resolves the stencil weights for one node in the domain, $x_c$. The process is repeated $N$ times---once for each stencil center in the domain---to obtain a total of $N \times n$ weights
+
+
+Approximating $\diffop{u(x)}$ for all nodes in the domain, $\{x_c\}_{c=1}^N$, requires iterating Equation~\ref{eq:rbffd_weight_system} must be solved $N$ 
+
+This process is repeated for each stencil center  $\{x_c\}_{c=1}^{N}$ for a total of $N \times n$ weights. 
+
+%TODO: weights applied to u
+%TODO: multiple RHS
+\begin{eqnarray}
+\underbrace{\begin{bmatrix} \phi & P \\
+		P^T & 0 \end{bmatrix}}_{A} \begin{pmatrix} c_{\nabla^2} & c_{\pd{}{x}} & \cdots \\ 
+							d_{\nabla^2} & d_{\pd{}{x}} & \dots \end{pmatrix} & = & \underbrace{\begin{pmatrix} \phi_{\nabla^2} & \phi{\pd{}{x}} & \cdots \\
+							0 & 0 & \cdots \end{pmatrix}}_{B_{\diffop{}}}. \nonumber
+	\end{eqnarray}	
+	
+%TODO: boundaries can be, but are not always handled by special operators
+%TODO: preprocessing complexity vs timestep
+
+to form the $N$ rows of the DM  with $n$ non-zeros $(n\ll N)$ per row.
+As an example, if $\diffop$ is the identity operator, 
+then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. In the context of time-dependent PDEs,  the stencil weights remain constant for all time-steps when the nodes are stationary. Therefore, the calculation of the 
+differentiation weights is performed once in a single preprocessing step of O$(n^3N)$ 
+%floating point operations (FLOPs). 
+FLOPs.
+Improved efficiency is achieved
+by processing multiple right hand sides in one pass, calculating the weights
+corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}$, $\Laplacian$, etc.).
 
 
 %Solving Equation~\ref{eqn:rbffd_simplified} for stencils weights, $c$, and substituting into Equation~\ref{eq:derivFromFDWeights} reveals the similarity between RBF-FD and the general problem of RBF interpolation (see Equation~\ref{eq:rbf_interpolate_pt} and discussion): 
-        \begin{align*} 
-        \diffop{u(x_1)} &\approx (\phi^{-1}_s \phi_{\diffop{}_s})^T \begin{pmatrix} u \end{pmatrix} \\
-        &\approx \vec{\phi}_{\diffop{}_s}^T \phi^{-T}_s \begin{pmatrix} u \end{pmatrix}
-        \end{align*}
+
         
 	
-Again, based on the choice of RBF, positive definiteness of the system is ensured by adding the same constraints as Equation~\ref{eq:additional_constraints}, but note differential quantities for $P$ on the right hand side: 
-	\begin{align}
-		\begin{pmatrix}
-		\phi_s & P \\
-		P^T & 0
-		\end{pmatrix} \begin{bmatrix}
-							c \\ 
-							d
-							\end{bmatrix}
-				 &= \begin{bmatrix}
-							\phi_{\diffop{}_s} \\
-							P_{\diffop{}}
-							 \end{bmatrix}.
-	\end{align}
+
 	%\authnote{must have things mixed up in my head. Cannot justify the reason to have $\PP_{\diffop{}}$ and not $0$. Perhaps because I dont fully understand the cardinal point derivation of RBFFD.}
-Equation~\ref{eq:rbffd_approx_derivs} is strictly for the stencil centered at node $x_1$. To obtain weights for all stencils in the domain, a total of $N$ such systems must be solved. %Following the discussion of Equation~\ref{eq:rbf_interpolate_pt}, stencils weights are computed given only node positions. 
 
 
 
@@ -217,40 +762,10 @@ Equation~\ref{eq:rbffd_approx_derivs} is strictly for the stencil centered at no
 \section{RBF-FD weights}
 \label{sec:rbffd}
 
-Given a set of function values, $\{u(\vx_j)\}_{j=1}^{N}$, on a set of $N$ nodes $\{\vx_j\}_{j=1}^{N}$, the operator $\diffop$ acting on $u(\vx)$ evaluated at 
-$\vx_j$, %$u(\vx_j)$ 
-is approximated by a weighted combination of function values, $\{u(\vx_i)\}_{i=1}^{n}$, in a small neighborhood of $\vx_j$, 
-where $n\ll N$ defines the size of the stencil. 
-%(added constant term to equation:)
-\begin{align}
-\diffop{u(\vx)}\mid_{\vx=\vx_j} &\approx \sum_{i=1}^{n} c_i u(\vx_i) + w_{n+1} p_0
-\label{eq:derivFromFDWeights}
-\end{align}
-The RBF-FD weights, ${c_i}$, are found by enforcing that they are exact within the space spanned by the RBFs $\phi_i(\epsilon r) = \phi(\ep\vectornorm{\vx-\vx_{i}})$, centered at the nodes $\{\vx_i\}_{i=1}^{n}$, with 
+ $\phi_i(\epsilon r) = \phi(\ep\vectornorm{\vx-\vx_{i}})$, centered at the nodes $\{\vx_i\}_{i=1}^{n}$, with 
 $r=\vectornorm{\vx - \vx_i}$
-being the distance between where the RBF is centered and where it is evaluated as measured in the standard Euclidean 2-norm. Various studies show  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} that better accuracy is achieved when the 
-interpolant can exactly reproduce a constant, $p_0$.  
-Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}c_i=\diffop{1}|_{\vx=\vx_{j}}=0$ completes the system: 
-%Address how the constraint is added. $w_{n+1}$ is mentioned without being defined.
-%($\epsilon$ has been moved outside the norm on the RHS)
-\begin{align}
-\begin{pmatrix}
-\phi(\epsilon\vectornorm{\vx_1-\vx_1}) & \phi(\epsilon\vectornorm{\vx_1-\vx_2} & \cdots & \phi(\epsilon\vectornorm{\vx_1-\vx_n}) & 1 \\
-\phi(\epsilon\vectornorm{\vx_2-\vx_1}) & \phi(\epsilon\vectornorm{\vx_2-\vx_2} & \cdots &
-\phi(\epsilon\vectornorm{\vx_2-\vx_n}) & 1\\
-\vdots & \ddots & \ddots & \vdots & \vdots\\
-\phi(\epsilon\vectornorm{\vx_n-\vx_1}) & \phi(\epsilon\vectornorm{\vx_n-\vx_2} & \cdots &
-\phi(\epsilon\vectornorm{\vx_n-\vx_n}) & 1 \\
-1 & 1 & \cdots & 1 & 0
-\end{pmatrix}
-\begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n  \\ w_{n+1}\end{bmatrix}
-&=
-\begin{bmatrix} \diffop{\phi(\ep\vectornorm{\vx-\vx_{1}})}|_{\vx=\vx_{j}} \\
-                \diffop{\phi(\ep\vectornorm{\vx-\vx_{2}})}|_{\vx=\vx_{j}} \\ \vdots \\  \diffop{\phi(\ep\vectornorm{\vx-\vx_{n}})}|_{\vx=\vx_{j}}\\
-                0
-\end{bmatrix},
-\label{eq:rbffd_weight_system}
-\end{align}
+being the distance between where the RBF is centered and where it is evaluated as measured in the standard Euclidean 2-norm.
+
 where $w_{n+1}$ is ignored after the matrix in ({\ref{eq:rbffd_weight_system}}) is inverted.
 This $n \times n$ system solve is repeated for each stencil center  $\vx_j$, $j=1...N$, to form the $N$ rows of the DM  with $n$ non-zeros $(n\ll N)$ per row.
 As an example, if $\diffop$ is the identity operator, 
@@ -342,9 +857,10 @@ P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\
 P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j}
 \end{align}
 
-Alternatively, assuming weights for operators $\grad = \pd{}{x_{1}}, \pd{}{x_{2}}, \pd{}{x_{3}}$ are already computed, the projected operator could be constructed via weighting the unprojected gradient components. For example: 
+%TODO: finish appendix
+%Alternatively, assuming weights for operators $\grad = \pd{}{x_{1}}, \pd{}{x_{2}}, \pd{}{x_{3}}$ are already computed, the projected operator could be constructed via weighting the unprojected gradient components. For example: 
 
-\authnote{Show accuracy of derivative approximation when using projected operator vs linear combinations of dx,dy,dz operators}
+%\authnote{Show accuracy of derivative approximation when using projected operator vs linear combinations of dx,dy,dz operators}
 
 
 \section{Stabilization: Hyperviscosity}
@@ -483,7 +999,7 @@ We observe that RBF-FD functions as well on stencils of true nearest neighbors a
 
 
 
-\section{Distributed/Parallel RBF Methods}
+\chapter{RBF Methods on Multiple GPUs}
 \label{chap:parallel_rbf} 
 
 RBFs on GPU work: \cite{Schmidt2009a, Schmidt2009b} (global), \cite{Yokota2010} (compact)
