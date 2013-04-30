@@ -387,6 +387,10 @@ Likewise, to obtain differential quantities we have:
 	\label{eqn:solve_uxx}
 \end{eqnarray*}
 
+%TODO: \subsection{Applying Methods for PDEs}
+%TODO: \subsubsection{Explicit PDEs}
+%TODO: \subsubsection{Implicit PDEs} 
+
 %Here we substitute $B$ for test samples in Equation~\ref{eqn:solve_u} to get the reconstructed solution:
 %\begin{eqnarray}
 %u(x) = B A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
@@ -655,13 +659,17 @@ including Navier-Stokes equations \cite{Shu2003} have all been considered.
 
 \section{The RBF-generated Finite Differences Method}
 %TODO: follow fornberg and flyer book 
-The RBF-FD method is similar to classical Finite Differences in that the RBF-FD method allows derivatives of a function $u(x)$ to be approximated by weighted combinations of $n$ function values in a small neighborhood (i.e., $n \ll N$) around a \emph{center} node, $x_c$. That is: 
+The RBF-FD method is similar to classical Finite Differences in that RBF-FD allows derivatives of a function $u(x)$ to be approximated by weighted combinations of $n$ function values in a small neighborhood (i.e., $n \ll N$) around a \emph{center} node, $x_c$. That is: 
  %derivative of u (i.e., $\diffop{u}$) at the stencil center ($x_1$) as a weighted combination of neighbors (like typical Finite Differencing): 
         \begin{align} 
         \left. \diffop{u(x)} \ \right|_{x = x_c} &\approx \sum_{j=1}^{n} c_j u(x_j) 
         \label{eq:derivFromFDWeights}
         \end{align}
-where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \d{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil}. While not necessary, in practice one typically considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; here, Euclidean distance ($||x-x_c||_2$) is preferred. 
+where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \pd{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil} with size $n$. While not required, in practice one considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; here, Euclidean distance ($||x-x_c||_2$) is preferred. 
+
+When solving PDEs, one typically desires derivatives at every node in the discretized domain. To achieve this, one generates a stencil centered at each node in the domain. Stencils need not have the same size ($n$), but most applications choose
+
+%TODO: convergence depends on stencil size
 
 \begin{figure}[htbp]
 	\centering
@@ -698,7 +706,9 @@ Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First
 %TODO: For RBF-FD the system is based on a symmetric distance matrix. 
 %TODO: Need better description and ref The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
 
- To approximate $\diffop{u(x)}$, one requires the \emph{stencil weights} (coefficients), ${c_j}$. These are obtained by enforcing that they be exact within the space spanned by the RBFs centered at stencil nodes (i.e., $\phi_j(x)$). Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
+\subsubsection{Stencil Weights} 
+
+ To approximate $\diffop{u(x)}$, one requires the stencil \emph{weights} (coefficients), ${c_j}$. Weights are obtained by enforcing that they be exact within the space spanned by the RBFs centered at stencil nodes (i.e., $\phi_j(x) = \phi(||x-x_j||_2)$; an RBF centered at $x_j$). Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
 interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align*}
 	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i) + c_{n+1} p_0 \ \ \ \ \ \ \textrm{for }i=1,2,...,n  
 	\end{align*}
@@ -716,17 +726,26 @@ interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align*}
 							0 \end{pmatrix}}_{B_{\diffop{}}}. \nonumber
 	\end{eqnarray}	
 
-The small $(n + 1) \times (n + 1)$ system in Equation~\ref{eq:rbffd_weight_system} is solved at a cost of $O(n^3)$ operations. The resulting stencil weights, $c_\diffop{} = \{c_j\}_{j=1}^n$ can be substituted into Equation~\ref{eq:derivFromFDWeights} for the derivative approximation at $x_c$; coefficient $c_{n+1}$, included in the solution of Equation~\ref{eq:rbffd_weight_system}, is of no use and discarded. 
+The small $(n + 1) \times (n + 1)$ system in Equation~\ref{eq:rbffd_weight_system} is solved at a cost of $O(n^3)$ floating point operations (FLOPs). The resulting stencil weights, $c_\diffop{} = \{c_j\}_{j=1}^n$ can be substituted into Equation~\ref{eq:derivFromFDWeights} for the derivative approximation at $x_c$. Coefficient $c_{n+1}$ ($d_\diffop{} = c_{n+1}$), included in the solution of Equation~\ref{eq:rbffd_weight_system}, is of no use and discarded once the system is solved. 
 
-\authnote{HERE} 
-Equation~\ref{eq:rbffd_weight_system} resolves the stencil weights for one node in the domain, $x_c$. The process is repeated $N$ times---once for each stencil center in the domain---to obtain a total of $N \times n$ weights
+Note that Equation~\ref{eq:rbffd_weight_system} resolves the weights for one node in the domain, $x_c$.  Thus, the small system solve is repeated $N$ times---once for each node---to obtain a total of $N \times n$ stencil weights.
 
+\authnote{Use of the 1's constraint is highly recommended. It keeps weights within magnitude 100, whereas not providing the constraint results in much higher magnitudes in the thousands or tens of thousands. Using first order monomials does not add benefit. Include examples of weights in 2D with 5 to 10 nodes.} 
 
-Approximating $\diffop{u(x)}$ for all nodes in the domain, $\{x_c\}_{c=1}^N$, requires iterating Equation~\ref{eq:rbffd_weight_system} must be solved $N$ 
-
-This process is repeated for each stencil center  $\{x_c\}_{c=1}^{N}$ for a total of $N \times n$ weights. 
 
 %TODO: weights applied to u
+\subsubsection{Differentiation Matrix}
+to form the $N$ rows of the DM  with $n$ non-zeros $(n\ll N)$ per row.
+As an example, if $\diffop$ is the identity operator, 
+then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. In the context of time-dependent PDEs,  the stencil weights remain constant for all time-steps when the nodes are stationary. Therefore, the calculation of the 
+differentiation weights is performed once in a single preprocessing step of O$(n^3N)$ FLOPs.
+
+
+\subsubsection{Multiple Derivatives}
+
+In many cases, multiple differential operators (i.e., $\diffop{}_1, \diffop{}_2, \cdots$) are required
+
+
 %TODO: multiple RHS
 \begin{eqnarray}
 \underbrace{\begin{bmatrix} \phi & P \\
@@ -738,12 +757,6 @@ This process is repeated for each stencil center  $\{x_c\}_{c=1}^{N}$ for a tota
 %TODO: boundaries can be, but are not always handled by special operators
 %TODO: preprocessing complexity vs timestep
 
-to form the $N$ rows of the DM  with $n$ non-zeros $(n\ll N)$ per row.
-As an example, if $\diffop$ is the identity operator, 
-then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. In the context of time-dependent PDEs,  the stencil weights remain constant for all time-steps when the nodes are stationary. Therefore, the calculation of the 
-differentiation weights is performed once in a single preprocessing step of O$(n^3N)$ 
-%floating point operations (FLOPs). 
-FLOPs.
 Improved efficiency is achieved
 by processing multiple right hand sides in one pass, calculating the weights
 corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}$, $\Laplacian$, etc.).
@@ -757,31 +770,17 @@ corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}
 	%\authnote{must have things mixed up in my head. Cannot justify the reason to have $\PP_{\diffop{}}$ and not $0$. Perhaps because I dont fully understand the cardinal point derivation of RBFFD.}
 
 
-
-
-\section{RBF-FD weights}
-\label{sec:rbffd}
-
- $\phi_i(\epsilon r) = \phi(\ep\vectornorm{\vx-\vx_{i}})$, centered at the nodes $\{\vx_i\}_{i=1}^{n}$, with 
-$r=\vectornorm{\vx - \vx_i}$
-being the distance between where the RBF is centered and where it is evaluated as measured in the standard Euclidean 2-norm.
-
-where $w_{n+1}$ is ignored after the matrix in ({\ref{eq:rbffd_weight_system}}) is inverted.
-This $n \times n$ system solve is repeated for each stencil center  $\vx_j$, $j=1...N$, to form the $N$ rows of the DM  with $n$ non-zeros $(n\ll N)$ per row.
-As an example, if $\diffop$ is the identity operator, 
-then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. In the context of time-dependent PDEs,  the stencil weights remain constant for all time-steps when the nodes are stationary. Therefore, the calculation of the 
-differentiation weights is performed once in a single preprocessing step of O$(n^3N)$ 
-%floating point operations (FLOPs). 
-FLOPs.
-Improved efficiency is achieved
-by processing multiple right hand sides in one pass, calculating the weights
-corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}$, $\Laplacian$, etc.).
-
+\section{Generating Stencils}
 %reply to the LSH question from the reviewer involving parallelization of the search process for each point, and the issue regarding embarrassingly parallel process. Also note: this is done only once so efficiency is not an issue, nor is parallelization.
 
 For each of the $N$ small system solves of Equation~(\ref{eq:rbffd_weight_system}), the $n$ nearest neighbors to $\vx_j$ need to be located. This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. 
 
-\authnote{Use of the 1's constraint is highly recommended. It keeps weights within magnitude 100, whereas not providing the constraint results in much higher magnitudes in the thousands or tens of thousands. Using first order monomials does not add benefit. Include examples of weights in 2D with 5 to 10 nodes.} 
+\section{Differentiation Matrices}
+
+%TODO: sparsity
+%TODO: Node ordering
+%TODO: show blocks for boundary conditions (annulus)
+%TODO: application (explicit/implicit solution)
 
 \section{Weight Operators}
 Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs. Here we provide a list of operators we have tested and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system} necessary to compute RBF-FD weights. 
@@ -863,9 +862,9 @@ P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\
 %\authnote{Show accuracy of derivative approximation when using projected operator vs linear combinations of dx,dy,dz operators}
 
 
-\section{Stabilization: Hyperviscosity}
+\subsection{Stabilization: Hyperviscosity}
 
-For RBF-FD, differentiation matrices encode convective operators of the form 
+In Chapter~\ref{chap:explicit_solutions}, differentiation matrices will encode convective operators of the form 
 \begin{equation}
 D = \alpha \pd{}{\lambda} + \beta \pd{}{\theta} \label{eqconv}
 \end{equation}
@@ -904,6 +903,8 @@ H = \gamma \Delta^{k} = \gamma_c N^{-k} \Delta^{k}.
 \end{equation*}
 Given a choice of $\epsilon$ (see Section~\ref{sec:numerical_validation}), it was found experimentally that $\gamma = \gamma_c N^{-k}$  provides stability and good accuracy for all values of $N$ considered here. It also ensures that the viscosity vanishes as $N\rightarrow\infty$ \cite{FlyerLehto11}.
 In general, the larger the stencil size, the higher the order of the Laplacian.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \cite{FornbergLehto11,FlyerLehto11}.
+
+\section{On Choosing the Right $\epsilon$} 
 
 
 
