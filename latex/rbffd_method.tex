@@ -648,7 +648,6 @@ convection-diffusion equations, demonstrating solutions that are non-oscillatory
 accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cecil2004}, and 2D linear and non-linear PDEs 
 including Navier-Stokes equations \cite{Shu2003} have all been considered. 
 
-\authnote{FINISH: } Table~\ref{tbl:rbfcolloctypes} reflects th
 
 %TODO: Expand description of each related work
 
@@ -815,7 +814,7 @@ where multiple sets of weights ($c_\nabla, c_x, c_y$) solved simultaneously. Thi
 
 \section{Weight Operators}
 %Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs.
-In the course of this work we work with a variety of PDEs. This section enumerates a list of relevant operators and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. Whenever possible the general form of $\diffop{\phi}$ is provided; otherwise a Gaussian RBF ($\phi(r) = e^{-(\epsilon r)^2}$) is assumed. 
+In the course of this work we work with a variety of PDEs. This section enumerates a list of relevant operators and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. Whenever possible the general form of $\diffop{\phi}$ is provided; otherwise the Gaussian RBF ($\phi(r) = e^{-(\epsilon r)^2}$) is assumed. 
 
 \subsection{First and Second Derivatives ($\frac{1}{r}\d{\phi}{r}, \dd{\phi}{r}$)}
 The following are used in subsequent derviatives:
@@ -826,8 +825,8 @@ The following are used in subsequent derviatives:
 
 
 
-\subsection{Gradient ($\grad$)}
-The standard first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) are produced via the chain rule
+\subsection{Cartesian Gradient ($\grad$)}
+The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) are produced via the chain rule:
 	\begin{align*} 
 	 \pd{\phi}{x} = \d{r}{x} \d{\phi}{r} = \frac{(x-x_{j})}{r} \d{\phi}{r} \\
 	 \pd{\phi}{y} = \d{r}{y} \d{\phi}{r} = \frac{(y-y_{j})}{r} \d{\phi}{r} \\
@@ -836,20 +835,20 @@ The standard first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \p
 %where $\pd{\phi}{r}$ for the Gaussian RBFs is given by: 
 
 
-\subsection{Laplacian ($\Laplacian$)}
+\subsection{Cartesian Laplacian ($\Laplacian$)}
 Fasshauer \cite{Fasshauer2007} provides the general form of $\nabla^2$ in 2D as: 
 \begin{align*}
 \nabla^2 = \dd{}{r}\phi(r) + \frac{1}{r}\d{}{r} \phi(r) 
 \end{align*}
 For Gaussian RBFs in particular we have the following operators:
 \begin{itemize}
-\item 1D: $\epsilon^2 (-2 + 4 (\epsilon r)^2) \phi(r)$
-\item 2D: $\epsilon^2 (-4 + 4 (\epsilon r)^2) \phi(r)$
+\item 1D: $$\nabla^2 = \epsilon^2 (-2 + 4 (\epsilon r)^2) \phi(r)$$
+\item 2D: $$\nabla^2 = \epsilon^2 (-4 + 4 (\epsilon r)^2) \phi(r)$$
 % e^{-(\epsilon r)^2}$
-\item 3D: $\epsilon^2 (-6 + 4 (\epsilon r)^2) \phi(r)$
+\item 3D: $$\nabla^2 = \epsilon^2 (-6 + 4 (\epsilon r)^2) \phi(r)$$
 % e^{-(\epsilon r)^2}$
 \end{itemize}
-which is fits $\nabla^2 = \dd{}{r}\phi(r) + \frac{d - 1}{r}\d{}{r} \phi(r)$ for dimension $d$.
+which all fit $\nabla^2 = \dd{}{r}\phi(r) + \frac{d - 1}{r}\d{}{r} \phi(r)$ for dimension $d$.
 
 %
 %
@@ -953,7 +952,7 @@ P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\
 %\authnote{Show accuracy of derivative approximation when using projected operator vs linear combinations of dx,dy,dz operators}
 
 
-\subsection{Stabilization: Hyperviscosity}
+\subsection{Hyperviscosity $\Delta^k$ for Stabilization}
 
 When explicitly solving hyperbolic equations, differentiation matrices encode convective operators of the form 
 \begin{equation}
