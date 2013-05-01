@@ -47,7 +47,7 @@ speedup even in unoptimized kernels. Although the stencil weight calculation is
 also data-parallel, we assume that in this context that the weights are
 precomputed and loaded once from disk during the initialization phase. 
 
-\authnote{}Need partitioning, global and local index maps, and local ordering for a distributed matrix operation \cite{Saad2003} 
+%TODO: Need partitioning, global and local index maps, and local ordering for a distributed matrix operation \cite{Saad2003} 
 
 \section{On the use of libraries for parallel solvers}
 
@@ -108,9 +108,7 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 \end{center}
 \end{figure}
 
-\authnote{Need to flesh detail on ParMETIS, two dimensional partitioning and case when a node value is required by multiple processors}
-
-
+%TODO: Need to flesh detail on ParMETIS, two dimensional partitioning and case when a node value is required by multiple processors}
 
 \section{Local node ordering}
 
