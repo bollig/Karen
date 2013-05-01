@@ -22,6 +22,8 @@
 \begin{document}
 \fi
 
+\tableofcontents
+
 { \graphicspath{{rbffd_methods_content/}} 
 
 %introduction
@@ -580,7 +582,7 @@ Note that because the interpolants are local, there is no notion of global conti
 
 %TODO: time stepping integrated into global collocation? For now, cut (see toadd timestepping.tex)
 
-\part{The RBF-FD Method}
+%\part{The RBF-FD Method}
 %The RBF-FD chapter needs:%•	Related papers on RBF-FD specifically (i.e., the complete history; follow Flyer Fornberg book). %o	Clearly state what every paper in the RBF-FD group accomplished%•	Weight method%•	Similarly to spectral and pseudospectral (only collocation points allow optimizations) modes, RBF-FD and FD are related and share much of the same approach. Use RBF-FD for general node placement and high order accuracy. Use FD for optimized solution, faster solvers (Fourier decomposition, Band solver, etc). %•	Apply weights to single node (figure from Paper 1) or form a DM%•	Solve PDEs with explicit/implicit form (solvers)%o	Mention GMRES%•	List of weight types%o	Projection operators%•	Choosing epsilon%•	Hyperviscosity stabilization
 
 \chapter{Introduction to RBF-FD}
@@ -757,11 +759,18 @@ D_\diffop{}^{(c,k)} & = \begin{cases} c_j & x_k = x_j \\
                                     0 & x_k \neq x_j \\
                                     \end{cases} 
 \end{align*}
-where $(c,k)$ represents the (row, column) index of $D_\diffop{}$ and vector $u = \{u(x_k)\}_{k=1}^{N}$. Equation~\ref{eq:derivFromFDWeights} can rewritten as:
+where $(c,k)$ represents the (row, column) index of $D_\diffop{}$ and vector $u = \{u(x_k)\}_{k=1}^{N}$. Equation~\ref{eq:derivFromFDWeights} can be rewritten as:
 \begin{align*}
 \left. \diffop{u(x)} \ \right|_{x = x_c} & \approx D_{\diffop{}}^{(c)} u \ \ .
 \end{align*}
-
+DMs are utilized in explicit and implicit modes to solve PDEs. Here explicit implies evaluating the matrix-vector mulitply to get derivative values, $u'$, from explicitly known vector of solution values $u$: 
+\begin{align*}
+u' = D_{\diffop{}} u
+\end{align*}
+whereas implicit requires solving for unknown $u$ in: 
+\begin{align*}
+D_{\diffop{}} u = f
+\end{align*}
 
 An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this example, assume operator $\diffop{} = \pd{}{x}$ is approximated at all $N$ stencil centers of an arbitrary domain. RBF-FD weights assemble the rows of the differentiation matrix, $D_{x}$. On each row, weights are indicated by blue dots. The sparsity of rows reflects the subset of $\{x_k\}_{k=1}^N$ included in corresponding stencils of size $n$. On the right hand side, discrete derivative values $\d{u}{x}$ are approximated at all stencil centers. 
 
@@ -773,12 +782,13 @@ An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this
 \end{figure}
 
 %TODO: note that DM does not depend on $u(x)$; only x. if the function u(x) wer
-Differentiation matrices are assembled at a cost of $O(n^3 N)$ FLOPs, but since the goal of RBF-FD is to keep stencil neighborhoods small, $n \ll N$ and the cost of assembly is dominated by $O(N)$. Furthermore, RBF-FD weights are independent of function values ($u(x)$) and rely only on stencil node locations. The implications of this are profound in the context of time-dependent PDEs, since the stencil weights remain constant so long as the nodes are stationary. The DM assembly is then part of a one-time preprocessing step.% and can applied explicitly in $O(N)$ operations  
+Differentiation matrices are assembled at a cost of $O(n^3 N)$ FLOPs; although, the goal of RBF-FD is to keep stencil neighborhoods small, $n \ll N$ and the cost of assembly is dominated by $O(N)$. Furthermore, RBF-FD weights are independent of function values ($u(x)$) and rely only on stencil node locations. The implications of this are profound in the context of time-dependent PDEs, since the stencil weights remain constant so long as the nodes are stationary. The DM assembly is then part of a one-time preprocessing step.% and can applied explicitly in $O(N)$ operations  
 
 %TODO: verify
 % Generally speaking DM application at each time-step scales as $O(N)$ for explicit solutions and $O(N^2)$ for implicit. 
 
-The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD due to $n \ll N$. Best practices dictate that the sparse DMs be stored in a compressed sparse storage format to keep only non-zeros and their corresponding indices in memory. 
+The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD due to $n \ll N$. Best practices dictate that the DMs be stored in a compressed sparse storage format to retain only non-zeros and their corresponding indices in memory. 
+%TODO: This reduces the $N^2$ matrix elements to a memory footprint of  
 
 %TODO: storage in sparse rather than dense form
 %TODO: storage allows us to precompute and apply at later time-steps. 
@@ -802,14 +812,19 @@ where multiple sets of weights ($c_\nabla, c_x, c_y$) solved simultaneously. Thi
 %TODO: boundaries can be, but are not always handled by special operators
 %TODO: preprocessing complexity vs timestep 
 
-\subsection{Application to PDEs}
-
-
 
 \section{Weight Operators}
 %Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs.
-In the course of this work we work with a variety of PDEs. 
- Here we provide a list of relevant operators their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. 
+In the course of this work we work with a variety of PDEs. This section enumerates a list of relevant operators and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. Whenever possible the general form of $\diffop{\phi}$ is provided; otherwise a Gaussian RBF ($\phi(r) = e^{-(\epsilon r)^2}$) is assumed. 
+
+\subsection{First and Second Derivatives ($\frac{1}{r}\d{\phi}{r}, \dd{\phi}{r}$)}
+The following are used in subsequent derviatives:
+\begin{align*}
+\frac{1}{r}\d{}{r}\phi(r) & = -2 \epsilon^2 \phi(r) \\
+\dd{\phi}{r} & = \epsilon^2(-2 + 4(\epsilon r)^2)\phi(r)
+\end{align*}
+
+
 
 \subsection{Gradient ($\grad$)}
 The standard first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) are produced via the chain rule
@@ -822,10 +837,58 @@ The standard first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \p
 
 
 \subsection{Laplacian ($\Laplacian$)}
+Fasshauer \cite{Fasshauer2007} provides the general form of $\nabla^2$ in 2D as: 
+\begin{align*}
+\nabla^2 = \dd{}{r}\phi(r) + \frac{1}{r}\d{}{r} \phi(r) 
+\end{align*}
+For Gaussian RBFs in particular we have the following operators:
+\begin{itemize}
+\item 1D: $\epsilon^2 (-2 + 4 (\epsilon r)^2) \phi(r)$
+\item 2D: $\epsilon^2 (-4 + 4 (\epsilon r)^2) \phi(r)$
+% e^{-(\epsilon r)^2}$
+\item 3D: $\epsilon^2 (-6 + 4 (\epsilon r)^2) \phi(r)$
+% e^{-(\epsilon r)^2}$
+\end{itemize}
+which is fits $\nabla^2 = \dd{}{r}\phi(r) + \frac{d - 1}{r}\d{}{r} \phi(r)$ for dimension $d$.
 
-2D: \authnote{TODO}
+%
+%
+%
+%2D: \begin{align}
+% \nabla^2 = 
+% \end{align}
+%3D: 
+%\begin{align} 
+%\epsilon^2 \\
+%r^2 \\
+%r^2 (\epsilon r)^2 \\
+%\nabla^2 = \pd{}{x^2} = 2 \epsilon^2 ( -1 + 2 r^2 ( \epsilon r)^2) \phi(r)
+%\end{align}
+%
+%
+%\begin{verbatim}
+%                eps2 = ep.^2;
+%                xdv = nodes(imat,1) - nodes(imat(1),1);
+%                x2eps2 = xdv.^2 * eps2;
+%                switch dim
+%                    case 1
+%                        B(1:n, windx) = 2 .* eps2 .* (-1 + 2.*x2eps2) .* rbf.phi(ep, rdv);
+%                    case 2
+%                        % Imat is stencil indices
+%                        % imat(1) gets stencil center
+%                        % ydv = x_i.y - x_j.y
+%                        % nodes(imat(1),:) = x_j
+%                        ydv = nodes(imat,2) - nodes(imat(1),2);
+%                        y2eps2 = ydv.^2 * eps2;
+%                        B(1:n, windx) = 4 .* eps2 .* (-1 + x2eps2 + y2eps2) .* rbf.phi(ep, rdv);
+%                    case 3
+%                        ydv = nodes(imat,2) - nodes(imat(1),2);
+%                        zdv = nodes(imat,3) - nodes(imat(1),3);
+%                        r2eps4 = (xdv.^2 + ydv.^2 + zdv.^2) * eps2 * eps2;
+%                        % r2eps4 = r^2 \epsilon^4
+%                        B(1:n, windx) = (-6 .* eps2 + 4 .* r2eps4) .* rbf.phi(ep, rdv);
+%\end{verbatim}
 
-3D: 
 
 \subsection{Laplace-Beltrami ($\LaplaceBeltrami$) on the Sphere}
 
@@ -839,15 +902,15 @@ In the case of PDEs solved on the unit sphere, there is no radial term, so we ha
 \begin{align}
 \Laplacian  \equiv \LaplaceBeltrami.
 \end{align}
-Although this originated in the spherical coordinate system, \cite{WrightFlyerYuen10} introduced the following Laplaci-Beltrami operator for the surface of the sphere: 
+Although this originated in the spherical coordinate system, \cite{WrightFlyerYuen10} introduced the following Laplace-Beltrami operator for the surface of the sphere: 
 \begin{align*} 
-\LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{}{r} + \frac{4-3r^2}{r} \pd{}{r} \right],
+\LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{\phi}{r} + \frac{4-3r^2}{r} \pd{\phi}{r} \right],
 \end{align*} 
 where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
 
 \subsection{Constrained Gradient ($P_{x} \cdot \grad$) on the Sphere}
 
-Additionally following \cite{FlyerWright09, FlyerLehto11}, the gradient operator must also be constrained to the sphere with this projection matrix: 
+Following \cite{FlyerWright09, FlyerLehto11}, the gradient operator can be constrained to the sphere with this projection matrix: 
 %\frac{1}{||\mathbf{x}||}
 \begin{align}
 P = I - \mathbf{x} \mathbf{x}^T =  \begin{pmatrix} 
@@ -878,11 +941,11 @@ Applying the projection matrix gives
 & = \begin{pmatrix} x \vx^T \vx_k - x_k \\ y \vx^T \vx_k -  y_k \\ z \vx^T \vx_k -z_k \end{pmatrix} \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} 
  \end{align*}
 Thus, we directly compute the weights for $P_{x}\cdot\grad{}$ using these three RHS in Equation~\ref{eq:rbffd_weight_system}: 
-\begin{align} 
+\begin{align*} 
 P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j} \\
 P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j} \\
 P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j}
-\end{align}
+\end{align*}
 
 %TODO: finish appendix
 %Alternatively, assuming weights for operators $\grad = \pd{}{x_{1}}, \pd{}{x_{2}}, \pd{}{x_{3}}$ are already computed, the projected operator could be constructed via weighting the unprojected gradient components. For example: 
@@ -894,7 +957,7 @@ P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\
 
 When explicitly solving hyperbolic equations, differentiation matrices encode convective operators of the form 
 \begin{equation}
-L = \alpha \pd{}{\lambda} + \beta \pd{}{\theta} \label{eqconv}
+D = \alpha \pd{}{\lambda} + \beta \pd{}{\theta} \label{eqconv}
 \end{equation}
 %TODO: where $\alpha$ and $\beta$ are a function of the fluid velocity. 
 The convective operator, discretized
@@ -938,6 +1001,8 @@ H = \gamma \Delta^{k} = \gamma_c N^{-k} \Delta^{k}.
 \end{equation*}
 It was found in \cite{FlyerLehto11}, and verified in our own application, that $\gamma = \gamma_c N^{-k}$  provides stability and good accuracy for all values of $N$ considered here. It also ensures that the viscosity vanishes as $N\rightarrow\infty$ \cite{FlyerLehto11}.
 In general, the larger the stencil size, the higher the order of the Laplacian.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \cite{FornbergLehto11,FlyerLehto11}.
+
+
 
 \section{Generating Stencils}
 %reply to the LSH question from the reviewer involving parallelization of the search process for each point, and the issue regarding embarrassingly parallel process. Also note: this is done only once so efficiency is not an issue, nor is parallelization.
@@ -998,7 +1063,7 @@ We observe that RBF-FD functions as well on stencils of true nearest neighbors a
 %TODO: application (explicit/implicit solution)
 
 
-\chapter{Distributed Multi-GPU RBF-FD Implementation}
+\chapter{A Distributed Multi-GPU RBF-FD Implementation}
 
 %\authnote{Related work for start of Parallel/GPU chapter}
 Parallel implementations of RBF methods currently rely on parallel domain decomposition. Depending on the implementation, domain decomposition not only accelerates solution procedures, but can decrease the ill-conditioning that plague all global RBF methods \cite{Divo2007}. The ill-conditioning is reduced if each domain is treated as a separate RBF domain, and the boundary update is treated separately. Domain decomposition methods for RBFs were introduced by Beatson et al. \cite{Beatson2000} in the year 2000 as a way to increase problem sizes into the millions of nodes.
