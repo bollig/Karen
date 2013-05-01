@@ -121,7 +121,7 @@ interpolation type.
 There are three main categories of RBF interpolation; we list them in Table~\ref{tbl:interp_types}. The first is \emph{Global} in the case that a single, large ($N\times N$) and 
 dense matrix corresponding to globally supported RBFs is inverted; second, \emph{Compact} if compactly supported RBFs are used to 
 produce a single, large, but sparse matrix; and third, \emph{Local} if compactly supported RBFs are used to produce many small but 
-dense matrices with one corresponding to each collocation point. In all three cases the matrices are symmetric and with the correct choice of RBF they are at least conditionally positive definite. 
+dense matrices with one corresponding to each collocation point. In all three cases the matrices are symmetric and with the correct choice of RBF they are at least conditionally positive definite. The final row of Table~\ref{tbl:rbfcolloctypes} considers literature on the RBF-FD method and will be discussed in depth in Chapter~\ref{chap:rbffd_method}.
 
 \begin{table}[t]
    \centering
@@ -139,9 +139,12 @@ dense matrices with one corresponding to each collocation point. In all three ca
 
 We note that three types of collocation occur throughout the RBF literature: 
 Kansa's unsymmetric collocation method \cite{Kansa1990a, Kansa1990b}, Fasshauer's symmetric collocation method \cite
-{Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}.% While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  %A full explanation of RBF based collocation is deferred to Chapter~\ref{chap:rbf_pde}. 
+{Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}. 
+%TODO: classify RBF-PS applications
 
-Prior to launching into derivation each RBF method, we first survey the classifications to highlight benefits, shortcomings, and to provide a brief historical context. A survey of related work in the RBF community that involves parallelization and optimization is deferred to Chapter~\ref{chap:parallel_rbf}. 
+% While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  %A full explanation of RBF based collocation is deferred to Chapter~\ref{chap:rbf_pde}. 
+
+Prior to launching into derivation each RBF collocation method, we first survey the classifications to highlight benefits, shortcomings, and to provide a brief historical context. A survey of related work in the RBF community that involves parallelization and optimization is deferred to Chapter~\ref{chap:parallel_rbf}. 
 
 \subsection{Global RBF Methods}
 
@@ -233,8 +236,9 @@ Recently, Fornberg and Wright
 computation of highly 
 accurate interpolants for (very small) cases typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). Larsson and Fornberg \cite{Larsson2003} 
 applied the 
-algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method. Note that currently, the Contour-Pad\'{e} 
-algorithm was only studied for global RBF interpolation, not for compact or local methods. 
+algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method. %TODO: verify 
+Note that currently, the Contour-Pad\'{e} 
+algorithm was only studied for global RBF interpolation, not for compact or local collocation methods. 
 
 The \emph{RBF-QR} method, an alternative for numerically stable computation in the limit as $\epsilon \rightarrow 0$, was introduced by Fornberg  and 
 Piret \cite{Fornberg2007} in context of a sphere, and later extended to planar 2D problems in \cite{Fornberg2009b}. The 
@@ -622,7 +626,7 @@ As in FD, increasing the stencil size, $n$, increases the accuracy of the approx
 
 In some ways, RBF-FD and global RBF methods are plagued by the same difficulties. For example, as the number of nodes in the stencil increases, so too does the ill-conditioning of the linear systems to be solved. Similarly, the most accurate weights occur when $\epsilon \rightarrow 0$, but values in that regime beget additional ill-conditioning problems---a recurrence of the \emph{Uncertainty Relation} \cite{Schaback1995}. One key difference in the multiple independent RBF-FD origins was that Wright \cite{Wright2003} focused on bypassing ill-conditioning of RBF-FD and investigated its behavior in the limit as $\epsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm. 
 
-Given $N$ total nodes in the domain, $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$; significantly lower than the global RBF or RBF-PS methods ($O(N^3)$). The cost per time step is also $O(N)$. 
+Given $N$ total nodes in the domain, $N$ linear systems, each of size $(n+1) \times (n+1)$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$; significantly lower than the global RBF or RBF-PS methods ($O(N^3)$). The cost per time step is also $O(N)$. 
 
 RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
@@ -640,6 +644,7 @@ convection-diffusion equations, demonstrating solutions that are non-oscillatory
 accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cecil2004}, and 2D linear and non-linear PDEs 
 including Navier-Stokes equations \cite{Shu2003} have all been considered. 
 
+\authnote{FINISH: } Table~\ref{tbl:rbfcolloctypes} reflects th
 
 %TODO: Expand description of each related work
 
@@ -667,7 +672,8 @@ The RBF-FD method is similar to classical Finite Differences in that RBF-FD allo
         \end{align}
 where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \pd{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil} with size $n$. While not required, in practice one considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; here, Euclidean distance ($||x-x_c||_2$) is preferred. 
 
-When solving PDEs, one typically desires derivatives at every node in the discretized domain. To achieve this, one generates a stencil centered at each node in the domain. Stencils need not have the same size ($n$), but most applications choose
+Generally, one typically needs derivatives at every node in the discretized domain to solve PDEs. To achieve this with RBF-FD, stencils are generated around each node in the domain. Stencils need not have the same size ($n$), but here this is assumed for simplicity in discussion. Furthermore, the number of stencils need not match the number of nodes in the domain. 
+%TODO: need ref to example of ghost nodes and/or leave-one-out}.
 
 %TODO: convergence depends on stencil size
 
@@ -706,9 +712,9 @@ Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First
 %TODO: For RBF-FD the system is based on a symmetric distance matrix. 
 %TODO: Need better description and ref The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
 
-\subsubsection{Stencil Weights} 
+\subsection{Stencil Weights} 
 
- To approximate $\diffop{u(x)}$, one requires the stencil \emph{weights} (coefficients), ${c_j}$. Weights are obtained by enforcing that they be exact within the space spanned by the RBFs centered at stencil nodes (i.e., $\phi_j(x) = \phi(||x-x_j||_2)$; an RBF centered at $x_j$). Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
+ To approximate $\diffop{u(x)}$, one requires the stencil \emph{weights} (coefficients), ${c_j}$. Stencil weights are a discrete representation of the differential operator at the stencil center and may vary by node location (e.g., nodes at the boundary are usually governed by another operator, $\boundop$). Weights are obtained by enforcing that they be exact within the space spanned by the RBFs centered at stencil nodes (i.e., $\phi_j(x) = \phi(\epsilon ||x-x_j||_2)$; an RBF centered at $x_j$). Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
 interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align*}
 	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i) + c_{n+1} p_0 \ \ \ \ \ \ \textrm{for }i=1,2,...,n  
 	\end{align*}
@@ -720,52 +726,81 @@ interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align*}
             \phi_{1}(x_n) & \phi_{2}(x_n) & \cdots & \phi_{n}(x_{n}) & 1 
             \\ 1 & 1 & \cdots & 1 & 0 \end{bmatrix} 
             \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_n \\ c_{n+1} \end{pmatrix} & = & \begin{pmatrix} \left.\diffop{\phi_1}(x)\ \right|_{x=x_c} \\  \left.\diffop{\phi_2}(x)\ \right|_{x=x_c} \\ \vdots \\  \left.\diffop{\phi_{n}}(x)\ \right|_{x=x_c} \\ 0 \end{pmatrix} \label{eq:rbffd_weight_system} \\
-\underbrace{\begin{bmatrix} \phi & P \\
-		P^T & 0 \end{bmatrix}}_{A} \begin{pmatrix} c_\diffop{} \\ 
-							d_\diffop{} \end{pmatrix} & = & \underbrace{\begin{pmatrix} \phi_{\diffop{}} \\
-							0 \end{pmatrix}}_{B_{\diffop{}}}. \nonumber
+\begin{bmatrix} \phi & P \\
+		P^T & 0 \end{bmatrix} \begin{pmatrix} c_\diffop{} \\ 
+							d_\diffop{} \end{pmatrix} & = & \begin{pmatrix} \phi_{\diffop{}} \\
+							0 \end{pmatrix}. \nonumber
 	\end{eqnarray}	
+The choice of $\diffop{}$ can be any linear operator. As an example, if $\diffop$ is the identity operator, then the above procedure leads to RBF-FD weights for interpolation. If $\diffop=\pd{}{x}$, one obtains the weights to approximate the first derivative in $x$. Refer to \cite{Fasshauer2007} for a table of commonly used RBF derivatives. 
 
-The small $(n + 1) \times (n + 1)$ system in Equation~\ref{eq:rbffd_weight_system} is solved at a cost of $O(n^3)$ floating point operations (FLOPs). The resulting stencil weights, $c_\diffop{} = \{c_j\}_{j=1}^n$ can be substituted into Equation~\ref{eq:derivFromFDWeights} for the derivative approximation at $x_c$. Coefficient $c_{n+1}$ ($d_\diffop{} = c_{n+1}$), included in the solution of Equation~\ref{eq:rbffd_weight_system}, is of no use and discarded once the system is solved. 
+The small $(n + 1) \times (n + 1)$ system in Equation~\ref{eq:rbffd_weight_system} is dense, and is solved at a cost of $O(n^3)$ floating point operations (FLOPs) using direct methods like LU-decomposition. The resulting stencil weights, $c_\diffop{} = \{c_j\}_{j=1}^n$ can be substituted into Equation~\ref{eq:derivFromFDWeights} for the derivative approximation at $x_c$. Coefficient $c_{n+1}$ ($d_\diffop{} = c_{n+1}$), included in the solution of Equation~\ref{eq:rbffd_weight_system}, is of no use and discarded once the system has been solved. 
 
-Note that Equation~\ref{eq:rbffd_weight_system} resolves the weights for one node in the domain, $x_c$.  Thus, the small system solve is repeated $N$ times---once for each node---to obtain a total of $N \times n$ stencil weights.
+Based on the choice of support parameter, $\epsilon$, the Equation~\ref{eq:rbffd_weight_system} may suffer problems with conditioning. In such cases, stable methods like Contour--Pad\'{e} \cite{Wright2003} or RBF-QR \cite{Fornberg2011a,Davydov2011} may be preferred.  
 
-\authnote{Use of the 1's constraint is highly recommended. It keeps weights within magnitude 100, whereas not providing the constraint results in much higher magnitudes in the thousands or tens of thousands. Using first order monomials does not add benefit. Include examples of weights in 2D with 5 to 10 nodes.} 
 
+%The above procedure 
+%As an example, if $\diffop$ is the identity operator, 
+%then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. 
+
+%TODO: Use of the 1's constraint is highly recommended. It keeps weights within magnitude 100, whereas not providing the constraint results in much higher magnitudes in the thousands or tens of thousands. Using first order monomials does not add benefit. Include examples of weights in 2D with 5 to 10 nodes.
 
 %TODO: weights applied to u
-\subsubsection{Differentiation Matrix}
-to form the $N$ rows of the DM  with $n$ non-zeros $(n\ll N)$ per row.
-As an example, if $\diffop$ is the identity operator, 
-then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. In the context of time-dependent PDEs,  the stencil weights remain constant for all time-steps when the nodes are stationary. Therefore, the calculation of the 
-differentiation weights is performed once in a single preprocessing step of O$(n^3N)$ FLOPs.
+\subsection{Differentiation Matrix}
+Note that Equation~\ref{eq:rbffd_weight_system} resolves the weights only for the stencil $x_c$. The small system solve is repeated $N$ times---once for each stencil---to obtain a total of $N \times n$ stencil weights. 
+
+For PDEs, it is common practice to assemble a \emph{differentiation matrix} (DM); a discrete representation of the PDE operator on the domain. Given the set of nodes in the domain $\{x_k\}_{k=1}^N$, the $c$-th row of the DM represents the discrete PDE operator for the stencil centered at node $x_c$ with stencil nodes $\{x_j\}_{j=1}^{n}$: 
+\begin{align*}
+ \diffop{u(x)} & \approx D_{\diffop{}} u \\
+D_\diffop{}^{(c,k)} & = \begin{cases} c_j & x_k = x_j \\
+                                    0 & x_k \neq x_j \\
+                                    \end{cases} 
+\end{align*}
+where $(c,k)$ represents the (row, column) index of $D_\diffop{}$ and vector $u = \{u(x_k)\}_{k=1}^{N}$. Equation~\ref{eq:derivFromFDWeights} can rewritten as:
+\begin{align*}
+\left. \diffop{u(x)} \ \right|_{x = x_c} & \approx D_{\diffop{}}^{(c)} u \ \ .
+\end{align*}
 
 
-\subsubsection{Multiple Derivatives}
+An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this example, assume operator $\diffop{} = \pd{}{x}$ is approximated at all $N$ stencil centers of an arbitrary domain. RBF-FD weights assemble the rows of the differentiation matrix, $D_{x}$. On each row, weights are indicated by blue dots. The sparsity of rows reflects the subset of $\{x_k\}_{k=1}^N$ included in corresponding stencils of size $n$. On the right hand side, discrete derivative values $\d{u}{x}$ are approximated at all stencil centers. 
 
-In many cases, multiple differential operators (i.e., $\diffop{}_1, \diffop{}_2, \cdots$) are required
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[width=0.65\textwidth]{omnigraffle/DM_rows.pdf}
+		\caption{Differentiation matrix $D_x$ is applied to the solution values $u(x)$ to obtain derivative approximations, $\d{u}{x}$. }
+		\label{fig:example_DM_rows}
+\end{figure}
+
+%TODO: note that DM does not depend on $u(x)$; only x. if the function u(x) wer
+Differentiation matrices are assembled at a cost of $O(n^3 N)$ FLOPs, but since the goal of RBF-FD is to keep stencil neighborhoods small, $n \ll N$ and the cost of assembly is dominated by $O(N)$. Furthermore, RBF-FD weights are independent of function values ($u(x)$) and rely only on stencil node locations. The implications of this are profound in the context of time-dependent PDEs, since the stencil weights remain constant so long as the nodes are stationary. The DM assembly is then part of a one-time preprocessing step.% and can applied explicitly in $O(N)$ operations  
+
+%TODO: verify
+% Generally speaking DM application at each time-step scales as $O(N)$ for explicit solutions and $O(N^2)$ for implicit. 
+
+The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD due to $n \ll N$. Best practices dictate that the sparse DMs be stored in a compressed sparse storage format to keep only non-zeros and their corresponding indices in memory. 
+
+%TODO: storage in sparse rather than dense form
+%TODO: storage allows us to precompute and apply at later time-steps. 
+
+%TODO: swapping nodes does not cause singularity
 
 
-%TODO: multiple RHS
+
+\subsection{Multiple Operators}
+
+In many cases, multiple derivatives (e.g., $\diffop{} = \nabla^2$, $\pd{}{x}$, $\pd{}{y}$, etc.) are required at stencil centers. This is common, for example, when solving coupled PDEs. For RBF-FD, acquiring weights for each additional operator can be both straight-forward and computationally efficient. For each change of differential operator, observe that only the RHS of Equation~\ref{eq:rbffd_weight_system} is modified. Thus, new operators amount to extending Equation~\ref{eq:rbffd_weight_system} to solve 
 \begin{eqnarray}
-\underbrace{\begin{bmatrix} \phi & P \\
-		P^T & 0 \end{bmatrix}}_{A} \begin{pmatrix} c_{\nabla^2} & c_{\pd{}{x}} & \cdots \\ 
-							d_{\nabla^2} & d_{\pd{}{x}} & \dots \end{pmatrix} & = & \underbrace{\begin{pmatrix} \phi_{\nabla^2} & \phi{\pd{}{x}} & \cdots \\
-							0 & 0 & \cdots \end{pmatrix}}_{B_{\diffop{}}}. \nonumber
-	\end{eqnarray}	
-	
+    \begin{bmatrix} \phi & P \\
+		P^T & 0 \end{bmatrix} \begin{bmatrix} c_{\nabla^2} & c_{x} & c_{y} & \cdots \\ 
+							d_{\nabla^2} & d_{x} & d_{y} & \dots \end{bmatrix} & = &     
+		\begin{bmatrix} \phi_{\nabla^2} & \phi_{x} & \phi_{y} & \cdots \\
+							0 & 0 & 0 & \cdots \end{bmatrix}. \nonumber
+	\end{eqnarray}
+where multiple sets of weights ($c_\nabla, c_x, c_y$) solved simultaneously. This dense, symmetric, multiple RHS linear system is considered ideal by linear algebra packages, and many highly optimized routines exist to solve them (e.g., LAPACK ``dgesv"). 
+
 %TODO: boundaries can be, but are not always handled by special operators
-%TODO: preprocessing complexity vs timestep
+%TODO: preprocessing complexity vs timestep 
 
-Improved efficiency is achieved
-by processing multiple right hand sides in one pass, calculating the weights
-corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}$, $\Laplacian$, etc.).
-
-
-%Solving Equation~\ref{eqn:rbffd_simplified} for stencils weights, $c$, and substituting into Equation~\ref{eq:derivFromFDWeights} reveals the similarity between RBF-FD and the general problem of RBF interpolation (see Equation~\ref{eq:rbf_interpolate_pt} and discussion): 
-
-        
-	
+\section{Applying DMs}
 
 	%\authnote{must have things mixed up in my head. Cannot justify the reason to have $\PP_{\diffop{}}$ and not $0$. Perhaps because I dont fully understand the cardinal point derivation of RBFFD.}
 
@@ -775,23 +810,23 @@ corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}
 
 For each of the $N$ small system solves of Equation~(\ref{eq:rbffd_weight_system}), the $n$ nearest neighbors to $\vx_j$ need to be located. This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. 
 
-\section{Differentiation Matrices}
-
 %TODO: sparsity
 %TODO: Node ordering
 %TODO: show blocks for boundary conditions (annulus)
 %TODO: application (explicit/implicit solution)
 
 \section{Weight Operators}
-Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs. Here we provide a list of operators we have tested and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system} necessary to compute RBF-FD weights. 
+%Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs.
+In the course of this work we work with a variety of PDEs. 
+ Here we provide a list of relevant operators their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. 
 
+\subsection{Gradient ($\grad$)}
 The standard first derivatives $\pd{}{x}, \pd{}{y}, \pd{}{z}$ are produced by the chain rule
-	\begin{align} 
+	\begin{align*} 
 	 \pd{\phi}{x} = \d{r}{x} \d{\phi}{r} = \frac{(x-x_{j})}{r} \d{\phi}{r} \\
 	 \pd{\phi}{y} = \d{r}{y} \d{\phi}{r} = \frac{(y-y_{j})}{r} \d{\phi}{r} \\
 	 \pd{\phi}{z} = \d{r}{z} \d{\phi}{r} = \frac{(z-z_{j})}{r} \d{\phi}{r}
-	\end{align}
-
+	\end{align*}
 where $\pd{\phi}{r}$ for the Gaussian RBFs is given by: 
 
 
@@ -804,9 +839,9 @@ where $\pd{\phi}{r}$ for the Gaussian RBFs is given by:
 \subsection{Laplace-Beltrami ($\LaplaceBeltrami$) on the Sphere}
 
 The $\Laplacian$ operator can be represented in spherical polar coordinates for $\mathbb{R}^3$ as: 
-\begin{align} 
+\begin{align*} 
 \Laplacian = \underbrace{\frac{1}{r} \pd{}{r} \left( r^{2} \pd{}{r}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{r^2} \Delta_{S}}_{\mathsf{angular}} , \label{eq:laplacian_in_spherical}
-\end{align}
+\end{align*}
 where $\LaplaceBeltrami$ is the Laplace-Beltrami operator---i.e., the Laplacian operator constrained to the surface of the sphere. This form nicely illustrates the separation of components into radial and angular terms. 
 
 In the case of PDEs solved on the unit sphere, there is no radial term, so we have:
@@ -814,9 +849,9 @@ In the case of PDEs solved on the unit sphere, there is no radial term, so we ha
 \Laplacian  \equiv \LaplaceBeltrami.
 \end{align}
 Although this originated in the spherical coordinate system, \cite{WrightFlyerYuen10} introduced the following Laplaci-Beltrami operator for the surface of the sphere: 
-\begin{align} 
+\begin{align*} 
 \LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{}{r} + \frac{4-3r^2}{r} \pd{}{r} \right],
-\end{align} 
+\end{align*} 
 where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
 
 \subsection{Constrained Gradient ($P_{x} \cdot \grad$) on the Sphere}
@@ -839,7 +874,9 @@ The direct method of computing RBF-FD weights for the projected gradient for $\m
 Using the chain rule, and assumption that 
 $$r(\vx_k-\vx)=\vectornorm{\vx_k-\vx} = \sqrt{(x_{1,k}-x_1)^2 + (x_{2,k}-x_2)^2 + (x_{3,k}-x_3)^2},$$
  we obtain the unprojected gradient of $\phi$ as
-$$\nabla \phi(r(\vx_k - \vx)) = \pd{r}{\vx} \pd{\phi(r(\vx_k - \vx))}{r} = - (\vx_k - \vx)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r}$$. 
+\begin{align*}
+\nabla \phi(r(\vx_k - \vx)) = \pd{r}{\vx} \pd{\phi(r(\vx_k - \vx))}{r} = - (\vx_k - \vx)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} .
+\end{align*} 
 
 Applying the projection matrix gives 
 \begin{align*}
@@ -909,7 +946,7 @@ In general, the larger the stencil size, the higher the order of the Laplacian. 
 
 
 % TODO: Break off to new chapter
-\chapter{TEMP}
+\section{TEMP}
 
 
 \subsection{Parallel RBF Implementations}
@@ -940,7 +977,7 @@ In this work, we will add to the above experiences, with the added twist of inco
 
 \section{Fragments (integrate above)}
 
-Stabilization of the RBF-FD method is achieved through the application of a hyperviscosity filter \cite{Fornberg2011b}. By assuming the use of Gaussian RBFs, $\phi(r) = e^{-(\epsilon r)^2}$, the hyperviscosity operator simplifies to
+Stabilization of the RBF-FD method is achieved through the application of a hyperviscosity filter \cite{FornbergLehto11}. By assuming the use of Gaussian RBFs, $\phi(r) = e^{-(\epsilon r)^2}$, the hyperviscosity operator simplifies to
 \begin{equation}
 \Delta^{k}\phi(r) = \epsilon^{2k} p_k(r) \phi(r).
 \label{eqn:gaussian_hv}
@@ -1010,11 +1047,11 @@ RBFs on GPU work: \cite{Schmidt2009a, Schmidt2009b} (global), \cite{Yokota2010} 
 
 }
 
-\part{Appendices}
-The following appendices are included to illuminate subtleties of the RBF-FD method. The first discusses the method's ability to avoid pole singularities when applied to solid body transport on the sphere. The second considers the difference between directly computing weights for differentiation operators versus leveraging linear combinations of weights to indirectly construct the same operators. 
-\appendix
-\input{rbffd_avoid_pole_singularities}
-\input{rbffd_weights_on_sphere}
+%\part{Appendices}
+%\appendix
+%The following appendices are included to illuminate subtleties of the RBF-FD method. The first discusses the method's ability to avoid pole singularities when applied to solid body transport on the sphere. The second considers the difference between directly computing weights for differentiation operators versus leveraging linear combinations of weights to indirectly construct the same operators. 
+%\include{rbffd_avoid_pole_singularities}
+%\include{rbffd_weights_on_sphere}
 
 \ifstandalone
 \bibliographystyle{plain}
