@@ -53,3 +53,11 @@ Open Questions:
     What iterative solver works better? GMRES or BiCGStab? 
 
 
+For slides: 
+===========
+
+Rotating grids, solar system with points hovering around on the screen. Opening slide. Zoom out and see randomly selected points and say, "At the end, we'll be solving these with PDEs."
+
+Difference is anyone else who sees that grid can't do it.
+
+Need to scale my thousands of nodes to thousands of compute nodes. Grid size in billions. Fit those in memory which means you have to do the mesh on a high memory machine. Get the *yawn* stable method for weight calculation using the incomplete gamma function. Cute fornberg lato and flyer 2012.
