@@ -1,0 +1,60 @@
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
+
+\input{all_usepackages} 
+
+\begin{document}
+\fi
+
+
+\chapter{Weight calculation}
+
+Recall that basis function is: 
+\begin{align} 
+\phi(r) & = e^{-(\epsilon r)^2} \\
+r & = ||x_i - x_j||_2 \\ 
+\d{\phi(r)}{x} & = \d{\phi(r)}{r} \d{r}{x} = -2 \epsilon^2 r e^{-(\epsilon r)^2} * \frac{x}{r} \\
+& = -2 \epsilon^2 x e^{-(\epsilon r)^2}
+\end{align}
+
+As $N$ increases, the spacing between nodes in the stencil decreases and the system becomes more and more difficult to solve accurately (it is ill-conditioned). Assume $h$ is the maximum spacing between the center and farthest node in the stencil. One way to simplify the solution for weights is to scale all nodes in the stencil to fit in the unit circle/sphere. That is, the farthest node from the center lies on or near the periphery of the unit sphere and the rest are proportionally distributed. This requires scaling each $r$ above by some factor $\frac{1}{h}$. 
+
+We try to prove that contrary to FD where the scaling by $h$ is required on the weights, RBF-FD distances can be scaled by $h$ as input to the weight system and result in far simpler systems to solve with much better control over the optimal support parameter $\epsilon$. 
+
+Consider the input to the weight system for $\frac{r}{h}$: 
+
+\begin{align}
+r & = ||x_i - x_j||_2 \\ 
+h & = \max{||x_i - x_j||_2} \\
+\phi(\frac{r}{h}) & = e^{-(\epsilon \frac{r}{h})^2} \\
+ & = e^{-(\frac{\epsilon}{h} r)^2} \\
+ & = e^{-(c r)^2}
+\end{align}
+which means scaling the nodes to the unit circle/sphere is equivalent to scaling the support parameter to result in more peaked bases for the same tight node layout.
+
+If we look at the derivative of $\phi(r)$ for the RHS of the system, we get: 
+
+\begin{align}
+\d{\phi(r)}{x} & = \d{\phi(r)}{r} \d{r}{x} = -2 c^2 r e^{-(c r)^2} * \frac{x}{r} \\
+& = -2 c^2 x e^{-(c r)^2}
+\end{align}
+Again, note that the scaling does not appear on the node locations in the derivative. Therefore, when we calculate the weights with 
+\begin{align}
+\begin{bmatrix} \phi & P \\ P & 0 \end{bmatrix} \begin{pmatrix} w \\ d \end{pmatrix} & = \begin{pmatrix} \diffop{\phi} \\ 0 \end{pmatrix}
+\end{align}
+we get the weights $w$ invariant to the of the scaling of the nodes. 
+
+This is incredibly useful for standardizing the support parameter. Consider for example when we have adaptive refinements in a domain with stencil coordinates ranging from $[-1,1]$ down to $[-0.00001, 0.00001]$. By simply scaling the stencils to the unit circle we can reuse the same $\epsilon$ for each stencil. Based on node distribution within the stencil we will see the stencil weights 
+
+
+\ifstandalone
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi
