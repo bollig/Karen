@@ -1,0 +1,85 @@
+\documentclass[11pt]{report}
+
+\usepackage{standalone}
+\input{all_usepackages}
+%
+%
+%\title{Multi-GPU Solutions of Geophysical PDEs with Radial Basis Function-generated Finite Differences}
+%\author{Evan F. Bollig}
+%\college{College of Arty Science}
+%\department{Department of Scientific Computing} % Delete if no department
+%\manuscripttype{Dissertation}                    % [Thesis, Dissertation, Treatise]
+%\degree{Doctor of Philosophy}                 
+%\semester{Fall}                          % [Spring, Summer, Fall]
+%\degreeyear{2012}
+%\defensedate{October 1, 2012}
+%%\subject{My Topic}
+%%\keywords{keyterm1; keyterm2; keyterm3; ...}
+%
+%\committeeperson{Gordon Erlebacher}{Professor Directing Thesis}
+%\committeeperson{Natasha Flyer}{Professor Directing Thesis}
+%\committeeperson{Mark Sussman}{University Representative}
+%\committeeperson{Dennis Slice}{Committee Member}
+%\committeeperson{Ming Ye}{Committee Member}
+
+\begin{document}
+
+%% UNCOMMENT THIS FOR ETD CLEARANCE
+%\frontmatter
+%\maketitle
+%\makecommitteepage
+%%
+%\input{dedication.tex}
+%\input{acknowledgments.tex}
+%%
+\tableofcontents
+%\listoftables
+%\listoffigures
+%\listofalgorithms
+%%
+%\input{symbols.tex}
+%\input{abbreviations.tex}
+	%
+	%\input{abstract.tex}
+
+%\mainmatter
+
+%\include{introduction}
+%\include{related_work}
+\include{rbffd_method}
+\include{distributed_solver}
+\include{RBFFD_as_SpMV}
+\include{SpMV_GPU}
+%\include{GMRES}
+%\include{ViennaCL.tex}
+%\include{future_of_gpus.tex}
+%\include{explicit_pde_solutions}
+%\include{implicit_pde_solutions}
+
+
+
+%\include{performance_analysis} 
+%\include{ordering_and_preconditioning}
+%	\include{publications}
+%
+%\appendix
+%%\input{notation_and_symbols.tex}
+%\include{rbffd_avoid_pole_singularities}
+%\include{rbffd_weights_on_sphere}
+
+% The BibTeX bibliography/references section.  View the file
+% 'myrefs.bib' to get a feel for what these entries may look like.
+% By using the optional \nocite{*} line, every entry in 'myrefs.bib'
+% will be inserted into the bibliography.  Otherwise, only entries
+% that have been cited with \cite{key} somewhere in the text will
+% be included.
+%\nocite{*}
+% Or individually reference papers you want to include without citation: 
+%\nocite{Vuduc2005}
+
+\bibliographystyle{plain}
+\bibliography{merged_references}
+
+%\input{biography.tex}
+
+\end{document}
