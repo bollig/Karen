@@ -1035,18 +1035,23 @@ In general, the larger the stencil size, the higher the order of the Laplacian. 
 
 \section{Implementation}
 
-This section details many of the steps we have taken in our practical implementation of RBF-FD. 
+This section discusses implementation of RBF-FD at a high level. Consider Algorithm~\ref{alg:rbffd_high_level}. The algorithm is partitioned into two phases: Preprocessing and Application. 
 
-First, we consider the high-level application of RBF-FD to solve PDEs. Second, we iterate through relevant portions of the solution process and discuss various design decisions made in our study of the method. 
+Preprocessing encompasses details such as grid setup/generation, stencil generation and stencil weight calculations. As output from Preprocessing one expects one or more DMs representing the discrete differential operators. Assuming the grid nodes do not move, the DMs remain constant for the duration of the Application phase. Additionally, DMs can be loaded from disk on subsequent runs to bypass the cost of preprocessing. 
+
+In the Application phase, constructed/loaded DMs are applied to known solution values to solve the PDE either explicitly or implicitly. Although it is not mandatory, Algorithm~\ref{alg:rbffd_high_level} assumes that this phase includes a form of time-stepping. Time-stepping could be as simple as an Euler method ($u_{new} = u + \Delta t u'$)
+or more complex like Runge-Kutta where SolvePDE would be called for multiple steps and the results of each call would be weighted and combined within UpdateSolution.
+
+ As the number of time-steps increases, the cost of Application far outweighs the one-time cost of preprocessing; thus, this work focuses mostly on acceleration of Application where the impact of gains will be most significant. 
+
+
 
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
-\subsection{High-level view of RBF-FD for PDEs} 
-
-\begin{algorithm}                      % enter the algorithm environment
-\caption{A High-Level View of RBF-FD}          % give the algorithm a caption
-\label{alg:rbffd_high_level}                           % and a label for \ref{} commands later in the document
-Preprocessing:
+\begin{algorithm}                      
+\caption{A High-Level View of RBF-FD}          
+\label{alg:rbffd_high_level}                           
+\textbf{Preprocessing:}
 \begin{algorithmic}[0]                   
     \State Load or construct grid $\{x\}_{j=1}^N$ 
    	\For {$j = 1$ to $N$} \label{alg:stencil_gen} 
@@ -1056,21 +1061,23 @@ Preprocessing:
    	    \State $\{w_{j,i}\}_{i=1}^{n} = $ SolveForWeights($\{S_j\}$)
    	    \State $D_{\diffop{}}^{(j)} = $ AssembleDM($\{w_j\}$)     
     \EndFor
-    \algstore{myalg}
+    \algstore{myalg}    % Store the algorithm number count
 \end{algorithmic}
-Solve: 
+\textbf{Application:}
 \begin{algorithmic}[1] 
-\algrestore{myalg}  
+\algrestore{myalg}      % continue to count from store line
     \State $t = t_{min}$                
     \While{ $t < t_{max}$ }
         \State $\{u'\} =$ SolvePDE($D_{\diffop{}}$, $\{u\}$)
-        \State UpdateSolution($\{u'\}$)
+        \State $\{u\} =$ UpdateSolution($\{u'\}$, $\Delta t$)
         \State $t$ += $\Delta t$
     \EndWhile
 \end{algorithmic}
 \end{algorithm}
 
 
+
+\subsection{Preprocessing Phase} 
 
 
 \subsection{On Choosing the Right $\epsilon$} 

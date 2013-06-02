@@ -1,0 +1,3 @@
+Stability regions within matlab: 
+
+http://www2.maths.ox.ac.uk/chebfun/examples/ode/html/Regions.shtml
