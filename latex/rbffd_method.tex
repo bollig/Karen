@@ -1039,10 +1039,10 @@ This section discusses implementation of RBF-FD at a high level. Consider Algori
 
 Preprocessing encompasses details such as grid setup/generation, stencil generation and stencil weight calculations. As output from Preprocessing one expects one or more DMs representing the discrete differential operators. Assuming the grid nodes do not move, the DMs remain constant for the duration of the Application phase. Additionally, DMs can be loaded from disk on subsequent runs to bypass the cost of preprocessing. 
 
-In the Application phase, constructed/loaded DMs are applied to known solution values to solve the PDE either explicitly or implicitly. Although it is not mandatory, Algorithm~\ref{alg:rbffd_high_level} assumes that this phase includes a form of time-stepping. Time-stepping could be as simple as an Euler update in which a single call to SolvePDE is necessary, or it could be a higher order Runge-Kutta update where SolvePDE is called multiple times, with the outputs weighted and combined within UpdateSolution. The choice of methods for this phase depend on the PDE. 
+In Application, constructed/loaded DMs are applied to known solution values to solve the PDE either explicitly or implicitly. Although it is not mandatory, Algorithm~\ref{alg:rbffd_high_level} assumes that this phase includes a form of time-stepping. Time-stepping could be as simple as an Euler update in which a single call to SolvePDE is necessary, or it could be a higher order Runge-Kutta update where SolvePDE is called multiple times, with the outputs weighted and combined within UpdateSolution. The choice of methods for this phase depend on the PDE. 
 
-As the number of time-steps increases, the cost of Application outweighs the one-time cost of preprocessing. Thus, efforts to accelerate RBF-FD should first focus on optimizations to the second phase. The steps in Preprocessing typically impact accuracy of the method and often-times the stability as well.
-In what follows we detail our choice of algorithms for preprocessing. Since the Application phase 
+As the number of time-steps increases, the cost of Application outweighs the one-time cost of preprocessing. Thus, efforts to accelerate RBF-FD should first focus on optimizations to the second phase. In contrast, the steps in Preprocessing typically impact accuracy of the method and often-times the stability as well. 
+In what follows we detail design decisions in of algorithms as a prelude to the next chapter which focuses on 
 
 This work focuses mostly on acceleration of Application where the impact of gains will be most significant. 
 

@@ -235,16 +235,14 @@ Need to describe our approach to launch
 
 In simplest form (\& indicates an overlapped execution; overlapping is possible by non-blocking launches to the GPU before comm is started): 
 \begin{itemize} 
-\item $ U_{Q \backslash B}' = A_{Q \backslash B} U_{Q \backslash B}$ 
-\item \& MPI\_alltoallv
+\item $ U_{Q \backslash B}' = A_{Q \backslash B} U_{Q \backslash B}$ \& MPI\_alltoallv
 \item $ U_{B}' = A_{B} U_{B}$ 
 \end{itemize} 
 This form benefits because stencils are operated on in their entirety. For the GPU this is important because we maintain SIMD nature. 
 
 A more complex form which might overlap more comm and comp depending on the size of B (i.e., might be beneficial for large stencil sizes): 
 \begin{itemize} 
-\item $ U_{Q \backslash B}' = A_{Q \backslash B} U_{Q \backslash B}$ 
-\item \& MPI\_alltoallv
+\item $ U_{Q \backslash B}' = A_{Q \backslash B} U_{Q \backslash B}$ \& MPI\_alltoallv
 \item \& $ U_{B}' = A_{B \backslash R} U_{B \backslash R}$  (partial sparse vector product)
 \item $ U_{B}' += A_{R} U_{R}$ 
 \end{itemize} 
