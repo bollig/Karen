@@ -1035,7 +1035,43 @@ In general, the larger the stencil size, the higher the order of the Laplacian. 
 
 \section{Implementation}
 
-This section details many of the steps we have taken in our practical implementation of RBF-FD. First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
+This section details many of the steps we have taken in our practical implementation of RBF-FD. 
+
+First, we consider the high-level application of RBF-FD to solve PDEs. Second, we iterate through relevant portions of the solution process and discuss various design decisions made in our study of the method. 
+
+%First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
+
+\subsection{High-level view of RBF-FD for PDEs} 
+
+\begin{algorithm}                      % enter the algorithm environment
+\caption{A High-Level View of RBF-FD}          % give the algorithm a caption
+\label{alg:rbffd_high_level}                           % and a label for \ref{} commands later in the document
+Preprocessing:
+\begin{algorithmic}[0]                   
+    \State Load or construct grid $\{x\}_{j=1}^N$ 
+   	\For {$j = 1$ to $N$} \label{alg:stencil_gen} 
+   	    \State Stencil $\{S_{j,i}\}_{i=1}^{n}$ = QueryNeighbors($x_j$)
+   	\EndFor
+    \For {$j = 1$ to $N$} \label{alg:weight_calc} 
+   	    \State $\{w_{j,i}\}_{i=1}^{n} = $ SolveForWeights($\{S_j\}$)
+   	    \State $D_{\diffop{}}^{(j)} = $ AssembleDM($\{w_j\}$)     
+    \EndFor
+    \algstore{myalg}
+\end{algorithmic}
+Solve: 
+\begin{algorithmic}[1] 
+\algrestore{myalg}  
+    \State $t = t_{min}$                
+    \While{ $t < t_{max}$ }
+        \State $\{u'\} =$ SolvePDE($D_{\diffop{}}$, $\{u\}$)
+        \State UpdateSolution($\{u'\}$)
+        \State $t$ += $\Delta t$
+    \EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+
+
 
 \subsection{On Choosing the Right $\epsilon$} 
 % TODO: expand missing content
