@@ -834,12 +834,12 @@ where multiple sets of weights ($c_\nabla, c_x, c_y$) solved simultaneously. Thi
 %TODO: preprocessing complexity vs timestep 
 
 
-\section{Weight Operators}
+\subsection{Weight Operators}
 \label{sec:weight_operators}
 %Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs.
 In the course of this work we work with a variety of PDEs. This section enumerates a list of relevant operators and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. Whenever possible the general form of $\diffop{\phi}$ is provided; otherwise the Gaussian RBF ($\phi(r) = e^{-(\epsilon r)^2}$) is assumed. 
 
-\subsection{First and Second Derivatives ($\frac{1}{r}\pd{\phi}{r}, \pdd{\phi}{r}$)}
+\subsubsection{First and Second Derivatives ($\frac{1}{r}\pd{\phi}{r}, \pdd{\phi}{r}$)}
 The following are used in subsequent derviatives:
 \begin{align*}
 \frac{1}{r}\d{}{r}\phi(r) & = -2 \epsilon^2 \phi(r) \\
@@ -848,7 +848,7 @@ The following are used in subsequent derviatives:
 
 
 
-\subsection{Cartesian Gradient ($\grad$)}
+\subsubsection{Cartesian Gradient ($\grad$)}
 The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) are produced via the chain rule:
 	\begin{align*} 
 	 \pd{\phi}{x} = \pd{r}{x} \pd{\phi}{r} = \frac{(x-x_{j})}{r} \pd{\phi}{r} \\
@@ -858,7 +858,7 @@ The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) 
 where $\pd{\phi}{r}$ for the Gaussian RBFs is given above. 
 
 
-\subsection{Cartesian Laplacian ($\Laplacian$)}
+\subsubsection{Cartesian Laplacian ($\Laplacian$)}
 Fasshauer \cite{Fasshauer2007} provides the general form of $\nabla^2$ in 2D as: 
 \begin{align*}
 \nabla^2 = \pdd{}{r}\phi(r) + \frac{1}{r}\pd{}{r} \phi(r) 
@@ -912,7 +912,7 @@ which all fit $\nabla^2 = \pdd{}{r}\phi(r) + \frac{d - 1}{r}\pd{}{r} \phi(r)$ fo
 %\end{verbatim}
 
 
-\subsection{Laplace-Beltrami ($\LaplaceBeltrami$) on the Sphere}
+\subsubsection{Laplace-Beltrami ($\LaplaceBeltrami$) on the Sphere}
 
 The $\Laplacian$ operator can be represented in spherical polar coordinates for $\mathbb{R}^3$ as: 
 \begin{align*} 
@@ -930,7 +930,7 @@ Although this originated in the spherical coordinate system, \cite{WrightFlyerYu
 \end{align*} 
 where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
 
-\subsection{Constrained Gradient ($P_{x} \cdot \grad$) on the Sphere}
+\subsubsection{Constrained Gradient ($P_{x} \cdot \grad$) on the Sphere}
 
 Following \cite{FlyerWright09, FlyerLehto11}, the gradient operator can be constrained to the sphere with this projection matrix: 
 %\frac{1}{||\mathbf{x}||}
@@ -975,7 +975,7 @@ P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\
 %\authnote{Show accuracy of derivative approximation when using projected operator vs linear combinations of dx,dy,dz operators}
 
 
-\subsection{Hyperviscosity $\Delta^k$ for Stabilization}
+\subsubsection{Hyperviscosity $\Delta^k$ for Stabilization}
 
 When explicitly solving hyperbolic equations, differentiation matrices encode convective operators of the form 
 \begin{equation}
@@ -1042,7 +1042,7 @@ Preprocessing encompasses details such as grid setup/generation, stencil generat
 In Application, constructed/loaded DMs are applied to known solution values to solve the PDE either explicitly or implicitly. Although it is not mandatory, Algorithm~\ref{alg:rbffd_high_level} assumes that this phase includes a form of time-stepping. Time-stepping could be as simple as an Euler update in which a single call to SolvePDE is necessary, or it could be a higher order Runge-Kutta update where SolvePDE is called multiple times, with the outputs weighted and combined within UpdateSolution. The choice of methods for this phase depend on the PDE. 
 
 As the number of time-steps increases, the cost of Application outweighs the one-time cost of preprocessing. Thus, efforts to accelerate RBF-FD should first focus on optimizations to the second phase. In contrast, the steps in Preprocessing typically impact accuracy of the method and often-times the stability as well. 
-In what follows we detail design decisions in of algorithms as a prelude to the next chapter which focuses on 
+In what follows we discuss design decisions in the choice of algorithms as a prelude to the next chapter which focuses on 
 
 This work focuses mostly on acceleration of Application where the impact of gains will be most significant. 
 
