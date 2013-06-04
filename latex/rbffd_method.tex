@@ -1001,7 +1001,7 @@ p_1(r) &= 4(\epsilon r)^2 - 2d, \\
 p_k(r) &= 4((\epsilon r)^2 - 2(k-1) - \frac{d}{2})  p_{k-1}(r) - 8(k-1)(2(k-1) - 2 + d) p_{k-2}(r), \ \ \ \ k = 2, 3, ...
 \end{cases}
 \end{align*}
-where $d$ is the dimension of the problem. In application of hyperviscosity, we assume a $d=2$ on the surface of the sphere since individual RBF-FD stencils can be viewed as (nearly) lying on a plane. For small $N$, the diameter of the stencil may not be sufficiently 
+where $d$ is the dimension of the problem. The application of hyperviscosity in Chapter~\ref{chap:explicit_implicit_pdes}, utilizes the operator as a filter to shift eigenvalues and stabilize advection equations on the surface of the unit sphere. In that case, $d=2$ is assumed ksince individual RBF-FD stencils can be viewed as (nearly) lying on a plane. For small $N$, the diameter of the stencil may not be sufficiently 
 small compared to the radius of the sphere, and hyperviscosity might not work as advertised. 
 %However,
 %numerical evidence in \cite{FornbergLehto11,BolligFlyer} \ci suggests that if the RBFs adequately resolve the convective operator, the 2D 
@@ -1042,7 +1042,9 @@ Preprocessing encompasses details such as grid setup/generation, stencil generat
 In Application, constructed/loaded DMs are applied to known solution values to solve the PDE either explicitly or implicitly. Although it is not mandatory, Algorithm~\ref{alg:rbffd_high_level} assumes that this phase includes a form of time-stepping. Time-stepping could be as simple as an Euler update in which a single call to SolvePDE is necessary, or it could be a higher order Runge-Kutta update where SolvePDE is called multiple times, with the outputs weighted and combined within UpdateSolution. The choice of methods for this phase depend on the PDE. 
 
 As the number of time-steps increases, the cost of Application outweighs the one-time cost of preprocessing. Thus, efforts to accelerate RBF-FD should first focus on optimizations to the second phase. In contrast, the steps in Preprocessing typically impact accuracy of the method and often-times the stability as well. 
-In what follows we discuss design decisions in the choice of algorithms as a prelude to the next chapter which focuses on 
+In what follows we discuss design decisions in the choice of algorithms 
+
+as a prelude to the next chapter which focuses on performance details. 
 
 This work focuses mostly on acceleration of Application where the impact of gains will be most significant. 
 
