@@ -1035,18 +1035,15 @@ In general, the larger the stencil size, the higher the order of the Laplacian. 
 
 \section{Implementation}
 
-This section discusses implementation of RBF-FD at a high level. Consider Algorithm~\ref{alg:rbffd_high_level}. The algorithm is partitioned into two phases: Preprocessing and Application. 
+This section provides an overview of how one implements RBF-FD. Consider Algorithm~\ref{alg:rbffd_high_level}. The algorithm is partitioned into two phases: preprocessing and application. The complexity of each phase depends on the choice of algorithms/method utilized for each task. 
 
-Preprocessing encompasses details such as grid setup/generation, stencil generation and stencil weight calculations. As output from Preprocessing one expects one or more DMs representing the discrete differential operators. Assuming the grid nodes do not move, the DMs remain constant for the duration of the Application phase. Additionally, DMs can be loaded from disk on subsequent runs to bypass the cost of preprocessing. 
+Preprocessing encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output from preprocessing tasks one expects one or more DMs representing the discrete differential operators. Assuming the grid nodes do not move, the DMs remain constant for the duration of the second phase. Additionally, DMs can be loaded from disk on subsequent runs to bypass the cost of all tasks in preprocessing. 
 
-In Application, constructed/loaded DMs are applied to known solution values to solve the PDE either explicitly or implicitly. Although it is not mandatory, Algorithm~\ref{alg:rbffd_high_level} assumes that this phase includes a form of time-stepping. Time-stepping could be as simple as an Euler update in which a single call to SolvePDE is necessary, or it could be a higher order Runge-Kutta update where SolvePDE is called multiple times, with the outputs weighted and combined within UpdateSolution. The choice of methods for this phase depend on the PDE. 
+The constructed DMs are applied in the second phase to known solution values to solve the PDE either explicitly or implicitly. For explicit solutions, the SolvePDE step evaluates a Matrix-Vector multiply. In the case of implicit solutions, SolvePDE inverts the DM via a direct or iterative linear system solve. Although it is not mandatory, many PDE solutions are time-dependent and require a time advancement scheme. The time-scheme could be as simple as an Euler update with a single call to SolvePDE. Alternatively, a higher order method (e.g., Runge-Kutta, Adams-Bashforth, etc.) may require multiple evaluations of SolvePDE, with the outputs weighted and combined within UpdateSolution. 
 
-As the number of time-steps increases, the cost of Application outweighs the one-time cost of preprocessing. Thus, efforts to accelerate RBF-FD should first focus on optimizations to the second phase. In contrast, the steps in Preprocessing typically impact accuracy of the method and often-times the stability as well. 
-In what follows we discuss design decisions in the choice of algorithms 
+When tuning the RBF-FD method for performance, one should focus on optimizations in SolvePDE. The one-time cost of preprocessing has significantly lower return of investment on tuning efforts compared to the compounded time savings of recurring DM applications. This is especially true for time-dependent PDEs where an increase in grid size results in proportional increase in time-steps. As the number of time-steps increases, the time spent in the application phase continues to increase and significantly outweighs the one-time cost of preprocessing. Preprocessing tasks typically impact accuracy of the method and often-times the stability as well. 
 
-as a prelude to the next chapter which focuses on performance details. 
-
-This work focuses mostly on acceleration of Application where the impact of gains will be most significant. 
+In what follows we discuss design decisions for preprocessing tasks. Chapter~\ref{chap:rbffd_multi_gpu} will cover the second phase in more detail. 
 
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
@@ -1079,7 +1076,7 @@ This work focuses mostly on acceleration of Application where the impact of gain
 
 
 
-\subsection{Preprocessing Phase} 
+\subsection{Grid } 
 
 
 \subsection{On Choosing the Right $\epsilon$} 
