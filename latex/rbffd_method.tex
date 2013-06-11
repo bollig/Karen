@@ -1077,8 +1077,9 @@ Here we discuss various design decisions in implementing the preprocessing tasks
 
 \subsection{Grid} 
 
-An implementation of RBF-FD begins with the grid. The RBF-FD method has no requirement for structured grids, or for a well-refined mesh/lattice that limits connectivity between nodes. It operates both on structured grids and random point clouds; although, the choice of grid does impact the accuracy of the method. This freedom to function on domains of any shape, dimension, and granularity is a major selling point for RBF-FD and often impossible for many other PDE methods. 
+An implementation of RBF-FD begins with the grid. The method has no requirement for structured grids, or for a well-refined mesh/lattice that limits connectivity between nodes. It operates both on structured grids and random point clouds; although, the choice of grid does impact the accuracy of the method. This freedom to function on domains of any shape, dimension, and granularity is a major selling point for RBF-FD and often impossible for many other PDE methods. 
 
+\authnote{RBF-FD nodes should not coincide}
 %TODO: cubed, ying-yang
 % For example classic Finite Difference and many Finite Volume methods operate on regular/Cartesian grids. When operating on the sphere, it is common to encounter Cubed-spheres \cite{TODO:NairJablonowski08} and/or Ying-Yang grids in attempts to bypass the need for small time-steps and to alleviate troubling pole singularities common to Latitude/Longitude grids \cite{TODO}. Generalizations to unstructured meshes 
 % TODO: Discontinuous Galerkin? How deep do I want to go?
@@ -1090,7 +1091,7 @@ In the course of this work, we applied RBF-FD to a number of PDEs and grid distr
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 
-\subsubsection{Regular Grid}Regular grid is simplest and used for testing/debugging 
+\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in 1D, 2D or 3D are simple to generate and nodes are guaranteed to not be coincident.     
 
 \begin{itemize}
 \item Benefits: besides a random grid, this is the simplest grid to generate.
