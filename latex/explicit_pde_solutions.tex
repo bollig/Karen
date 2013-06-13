@@ -165,6 +165,9 @@ For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ 
 \end{center}
 \end{figure}
 
+% TODO: figures without stabilization
+\authnote{Include older figures of convergence without stabilization. Mention that CVT nodes require independent tuning of HV param. Its useful but not incredibly convenient at the moment.}
+
 \subsection{Solid body rotation}
 
 The second test case simulates the advection of a cosine bell over the surface of a unit sphere at an angle $\alpha$ relative to the pole of a standard latitude-longitude grid. The governing PDE is
@@ -277,11 +280,13 @@ Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolu
 
 \begin{figure}[htbp]
 \begin{center}
+% TODO: Color figure
 \includegraphics[width=3in]{../figures/paper1/figures/cosine_bell/convergence_plot_hv.pdf}
 \caption{Convergence plot for cosine bell advection. Normalized $\ell_2$ error at 10 revolutions with hyperviscosity enabled. }
 \label{fig:conv_cosine_bell}
 \end{center}
 \end{figure}
+
 
 
 \section{Fragments (integrate above)}
