@@ -1103,11 +1103,13 @@ we test our solutions on the Maximum Determinant (MD) node sets.
 
 MD node sets are 
 
+Two sets of MD nodes are plotted in Figure~\ref{fig:md_nodes}. On the left is $N=4096$ and the right $N=8100$. 
+
 Node sets from 1024 to 27,556 are considered with stencil sizes ranging from17 to 101.
 \begin{figure} 
 \centering
-\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N4096_points.pdf} \includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N8100_points.pdf}
-\caption{Example of $N=4096$ and $N=8100$ maximum determinant (MD) node sets on the unit sphere.} 
+\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N4096_points.pdf} \includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N10201_points.pdf}
+\caption{Example of $N=4096$ and $N=10201$ maximum determinant (MD) node sets on the unit sphere.} 
 \label{fig:md_nodes}
 \end{figure}
 
@@ -1119,14 +1121,22 @@ Node sets from 1024 to 27,556 are considered with stencil sizes ranging from17 
 \end{itemize}
 
 
-\subsubsection{Centroidal Voronoi Tessellations}For large node sets we also consider CVTs since they keep nodes from overlapping. Have I mentioned nodes should not coincide with RBF-FD? CVT simple algorithm (Lloyd’s)
+\subsubsection{Centroidal Voronoi Tessellations}
+To test scaling of our implementations problems greater than $N=27,556$ are required. To this end we leverage Centroidal Voronoi Tessellations (CVTs) of the sphere for higher resolution grids. 
+For large node sets we also consider CVTs since they keep nodes from overlapping. Have I mentioned nodes should not coincide with RBF-FD? CVT simple algorithm (Lloyd’s)
 
 \begin{itemize}
 \item Benefits: theoretically unbounded resolution; converged grids have a sense of ``optimal" node placement; 
 \item Pitfalls: refinements are not direct; long time to convergence; limited to 1M nodes
 \end{itemize}
 
+% TODO: mention other grids generated with CVTs and provide examples 
 \subsubsection{Other Grids}
+
+% TODO: wanted to test without the presence of boundary conditions 
+% TODO: other grids tested boundary conditions
+
+Integrating CVTs within our implementation opens the door to a plethora of applications. While not discussed in detail in the following sections, CVTs were used to generate other complex geometries such as the 3D sphere shell, 2D annulus, ellipse and ellipsoid, 
 
 Other grids considered during the thesis, but not included in the applications below: 
 
