@@ -1078,6 +1078,7 @@ Here we discuss various design decisions in implementing the preprocessing tasks
 \subsection{Grid} 
 
 An implementation of RBF-FD begins with the grid. The method has no requirement for structured grids, or for a well-refined mesh/lattice that limits connectivity between nodes. It operates both on structured grids and random point clouds; although, the choice of grid does impact the accuracy of the method. This freedom to function on domains of any shape, dimension, and granularity is a major selling point for RBF-FD and often impossible for many other PDE methods. 
+%Typically, the only constraint placed on the grid is that nodes should not coincide. If two nodes do coincide it is possible for a stencil to include both, and 
 
 \authnote{RBF-FD nodes should not coincide}
 %TODO: cubed, ying-yang
@@ -1091,14 +1092,13 @@ In the course of this work, we applied RBF-FD to a number of PDEs and grid distr
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 
-\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in 1D, 2D or 3D are simple to generate and refinements (for convergence tests) are direct subsamples.     
-
-\begin{itemize}
-\item Benefits: besides a random grid, this is the simplest grid to generate.
-\item Pitfalls: the regular grid does not take advantage of RBF-FD method's ability to function on unstructured nodes. 
-\end{itemize}
+\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in 1D, 2D or 3D are simple to generate. Additionally, refinements (for convergence tests) are direct subsamples. RBF-FD functions the same whether nodes are uniformly spaced or random. From this perspective, one can argue that regular grids do not fully exercise the advantages from RBF-FD. 
 
 \subsubsection{Maximum Determinant Nodes}
+
+In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. Following the lead of many others in the RBF literature \cite{FlyerWright07,FlyerLehto10}, %TODO: need refs
+we test our solutions using the Maximum Determinant node sets. 
+
 For most tests on sphere we load MD node sets to confirm results with other RBF literature
 
 \begin{itemize}
