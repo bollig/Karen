@@ -1098,19 +1098,12 @@ In theory, RBF-FD functions the same whether nodes are uniformly spaced or rando
 
 \subsubsection{Maximum Determinant Nodes}
 
-In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. For consistency in verification, we choose the Maximum Determinant (MD) node sets \cite{Sloan2001, Sloan2003} to compare against related investigations (e.g., \cite{Fornberg2009a, Fornberg2007,FornbergLehto11}). %TODO: need ref Sloan2001
+In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. For consistency with respect to related investigations (e.g., \cite{Fornberg2009a, Fornberg2007,FornbergLehto11}), we choose the Maximum Determinant (MD) node sets \cite{Womersley2001, Sloan2003}. %TODO: need ref Womersley2001
 
-As \cite{FornbergLehto11} explain choice to use MD nodes in references such as \cite{FornbergLehto11,Fornberg2009a} is based on numerical stability exhibited spherical harmonics interpolation on the node sets. 
+MD node sets were originally introduced to the RBF community due to demonstrated success in spherical harmonics interpolation on the sphere. The seemingly irregular distribution of nodes gain an order of magnitude accuracy over regular looking node distributions \cite{Womersley2001}. Since RBF interpolation tends to reproduce spherical harmonics interpolants on the sphere when $\epsilon \rightarrow 0$, RBF methods benefit similarly \cite{Fornberg2009a}. 
 
-MD node sets have gained popularity in the RBF community due demonstrated success in spherical harmonics interpolation, where the seemingly irregular distribution of nodes is demonstrated to achieve  
-The node sets are available for download on the authors' web site (\url{http://web.maths.unsw.edu.au/~rsw/Sphere}), and range in size from $N=4$ up to $N=27556$. 
+MD node files are available for download on the authors' web site (\url{http://web.maths.unsw.edu.au/~rsw/Sphere}), and range in size from $N=4$ up to $N=27,556$ nodes. Figure~\ref{fig:md_nodes} plots the $N=4096$ MD node set to illustrate the irregularity in node distribution. 
 
-
-In case of interpolation with spherical harmonics, the MD node sets are much more stable numericallythan the ME (minimal energy) type sets [29]. This is due to the MD nodes’ subtle location irregularities, which can be seen inFig. 4.1. This difference in stability is therefore also present for global RBFs in their e?0 limit [14], but it becomes insignificantfor larger e-values. Tests that we have carried out show that such node location details are irrelevant also for the accuracyand robustness of the RBF-FD approach.
-
-Two sets of MD nodes are plotted in Figure~\ref{fig:md_nodes}. On the left is $N=4096$ and the right $N=8100$. 
-
-Node sets from 1024 to 27,556 are considered with stencil sizes ranging from17 to 101.
 \begin{figure} 
 \centering
 \includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N4096_points.pdf} 
