@@ -1098,7 +1098,7 @@ In theory, RBF-FD functions the same whether nodes are uniformly spaced or rando
 
 \subsubsection{Maximum Determinant Nodes}
 
-In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. Following the lead of others in the RBF literature (e.g., \cite{FlyerWright07,FornbergLehto11}), %TODO: need refs
+In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. For consistency in verification against related work in RBF literature (e.g., \cite{FlyerWright07,FornbergLehto11}), %TODO: need refs
 we test our solutions on the Maximum Determinant (MD) node sets. 
 
 MD node sets are 
@@ -1108,8 +1108,8 @@ Two sets of MD nodes are plotted in Figure~\ref{fig:md_nodes}. On the left is $N
 Node sets from 1024 to 27,556 are considered with stencil sizes ranging from17 to 101.
 \begin{figure} 
 \centering
-\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N4096_points.pdf} \includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N10201_points.pdf}
-\caption{Example of $N=4096$ and $N=10201$ maximum determinant (MD) node sets on the unit sphere.} 
+\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N4096_points.pdf} 
+\caption{Example of $N=4096$ maximum determinant (MD) node sets on the unit sphere.} 
 \label{fig:md_nodes}
 \end{figure}
 
