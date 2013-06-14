@@ -1098,10 +1098,15 @@ In theory, RBF-FD functions the same whether nodes are uniformly spaced or rando
 
 \subsubsection{Maximum Determinant Nodes}
 
-In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. For consistency in verification against related work in RBF literature (e.g., \cite{FlyerWright07,FornbergLehto11}), %TODO: need refs
-we test our solutions on the Maximum Determinant (MD) node sets. 
+In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. For consistency in verification, we choose the Maximum Determinant (MD) node sets \cite{Sloan2001, Sloan2003} to compare against related investigations (e.g., \cite{Fornberg2009a, Fornberg2007,FornbergLehto11}). %TODO: need ref Sloan2001
 
-MD node sets are 
+As \cite{FornbergLehto11} explain choice to use MD nodes in references such as \cite{FornbergLehto11,Fornberg2009a} is based on numerical stability exhibited spherical harmonics interpolation on the node sets. 
+
+MD node sets have gained popularity in the RBF community due demonstrated success in spherical harmonics interpolation, where the seemingly irregular distribution of nodes is demonstrated to achieve  
+The node sets are available for download on the authors' web site (\url{http://web.maths.unsw.edu.au/~rsw/Sphere}), and range in size from $N=4$ up to $N=27556$. 
+
+
+In case of interpolation with spherical harmonics, the MD node sets are much more stable numericallythan the ME (minimal energy) type sets [29]. This is due to the MD nodes’ subtle location irregularities, which can be seen inFig. 4.1. This difference in stability is therefore also present for global RBFs in their e?0 limit [14], but it becomes insignificantfor larger e-values. Tests that we have carried out show that such node location details are irrelevant also for the accuracyand robustness of the RBF-FD approach.
 
 Two sets of MD nodes are plotted in Figure~\ref{fig:md_nodes}. On the left is $N=4096$ and the right $N=8100$. 
 
