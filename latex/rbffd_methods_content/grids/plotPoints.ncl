@@ -55,7 +55,7 @@ end if
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fdat            = "./initial_condition.dat"     ; ScalarField
-xdat            = "./loadedgrid_8100nodes.ascii"              ; Nodes
+xdat            = "./N100000cvt_nodes.ascii"              ; Nodes
 gdat            = "./geometry.dat"          ; Description of Nodes file (dimensions)
 
 

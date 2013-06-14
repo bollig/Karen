@@ -1100,9 +1100,9 @@ In theory, RBF-FD functions the same whether nodes are uniformly spaced or rando
 
 In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. For consistency with respect to related investigations (e.g., \cite{Fornberg2009a, Fornberg2007,FornbergLehto11}), we choose the Maximum Determinant (MD) node sets \cite{Womersley2001, Sloan2003}. %TODO: need ref Womersley2001
 
-MD node sets were originally introduced to the RBF community due to demonstrated success in spherical harmonics interpolation on the sphere. The seemingly irregular distribution of nodes gain an order of magnitude accuracy over regular looking node distributions \cite{Womersley2001}. Since RBF interpolation tends to reproduce spherical harmonics interpolants on the sphere when $\epsilon \rightarrow 0$, RBF methods benefit similarly \cite{Fornberg2009a}. 
+MD node sets were introduced to the RBF community due to their success in spherical harmonics interpolation, where the seemingly irregular node distributions gain an order of magnitude accuracy compared to regular looking (Minimum Energy) node distributions \cite{Womersley2001}. RBF interpolation tends to reproduce spherical harmonics interpolants on the sphere when $\epsilon \rightarrow 0$, and RBF methods have been shown to benefit similarly from a subtle irregularity in node locations \cite{Fornberg2007}. 
 
-MD node files are available for download on the authors' web site (\url{http://web.maths.unsw.edu.au/~rsw/Sphere}), and range in size from $N=4$ up to $N=27,556$ nodes. Figure~\ref{fig:md_nodes} plots the $N=4096$ MD node set to illustrate the irregularity in node distribution. 
+The MD node files are available for download on the authors' web site (\url{http://web.maths.unsw.edu.au/~rsw/Sphere}), and range in size from $N=4$ up to N=27,556 nodes on the sphere. Figure~\ref{fig:md_nodes} plots the $N=4096$ node set to illustrate the irregularity in distribution. Each MD node set is a refinement of the sphere but not a subdivision of one another. %The process of generating new MD node sets greater than $N=27,556$ nodes would require recomputing the entire distribution. 
 
 \begin{figure} 
 \centering
@@ -1112,16 +1112,24 @@ MD node files are available for download on the authors' web site (\url{http://w
 \end{figure}
 
 
-
-\begin{itemize}
-\item Benefits: well studied refinements; many applications in RBF literature
-\item Pitfalls: limited resolution ($27556$ max); 
-\end{itemize}
-
-
 \subsubsection{Centroidal Voronoi Tessellations}
-To test scaling of our implementations problems greater than $N=27,556$ are required. To this end we leverage Centroidal Voronoi Tessellations (CVTs) of the sphere for higher resolution grids. 
-For large node sets we also consider CVTs since they keep nodes from overlapping. Have I mentioned nodes should not coincide with RBF-FD? CVT simple algorithm (Lloyd’s)
+
+While the MD nodes allow for verification against related work, our objective is to scale RBF-FD to problem sizes never attempted. To accomplish this, approximately regular grids on the sphere on the order of many hundred thousands of nodes and into millions were required. To this end we leverage Spherical Centroidal Voronoi Tessellations (SCVTs) \cite{Du2003b, Womeldorff2008}. 
+
+SCVTs come with a sense of "optimality" in node locations due to their energy minimizing properties \cite{Du2003b}. Generating SCVTs involves constructing a Voronoi diagram, computing the mass centroids for each Voronoi partition, and updating generating node locations. In most large-scale applications, this iterative process is completed via a probabilistic Lloyd's method, where integrals to compute mass centroids are approximated using random sampling \cite{Womeldorff2008, Du2003b}. While SCVTs in theory converge to a regular node distribution, the probabilistic nature of the centroid calculation introduces irregularities in the grids reminiscent of MD nodes. 
+
+Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=500,000 nodes. On the left, the full sphere, and on the right, a close-up of the same node set. The close-up perspective clearly demonstrates the random artifacts/scarring of irregularly distributed nodes. For benchmarking purposes we test N=100,000, N=500,000 and N=1,000,000 node sets generated using the SCVT library from \cite{Womeldorff2008}. 
+
+
+Not considered here: it is possible to refine grids using density functions in the calculation of the mass centroids. 
+
+\begin{figure} 
+\centering
+\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N100000_points.png}\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N100000_closeup.png} 
+\caption{(Left) N=100,000 Spherical Centroidal Voronoi Tessellation nodes. (Right) Close-up of the same N=100,000 nodes to illustrate the irregularities in the grid.} 
+\label{fig:scvt_nodes}
+\end{figure}
+
 
 \begin{itemize}
 \item Benefits: theoretically unbounded resolution; converged grids have a sense of ``optimal" node placement; 
