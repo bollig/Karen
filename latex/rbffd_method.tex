@@ -1204,6 +1204,16 @@ While the $k$-D Tree functions well for queries, its downfall is a large cost in
 Approximate nearest neighbors will be nearly balanced. 
 We observe that RBF-FD functions as well on stencils of true nearest neighbors as it does on approximate nearest neighbors.
 
+Consider Figure~\ref{fig:ann_stencil} in which an Approximate Nearest Neighbor stencil is constructed. For this stencil, all but one of the nearest neighboring nodes are chosen. 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{rbffd_methods_content/neighbors/neighbor_incorrect.png}
+\caption{Example of an Approximate Nearest Neighbor (ANN) stencil, with all but one of the true nearest neighbors included in the stencil. }
+\label{fig:ann_stencil}
+\end{figure}
+
+
 
 Hashing, shown in Figure~\ref{fig:hashing_example} overlays a regular grid. This is equivalent to an axis aligned bounding box AABB, with refinement. In other words, we form a quad-tree in 2D, an octree in 3D. The neighbor query starts with the cell in which $x_c$ resides. Since we use an axis aligned bounding box, this cell index is easily calculated given the coordinate and number of subdivisions in each dimension. Once the cell index is resolved, the stencil is populated by taking the $n$ nearest neighbors from within the current cell. If the cell does not contain sufficient number of nodes to fill the stencil, the search for neighbors expands to include the cells immediately adjoining the center cell, taking only the nearest nodes in the provided cells. The search continues to expand outward in a rasterized circle/sphere until $n$ is satisifed. This search is considered approximate because it can happen that a true nearest neighbor would lie in a cell that is is not included in the rasterized circle, and other nodes are substituted from the far reaches of the discretized grid.
 
