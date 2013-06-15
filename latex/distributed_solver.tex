@@ -110,6 +110,16 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 
 %TODO: Need to flesh detail on ParMETIS, two dimensional partitioning and case when a node value is required by multiple processors}
 
+
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{rbffd_methods_content/decompositions/gpmetis_decomp_sphere_4parts.png}
+\caption{METIS partitioning of $N=10,201$ nodes to span four processors with stencil size $n=31$.  }
+\label{fig:decomposed_sphere}
+\end{center}
+\end{figure}
+
+
 \section{Local node ordering}
 
 After partitioning, each CPU/GPU is responsible for its own subset of nodes. 
