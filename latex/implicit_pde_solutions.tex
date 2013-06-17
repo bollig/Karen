@@ -244,13 +244,13 @@ Scaling GMRES across multiple GPUs requires a domain decomposition. Domain decom
 
 \subsubsection{Domain Decomposition} 
 The domain is decomposed na\"{i}vely by cutting the domain into domain bounding box into $P$ equal sized partitions. Each processor is assigned one partition. Partitions may contain unequal number of nodes. Future work will integrate a domain partitioning library such as ParMETIS \cite{KarypisXXX} or SCOTCH \cite{Scotch} to improve load balancing for processors. 
-
-\begin{align} 
-\vu = \sum_{p=0}^{numprocs} R_p (A R_p^T)^{-1}  F
-\end{align} 
-where $R_p$ is a restriction matrix (identity on diagonals for stencils operated on by a processor, zero elsewhere). In our case, the partitions are determined by node coordinates, so all non-zeros for a stencil row end up on the same processor (i.e., the decomposition of the matrix does not allow multiple domain blocks per row). 
-
-The restriction matrix $R^0_p$ contains only zeros and ones. Cai et al. \cite{Cai1998} let $R^0_p$ contain ones on the diagonal to indicate rows of the system for which a processor $p$ is responsible. Our implementation similarly places $I$ on the diagonal, but we then apply a general permutation matrix $P$ to compress $R^0_p A$ such that processors assemble an $N_p \times m$ local matrix (where $N_p \ll N$ and $m \ll N$). Likewise, processors allocate vectors for the reduced problem size. The solution is $N_p \times 1$ and RHS is $m \times 1$. Recall that the domain decomposition is determined by node partitioning, which does not guarantee rows of the global system corresponding to stencils in a processor's partition will be a contiguous block of the full system. 
+%
+%\begin{align} 
+%\vu = \sum_{p=0}^{numprocs} R_p (A R_p^T)^{-1}  F
+%\end{align} 
+%where $R_p$ is a restriction matrix (identity on diagonals for stencils operated on by a processor, zero elsewhere). In our case, the partitions are determined by node coordinates, so all non-zeros for a stencil row end up on the same processor (i.e., the decomposition of the matrix does not allow multiple domain blocks per row). 
+%
+%The restriction matrix $R^0_p$ contains only zeros and ones. Cai et al. \cite{Cai1998} let $R^0_p$ contain ones on the diagonal to indicate rows of the system for which a processor $p$ is responsible. Our implementation similarly places $I$ on the diagonal, but we then apply a general permutation matrix $P$ to compress $R^0_p A$ such that processors assemble an $N_p \times m$ local matrix (where $N_p \ll N$ and $m \ll N$). Likewise, processors allocate vectors for the reduced problem size. The solution is $N_p \times 1$ and RHS is $m \times 1$. Recall that the domain decomposition is determined by node partitioning, which does not guarantee rows of the global system corresponding to stencils in a processor's partition will be a contiguous block of the full system. 
 
 
 \subsection{Solution Ordering}
