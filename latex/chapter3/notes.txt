@@ -1,0 +1,86 @@
+•	Parallelizing RBF-FD solutions
+o	As previously mentioned, the dominant cost in RBF-FD arises in the application phase when the DM is used to solve the PDE
+•	Explicit solutions require SpMV, SAXPY for update
+•	Implicit solutions require GMRES or another iterative solver; which in turns requires multiple SpMV, SAXPY internally.
+•	Reduce as a means to calculate norms and monitor progress of application. 
+o	Parallelization is achieved at two levels
+•	A domain decomposition allows us to distribute the SpMV and SAXPY operations
+•	We target the GPU with OpenCL and ViennaCL
+o	Multi-CPU/Multi-GPU Implementation is first in the RBF-FD community
+•	Related work for RBF methods on GPU is limited to Schmidt 
+•	Distributed RBF methods limited to Knepley and a few others*
+o	Leveraging GPU
+•	GPU features
+•	Memory layout
+•	Multi-Processors
+•	Bandwidth on GPU (refer to Bell for significance)
+•	Table comparing hardware of M2070, M2090, Phi
+•	Trends in hardware since 2006
+o	Cheap to purchase, superior performance 
+o	Trending technology that nearly all supercomputing centers are buying into; predominantly CUDA hardware, until 2012 when Intel released the Phi cards
+o	Initially research focused on porting codes and determining the limits of the almost black-box hardware. Today it seems as though the buzz/hype over GPU computing is winding down as more and more research leverages existing code that was previously optimized for the GPU. That is understandable; focus on getting the science done, rather than the computer science. Newcomers are more interested in leveraging the GPUs rather than optimizing for them.  
+•	MIC is new on scene
+•	Describe hardware
+•	State that we are just starting investigations but results are not included here. 
+o	Too soon to tell what benefits
+o•	MIC has pragmas and OpenCL support (beta 2012/2013). 
+•	Choice to work with OpenCL and language summary
+•	Functional portability vs performance portability
+•	Promise for open standard in parallel languages
+•	Work-Items, Work-Groups, NDRange, etc.
+•	Local memory
+•	Asynchronous kernel execution, Queues
+•	Memory transfers
+•	How does it compare to CUDA? OpenACC? 
+o	OpenCL attempts to harness the power of all hardware. Supports ATI, Nvidia, etc. Even has support for Cell BE and Phi. 
+o	No support for direct MPI communication (e.g., CUDA-MPI)
+•	Language notation is heavy. Simplification is a must.
+o	OpenCL C++ headers are one option, but this does not simplify the task our problem
+o	Approach our problem from a higher level of abstraction with a sparse matrix library and primitives like SpMV. Answer question: why use libraries like ViennaCL? 
+•	Faster development
+•	Public project with shared interests
+•	Simple API
+•	Why avoid the language? 
+o	Changes are occurring too fast
+•	Hardware is great for performance (>1TFLOP) compared to price to purchase (<$1K)
+•	But hardware is arriving at an incredible rate. 
+•	Not to mention adoption is successful in existing codes where optimization was possible on day 1. For codes developing from scratch it is still easier to debug without using the hardware. Most problems that people would put on GPU can be reduced to some BLAS or LAPACK primitive, so it makes sense to use a library like ViennaCL
+o	ViennaCL already adopted back-end switch for OpenMP, CUDA and OpenCL to allow more versatility.
+•	Whatever vendor or language available libraries like ViennaCL will adapt and our code will change little.
+•	MIC limitations in OpenCL 
+o	Images
+o	Device Fission
+•o	No such limitations in GPU, but language is in beta
+•	GPU hardware features
+•	Custom kernels with one thread vs one warp
+•	SpMV will be bandwidth limited
+•	2:1 operations; or 1:1 if a fused multiply and add is used
+•	Custom kernels vs libraries like ViennaCL
+•	Simple interface where transfer to/from GPU happens behind the scenes; incl. Kernels
+•	Fast prototyping
+•	Compatibility with BOOST, Eigen, MKL
+o	BOOST in turn has compatibility with 
+•	ViennaCL SpMV formats 
+o	Focus on ViennaCL and clSpMV options
+••	We can implement test PDEs in ViennaCL, or consider GPU optimizations external to PDEs. clSpMV test weights (read as mtx format) and benchmark for a better view of optimization potential on the GPU. 
+o	COO
+o	, CSR
+o•	Only enough description to state that COO is the storage format and CSR is most common format in literature. Most results compare on CSR format.
+o	Focus on ELL
+•	Ideal for RBF-FD given assumption all stencils are size n
+o	SELL, BELL, SBELL
+•	Differences in kernels
+•	What optimizations can we make?
+•	We can test padding to nearest 32
+o	A range of HYBother formats exist, but we do not concern ourselves with them here. 
+o•	Would be appropriate for cases where stencils have variable number of nodes. Our assumption is that we have a uniform number. 
+•	All indicators point to ideal for RBF-FD with variable stencil size
+•	Performance comparison of ViennaCL formats reveals expected 27x speedup over CPU (boost SpMV, not as optimal as MKL; only optimized for one core). 
+o	What is the fastest SpMV for RBF-FD? 
+o	Need: MKL SpMV for comparison
+o	Need: table of GFLOPs
+•	Other known formats
+o	CUSPARSE offers some (limited to CUDA)
+o	MKL offers some
+o	Block options in clSpMV; clSpMV (OSKI) is also best competitor
+

@@ -1,0 +1,69 @@
+
+Chapter Contents: 
+
+#### Should this be broken off to introduction? ####
+•	Preliminaries
+o	RBF method history
+•	Related methods in history leading to RBF-FD
+o	Equations for Related RBF methods and how they compare
+•	Show commonalities (RBF interpolation)
+•	Differences
+######################
+
+•	RBF-FD
+o	Related work
+o	Define: Stencils
+o	Equations to get stencil weights
+o	Define: Differentiation matrix
+o	Multiple Operators
+o	Weight Operators
+•	First and second derivatives
+•	Cartesian Gradient
+•	Cartesian Laplacian
+•	Laplace-Beltrami
+•	Constrained Gradient on Sphere
+•	Hyperviscosity 
+o	Implementation of RBF-FD
+•	Algorithm showing flow of RBF-FD 
+•	Two phases
+o	Preprocessing
+o	Application
+•	Complexity of phases depends on choice of algorithm for each task
+•	Phase 1 is strictly preprocessing and data can be loaded from disk to bypass on subsequent runs. 
+•	Generally, PDEs will have time-steps making phase 2 the more computationally intense. 
+•	Application phase would be similar regardless of method choice. 
+•	Here we discuss various design decisions within the preprocessing phase and consider potential impacts on performance (if any). 
+•	Preprocessing tasks
+•	Grid Generation
+o	We can load or generate grids
+o	Regular grid is simplest and used for testing/debugging 
+o	For most tests on sphere we load MD node sets to confirm results with other RBF literature
+o	For large node sets we also consider CVTs since they keep nodes from overlapping. 
+•	Have I mentioned nodes should not coincide with RBF-FD? 
+•	CVT simple algorithm (Lloyd’s)
+•	Stencil generation
+o	Brute force is obvious starting point, but this is O(N^2). 
+o	K-DTree is used by many in the RBF world to reduce complexity to O(N log N) search time for all stencils.	
+•	Bengt and Fasshauer refer to kDTree
+•	Complexity
+o	Hashing can further reduce complexity. 
+•	Borrowed from SPH, this method builds the equivalent of an axis aligned bounding box. Internal representation though, since we have node indices, we can hash the coordinates directly to a cell in AABB. 
+•	Downside: approximate nearest neighbors
+•	Still appropriate for RBF-FD though. No requirement to have strict Nearest Neighbors. 
+•	Complexity.
+•	Impact of ordering on Sparsity
+•	Alternative orderings to consider
+o	Performance comparison of 3 methods (incl. Figure) 
+•	What is the minimum N and n to justify LSH? 
+•	What is the number of divisions we need in the AABB? SPH uses ~2-10 nodes per cell
+•	On Choosing Epsilon for weights
+o	Ill conditioning is an issue
+•	Lots of references allude to this
+•	Bayona, others seek to find the optimal for general node placement
+•	Stable methods bypass this struggle
+o	Choose epsilon proportional to h
+•	Choose epsilon as function of N
+•	Choose epsilon curve as function of k(N)
+•	We follow approach in Lehto et al. to choose based on k(N) 
+•	Example Figures of contours generated following Lehto approach. 
+

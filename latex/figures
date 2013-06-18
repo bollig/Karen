@@ -1,0 +1,17 @@
+Chapter 1 (introduction)
+	Stencil
+	RBF
+
+Chapter 2 (RBF-FD method)
+	Stencil
+	RBF
+	DM
+	Epsilon contours
+	Hashing neighbor queries algorithm
+	Hashing neighbor query performance
+	
+Chapter 3 (Distributed PDE Solver)
+	HPC Cluster Layout
+	GPU hardware
+	GPU Memory
+	

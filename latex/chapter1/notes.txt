@@ -1,0 +1,27 @@
+Contents: 
+
+•	Introduction
+o	RBF Methods are great for
+•	Scattered Data
+•	High dimensions
+•	Higher order accuracy
+•	Etc.
+o	RBF methods have a 30+ year history
+•	Interpolation: 1970
+•	Franke comparison 1982
+•	PDE History is only 1995-present
+•	The method is still young with limited application
+•	Little attention in HPC
+o	Targeting HPC
+•	Need to focus on hardware that will get us to Petascale 
+•	Keep method current
+•	GPUs/Accelerators are expected to be (default|common|…) on petascale architectures
+•	Target GPUs/Accelerators first
+•	GPU for RBF is limited; only one related work
+•	Focus on MPI to scale across HPC clusters
+•	MPI for RBF is limited; only a few related works
+o	We bring together the combination of RBF-FD, MPI, GPU
+•	And we demonstrate combinations through applicaton to various problems
+•	Implicit and Explicit PDEs
+•	Goal is to construct building blocks for a large scale Geophysical simulation
+
