@@ -1233,6 +1233,16 @@ has is to To quantify the sparsity of a Differentiation Matrix we consider the r
 
 
 
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{rbffd_methods_content/neighbors/neighbor_incorrect.png}
+\caption{Example of an Approximate Nearest Neighbor (ANN) stencil, with all but one of the true nearest neighbors included in the stencil. }
+\label{fig:ann_stencil}
+\end{figure}
+
+
+
+
 
 \subsection{On Choosing the Right $\epsilon$} 
 % TODO: expand missing content
@@ -1312,23 +1322,18 @@ We are investigating optimizations that target both GPUs and Phi cards for a cla
 
 
 With the generalization of RBF-FD derivative computation formulated as a sparse matrix multiplication, we can 
+% TODO: mention CUSP as alternative but concentrate on VCL
 consider the various sparse formats provided by CUSP and ViennaCL. 
 
-Consider the performance of the problem given 
-	\begin{itemize} 
-	\item All stencils with uniform size
-	\item All stencils with non-uniform size
-	\end{itemize}
-What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
+%TODO later: \item All stencils with non-uniform size
+%TODO: What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
 
 Compare formats: 
 \begin{itemize}
-\item JAD
 \item ELL
-\item HYB
 \item COO
 \item CSR
-\item DIA
+\item Other formats such as HYB, JAD, DIA are considered on the GPU
 \end{itemize}
 
 How is communication overlap handled with each format? 
