@@ -120,6 +120,16 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 \end{figure}
 
 
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
+\caption{Spy of the sub-DM view on processor 2 of 4 from a METIS partitioning of $N=10,201$ nodes with stencil size $n=31$. Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setProvide$, and $\setDepend$.}
+\label{fig:decomp_spy}
+\end{center}
+\end{figure}
+
+
 \section{Local node ordering}
 
 After partitioning, each CPU/GPU is responsible for its own subset of nodes. 
