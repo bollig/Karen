@@ -1,0 +1,69 @@
+separate OCL from algorithm
+picture of ocl flow
+embed code (in appendices)
+
+reorder whats needed
+chapter in own files
+one large file with all data
+benchmark tables
+(tomorrow morning)
+
+gmres verification (based on other works)
+why would constraints not be necessary in gmres?
+
+partial conclusion section
+
+
+
+
+Tonight: 
+=========
+one doc
+	- all pics
+	- all benchmarks in tables
+	- all sections (chapter each in independent file)
+
+
+overlap
+rbf-ga
+scaling
+ordering for matrices (reuse ijk_to_z, ijk_to_u, etc.)
+
+
+1) GPU
+	hardware
+		comparison of features
+		benchmarks from each
+	language
+		limitations
+	libraries
+		ViennaCL
+		CUSP
+	
+
+
+
+Figures: 
+	LSH algorithm (high level)
+		- hash nodes to coarse grid
+		- sort coarse grid by Z order
+		- query neighbors with 
+	COO, CSR, ELL formats
+	BELL, SELL, SBELL
+	GMRES orthogonalization
+	GMRES preconditioner mask
+	GMRES convergence (residual of example problem; i.e., square vs sphere)
+	
+
+Data Tables: 
+	ViennaCL vs UBLAS benchmarks
+	ViennaCL CSR, COO, ELL
+	clSpMV SELL, BELL, SBELL
+	Weak Scaling benchmarks
+	Strong Scaling benchmarks
+	GMRES convergence w/ and w/o precond 
+	GMRES benchmarks w/ ELL
+			 w/ precond
+	GMRES convergence of single vs coupled equation
+	 
+

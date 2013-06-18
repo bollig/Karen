@@ -50,6 +50,7 @@ we get the weights $w$ invariant to the of the scaling of the nodes.
 
 This is incredibly useful for standardizing the support parameter. Consider for example when we have adaptive refinements in a domain with stencil coordinates ranging from $[-1,1]$ down to $[-0.00001, 0.00001]$. By simply scaling the stencils to the unit circle we can reuse the same $\epsilon$ for each stencil. Based on node distribution within the stencil we will see the stencil weights 
 
+\authnote{TODO: finish test cases. There is a scaling of $h$ necessary on weights output from scaled solve. Any stabilization parameters we tuned do not apply, and that scaling depends on the derivative type.}
 
 \ifstandalone
 \bibliographystyle{plain}
