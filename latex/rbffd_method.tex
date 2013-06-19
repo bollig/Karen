@@ -1184,9 +1184,10 @@ Alternative queries are possible: ball query and approximate nearest neighbor. T
 For example, in general brute force is inefficient 
 The author of \cite{Fasshauer2007} queries $n$ nearest neighbors for a compact-support RBF partition of unity example with a $k$-D tree. In \cite{FlyerLehto11,FornbergLehto11} a $k$-D Tree is leveraged for all neighbor queries for RBF-FD. 
 
-In our work in \cite{BolligFlyerErlebacher2012} an alternative to $k$-D tree was leveraged, based loosely on Locality Sensitive Hashing. 
+Our work in \cite{BolligFlyerErlebacher2012} leveraged an alternative to $k$-D tree, based loosely on space-filling curve orderings common in Lagrangian schemes like Smoothed Particle Hydrodynamics (e.g., \cite{IanThesis}, \cite{Kelager}). %TODO: I have used Locality Sensitive Hashing \cite{Indyk} in the past. According to Samet \cite{Samet "Multidimensional and Metric..."}, LSH uses a set of random hashes to assign indices for each node. Our case uses space-filling curve, so we use . 
 
 Rather than iterate through all $N$ nodes to find the true neighbors, or step through a k-D tree in something like $O(log N)$ that requires extra built-out, ANN allows us to use a set of nodes that satisfy
+
 
 
 \subsubsection{KDTree}
@@ -1226,6 +1227,9 @@ To demonstrate the savings in choice of stencil generation method, we provide Fi
 
 The impact of our neighbor query also extends influence on the structure of the RBF-FD DMs.
 has is to To quantify the sparsity of a Differentiation Matrix we consider the ratio of non-zeros ($N*n$) to total elements in the matrix ($N^2$). For example, a problem of size $N = 10,000$ with stencil size $n=31$ has a ratio of $0.0031$ and is $99.69\%$ empty. 
+
+Querying neighbors requires searching at least the immediate cell one layer of neighbors. by including one extra layer we ensure that small stencils near the border of the immediate cell can pick up neighbors in adjacent cells.
+
 
 %TODO: sparsity
 %TODO: Node ordering

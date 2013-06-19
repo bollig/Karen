@@ -27,7 +27,7 @@ one doc
 overlap
 rbf-ga
 scaling
-ordering for matrices (reuse ijk_to_z, ijk_to_u, etc.)
+DONE (analyze data): ordering for matrices (reuse ijk_to_z, ijk_to_u, etc.)
 
 
 1) GPU
@@ -40,9 +40,6 @@ ordering for matrices (reuse ijk_to_z, ijk_to_u, etc.)
 		ViennaCL
 		CUSP
 	
-
-
-
 Figures: 
 	LSH algorithm (high level)
 		- hash nodes to coarse grid
