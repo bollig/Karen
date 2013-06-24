@@ -50,18 +50,18 @@ We started with a CPU implementation to test appropriateness.
 
 \begin{figure}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter7/LSH_Concept.png}
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
 \caption{High level overview of Locality Sensitive Hashing algorithm. First we overlay a coarse regular grid on the bounding box of the domain. The cells of the coarse grid cells are reordered in memory according to a space filling curve. Then we query neighbors by starting search with \authnote{Illustrate the query process} cell containing stencil center and append neighboring cells until stencil size $n$ nodes are found. We take $n$ closest neighbors (brute force search) if more than $n$ are appended to the list of candidates. }
 \end{figure} 
 
 \begin{figure}
 \centering
 \begin{subfigure}{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/chapter7/bruteforce_N6400_n50-eps-converted-to.png}
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/bruteforce_N6400_n50-eps-converted-to.png}
 \caption{k-D Tree} 
 \end{subfigure} 
 \begin{subfigure}{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/chapter7/lsh_N6400_n50-eps-converted-to.png}
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/lsh_N6400_n50-eps-converted-to.png}
 \caption{LSH}
 \end{subfigure}
 \caption{Example effects of node reordering within neighbor query algorithm for MD node set $N=6400$ with $n=50$. Matrix is $0.78\%$ full. k-D Tree maintains original ordering of the nodes and deceptively appears nearly dense. LSH algorithm reorders nodes according to raster ordering and reveals sparsity of the problem.  }
