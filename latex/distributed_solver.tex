@@ -237,6 +237,8 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
         This approach is scalable to a very large number of 
 		processors, since the individual processors do not require the 
 		full mapping between RBF nodes and CPUs. 
+		
+		By scalable here we imply total problem size and processor count. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
 
 
 \subsection{Scaling}
