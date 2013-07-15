@@ -39,3 +39,7 @@ fi
 if [ ! -d "rbffd_prototypes/" ]; then 
 	git clone -b master git@github.com:bollig/rbffd_prototypes.git
 fi 
+if [ ! -d "msi_benchmarks/" ]; then 
+	git clone ssh://bollige@login.msi.umn.edu/~bollige/../repos/msi_benchmarks.git 
+fi
+

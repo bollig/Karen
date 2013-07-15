@@ -254,6 +254,31 @@ Weak scaling considers the amount of time for a fixed problem size per process a
 We consider a simple idealized problem where derivatives are computed over a regular grid generated in 3-D. The experiment computes the SpMV one thousand times. At the end of each SpMV the MPI\_Alltoallv collective is used to synchronize the local derivative vectors. After one thousand iterations, each process computes the local norm of the resulting vector and an MPI\_Reduce collective dra
 
 
+\begin{figure} 
+\centering
+\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_alltoallv.png}  
+\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_speedup.png} \\
+\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_spmvOnly.png}
+\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_commOnly.png} 
+\caption{Strong scaling the distributed SpMV for $N=4096000$ nodes (i.e., a $160^3$ regular grid) and various stencil sizes. Here the MPI\_Alltoallv collective operation is used. (Left) Strong scaling of SpMV (including cost of communication). (Center) Strong scaling of computation only. (Right) Strong scaling of communication only.}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_n17comparison_commOnly.png}
+\caption{Scaling comparison of MPI\_Alltoallv and two types of MPI\_Isend/MPI\_Irecv collectives: one with MPI\_Irecv issued after filling the MPI\_Isend send buffer (post-fill), and the other issued before filling the MPI\_Isend buffer (pre-fill).}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv_commOnly.png}
+\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv.png}  
+\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare_commOnly.png} \\
+\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_spmvOnly.png} 
+\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare.png}
+\caption{Weak scaling of the SpMV}
+\end{figure}
+
 \section{Two level parallelism}
 
 Our current implementation assumes that we are computing on a cluster of CPUs,
