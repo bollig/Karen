@@ -11,23 +11,16 @@
 \begin{document}
 \fi
 
-\chapter{Parallel Solvers}
+\chapter{Distributed Solvers}
 \label{sec:rbffd_gpu}
 
-Parallel solution of PDEs in a distributed computing environment requires three
-design decisions \cite{Saad2003}. First, partitioning the domain and
-distributing work across compute nodes requires knowledge of \emph{neighboring processors} with which communication will occur. Intelligent partitioning
-impacts load balancing on processors and the computation to communication
-ratio; imbalanced computation can cause excessive delay per
-iteration as processors wait to receive information. Second, one must decide
-what information each processor is able to access regarding node information,
-solution values, etc and establish index mappings that translate between a
-processor's local context and the global problem. In situations where
-processors are not aware of all nodes/solution values in the global domain, the
-index mappings are essential to maintaining solution consistency at each
-time-step. Last but not least, each processor can re-order nodes locally in an
+Distributed application of RBF-FD requires three
+design decisions \cite{Saad2003}. First, the problem is partitioned in some fashion to distribute work across multiple processes. Intelligent partitioning
+impacts load balancing of processors and the ratio of computation versus communication; imbalanced computation can result in excessive delay per
+iteration as some processors tackle larger problem sizes while others sit idle, waiting on information. Second, one must determine whether processes have access to all or a subset of node information,
+solution values, etc. and establish index mappings that translate between a local context and the global problem. Last but not least, the local ordering  processor can re-order nodes locally in an
 effort to improve solver efficiency and local system conditioning. Node
-ordering also allows us to minimize data transfer between CPU and GPU. 
+ordering is also significant in the future discussion of offloading computation to GPUs as it can help to minimize data transfer between CPU and GPU. 
 
 
 Parallelization of the RBF-FD method is achieved at two levels. First, the
@@ -50,6 +43,9 @@ precomputed and loaded once from disk during the initialization phase.
 %TODO: Need partitioning, global and local index maps, and local ordering for a distributed matrix operation \cite{Saad2003} 
 
 \section{On the use of libraries for parallel solvers}
+
+\authnote{$\rightarrow$} 
+Implementations of RBF methods are known to be in PETSC \cite{Yokota2010}. The method is simple, and straight-forward to code, but the majority of implementations exist in MATLAB. MATLAB is justified as a platform for computing due to its plethora of solvers, preconditioners, toolkits and support for all things ``matrices" (as it should with a name like ``MATrix LABoratory" (MATLAB). MATLAB is a wonderful platform to develop new features for the RBF methods, but the efficiency of the platform limits its ability to scale to very large problems. For such cases the developers recommend implementations in C or FORTRAN. To aid development in C/FORTRAN, one can take full advantage of the decades worth of research in
 
 Since our focus within this work is to lay the foundation for parallel computing
 with RBF-FD, we have made several simplifying assumptions in our code design.
@@ -130,8 +126,8 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 
 \begin{figure}[ht!]
 \begin{center}
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
+\includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
+%\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
 \caption{Spy of the sub-DM view on processor 2 of 4 from a METIS partitioning of $N=10,201$ nodes with stencil size $n=31$. Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setProvide$, and $\setDepend$. Stencils involved in MPI communications have been permuted to the bottom of the matrix.}
 \label{fig:decomp_spy}
 \end{center}
@@ -239,6 +235,40 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
 		full mapping between RBF nodes and CPUs. 
 		
 		By scalable here we imply total problem size and processor count. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
+
+\subsection{MPI Collectives} 
+MPI collectives allow information sharing between processes. Our code leverages three collectives: MPI\_Alltoall, MPI\_Alltoallv and MPI\_Isend/MPI\_Irecv. 
+
+The collective operation is essentially transposing information as seen in Figure~\ref{fig:mpi_alltoallv_visual}. 
+
+MPI\_Alltoall requires that all processors send and receive an equivalent number of bytes to one another. Since the size must be equivalent for all processors, the send and receive buffers are padded to the maximum message size for any one connection between processors. MPI\_Alltoallv reduces the number of bytes sent and received by allowing processors to specify variable message sizes when communicating. For a small number of processors the variable message size will function well. However, MPI\_Alltoallv requires all processes to connect with every other process, even in the event that 0 bytes are to be sent. Based on the grid decomposition, processors compute on contiguous partitions with a small number of neighboring partitions. By replacing the MPI\_Alltoallv with a MPI\_Isend/MPI\_Irecv combination, the number of collective connections are truncated such that processors only connect to and communicate with essential neighbors that need/provide data. 
+
+The actual implementation of MPI\_Alltoall and MPI\_Alltoallv likely use Isend and Irecv internally. 
+
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoall_Visual.png}
+\caption{The MPI\_Alltoall collective allows processors to interchange/transpose data by passing an equivalent number of bytes to every other processor.}
+\label{fig:mpi_alltoall_visual}
+\end{center}
+\end{figure}
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
+\caption{The MPI\_Alltoallv collective compresses the interchange from MPI\_Alltoall by allowing for variable message sizes between all processors. Assume message sizes are proportional to square size in figure.}
+\label{fig:mpi_alltoall_visual}
+\end{center}
+\end{figure}
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=9cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
+\caption{The MPI\_Isend/MPI\_Irecv collective allows for variable message sizes, and truncates the number of connections between processors to only required connections.}
+\label{fig:mpi_isendirecv_visual}
+\end{center}
+\end{figure}
+
+MPI\_Isend/MPI\_Irecv also allows for overlapping communication and computation by posting receives early 
+
 
 
 \subsection{Scaling}
