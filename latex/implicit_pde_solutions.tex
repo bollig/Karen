@@ -225,15 +225,15 @@ Note that the application of a preconditioner such as ILU0 introduces an additio
 \end{algorithm}
 
 \subsection{Multiple GPUs}
-\subsubsection{Domain Decomposition} 
-A restricted additive Schwarz \cite{Cai1998} domain decomposition is applied. Traditional additive Schwarz methods construct a restriction matrix $R$ to constrain processor computation to a subdomain and $R^T$ project it back onto the global domain. In contrast, restricted additive Schwarz replaces replaces the restriction matrix $R$ with some restriction operator $R^0_P$ where $R^0_P \subset R$, but continues to use $R^T$ to project the solution back onto the global domain. The main idea behind re
-, restricted additive schwarz assigns all nodes to exactly one subdomain. Regular additive Schwarz would allow nodes to be in one or more subdomains.
- 
-\begin{align} 
-\vu = \sum_{p=0}^{numprocs} R_p' (A (R_p^0)^T)^{-1}  R_P^0 R_P F
-\end{align} 
-where $R_p$ is a restriction matrix (identity on diagonals for stencils operated on by a processor, zero elsewhere). In our case, the partitions are determined by node coordinates, so all non-zeros for a stencil row end up on the same processor (i.e., the decomposition of the matrix does not allow multiple domain blocks per row). 
-
+%\subsubsection{Domain Decomposition} 
+%A restricted additive Schwarz \cite{Cai1998} domain decomposition is applied. Traditional additive Schwarz methods construct a restriction matrix $R$ to constrain processor computation to a subdomain and $R^T$ project it back onto the global domain. In contrast, restricted additive Schwarz replaces replaces the restriction matrix $R$ with some restriction operator $R^0_P$ where $R^0_P \subset R$, but continues to use $R^T$ to project the solution back onto the global domain. The main idea behind re
+%, restricted additive schwarz assigns all nodes to exactly one subdomain. Regular additive Schwarz would allow nodes to be in one or more subdomains.
+% 
+%\begin{align} 
+%\vu = \sum_{p=0}^{numprocs} R_p' (A (R_p^0)^T)^{-1}  R_P^0 R_P F
+%\end{align} 
+%where $R_p$ is a restriction matrix (identity on diagonals for stencils operated on by a processor, zero elsewhere). In our case, the partitions are determined by node coordinates, so all non-zeros for a stencil row end up on the same processor (i.e., the decomposition of the matrix does not allow multiple domain blocks per row). 
+%
 
 
 \subsubsection{MPI Communication} 
@@ -242,8 +242,7 @@ Mention communication using MPI\_AlltoAllv, MPI\_Allreduce. (Show communication 
 
 Scaling GMRES across multiple GPUs requires a domain decomposition. Domain decompositions can be interpreted as partitioning of nodes or cuts along 
 
-\subsubsection{Domain Decomposition} 
-The domain is decomposed na\"{i}vely by cutting the domain into domain bounding box into $P$ equal sized partitions. Each processor is assigned one partition. Partitions may contain unequal number of nodes. Future work will integrate a domain partitioning library such as ParMETIS \cite{KarypisXXX} or SCOTCH \cite{Scotch} to improve load balancing for processors. 
+
 %
 %\begin{align} 
 %\vu = \sum_{p=0}^{numprocs} R_p (A R_p^T)^{-1}  F

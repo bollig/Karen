@@ -18,22 +18,23 @@
 
 
 
-\subsection{CVT epsilon tests}
+%\subsection{CVT epsilon tests}
+%
+%\cite{FlyerLehto11} consider epsilon as a function of the number of nodes on the sphere. However, this assumption requires nodes to be distributed as MD nodes. When we apply the same functions to CVTs of larger problems we get varying results. The subtle perturbations in nodes 
+%
+%\hl{test on icosahedral grid}
+%
+%\hl{function based on min enclosing circle instead. Will be finer tuned to the grid. if nodes are uniform in stencil and stencil size locked then the only things that can influence epsilon and conditioning is the enclosing circle radius.}
+%
 
-\cite{FlyerLehto11} consider epsilon as a function of the number of nodes on the sphere. However, this assumption requires nodes to be distributed as MD nodes. When we apply the same functions to CVTs of larger problems we get varying results. The subtle perturbations in nodes 
-
-\hl{test on icosahedral grid}
-
-\hl{function based on min enclosing circle instead. Will be finer tuned to the grid. if nodes are uniform in stencil and stencil size locked then the only things that can influence epsilon and conditioning is the enclosing circle radius.}
-
-
-\section{Parabolic} 
-
-Include figure tracking max temperature and min temperature. If we have zero flux conditions then they should average out. If we have Dirichlet BCs the temperature will converge to 0. 
+%\section{Parabolic} 
+%
+%Include figure tracking max temperature and min temperature. If we have zero flux conditions then they should average out. If we have Dirichlet BCs the temperature will converge to 0. 
+%
 
 
+%\section{RBF-FD for Explicit Solutions} 
 
-\section{Hyperbolic} 
 
 Here, we present the first results in the literature for parallelizing RBF-FDs on multi-CPU and multi-GPU architectures for solving PDEs. 
  To verify our multi-CPU, single GPU and multi-GPU implementations, two hyperbolic PDEs on the surface of the sphere are tested: 1) vortex roll-up \cite{NairTransport05, NairJablonowski08} and 2) solid body rotation \cite{JakobChien1995}. These tests were chosen since they are not only standard in the numerical literature, but also
@@ -316,31 +317,6 @@ For the cosine bell test cases we use a conservative $C_{\text{max}} = 0.4$ to e
 
 
 apparently, canceling the cosine analytically causes the conditioning of the system to change slightly. The hyperviscosity parameters I have in the paper are for the case with the cosine present. The parameters continue to function well for the other cases, but their impact on the eigenvalue distributions is noticeably higher (further span to the left). 
-
-
-\section{GFLOP Throughput}
-In order to quantify the performance of our implementation, we can measure two
-factors. First, we can check the speedup achieved on the GPU relative to the
-CPU to get an idea of how much return of investment is to be expected by all
-the effort in porting the application to the GPU. Speedup is measured as the
-time to execute on the CPU divided by the time to execute on the GPU. 
-
-The second quantification is to check the throughput of the process. By
-quantifying the GFLOP throughput we have a measure that tells us two things:
-first, a concrete number quantifying the amount of work performed per second by
-either hardware, and second because we can calculate the peak throughput possible on
-each hardware, we also have a measure of how occupied our CPU/GPU units are.
-With the GFLOPs we can also determine the cost per watt for computation and
-conclude on what problem sizes the GPU is cost effective to target and use. 
-
-Now, as we parallelize across multiple GPUs, these same numbers can come into
-play. However we are also interested in the efficiency. Efficiency is the
-speedup divided by the number of processors. With efficiency we have a measure
-of how well-utilized processors are as we scale either the problem size (weak)
-or the number of processors (strong). As the efficiency diminishes we can
-conclude on how many stencils/nodes per processor will keep our processors
-occupied balanced with the shortest compute time possible (i.e., we are
-maximizing return of investment). 
 
 
 \ifstandalone
