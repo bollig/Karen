@@ -87,17 +87,26 @@ was designed for a 36 node cluster, but benchmarks and scalability tests are not
 Kosec and \v{S}arler \cite{Kosec2008} used OpenMP to parallelize coupled heat transfer 
 and fluid flow problems on a single workstation. 
 Their test cases used local collocation, explicit time-stepping and Neumann boundary conditions. A speedup 
-factor of 1.85x over serial execution was achieved by executing on two CPU cores; no 
+factor of 1.85x over serial execution was achieved by executing on two CPU cores; no further 
 results from scaling tests were provided. 
 
-Stevens et al. \cite{Stevens2009a} mention a parallel implementation under development, but no document is available yet. 
+Stevens et al. \cite{Stevens2009a} mention a parallel implementation under development, but no document is available at this time. 
 
 %TODO Additional RBF implementations are discussed at the end of this chapter in the context of parallel co-processing with the GPU. 
 
-In this work, we will add to the above experiences, with the added twist of incorporating an implementation on the GPU (see later chapters). 
+This work leverages a domain decomposition, but not for the purpose of conditioning. Instead the focus is on decomposing the domain in order to scale RBF-FD across more than a thousand CPU cores of an HPC cluster. Add to this the twist of incorporating a novel implementation on the GPU with overlapping communication and computation. 
+
+Related work on RBFs and GPUs is sparse. In 2009, Schmidt et al. \cite{Schmidt2009a, Schmidt2009b} implemented a global RBF method for Tsunami simulation on the GPU using the AccelerEyes Jacket \cite{JacketGuide2009} add-on for MATLAB. Jacket provides a MATLAB interface to data structures and routines that internally call to the NVidia CUDA API. Their model was based on a single large dense matrix solve, and with the help of Jacket the authors were able to achieve approximately 7x speedup over the standard MATLAB solution on the then current generation of the MacBook Pro laptop. The authors compared the laptop CPU (processor details not specified) to the built-in NVidia GeForce 8600M GT GPU. Schmidt et al.'s implementation was the first contribution to the RBF community to leverage accelerators. The results were significant and promising, but no further contributions were made on the topic. 
+
+While both Schmidt et al.'s method and our's are based on RBFs, the two problems are only distantly related when it comes to implementation on the GPU. Dense matrix operations have a high computational complexity, are considered ideal (or near to) by linear algebra libraries like BLAS \cite{BLAS} and LAPACK \cite{Lapack1999}, and were demonstrated to fit well on GPUs from the onset of General Purpose GPU (GPGPU) Computing. In fact, NVidia included CUBLAS \cite{CUBLAS} (a GPU based BLAS library for their hardware) with their initial public release of the game-changing CUDA development kit in 2006. In stark contrast to this, sparse matrix operations have minimal computational complexity and are less than ideal for the GPU.
 
 
-RBFs on GPU work: \cite{Schmidt2009a, Schmidt2009b} (global), \cite{Yokota2010} (compact)
+Earlier this year (2013), Cuomo et al. \cite{Cuomo2013} implemented RBF-interpolation on the GPU for surface reconstruction. Their implementation leveraged PETRBF \cite{Yokota2010}, an RBF implementation based on PETSc. Utilizing the built-in GPU extensions for PETSc, Cuomo et al assemble and solve the systems on the GPU. Their study considered the various SpMV formats offered by PETSc on the GPU: CSR, COO, ELL, DIA, HYB. Our work similarly investigates the SpMV formats and appropriateness for our problem. 
+
+In \cite{Yokota2010} (compact) 
+ 
+ 
+ 
 Multi-GPU Jacobi iteration for Navier stokes flow in cavity \url{http://scholarworks.boisestate.edu/cgi/viewcontent.cgi?article=1003&context=mecheng_facpubs}
 
 We are investigating optimizations that target both GPUs and Phi cards for a class of numerical methods based on Radial Basis Functions (RBFs) to solve Partial Differential Equations. RBF methods are increasingly popular across disciplines due to their low complexity, natural ability to function in higher dimension with minimal requirements for an underlying mesh, and high-order---in many cases, spectral---accuracy. RBF methods can be viewed as generalizations of many traditional methods such as Finite Difference and Finite Element to allow for truly unstructured grids. This generalization allows one to reuse many of the same techniques (e.g., sparse matrices, iterative solvers, domain decompositions, etc.) to efficiently obtain solutions. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
