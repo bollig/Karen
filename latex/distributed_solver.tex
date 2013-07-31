@@ -169,15 +169,6 @@ ordering is also significant in the future discussion of offloading computation 
 
 The following sections detail the approach to distributed computing and a few optimizations that allow RBF-FD to scale over a thousand processes. In later chapters these same decisions will tie into the resulting performance of the distributed multi-GPU implementations. 
 
-\section{Test Case}
-
-To test scaling of our method, we consider an idealized regular grid in three dimensions. 
-
-verification here is only significant to ensure we are applying all weights. 
-We apply weights to calculate derivatives of a test function in X, Y, Z, and the Laplacian. 
-the grid is regular and 3D.
-We test strong scaling on a $N=160^3$ grid, and weak scaling with $N_p=4000$. This way at $p=1024$ processes we have weak scaling testing the full $N=160^3$ grid. 
-
 %
 %
 %
@@ -202,24 +193,30 @@ We test strong scaling on a $N=160^3$ grid, and weak scaling with $N_p=4000$. Th
 
 %TODO: Need partitioning, global and local index maps, and local ordering for a distributed matrix operation \cite{Saad2003} 
 
-\section{Node Sets}
-
-
-
-
 \section{Partitioning}
 
 For ease of development and parallel debugging, partitioning is initially
 assumed to be linear within one physical direction (typically the
 $x$-direction). Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
-$N=10,201$ nodes on the unit sphere onto four CPUs. Each partition, illustrated
-as a unique color, represents set $\setAllNodes$ for a single CPU.  Alternating
-representations between node points and interpolated surfaces illustrates the
-overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes
-requiring MPI communication) reside. As stencil size increases, the width of the
-overlap regions relative to total number of nodes on the sphere also increases. 
+$N=10,201$ nodes on the unit sphere onto four CPUs.
+
+Each partition, illustrated
+as a unique color, contains many \emph{stencil centers}. Although \emph{stencil centers} are contained within a partition, there is no requirement for all \emph{stencil nodes} to be contained within the same partition. As a result, many stencils require information updates from neighboring partitions for nodes that are referred to as \emph{ghost nodes} \cite{NeEDREF}. %TODO: need ghost node ref.
+In many cases, \emph{ghost nodes} are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc.. However, values at ghost nodes are modified by another process, so changes must be explicitly synchronized via an MPI collective for dependent processes to maintain consistency. 
+
+In Figure~\ref{fig:decomposed_sphere}, alternating representations between node points and interpolated surfaces illustrates the
+overlap regions where ghost nodes reside. Due to stencil dependencies in each partition, the overlap region representations are double-wide---i.e., they contain a set of ghost nodes for both the left and right partitions. 
+
+As the stencil size increases, the width of the
+overlap regions relative to total number of nodes on the sphere proportionally increases. In the case of the unit sphere from Figure~\ref{fig:decomposed_sphere}, the width of the overlap is roughly $\sqrt{n}$ for stencil size $n$. Figure~\ref{fig:decomposed_sphere} shows the case of $n=31$ nodes per stencil. Higher order RBF-FD stencils (i.e., larger stencil sizes) exacerbate the situation by further increasing the number of bytes that must be sent via MPI. Observe that since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary.
+
 
 Thibault et al. \cite{Thibault200*} use a linear partitioning in the $z$-direction. 
+
+
+The choice for a linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is simple. On a high number of processors, there are two issues: 1) increasing the number of processors quickly reduces the width of each partition and can result in stencils dependent on more than one partition in each direction introducing the need for more complex collectives; and 2) with near uniform node distributions the partitions are unequal size and processors will be improperly balanced.  
+
+To address these concerns we 
 
 Linear partitioning is not ideal for the sphere. 
 
@@ -244,9 +241,12 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 \begin{center}
 \includegraphics[width=0.8\textwidth]{rbffd_methods_content/decompositions/gpmetis_decomp_sphere_4parts.png}
 \caption{METIS partitioning of $N=10,201$ nodes to span four processors with stencil size $n=31$.  }
-\label{fig:decomposed_sphere}
+\label{fig:metis_decomposed_sphere}
 \end{center}
 \end{figure}
+
+\section{Index Mappings and Local Node Ordering}
+
 
 \begin{figure}[ht!]
 \begin{center}
@@ -256,15 +256,6 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 \end{center}
 \end{figure}
 
-
-\begin{figure}[ht!]
-\begin{center}
-\includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
-%\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
-\caption{Spy of the sub-DM view on processor 2 of 4 from a METIS partitioning of $N=10,201$ nodes with stencil size $n=31$. Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setProvide$, and $\setDepend$. Stencils involved in MPI communications have been permuted to the bottom of the matrix.}
-\label{fig:decomp_spy}
-\end{center}
-\end{figure}
 
 
 \section{Local node ordering}
@@ -284,6 +275,16 @@ other processors, are permanently on the processor, etc. Note as well,
 that each node has a home processor since the RBF nodes are partitioned into 
 multiple domains without overlap.
 Table~\ref{tbl:stencil_sets}, defines the collection of index lists that each CPU must maintain for both multi-CPU and multi-GPU implementations.  
+
+
+\begin{figure}[ht!]
+\begin{center}
+\includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
+%\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
+\caption{Spy of the sub-DM view on processor 2 of 4 from a METIS partitioning of $N=10,201$ nodes with stencil size $n=31$. Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setProvide$, and $\setDepend$. Stencils involved in MPI communications have been permuted to the bottom of the matrix.}
+\label{fig:decomp_spy}
+\end{center}
+\end{figure}
 
 
 Figure~\ref{fig:stencilSets2CPU} illustrates a configuration with two 
@@ -350,6 +351,16 @@ The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices co
 
 \authnote{} Domain boundary nodes appear at beginning of the list 
 
+Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
+$N=10,201$ nodes on the unit sphere onto four CPUs. Each partition, illustrated
+as a unique color, represents set $\setAllNodes$ for a single CPU.  Alternating
+representations between node points and interpolated surfaces illustrates the
+overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes
+requiring MPI communication) reside. As stencil size increases, the width of the
+overlap regions relative to total number of nodes on the sphere also increases. 
+
+
+
 
 When targeting the GPU, communication of solution or intermediate values is a four step process:
         \begin{enumerate}
@@ -369,6 +380,21 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
 		full mapping between RBF nodes and CPUs. 
 		
 		By scalable here we imply total problem size and processor count. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
+
+
+
+\section{Test Case}
+
+To test and demonstrate scaling of our method, we consider an idealized regular grid in three dimensions. 
+
+verification here is only significant to ensure we are applying all weights. 
+We apply weights to calculate derivatives of a test function in X, Y, Z, and the Laplacian. 
+the grid is regular and 3D.
+We test strong scaling on a $N=160^3$ grid, and weak scaling with $N_p=4000$. This way at $p=1024$ processes we have weak scaling testing the full $N=160^3$ grid. 
+
+
+
+
 
 \section{Communication Collectives} 
 
