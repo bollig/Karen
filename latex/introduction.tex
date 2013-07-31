@@ -258,6 +258,9 @@ weights are exact for RBFs rather than polynomials.
 As in FD, increasing the stencil size $n$  increases the accuracy of the approximation.
 Given $N$ total nodes in the domain (such as on the surface of a sphere), $N$ linear systems, each of size $n \times n$, are solved to calculate the differentiation weights. Since $n \ll N$, the RBF-FD preprocessing complexity is dominated by $O(N)$---much lower than for the global RBF method of $O(N^3)$---with derivative evaluations on the order of $O(nN) \implies O(N)$ FLOPs. 
 
+
+This work utilizes the Message Passing Interface (MPI) standard \cite{MPI} to spawn multiple processes and manage communication. 
+
 \chapter{Related Work}
 
 \section{  GPUS for explicit and implicit methods }
@@ -313,6 +316,25 @@ Within this dissertation, we have developed the first implementation of RBF-FD
 to span multiple CPUs. Each CPU has a corresponding GPU attached to it
 in a one-to-one correspondence. We thus also introduced the first known 
 implementation of accelerated RBF-FD on the GPU.
+
+
+Parallelization of RBF-FD is achieved at two levels. First, the
+physical domain of the problem is partitioned
+into overlapping subdomains, each handled by a different MPI process. All CPUs
+operate independently to compute/load RBF-FD stencil weights, run diagnostic
+tests and perform other initialization tasks. A CPU computes only weights
+corresponding to stencils centered in the interior of its partition. After
+initialization, CPUs continue concurrently to solve the PDE. Communication
+barriers ensure that the CPUs execute in lockstep to maintain consistent
+solution values in regions where partitions overlap.  The second level of
+parallelization offloads time-stepping of the PDE to the GPU.  Evaluation of
+the right hand side of Equation~(\ref{eq:evaluation_with_hyperviscosity}) is
+data-parallel: the solution derivative at each stencil center is evaluated
+independently of the other stencils. This maps well to the GPU, offering decent
+speedup even in unoptimized kernels. Although the stencil weight calculation is
+also data-parallel, we assume that in this context that the weights are
+precomputed and loaded once from disk during the initialization phase. 
+
 
  \hl{continue with outline of chapters} 
 We present our explicit and implicit solutions to PDEs with our multi-GPU RBF-FD implementation. 
