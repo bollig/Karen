@@ -210,22 +210,6 @@ overlap regions where ghost nodes reside. Due to stencil dependencies in each pa
 As the stencil size increases, the width of the
 overlap regions relative to total number of nodes on the sphere proportionally increases. In the case of the unit sphere from Figure~\ref{fig:decomposed_sphere}, the width of the overlap is roughly $\sqrt{n}$ for stencil size $n$. Figure~\ref{fig:decomposed_sphere} shows the case of $n=31$ nodes per stencil. Higher order RBF-FD stencils (i.e., larger stencil sizes) exacerbate the situation by further increasing the number of bytes that must be sent via MPI. Observe that since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary.
 
-
-Thibault et al. \cite{Thibault200*} use a linear partitioning in the $z$-direction. 
-
-
-The choice for a linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is simple. On a high number of processors, there are two issues: 1) increasing the number of processors quickly reduces the width of each partition and can result in stencils dependent on more than one partition in each direction introducing the need for more complex collectives; and 2) with near uniform node distributions the partitions are unequal size and processors will be improperly balanced.  
-
-To address these concerns we 
-
-Linear partitioning is not ideal for the sphere. 
-
-%TODO: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil
-
-
-The linear partitioning in Figure~\ref{fig:decomposed_sphere} was chosen for ease of implementation. Communication is limited for each
-processor to left and right neighbors only, which simplifies parallel debugging. This partitioning, however, does not guarantee properly balanced computational work-loads. \authnote{Update w/ ParMETIS} Other partitionings of the sphere exist but are not studied here because this paper's focus is neither on efficiency nor on selecting a partitioning strategy for maximum accuracy. Examples of alternative approaches include a cubed-sphere \cite{Ivan2011} or icosahedral geodesic grid \cite{Randall2002}, which can evenly balance the computational load across partitions. Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
-
 \begin{figure}[ht!]
 \begin{center}
 \includegraphics[width=2.5in]{../figures/paper1/figures/vortex_rollup/4procs_N10K_n31.pdf}
@@ -234,16 +218,58 @@ processor to left and right neighbors only, which simplifies parallel debugging.
 \end{center}
 \end{figure}
 
+The choice for a linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is straightforward. On a high number of processors, there are two issues: 1) increasing the number of processors quickly reduces the width of each partition and can result in stencils dependent on more than one partition in each direction introducing the need for more complex collectives; and 2) with near uniform node distributions the resulting partitions are of unequal size and processors are improperly balanced. Thus, in the case of the sphere, linear partitioning is not ideal. 
+
+
+Many other options for partitioning the sphere exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere and assigns projected rectangular elements to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. The options for partitioning the sphere are endless, and are outside the scope of this work. 
+
+
+
+Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
+
+
+
+%TODO: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil
+
+
+In order to partition our nodes, METIS requires an undirected adjacency graph representing the edges that connect nodes. In this case the adjacency graph represents edges connecting nodes in a mesh. For RBF-FD there is no well-defined mesh. Rather, every node is connected to multiple stencil centers.  of connecting stencil nodes to stencil centers. An undirected  To produce this we generate 
+
+The undirected graph is used only for partitioning and subsequently discarded. 
+
+METIS divides stencils into contiguous partitions of nearly equivalent size. 
 %TODO: Need to flesh detail on METIS
 
+\begin{figure}[ht!]
+\begin{center}
+\begin{subfigure}[b]{0.425\textwidth}
+\includegraphics[width=2.5in]{../figures/omnigraffle/DirectedAdjacencyGraph.png}
+\caption{Directed (Unsymmetric)}
+\label{fig:directed_graph}
+\end{subfigure}
+\begin{subfigure}[b]{0.425\textwidth}
+\includegraphics[width=2.5in]{../figures/omnigraffle/UndirectedAdjacencyGraph.png}
+\caption{Undirected (Symmetric)}
+\label{fig:undirected_graph}
+\end{subfigure}
+\caption{A simple adjacency graph and corresponding matrices. Edges connecting nodes of RBF-FD stencils produce (a) a directed adjacency matrix. To partition RBF-FD stencils, METIS requires conversion to (b) an undirected graph/matrix.}
+\label{fig:adjacency_matrix}
+\end{center}
+\end{figure}
 
 \begin{figure}[ht!]
 \begin{center}
 \includegraphics[width=0.8\textwidth]{rbffd_methods_content/decompositions/gpmetis_decomp_sphere_4parts.png}
-\caption{METIS partitioning of $N=10,201$ nodes to span four processors with stencil size $n=31$.  }
+\caption{METIS partitioning of $N=10,201$ nodes to span four processors with stencil size $n=31$. }
 \label{fig:metis_decomposed_sphere}
 \end{center}
 \end{figure}
+
+%TODO: related work that uses linear partitioning
+%Thibault et al. \cite{Thibault200*} use a linear partitioning in the $z$-direction of a 3D cube domain.  
+%TODO: related work that uses METIS.
+
+
+
 
 \section{Index Mappings and Local Node Ordering}
 
@@ -464,9 +490,22 @@ The first improvement on Alltoallv collectives is to truncate the number of conn
 
 To demonstrate the effectiveness of our decomposition and indexing, we perform scaling experiments. 
 
+\subsection{Strong Scaling}
 Strong scaling tests the growth in time for a fixed total problem size, and a variable number of processors. 
 
+\subsection{Weak Scaling}
 Weak scaling considers the amount of time for a fixed problem size per process and variable number of processors. That is to say, each processor has roughly the same amount of work, so as we scale to a large number of processors, changes in time will be the result of increased communication overhead. 
+
+Although our weak scaling results are promising, they also contain a problem. First, since we are subsampling a $160^3$ regular grid to get the first $N=p*4000$ nodes, many of the tests consider domains that are ``L" shaped and have odd partitions with limited connectivity.
+
+\authnote{Here and strong scaling: table showing the min and max Osize,Rsize}
+
+
+\subsection{Bandwidth}
+
+To understand the impact of MPI on these benchmarks we calculate the average and aggregate collective bandwidths. The average bandwidth considers the MPI throughput from the perspective of one processor. 
+
+The aggregate bandwidth reveals when processes saturate the interconnects. 
 
 We consider a simple idealized problem where derivatives are computed over a regular grid generated in 3-D. The experiment computes the SpMV one thousand times. At the end of each SpMV the MPI\_Alltoallv collective is used to synchronize the local derivative vectors. After one thousand iterations, each process computes the local norm of the resulting vector and an MPI\_Reduce collective dra
 
