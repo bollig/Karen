@@ -119,9 +119,9 @@ As in the problem of RBF scattered data interpolation, $ \vc = \{c_j\} $ is the 
 Under the assumption that $\mathcal{L}$ is a linear operator, one can collocate the differential equation. Alternatively, individual derivative operators can be expressed as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
 In all cases, a linear system of equations arises, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While we restrict the $\phi_j(x)$ to RBFs or various operators applied to the RBFs, we note that spectral methods, finite-element or spectral-element methods can be formulated in a similar way with different choices of basis functions.  Of course, $u$ can be a vector of unknown variables ($\vc$ then becomes a matrix). 
 
-In Table~\ref{tbl:rbfcolloctypes} we classify references according to their choice of collocation method and RBF 
+Table~\ref{tbl:rbfcolloctypes} classifies references according to their choice of collocation method and RBF 
 interpolation type. 
-There are three main categories of RBF interpolation; we list them in Table~\ref{tbl:interp_types}. The first is \emph{Global} in the case that a single, large ($N\times N$) and 
+There are three main categories of RBF interpolation listed in Table~\ref{tbl:interp_types}. The first is \emph{Global} in the case that a single, large ($N\times N$) and 
 dense matrix corresponding to globally supported RBFs is inverted; second, \emph{Compact} if compactly supported RBFs are used to 
 produce a single, large, but \emph{sparse} matrix; and third, \emph{Local} if compactly supported RBFs are used to produce many small but 
 dense matrices with one corresponding to each collocation point. In all three cases the matrices are symmetric and with the correct choice of RBF they are at least conditionally positive definite. The final row of Table~\ref{tbl:rbfcolloctypes} considers literature on the RBF-FD method and is discussed in depth in Chapter~\ref{chap:rbffd_method}.
@@ -183,12 +183,12 @@ Both Kansa's method and Fasshauer's methods were shown in \cite{Fasshauer2006} t
 
 Following the evolution of the RBF-PS algorithm, applications of global RBFs in the classic collocation sense (i.e., without the RBF-PS DMs) become impractical. This statement stems from the algorithmic complexity of each method. 
 %As discussed in \cite{Fasshauer2007, FlyerWright09}, RBF methods result in matrices that are full. The 
-Global RBF methods result in full matrices \cite{Fasshauer2007}. The global collocation methods then scale on the order of $O(N^3)$ floating point operations (FLOPs) to solve for weighting coefficients on a given node layout, plus $O(N^2)$ to apply the weights for derivatives. If time-stepping is required, global collocation methods must recompute the time-dependent coefficients with additional cost dominated by $O(N^3)$ operations. RBF-PS methods have similar requirements for $O(N^3)$ operations to assemble the differentiation matrix and $O(N^2)$ to apply for derivatives. However, by avoiding time-dependent coefficients, RBF-PS methods only apply the differentiation matrix each time-step for $O(N^2)$ operations. As an aside, the $O(N^3)$ complexity for each method---typically due to an LU-decomposition, with subsequent forward- and back-solves---could be reduced. While not in mainstream use by the RBF community, \cite{Morse2005} correctly points out that the use of iterative solvers could reduce complexity of preprocessing to the order of $O(N^2)$. 
+Global RBF methods result in full matrices \cite{Fasshauer2007}. The global collocation methods then scale on the order of $O(N^3)$ floating point operations (FLOPs) to solve for weighting coefficients on a given node layout, plus $O(N^2)$ to apply the weights for derivatives. If time-stepping is required, global collocation methods must recompute the time-dependent coefficients with additional cost dominated by $O(N^3)$ operations. RBF-PS methods have similar requirements for $O(N^3)$ operations to assemble the differentiation matrix and $O(N^2)$ to apply for derivatives. However, by avoiding time-dependent coefficients, the differentiation matrix application at each time-step is only $O(N^2)$ operations. As an aside, the $O(N^3)$ complexity for each method---typically due to an LU-decomposition, with subsequent forward- and back-solves---could be reduced. While not in mainstream use by the RBF community, \cite{Morse2005} correctly points out that iterative solvers could be employed for $O(N^2)$ complexity. 
 %For mid- to large-scale problems, in the unlikely event that conditioning of the system is not a limiting factor, the cost of the method is still seen as prohibitively high. 
 
 Hon et al. \cite{Hon1999} employed Kansa's method to solve shallow water equations for Typhoon simulation.
 In \cite{FlyerWright09}, Flyer and Wright employed RBF-PS (Kansa method) for the solution of shallow water equations on a sphere. Their 
-results show that RBFs allow for longer time steps with spectral accuracy. The survey \cite{FlyerFornberg11} by Flyer and Fornberg showcases RBF-PS (Kansa) out-performing some of the of the best available methods in geosciences, namely: Finite Volume, Spectral Elements, Double Fourier, and Spherical Harmonics. When applied to problems such as transport on the sphere \cite{FlyerWright07}, shallow water equations \cite{FlyerWright09}, and 3D mantle convection\cite{WrightFlyerYuen10}, RBF-PS consistently required fewer time steps, and a fraction of the nodes for similar accuracy \cite{FlyerFornberg11}. 
+results show that RBFs allow for longer time steps with spectral accuracy. The survey \cite{FlyerFornberg11} by Flyer and Fornberg showcases RBF-PS (Kansa's method) out-performing some of the of the best available methods in geosciences, namely: Finite Volume, Spectral Elements, Double Fourier, and Spherical Harmonics. When applied to problems such as transport on the sphere \cite{FlyerWright07}, shallow water equations \cite{FlyerWright09}, and 3D mantle convection \cite{WrightFlyerYuen10}, RBF-PS consistently required fewer time steps, and a fraction of the nodes for similar accuracy \cite{FlyerFornberg11}. 
 %TODO: add \cite{Neves2009}
 
 %
@@ -209,7 +209,7 @@ Thus far, all cases of collocation and interpolation mentioned have assumed glob
 \end{cases}
 \label{eqn:csrbf}
 \end{equation}
-where a cut-off radius is defined past which the RBF (in this case $\varphi(r)$) has no influence on the interpolant. Note that the radius can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved with smaller memory requirements \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} lists the complexity as dominated by $O(N)$ for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate provided by their choice of general sparse solver package. A multi-level CSRBF method, introduced by Fasshauer \cite{Fasshauer2007}, collocates solutions over multiple grid refinements to achieve reduced $O(N)$ complexity, but the method is plagued by poor convergence. We also notes that in the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
+where a cut-off radius is defined past which the RBF (in this case $\varphi(r)$) has no influence on the interpolant. Note that the radius can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved with smaller memory requirements \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} lists the complexity as dominated by $O(N)$ for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate provided by their choice of general sparse solver package. A multi-level CSRBF method, introduced by Fasshauer \cite{Fasshauer2007}, collocates solutions over multiple grid refinements to achieve reduced $O(N)$ complexity, but the method is plagued by poor convergence. It is also worth noting that in the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
 
 CSRBFs have attracted a lot of attention in applications. For example, in the field of dynamic surface and image deformation, compact support allows for local transformations which do not induce global deformation (see e.g., \cite{Yang2008, Lin2009, Correa2007}). 
 
@@ -235,7 +235,7 @@ problems based on transient Richards' equations \cite{Stevens2008a, Stevens2009a
 
 \subsection{Recent Advances in Conditioning}
 
-The most limiting factor in the success of RBF methods is not the complexity of the methods, nor the task of collocating the PDE. Rather, it is the support parameter, $\epsilon$, and the dilemma one faces in the \emph{Uncertainty Relation} \cite{Schaback1995}. Recall that as $\epsilon \rightarrow 0$ ill-conditioning increases, but the accuracy of the method also increases. Similarly, as the number of collocation points increases, so too does the ill-conditioning. 
+The most limiting factor in the success of RBF methods is not the complexity of the methods, nor the task of approximating derivatives. Rather, it is the support parameter, $\epsilon$, and the dilemma one faces in the \emph{Uncertainty Relation} \cite{Schaback1995}. Recall that as $\epsilon \rightarrow 0$ ill-conditioning of the RBF interpolation matrices increases, but the accuracy also increases. Similarly, as the number of collocation points increases, so too does the ill-conditioning. Solving the the 
 
 In response to this problem, Fornberg and Wright 
 \cite{Fornberg2004} presented the \emph{Contour--Pad\'{e} algorithm}, which allows for numerically stable 
@@ -249,8 +249,7 @@ algorithm was only studied for global RBF interpolation, not for compact or loca
 The \emph{RBF-QR} method, an alternative for numerically stable computation in the limit as $\epsilon \rightarrow 0$, was introduced by Fornberg  and 
 Piret \cite{Fornberg2007} in context of a sphere, and later extended to planar 2D problems in \cite{Fornberg2009b}. The 
 RBF-QR 
-method is simple 
-to implement (less than 100 lines of Matlab code), and it allows solution of large problems that are typically ill-conditioned. Fornberg, Larsson and Flyer \cite{Fornberg2009b} successfully applied RBF-QR on large problems with 6000 nodes for globally supported basis functions. 
+method can be implemented in less than 100 lines of Matlab code, and it allows solution of large problems that are typically ill-conditioned. Fornberg, Larsson and Flyer \cite{Fornberg2011a} successfully applied RBF-QR on large problems with 6000 quasi-unifrom nodes for globally supported basis functions. RBF-QR 
 %TODO: add mention of bengt's latest on RBF-QR \cite{Fornberg2011a, Fornberg2011b}
 
 With these two algorithms, global RBF methods have overcome most ill-conditioning issues for small to mid-sized problems. Unfortunately, both Contour-Pad\'{e} and RBF-QR fail for large problems.
@@ -259,7 +258,13 @@ As the number of RBFs increases beyond a few thousand nodes it is impossible to 
 
 This reveals the benefit of local methods, which decrease the number of RBFs and ill-conditioning. However, in the limit as local stencil size increases to include all nodes in a domain, the local and global method are equivalent; thus it is known that local methods also suffer extreme ill-conditioning around 2000 nodes per stencil \cite{Shu2006}. Although, to our knowledge, no applications of local methods require more than a few hundred nodes per local solution. 
 
- 
+Most recently, Fornberg et al. \cite{Fornberg2012} introduced a method called RBF-GA, which performs a change of basis based on expansion of RBFs to express interpolation in terms of incomplete Gamma functions. The change of basis allows for an assembly
+
+Benchmarks provided by \cite{Fornberg2012} demonstrate the cost (i.e., time to solve for weights) of existing stable methods in order from lowest to highest as: RBF-Direct, RBF-GA, RBF-QR, and Contour-Pad\'{e}. 
+
+ limited to less than 2000 nodes. In the case of RBF-FD that number exceeds the stencil size for all known applications, so the method hold significant promise as a stable method 
+
+
 
 
 %To our our knowledge, no research has yet been published that applies the RBF-QR method to RBF-FD stencils.
@@ -1181,6 +1186,12 @@ GPU version of Locality Sensitive Hashing could reduce complexity further \cite{
 This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. 
 
 
+At the onset of our work on RBF-FD, the most commonly used KDTree implmentation used by the RBF community was \cite{Tagliasacchi2008}. Recently, improvements were made to the KDTree algorithm to reduce the cost of building the KDTree to $O(N log^2 N)$. 
+
+Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $N$ stencils of size $n=50$ with three methods: \cite{Tagliasacchi2008}, our hash-based neighbor query, and the improved KDTree from \cite{Tagliasacchi2012}. 
+Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
+
+
 RBF-FD operates on general node distributions. Historically, stencils are uniform in size ($n$) and generated by selecting the $(n-1)$ true nearest neighbors to a node $x_c$. This is a $k$-NN query. 
 
 Alternative queries are possible: ball query and approximate nearest neighbor. The approximate is of particular interest because nodes closest to the stencil will always be selected, whereas the nodes further away have minimal influence so swapping out cant hurt. The justification in altering the selection is for reduced complexity in neighbor queries.  
@@ -1206,7 +1217,7 @@ Rather than iterate through all $N$ nodes to find the true neighbors, or step th
 \includegraphics[width=6.5cm]{/Users/evan/Karen/figures/stencils/SpMV_hash_vs_kdtree_hnx100.png} \\
 \includegraphics[width=6.5cm]{/Users/evan/Karen/figures/stencils/speedup_hash_vs_kdtree_hnx100.png}
 \includegraphics[width=6.5cm]{/Users/evan/Karen/figures/stencils/hash_vs_kdtree_hnx100.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query.}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
 \label{fig:hash_results}
 \end{figure}
 
@@ -1269,6 +1280,10 @@ Querying neighbors requires searching at least the immediate cell one layer of n
 \caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
 \label{fig:orderings}
 \end{figure}
+
+The KDTree implementation used in this work is from 
+
+Original data showed our algorithm as wildly successful against a version  
 
 
 %TODO: get the compareKDTreeLSH.m output; this was for my C++ code and compared queries on 
