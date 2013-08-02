@@ -233,48 +233,6 @@ Fasshauer's method called \emph{local Hermitian interpolation}. The authors have
 problems based on transient Richards' equations \cite{Stevens2008a, Stevens2009a, Stevens2009b}.
 
 
-\subsection{Recent Advances in Conditioning}
-
-The most limiting factor in the success of RBF methods is not the complexity of the methods, nor the task of approximating derivatives. Rather, it is the support parameter, $\epsilon$, and the dilemma one faces in the \emph{Uncertainty Relation} \cite{Schaback1995}. Recall that as $\epsilon \rightarrow 0$ ill-conditioning of the RBF interpolation matrices increases, but the accuracy also increases. Similarly, as the number of collocation points increases, so too does the ill-conditioning. Solving the the 
-
-In response to this problem, Fornberg and Wright 
-\cite{Fornberg2004} presented the \emph{Contour--Pad\'{e} algorithm}, which allows for numerically stable 
-computation of highly 
-accurate interpolants for (very small) cases typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). Larsson and Fornberg \cite{Larsson2003} 
-applied the 
-algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method. %TODO: verify 
-Note that currently, the Contour-Pad\'{e} 
-algorithm was only studied for global RBF interpolation, not for compact or local collocation methods. 
-
-The \emph{RBF-QR} method, an alternative for numerically stable computation in the limit as $\epsilon \rightarrow 0$, was introduced by Fornberg  and 
-Piret \cite{Fornberg2007} in context of a sphere, and later extended to planar 2D problems in \cite{Fornberg2009b}. The 
-RBF-QR 
-method can be implemented in less than 100 lines of Matlab code, and it allows solution of large problems that are typically ill-conditioned. Fornberg, Larsson and Flyer \cite{Fornberg2011a} successfully applied RBF-QR on large problems with 6000 quasi-unifrom nodes for globally supported basis functions. RBF-QR 
-%TODO: add mention of bengt's latest on RBF-QR \cite{Fornberg2011a, Fornberg2011b}
-
-With these two algorithms, global RBF methods have overcome most ill-conditioning issues for small to mid-sized problems. Unfortunately, both Contour-Pad\'{e} and RBF-QR fail for large problems.
-% due to ill-conditioning. 
-As the number of RBFs increases beyond a few thousand nodes it is impossible to avoid  ill-conditioning of the extremely large interpolation matrix.
-
-This reveals the benefit of local methods, which decrease the number of RBFs and ill-conditioning. However, in the limit as local stencil size increases to include all nodes in a domain, the local and global method are equivalent; thus it is known that local methods also suffer extreme ill-conditioning around 2000 nodes per stencil \cite{Shu2006}. Although, to our knowledge, no applications of local methods require more than a few hundred nodes per local solution. 
-
-Most recently, Fornberg et al. \cite{Fornberg2012} introduced a method called RBF-GA, which performs a change of basis based on expansion of RBFs to express interpolation in terms of incomplete Gamma functions. The change of basis allows for an assembly
-
-Benchmarks provided by \cite{Fornberg2012} demonstrate the cost (i.e., time to solve for weights) of existing stable methods in order from lowest to highest as: RBF-Direct, RBF-GA, RBF-QR, and Contour-Pad\'{e}. 
-
- limited to less than 2000 nodes. In the case of RBF-FD that number exceeds the stencil size for all known applications, so the method hold significant promise as a stable method 
-
-
-
-
-%To our our knowledge, no research has yet been published that applies the RBF-QR method to RBF-FD stencils.
-
-%
-%In 2002, Mouat and Beatson \cite{Mouat2002} suggested that Matern functions would be more accurate than the more 
-%commonly chosen multiquadrics. 
-%The authors also considered the problem of a large number of nodes with a discussion of a 
-%domain decomposition method for PDE solution. 
-
 
 \section{Comparison of RBF Methods}
 
@@ -598,6 +556,45 @@ This results in a linear system with similar structure to the global collocation
 Solving this system gives an interpolant locally defined around the stencil center. Note that approximating the PDE solution $u(x)$ requires finding the stencil center nearest $x$, then using the local interpolant for that stencil. Since interpolation is local (i.e., $c_j^{(k)}$'s are unique to each RBF center), reconstructing the derivatives with Equation~\ref{eqn:solve_uxx} is limited to an inner product for each center rather than the matrix-vector grouping possible with global RBFs.  
 %In the event that a point lies on the perpendicular bisector between two stencils, one of them can be arbitrarily selected. 
 This approach decomposes the problem into smaller and more manageable parts. However, because the interpolants are local, there is no notion of global continuity/smoothness of the solution. 
+
+
+
+\section{Recent Advances in Conditioning}
+
+The most limiting factor in the success of RBF methods has not been the complexity of the methods, nor the task of approximating derivatives. Rather, it is the support parameter, $\epsilon$, and the dilemma one faces in the \emph{Uncertainty Relation} \cite{Schaback1995}. Recall that as $\epsilon \rightarrow 0$ ill-conditioning of the RBF interpolation matrices increases, but the accuracy also increases. Similarly, as the number of collocation points increases, so too does the ill-conditioning of the linear systems produced by each RBF method. As \cite{Fornberg2011a} point out, much of the literature on RBF methods seek to find optimal values of the support parameter $\epsilon$ for the highest accuracy in applications. Occasionally the optimal values lie within a range of acceptable conditioning to solve the linear systems directly (a.k.a. RBF-Direct solutions). Unfortunately, more often one must compromise between accuracy loss for large $\epsilon$ and accuracy loss in RBF-Direct solutions due to lower values of $\epsilon$. Many attempts to express the optimal $\epsilon$ as a function of problem size have also been thwarted because the impact on the optimal $\epsilon$ values for small perturbations in node placement is still not fully understood. 
+
+In an effort to overcome this limitation, Fornberg and Wright 
+\cite{Fornberg2004} presented the \emph{Contour--Pad\'{e} algorithm}, which allows for numerically stable 
+computation of highly 
+accurate interpolants typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). Larsson and Fornberg \cite{Larsson2003} 
+applied the 
+algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method. %TODO: verify 
+Note that currently, the Contour-Pad\'{e} 
+algorithm was only studied for global RBF interpolation, not for compact or local collocation methods. 
+
+The \emph{RBF-QR} method, an alternative for numerically stable computation in the limit as $\epsilon \rightarrow 0$, was introduced by Fornberg  and 
+Piret \cite{Fornberg2007} in context of a sphere, and later extended to planar 2D problems in \cite{Fornberg2011a} with details for extension into 3D. The 
+RBF-QR 
+method expands RBFs in terms of spherical harmonics or Chebyshev polynomials and then leverages QR factorization to create create a new well-conditioned basis in exactly the same space. The change of basis allows stable solution independent of the value $\epsilon$, although cost of the method increases as $\epsilon$ increases. Benchmarks in \cite{Fornberg2011a} demonstrate that RBF-QR is between 3x-7x slower than RBF-Direct for the same values of $\epsilon$. Fornberg, Larsson and Flyer \cite{Fornberg2011a} successfully implemented the method in less than 100 lines of matlab code and applied RBF-QR on large problems with 6000 quasi-unifrom nodes for globally supported basis functions. 
+
+With these two algorithms, global RBF methods have overcome most ill-conditioning issues for small to mid-sized problems. Unfortunately, both Contour-Pad\'{e} and RBF-QR fail for large problems.
+% due to ill-conditioning. 
+As the number of RBFs increases beyond a few thousand nodes it is impossible to avoid ill-conditioning of the extremely large interpolation matrix. This reveals the benefit of local methods, which decrease the number of RBFs. To our knowledge, no applications of local methods require more than a few hundred nodes per local solution. 
+
+Most recently, Fornberg et al. \cite{Fornberg2012} introduced another stable method called RBF-GA, which performs a similar change of basis as RBF-QR, but expands Gaussian RBFs in terms of incomplete Gamma functions. Unlike RBF-QR, this method is limited to Gaussian basis functions only. Interestingly, the benchmarks provided in \cite{Fornberg2012} demonstrate the cost (i.e., time to solve for weights) for existing stable methods can be ordered (from lowest to highest) as: RBF-Direct, RBF-GA, and then RBF-QR. RBF-GA is also limited to less than 2000 nodes. The RBF-GA method was also developed around the RBF-FD method, distinguishing it from the others 
+ 
+
+
+
+
+
+%To our our knowledge, no research has yet been published that applies the RBF-QR method to RBF-FD stencils.
+
+%
+%In 2002, Mouat and Beatson \cite{Mouat2002} suggested that Matern functions would be more accurate than the more 
+%commonly chosen multiquadrics. 
+%The authors also considered the problem of a large number of nodes with a discussion of a 
+%domain decomposition method for PDE solution. 
 
 
 %TODO: time stepping integrated into global collocation? For now, cut (see toadd timestepping.tex)
