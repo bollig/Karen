@@ -67,8 +67,7 @@ Our goal is to scale RBF-FD solutions on high resolution meshes across high perf
 %Additional key challenges lie in the choice of grid, the choice of stencil, and stability of scalable solutions. 
 %To demonstrate Chapter~\ref{chap:applied_rbffd} verifies 
 
-The layout of this document is as follows. We continue this chapter with a survey of related work 
-
+The layout of this document is as follows. This chapter continues with a survey of work related on parallelizing RBF-FD, targeting the GPU, and spanning a multi-GPU cluster. Chapter~\ref{chap:background} provides a historical survey of RBF methods as a backdrop to present RBF-FD in Chapter~\ref{chap:rbffd_method}. Chapter~\ref{chap:stencils} introduces a novel, fast algorithm for generating RBF-FD stencils as a substitute for the $k$-D Tree algorithm widely used by the RBF community. In Chapter~\ref{chap:distributed_rbffd}, we present the first scalable implementation of RBF-FD to span one thousand processors. Following this, Chapter~\ref{chap:gpu_rbffd} discusses the challenge of offloading computation to GPUs, and Chapter~\ref{chap:multigpu_rbffd} expands the discussion to a multi-GPU cluster. Chapter~\ref{chap:applications} applies the parallel RBF-FD implementation to solve geophysical problems both explicitly and implicitly. Finally, this document concludes with a summary of results and future directions in Chapter~\ref{chap:discussion}.
 
 
 \section{On Parallel/Distributed RBF-FD} 
@@ -102,7 +101,7 @@ Perhaps the most competitive parallel implementation of RBFs is the PetRBF \cite
 \section{On GPU RBF Methods}
 Related work on RBFs and GPUs is sparse. In 2009, Schmidt et al. \cite{Schmidt2009a, Schmidt2009b} implemented a global RBF method for Tsunami simulation on the GPU using the AccelerEyes Jacket \cite{JacketGuide2009} add-on for MATLAB. Jacket provides a MATLAB interface to data structures and routines that internally call to the NVidia CUDA API. Their model was based on a single large dense matrix solve, and with the help of Jacket the authors were able to achieve approximately 7x speedup over the standard MATLAB solution on the then current generation of the MacBook Pro laptop. The authors compared the laptop CPU (processor details not specified) to the built-in NVidia GeForce 8600M GT GPU. Schmidt et al.'s implementation was the first contribution to the RBF community to leverage accelerators. The results were significant and promising, but no further contributions were made on the topic. 
 
-While both Schmidt et al.'s method and our's are based on RBFs, the two problems are only distantly related when it comes to implementation on the GPU. Dense matrix operations have a high computational complexity, are considered ideal (or near to) by linear algebra libraries like BLAS \cite{BLAS} and LAPACK \cite{Lapack1999}, and were demonstrated to fit well on GPUs from the onset of General Purpose GPU (GPGPU) Computing. In fact, NVidia included CUBLAS \cite{CUBLAS} (a GPU based BLAS library for their hardware) with their initial public release of the game-changing CUDA development kit in 2006. In stark contrast to this, sparse matrix operations have minimal computational complexity and are less than ideal for the GPU.
+While both Schmidt et al.'s method and the method presented here are based on RBFs, the two problems are only distantly related when it comes to implementation on the GPU. Dense matrix operations have a high computational complexity, are considered ideal (or near to) by linear algebra libraries like BLAS \cite{BLAS} and LAPACK \cite{Lapack1999}, and were demonstrated to fit well on GPUs from the onset of General Purpose GPU (GPGPU) Computing. In fact, NVidia included CUBLAS \cite{CUBLAS} (a GPU based BLAS library for their hardware) with their initial public release of the game-changing CUDA development kit in 2006. In stark contrast to this, sparse matrix operations have minimal computational complexity and are less than ideal for the GPU.
 
 
 Earlier this year (2013), Cuomo et al. \cite{Cuomo2013} implemented RBF-interpolation on the GPU for surface reconstruction. Their implementation utilizes PetRBF \cite{Yokota2010}, and new built-in extensions that allow GPU access within PETSc. PETSc internally wraps the CUSP project \cite{CUSP} for sparse matrix algebra on the GPU. With the help of these libraries, Cuomo et al. solve and apply sparse interpolation systems on the GPU for up to three million nodes on an NVidia Fermi C1060 GPU (4GB). They compare results to a single core CPU implementation on an Intel i7-940 CPU and demonstrate that the GPU accelerate their solutions between 6x and 25x. Unfortunately, the authors do not show evidence of scaling the interpolation across multiple GPUs; so while evidence exists that PetRBF now has full GPU support, it remains to be seen how well the code can scale in GPU mode. 
@@ -259,13 +258,8 @@ Global RBF methods result in full matrices \cite{Fasshauer2007}. The global coll
 Hon et al. \cite{Hon1999} employed Kansa's method to solve shallow water equations for Typhoon simulation.
 In \cite{FlyerWright09}, Flyer and Wright employed RBF-PS (Kansa method) for the solution of shallow water equations on a sphere. Their 
 results show that RBFs allow for longer time steps with spectral accuracy. The survey \cite{FlyerFornberg11} by Flyer and Fornberg showcases RBF-PS (Kansa's method) out-performing some of the of the best available methods in geosciences, namely: Finite Volume, Spectral Elements, Double Fourier, and Spherical Harmonics. When applied to problems such as transport on the sphere \cite{FlyerWright07}, shallow water equations \cite{FlyerWright09}, and 3D mantle convection \cite{WrightFlyerYuen10}, RBF-PS consistently required fewer time steps, and a fraction of the nodes for similar accuracy \cite{FlyerFornberg11}. 
-%TODO: add \cite{Neves2009}
 
-%
-%In the survey on RBF collocation presented by Larsson and Fornberg \cite{Larsson2003}, it was found that performance of the 
-%collocation methods depends on the choice of RBFs (i.e., whether they are infinitely smooth or piecewise smooth). Their end 
-%conclusion, however, was that infinitely smooth RBFs are preferred for Elliptic PDEs as they do not require node placement 
-%optimization.
+
 
 \input{rbffd_methods_content/rbftype_table}
 
@@ -653,21 +647,51 @@ Most recently, Fornberg et al. \cite{Fornberg2012} introduced a new method calle
 RBF-generated Finite Differences (RBF-FD) were first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
 but it was the simultaneous, yet independent,
 efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. 
-The RBF-FD method (and the RBF-HFD, ``Hermite" equivalent \cite{WrightFornberg06}) is similar in concept to classical 
-finite-differences (FD), but differs in that the underlying differentiation 
+The RBF-FD method 
+%(and the RBF-HFD, ``Hermite" equivalent \cite{WrightFornberg06})
+is similar in concept to classical 
+finite-differences (FD), in that derivatives of a function $u(x)$ are approximated by weighted combinations of $n$ function values in a small neighborhood around a single \emph{center} node, $x_c$. That is: 
+        \begin{align} 
+        \left. \diffop{u(x)} \ \right|_{x = x_c} &\approx \sum_{j=1}^{n} c_j u(x_j) 
+        \label{eq:derivFromFDWeights}
+        \end{align}
+where $\diffop{u}$ again represents a differential operator on $u(x)$ (e.g., $\diffop{} = \pd{}{x}$). Here the $n$ nodes around $x_c$ are known as a \emph{stencil} with size $n$. The $c_j$ are \emph{stencil weights}. In practice stencils include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" can depend the choice of distance metric, but in all discussions to follow it is assumed to be Euclidean distance ($||x-x_c||_2$). 
+
+\begin{figure}[htbp]
+\centering
+	\begin{subfigure}[m]{0.55\textwidth}
+		\centering
+		\includegraphics[width=1.0\textwidth]{../figures/chapter1/preview_stencils_example.png}
+		\caption{A 13 node RBF-FD stencil of randomly distributed nodes. The stencil centered at the green square contains the 12 nearest neighbors contained within the minimum covering circle drawn in purple.}
+		\label{fig:stencil_example_random}
+	\end{subfigure}\ \ \begin{subfigure}[m]{0.35\textwidth}
+		\centering
+		\includegraphics[width=1.0\textwidth]{../figures/chapter1/RBFFD_single-eps-converted-to.pdf}
+		\caption{A 75 node RBF-FD stencil with blue (negative) and red (positive) differentiation weights to approximate advective operator at the square. Stencils weights indicated by scale of disk radii. (Image courtesy of Bengt Fornberg and Natasha Flyer)}
+		\label{fig:stencil_example_sphere}
+	\end{subfigure}
+	\caption{Examples of stencils computable with RBF-FD}
+	%TODO: Consider: show example FD stencil (5pt with regular grid)
+	\label{fig:stencil_example}
+\end{figure}
+
+Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. A single stencil of size $n=13$ is depicted in Figure~\ref{fig:stencil_example_random} within in a domain of random points. The center, $x_c$, is represented by a green square, with 12 neighbors connected via red edges. The purple circle---the minimum covering circle for the stencil---illustrates that the 12 nearest neighbors are selected. Figure~\ref{fig:stencil_example_sphere} presents a larger stencil ($n=75$) on the unit sphere with red and blue disks surrounding the square center. Green disks are nodes outside of the stencil. Radii and color of the disks indicate magnitude and alternating sign of the weights, $c_j$.
+
+
+%TODO: fix this paragraph
+\authnote{Fix this paragraph:}
+Weights for classical FD stencils, typically obtained in one dimension, are easiest to acquire through the solution of a Vandermonde System with a 1-D polynomial basis set \cite{FornbergLehto11}. For multiple dimensions, one composes classical FD stencils by adding weights from individual dimensions. In contrast to this, RBF-FD replaces the polynomial basis functions with $d$-dimensional radial basis functions. Solving the resulting 
+but differs in that the underlying differentiation 
 weights are exact for RBFs rather than polynomials. The method contrasts with global RBF methods in the sense that it does not collocate the PDE. Instead, RBF-FD provides a set of generalized FD weights representing the discrete differential operator for a small neighborhood of nodes.
 
 RBF-FD 
-share many advantages with global RBF methods, 
-like the ability to function without an underlying mesh, easily extend to higher dimensions and afford large time steps; however spectral accuracy is lost. 
+share many advantages with global RBF methods. For example, the ability to function without an underlying mesh, easily extend to higher dimensions, and (in some cases) stability for large time steps. Unfortunately, spectral accuracy is lost due to its nature as a local method. 
 Other advantages of RBF-FD 
-include lower computational complexity together with high-order accuracy
+include low computational complexity together with high-order accuracy
 (6th to 10th order accuracy is common). 
-As in FD, increasing the stencil size, $n$, increases the order accuracy of the approximation. While not a panacea for PDEs, the method is simple to code, easily extensible to higher dimensions, and powerful in its ability to avoid singularities introduced by the coordinate systems that might impact other methods (see e.g., \cite{FlyerWright07,FornbergLehto11}). 
+As with classical FD methods, increasing the stencil size, $n$, increases the order accuracy of the approximation. While not a panacea for PDEs, RBF-FD is simple to code, and powerful in its ability to avoid singularities introduced by coordinate systems that might negatively impact other methods (see e.g., \cite{FlyerWright07,FornbergLehto11}). 
 
-In some ways, RBF-FD and global RBF methods are plagued by the same difficulties. For example, as the number of nodes in the stencil increases, so too does the ill-conditioning of the linear systems to be inverted. Similarly, the most accurate weights occur when $\epsilon \rightarrow 0$, but values in that regime beget additional ill-conditioning problems---a recurrence of the \emph{Uncertainty Relation} \cite{Schaback1995}. One key difference in the multiple independent RBF-FD origins was that Wright \cite{Wright2003} focused on bypassing ill-conditioning of RBF-FD and investigated its behavior in the limit as $\epsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm. 
-
-Given $N$ total nodes in the domain, $N$ linear systems, each of size $(n+1) \times (n+1)$, are solved to calculate the differentiation weights for derivatives at each node. With $n \ll N$, the RBF-FD preprocessing complexity can behave as $O(N)$; significantly lower than the global RBF or RBF-PS methods ($O(N^3)$). Additionally, the cost per time step is also dominated by $O(N)$. 
+%In some ways, RBF-FD and global RBF methods are plagued by shared difficulties. For example, both face a dilemma in choosing the optimal $\epsilon$ to compromise between conditioning and accuracy. A key difference---historically---is that in the multiple independent RBF-FD origins, Wright \cite{Wright2003} focused on bypassing ill-conditioning of RBF-FD and investigated its behavior in the limit as $\epsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm. So while global RBF methods suffered  
 
 RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
@@ -686,41 +710,16 @@ accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cec
 including Navier-Stokes equations \cite{Shu2003} have all been considered. 
 
 
+The method Given $N$ total nodes in the domain, $N$ linear systems, each of size $(n+1) \times (n+1)$, are solved to calculate the differentiation weights for derivatives at each node. With $n \ll N$, the RBF-FD preprocessing complexity can behave as $O(N)$; significantly lower than the global RBF or RBF-PS methods ($O(N^3)$). Additionally, the cost per time step is also dominated by $O(N)$. 
 
 
-The RBF-FD method is similar to classical Finite Differences in that RBF-FD allows derivatives of a function $u(x)$ to be approximated by weighted combinations of $n$ function values in a small neighborhood (i.e., $n \ll N$) around a \emph{center} node, $x_c$. That is: 
- %derivative of u (i.e., $\diffop{u}$) at the stencil center ($x_1$) as a weighted combination of neighbors (like typical Finite Differencing): 
-        \begin{align} 
-        \left. \diffop{u(x)} \ \right|_{x = x_c} &\approx \sum_{j=1}^{n} c_j u(x_j) 
-        \label{eq:derivFromFDWeights}
-        \end{align}
-where $\diffop{u}$ again represents a differential quantity over $u(x)$ (e.g., $\diffop{} = \pd{}{x}$). We refer to the $n$ nodes around $x_c$ as a \emph{stencil} with size $n$. While not required, in practice one considers stencils to include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" depends the choice of distance metric; here, Euclidean distance ($||x-x_c||_2$) is preferred. 
+
 
 Typically, one needs derivatives at every node in the discretized domain to solve PDEs. To achieve this with RBF-FD, stencils are generated around each node in the domain. Stencils need not have the same size ($n$), but this is assumed here for simplicity in discussion. Furthermore, the number of stencils need not match the number of nodes in the domain, but this is also assumed. 
 %TODO: need ref to example of ghost nodes and/or leave-one-out}.
 
 %TODO: convergence depends on stencil size
 
-\begin{figure}[htbp]
-	\centering
-	\begin{subfigure}[m]{0.6\textwidth}
-		\centering
-		\includegraphics[width=1.0\textwidth]{../figures/chapter1/preview_stencils_example.png}
-		\caption{A 13 node RBF-FD stencil of randomly distributed nodes. The stencil centered at the green square contains the 12 nearest neighbors contained within the minimum covering circle drawn in purple.}
-		\label{fig:stencil_example_random}
-	\end{subfigure}
-	\begin{subfigure}[m]{0.35\textwidth}
-		\centering
-		\includegraphics[width=1.0\textwidth]{../figures/chapter1/RBFFD_single-eps-converted-to.pdf}
-		\caption{A 75 node RBF-FD stencil with blue (negative) and red (positive) differentiation weights to approximate advective operator at the square. Stencils weights indicated by scale of disk radii. (Image courtesy of Bengt Fornberg and Natasha Flyer)}
-		\label{fig:stencil_example_sphere}
-	\end{subfigure}
-	\caption{Examples of stencils computable with RBF-FD}
-	%TODO: Consider: show example FD stencil (5pt with regular grid)
-	\label{fig:stencil_example}
-\end{figure}
-
-Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. First, Figure~\ref{fig:stencil_example_random} illustrates a single stencil of size $n=13$ in a domain of randomly distributed nodes. The stencil center, $x_c$, is represented by a green square, with the 12 neighboring nodes connected via red edges. The purple circle, the minimum covering circle for the stencil, demonstrates that the stencil contains only the 12 nearest neighbors of the center node. In Figure~\ref{fig:stencil_example_sphere}, a larger RBF-FD stencil of size $n=75$ on the unit sphere is shown as red and blue disks surrounding the center represented as a square. Green disks are nodes outside of the stencil. The radii and color of the red and blue disks represent the magnitude and alternating sign of coefficients, $c_j$, determined to calculate a derivative quantity at the stencil center. 
 
 %TODO: stencil does not need to be regular distribution.
 %One of the most appealing benefits of RBF-FD is its built-in support for irregular and unstructured node distributions. 
