@@ -47,29 +47,26 @@
 
 \chapter{Introduction}
 \label{chap:introduction}
-\authnote{insert more discussion here: what are RBFs, what type of problems do they solve, why are they of value}
 
-% TODO: how does the RBF-FD method expand on existing?
-While most of the literature surrounding RBFs for PDEs involves collocation, the hot topic in the community today is RBF-generated Finite Differences (RBF-FD). RBF-FD is a hybrid of RBF scattered data interpolation and classical Finite Difference (FD). 
+The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. At the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions to generate weights for finite-differencing stencils, utilizing the weights in turn to approximate derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
+
+As ``meshless" methods, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $d$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
+
+While most of the literature surrounding RBFs for PDEs involves collocation (see Chapter~\ref{chap:background}), the hot topic in the community today is RBF-generated Finite Differences (RBF-FD). RBF-FD is a hybrid of RBF scattered data interpolation and classical Finite Difference (FD). 
+
 
 The idea behind classical FD is to express derivatives at a single node (center) as a weighted combination/difference of solution values from a small neighborhood around the center. Common approximations such as upwind differencing, center differencing, and other higher order approximations are of this form. 
 %A common approach to building such discrete operators is to form a local interpolant in a neighborhood of the target point, and simply differentiate it analytically. 
 In similar fashion, RBF-FD combines solutions values, but it does so in a more generalized sense than standard FD stencils. Classical FD is typically restricted to regular meshes and often symmetric stencils in practice with the same set of weights for each stencil. Weights are derived from polynomial expansion and can be obtained in 1D by solving a Vandermonde interpolation matrix \cite{FornbergLehto11}. Weights for higher dimension stencils are composed of combinations of 1D formulas for each dimension. This implies added restrictions on scattered nodes---in fact, the Vandermonde system loses its guaranteed nonsingularity in the case of scattered 2D nodes \cite{FornbergLehto11}. In contrast to this, RBF-FD is designed for stencils with irregular node placement and can easily provide a unique set of weights for each stencil. RBF-FD leverages $d$-dimensional basis functions to derive weights directly for any dimension with guaranteed nonsingularity \cite{FornbergLehto11}.
-%A detailed derivation is provided in the next chapter. 
+
+
 %TODO:  \cite{Wright2004, Wright2003, WrightFornberg06, Chandhini2007}. 
 
-%Such an approach leads to very simple implementations of time-advancement schemes, whether explicit or implicit. The solution at the new time step is simply some linear---if $\diffop{}$ is linear, nonlinear otherwise---combination of the unknown functional values (if implicit scheme) or known functional value (if explicit scheme). 
-
-
-
-
-
-%This is followed by a description of Radial Basis Function-generated Finite Differences and examples of operators approximated by the method within this work.
-RBF-generated Finite Differences (RBF-FD) were first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
+The concept of RBF-FD was first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
 but it was the simultaneous, yet independent,
 efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. Introduced over a decade ago, the method is only recently showing signs that it has obtained the critical-mass following necessary for the method's use in large-scale scientific models. At the onset of this work, most of the literature considered RBF-FD for problem sizes up to a few thousand or tens of thousands of nodes. Similar to most RBF methods, RBF-FD has been predominantly implemented within small scale serial computing environments where authors have investigated the method and developed extensions within MATLAB. 
 
-Our goal is to scale RBF-FD solutions on high resolution meshes across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. This is the focus of Chapter~\ref{chap:distributed_rbffd}, where we demonstrate the scalability of RBF-FD across one thousand processors. As part of the push to HPC, leveraging Graphics Processing Units (GPUs) for computation is considered critical. GPUs, introduced in Chapter~\ref{chap:gpu_rbf} and extended to distributed environments in Chapter~\ref{chap:multigpu_rbffd}, are many-core accelerators capable of general purpose, embarrassingly parallel computations. GPUs represent the latest trend in HPC, where compute nodes are commonly supplemented by one or more accessory GPUs. This effort leads the way for application of RBF-FD in an age when compute nodes with attached accelerator boards are considered key to breaching the exa-scale computing barrier \cite{GPUandExascale2011}. Key challenges lie in the choice of grid, the choice of stencil, and stability of scalable solutions. To demonstrate Chapter~\ref{chap:applied_rbffd} verifies 
+Our goal is to scale RBF-FD solutions on high resolution meshes across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. Chapter~\ref{chap:distributed_rbffd} focuses on the problem of distributing RBF-FD across independent compute nodes, and demonstrates the scalability of RBF-FD to a thousand processors. As part of the push to HPC, leveraging Graphics Processing Units (GPUs) for computation is considered critical. GPUs, introduced in Chapter~\ref{chap:gpu_rbf} and extended to distributed environments in Chapter~\ref{chap:multigpu_rbffd}, are many-core accelerators capable of general purpose, embarrassingly parallel computations. GPUs represent the latest trend in HPC, where compute nodes are commonly supplemented by one or more accessory GPUs. This effort leads the way for application of RBF-FD in an age when compute nodes with attached accelerator boards are considered key to breaching the exa-scale computing barrier \cite{GPUandExascale2011}. Key challenges lie in the choice of grid, the choice of stencil, and stability of scalable solutions. To demonstrate Chapter~\ref{chap:applied_rbffd} verifies 
 
 
 
@@ -175,8 +172,6 @@ Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and 
 
 \input{rbffd_methods_content/rbf_interp_example}
 
-%TODO: expand with new literature since 2009
-%TODO: any new methods?
 
 
 RBF methods for interpolation first appeared in 1971 with Hardy's seminal research on multiquadrics
@@ -221,7 +216,7 @@ dense matrices with one corresponding to each collocation point. In all three ca
 We note that three types of collocation occur throughout the RBF literature: 
 Kansa's unsymmetric collocation method \cite{Kansa1990a, Kansa1990b}, Fasshauer's symmetric collocation method \cite
 {Fasshauer1997}, and the Direct collocation method \cite{Fedoseyev2002}. 
-%TODO: classify RBF-PS applications
+%TODO: check with Natasha and Gordon on the RBF-PS description
 
 % While not a collocation method, RBF-FD represents the latest trend in solving PDEs with RBFs.  %A full explanation of RBF based collocation is deferred to Chapter~\ref{chap:rbf_pde}. 
 
@@ -249,7 +244,6 @@ and b) the linear system is larger and more complex to form
 the possible existence of a singularity in Kansa's method is not enough to justify the added difficulties of using Fasshauer's 
 method.
 
-%TODO: refs that refer to global RBF methods and RBF-PS as just RBF methods. 
 
 The last collocation method, \emph{Direct Collocation}, was introduced by Fedoseyev, Friedman and Kansa
  \cite{Fedoseyev2002} and satisfies the differential operator on the interior and the boundary. Larsson and Fornberg \cite{Larsson2003} observe that this third method has a matrix structure similar to that found in Kansa's method; however, it is noted that the dimensions of the matrix blocks for each method differ. This is due to collocation constraints added for 
@@ -639,43 +633,28 @@ This approach decomposes the problem into smaller and more manageable parts. How
 
 \section{Recent Advances in Conditioning}
 
-The most limiting factor in the success of RBF methods has not been the complexity of the methods, nor the task of approximating derivatives. Rather, it is the support parameter, $\epsilon$, and the dilemma one faces in the \emph{Uncertainty Relation} \cite{Schaback1995}. Recall that as $\epsilon \rightarrow 0$ ill-conditioning of the RBF interpolation matrices increases, but the accuracy also increases. Similarly, as the number of collocation points increases, so too does the ill-conditioning of the linear systems produced by each RBF method. As \cite{Fornberg2011a} point out, much of the literature on RBF methods seek to find optimal values of the support parameter $\epsilon$ for the highest accuracy in applications. Occasionally the optimal values lie within a range of acceptable conditioning to solve the linear systems directly (a.k.a. RBF-Direct solutions). Unfortunately, more often one must compromise between accuracy loss for large $\epsilon$ and accuracy loss in RBF-Direct solutions due to lower values of $\epsilon$. Many attempts to express the optimal $\epsilon$ as a function of problem size have also been thwarted because the impact on the optimal $\epsilon$ values for small perturbations in node placement is still not fully understood. 
+The most limiting factor in the success of RBF methods has not been the complexity of the methods, nor the task of approximating derivatives. Rather, it is the support parameter, $\epsilon$, and the dilemma one faces in the \emph{Uncertainty Relation} \cite{Schaback1995}. Recall that as $\epsilon \rightarrow 0$, ill-conditioning of the RBF interpolation matrices increases, but so too does the approximation accuracy---that is, assuming a stable solution can be found. Likewise, as the number of collocation points increases, the range of $\epsilon$ for which the linear system has acceptable conditioning narrows. In \cite{Fornberg2011a}, the authors observe that much of the literature on RBF methods seek to find optimal values of the support parameter $\epsilon$ for the highest accuracy in applications. Occasionally the optimal values lie within a range of acceptable conditioning to solve the linear systems directly (a.k.a. RBF-Direct solutions). More often, one must compromise between the accuracy loss for large $\epsilon$ and accuracy loss in RBF-Direct solutions due to lower values of $\epsilon$. Many attempts to express the optimal $\epsilon$ as a function of problem size have also been thwarted as the impact on the optimal $\epsilon$ values in the face of small node perturbations is still not fully understood. This makes refinements a challenge to manage. 
 
-In an effort to overcome this limitation, Fornberg and Wright 
-\cite{Fornberg2004} presented the \emph{Contour--Pad\'{e} algorithm}, which allows for numerically stable 
+In an effort to overcome limitations due to conditioning, Fornberg and Wright 
+\cite{Fornberg2004} presented the \emph{Contour--Pad\'{e}} algorithm, which allows for numerically stable 
 computation of highly 
-accurate interpolants typically associated with ill-conditioning induced by nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). Larsson and Fornberg \cite{Larsson2003} 
+accurate interpolants with nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). Larsson and Fornberg \cite{Larsson2003} 
 applied the 
-algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method. %TODO: verify 
-Note that currently, the Contour-Pad\'{e} 
-algorithm was only studied for global RBF interpolation, not for compact or local collocation methods. 
+algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method.  
+The Contour-Pad\'{e} 
+algorithm is not overly competitive due to the fact that it only supports fewer than a hundred in 2D and slightly more in 3D \cite{Fornberg2012}. 
 
-The \emph{RBF-QR} method, an alternative for numerically stable computation in the limit as $\epsilon \rightarrow 0$, was introduced by Fornberg  and 
-Piret \cite{Fornberg2007} in context of a sphere, and later extended to planar 2D problems in \cite{Fornberg2011a} with details for extension into 3D. The 
+The \emph{RBF-QR} method, was later introduced by Fornberg  and 
+Piret \cite{Fornberg2007} in context of a sphere to let $\epsilon \rightarrow 0$ for a few thousand nodes. It was later extended to general 1D, 2D and 3D problems in \cite{Fornberg2011a}. The 
 RBF-QR 
-method expands RBFs in terms of spherical harmonics or Chebyshev polynomials and then leverages QR factorization to create create a new well-conditioned basis in exactly the same space. The change of basis allows stable solution independent of the value $\epsilon$, although cost of the method increases as $\epsilon$ increases. Benchmarks in \cite{Fornberg2011a} demonstrate that RBF-QR is between 3x-7x slower than RBF-Direct for the same values of $\epsilon$. Fornberg, Larsson and Flyer \cite{Fornberg2011a} successfully implemented the method in less than 100 lines of matlab code and applied RBF-QR on large problems with 6000 quasi-unifrom nodes for globally supported basis functions. 
-
-With these two algorithms, global RBF methods have overcome most ill-conditioning issues for small to mid-sized problems. Unfortunately, both Contour-Pad\'{e} and RBF-QR fail for large problems.
-% due to ill-conditioning. 
-As the number of RBFs increases beyond a few thousand nodes it is impossible to avoid ill-conditioning of the extremely large interpolation matrix. This reveals the benefit of local methods, which decrease the number of RBFs. To our knowledge, no applications of local methods require more than a few hundred nodes per local solution. 
-
-Most recently, Fornberg et al. \cite{Fornberg2012} introduced another stable method called RBF-GA, which performs a similar change of basis as RBF-QR, but expands Gaussian RBFs in terms of incomplete Gamma functions. Unlike RBF-QR, this method is limited to Gaussian basis functions only. Interestingly, the benchmarks provided in \cite{Fornberg2012} demonstrate the cost (i.e., time to solve for weights) for existing stable methods can be ordered (from lowest to highest) as: RBF-Direct, RBF-GA, and then RBF-QR. Similar to the other methods, RBF-GA is also limited to mid-size problems, with the authors finding it effective on less than 2000 nodes. Unlike previous stable methods which were developed for global RBF methods, RBF-GA was demonstrated to improve the accuracy and stability of weight calculation for the RBF-FD method.
+method uses a truncated expansion of RBFs in terms of spherical harmonics or Chebyshev polynomials and leverages QR factorization to create create a new well-conditioned set of basis functions to reproduce the original RBF space. The well-conditioned basis set allows stable solution independent of the value $\epsilon$. The cost of the method is demonstrated to increase as $\epsilon$ increases. Benchmarks in \cite{Fornberg2011a} show that double precision RBF-QR is between 3x-7x slower than RBF-Direct for the same values of $\epsilon$. Fornberg, Larsson and Flyer \cite{Fornberg2011a} successfully implemented the 2D method in less than 100 lines of MATLAB code and apply RBF-QR to problems with 6000 quasi-unifrom nodes and globally supported RBFs. 
 
 
+Between Contour-Pad\'{e} and RBF-QR, global RBF methods overcame many conditioning issues for small to mid-sized problems. The lack of support for large problem sizes is discouraging, but it leads to an argument in favor of local methods like RBF-FD, which decrease the problem size to fit nicely within the scope of stable methods. To our knowledge, no application of a local method has required more than a few hundred nodes per local solution. 
 
-%To our our knowledge, no research has yet been published that applies the RBF-QR method to RBF-FD stencils.
-
-%
-%In 2002, Mouat and Beatson \cite{Mouat2002} suggested that Matern functions would be more accurate than the more 
-%commonly chosen multiquadrics. 
-%The authors also considered the problem of a large number of nodes with a discussion of a 
-%domain decomposition method for PDE solution. 
+Most recently, Fornberg et al. \cite{Fornberg2012} introduced a new method called RBF-GA, which performs a similar change of basis as RBF-QR, but the method avoids truncated infinite expansions by expressing the new basis functions in terms of an incomplete Gamma function. Unlike RBF-QR, this method is limited to Gaussian basis functions only. Interestingly, benchmarks provided in \cite{Fornberg2012} rank stable methods for RBFs from fastest to slowest as: RBF-Direct, RBF-GA, and then RBF-QR. Similar to the other methods, RBF-GA is effective for a small number of nodes: a few hundred in 2D, and at least 500 in 3D. Unlike RBF-QR, which performs a change of basis on the interpolating matrix only, the RBF-GA method additionally requires a complicated change of basis for the RHS. 
 
 
-%TODO: time stepping integrated into global collocation? For now, cut (see toadd timestepping.tex)
-
-%\part{The RBF-FD Method}
-%The RBF-FD chapter needs:%•	Related papers on RBF-FD specifically (i.e., the complete history; follow Flyer Fornberg book). %o	Clearly state what every paper in the RBF-FD group accomplished%•	Weight method%•	Similarly to spectral and pseudospectral (only collocation points allow optimizations) modes, RBF-FD and FD are related and share much of the same approach. Use RBF-FD for general node placement and high order accuracy. Use FD for optimized solution, faster solvers (Fourier decomposition, Band solver, etc). %•	Apply weights to single node (figure from Paper 1) or form a DM%•	Solve PDEs with explicit/implicit form (solvers)%o	Mention GMRES%•	List of weight types%o	Projection operators%•	Choosing epsilon%•	Hyperviscosity stabilization
 
 
 \part{RBF-FD for HPC Environments}
@@ -684,16 +663,6 @@ Most recently, Fornberg et al. \cite{Fornberg2012} introduced another stable met
 \label{chap:rbffd_method}
 
 
-%We capitalize on the inherent parallelism of RBF-FD to develop a collection of multi-GPU test cases that span the compute nodes of a Top 500 supercomputer. 
-%Second, RBF-FD inherits many of the positive features from global and local collocation schemes, but sacrifices others for reduced computational complexity and potentially increased parallelism. The method is sufficiently young, so many opportunities for investigation still remain. 
-
-
-%Prior to considering implementation of RBF-FD and optimizations on one or more GPUs, it is prudent to dedicate significant attention to the method definition and related works.
-
-
-%Rather than solely focus on the optimizations of said algorithms on the GPU, we dedicate significant attention to the practical application of RBF-FD to interesting problems in geophysics. This means we have walked a fine line between research topics to both apply the method to 
-
-\section{Background}
 
 RBF-generated Finite Differences (RBF-FD) were first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
 but it was the simultaneous, yet independent,
