@@ -55,7 +55,7 @@ As ``meshless" methods, RBF methods excel at solving problems that require geome
 While most of the literature surrounding RBFs for PDEs involves collocation (see Chapter~\ref{chap:background}), the hot topic in the community today is RBF-generated Finite Differences (RBF-FD). RBF-FD is a hybrid of RBF scattered data interpolation and classical Finite Difference (FD). It shares many of the benefits from other RBF methods to generalize to scattered node layouts in any dimension, and allows for high order accurate solutions.
 
 The idea behind classical FD is to express derivatives at a single node (center) as a weighted combination/difference of solution values from a small neighborhood (i.e., a stencil) around the center. Common approximations such as upwind differencing, center differencing, and other higher order approximations are of this form. 
-In similar fashion, RBF-FD combines solutions values based on stencils, but it does so in a more generalized sense than standard FD stencils. For example, classical FD is typically restricted to regular meshes and often symmetric stencils in practice with the same set of weights for each stencil. Weights can be derived from polynomial expansion and obtained in 1D by solving a Vandermonde interpolation matrix \cite{FornbergLehto11}. Higher dimension FD stencils are composed from combinations of 1D formulas applied to each dimension. This implies restrictions on the shape/layout of stencils. In contrast to this, RBF-FD is designed for stencils with irregular node placement and can easily provide a unique set of weights for each stencil with no restrictions on stencil shape. 
+In similar fashion, RBF-FD combines solutions values based on stencils, but it does so in a more generalized sense than standard FD. For example, classical FD is typically restricted to regular meshes and often symmetric stencils in practice with the same set of weights for each stencil. Weights can be derived from polynomial expansion and obtained in 1D by solving a Vandermonde interpolation matrix \cite{FornbergLehto11}. Higher dimension FD stencils are composed from combinations of 1D formulas applied to each dimension. This implies restrictions on the shape/layout of stencils. In contrast to this, RBF-FD is designed for stencils with irregular node placement and can easily provide a unique set of weights for each stencil with no restrictions on stencil shape. 
 
 %TODO:  \cite{Wright2004, Wright2003, WrightFornberg06, Chandhini2007}. 
 
@@ -67,8 +67,9 @@ Our goal is to scale RBF-FD solutions on high resolution meshes across high perf
 %Additional key challenges lie in the choice of grid, the choice of stencil, and stability of scalable solutions. 
 %To demonstrate Chapter~\ref{chap:applied_rbffd} verifies 
 
-The layout of this document is as follows. This chapter continues with a survey of work related on parallelizing RBF-FD, targeting the GPU, and spanning a multi-GPU cluster. Chapter~\ref{chap:background} provides a historical survey of RBF methods as a backdrop to present RBF-FD in Chapter~\ref{chap:rbffd_method}. Chapter~\ref{chap:stencils} introduces a novel, fast algorithm for generating RBF-FD stencils as a substitute for the $k$-D Tree algorithm widely used by the RBF community. In Chapter~\ref{chap:distributed_rbffd}, we present the first scalable implementation of RBF-FD to span one thousand processors. Following this, Chapter~\ref{chap:gpu_rbffd} discusses the challenge of offloading computation to GPUs, and Chapter~\ref{chap:multigpu_rbffd} expands the discussion to a multi-GPU cluster. Chapter~\ref{chap:applications} applies the parallel RBF-FD implementation to solve geophysical problems both explicitly and implicitly. Finally, this document concludes with a summary of results and future directions in Chapter~\ref{chap:discussion}.
+The layout of this document is as follows. This chapter continues with a survey of work related on parallelizing RBF-FD, targeting the GPU, and spanning a multi-GPU cluster. Chapter~\ref{chap:background} provides a historical survey of RBF methods as a backdrop to present RBF-FD in Chapter~\ref{chap:rbffd_method}. Chapter~\ref{chap:stencils} introduces a novel, fast algorithm for generating RBF-FD stencils as a substitute for the $k$-D Tree algorithm widely used by the RBF community. In Chapter~\ref{chap:distributed_rbffd}, the first scalable implementation of RBF-FD to span one thousand processors is preseted. Chapter~\ref{chap:gpu_rbffd} continues with the challenge of offloading computation to GPUs, and Chapter~\ref{chap:multigpu_rbffd} expands the discussion to a multi-GPU cluster. Chapter~\ref{chap:applications} verifies the parallel RBF-FD implementation with both explicit and implicit solutions to geophysical problems. Finally, this document concludes with a summary of results and future directions in Chapter~\ref{chap:discussion}.
 
+\authnote{TODO: iterate through remainder of this chapter again}
 
 \section{On Parallel/Distributed RBF-FD} 
 
@@ -126,14 +127,16 @@ The process of solving partial differential equations (PDEs) using radial basis 
 As ``meshless" methods, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $d$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
 
 This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the 
-RBF-generated Finite Differences (RBF-FD) method. Beginning with a brief introduction to RBFs and a historical survey, we attempt to classify related work into three three types: global, compact, and local methods. Following this, the general approximation problem is introduced, with a look at the core of all three method classificiations: RBF scattered-data interpolation. %We categorize existing methods for solving PDEs with RBFs as either global 
+RBF-generated Finite Differences (RBF-FD) method. Beginning with a brief introduction to RBFs and a historical survey, related methods are into classified into three types: global, compact, and local methods. Following this, the general approximation problem is introduced, with a look at the core of all three method classificiations: RBF scattered-data interpolation. %We categorize existing methods for solving PDEs with RBFs as either global 
 %or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies 
 %the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant 
 %at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
 
-Three global RBF collocation methods are presented: Kansa's method, Fasshauer's method and Direct collocation. Within the historical context of RBF methods we highlight extensions that lead to local interpolation matrices instead of a single global interpolation matrix. Additionally, the RBF-pseudospectral (RBF-PS) method is shown as an extension to fit global RBF methods into the framework of lower complexity pseudo-spectral methods. %Finally, we discuss the most recent methods for solving PDEs, emphasizing RBF-FD as the focus of this work. 
+Three global RBF collocation methods are presented: Kansa's method, Fasshauer's method and Direct collocation.
+% Within the historical context of RBF methods we highlight extensions that lead to local interpolation matrices instead of a single global interpolation matrix. 
+Additionally, the RBF-pseudospectral (RBF-PS) method is shown as an extension to fit global RBF methods into the framework of lower complexity pseudo-spectral methods. %Finally, we discuss the most recent methods for solving PDEs, emphasizing RBF-FD as the focus of this work. 
 
-By surveying related work in the field of RBF PDE methods, we frame the context in which RBF-FD was developed, and illustrate both the benefits and pitfalls inherited from its predecessors. 
+This survey of RBF PDE methods frames the context in which RBF-FD was developed, and illustrates both the benefits and pitfalls inherited from its predecessors. 
 
 \section{Survey of Related Work}
 
@@ -159,7 +162,7 @@ reformulate RBF methods as pseudospectral methods that have
 generated solutions to ill-posed problems for which Chebyshev-based and other pseudospectral methods 
 fail \cite{Fasshauer2006}. However, as with all methods, RBFs come with certain limitations. For example, RBF interpolation is---in general---not a well-posed problem, so it requires careful choice of positive definite or conditionally positive definite basis functions (see \cite{Iske2004, Fasshauer2007} for details). 
 
-RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon\  r(\vx))$. For simplicity in what follows, we use the notation $\phi_j(\vx)$ to imply $\phi(\epsilon ||\vx-\vx_j||_2)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. This inverse relationship is widely known as the \emph{Uncertainty Relation} \cite{Schaback1995, Iske2004}. 
+RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon\  r(\vx))$. For simplicity in what follows, the notation $\phi_j(\vx)$ implies $\phi(\epsilon ||\vx-\vx_j||_2)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. This inverse relationship is widely known as the \emph{Uncertainty Relation} \cite{Schaback1995, Iske2004}. 
 Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2007, Fornberg2011a} allow for numerically stable computation of interpolants in the nearly flat RBF regime (i.e., $\epsilon \rightarrow 0$) where high accuracy has been observed \cite{Larsson2003, Fornberg2008}. 
 
 
@@ -187,7 +190,7 @@ u(x) = \sum_{i=1}^N \phi_j(x) c_j
 $$
 As in the problem of RBF scattered data interpolation, $ \vc = \{c_j\} $ is the unknown coefficient vector. 
 Under the assumption that $\mathcal{L}$ is a linear operator, one can collocate the differential equation. Alternatively, individual derivative operators can be expressed as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
-In all cases, a linear system of equations arises, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While we restrict the $\phi_j(x)$ to RBFs or various operators applied to the RBFs, we note that spectral methods, finite-element or spectral-element methods can be formulated in a similar way with different choices of basis functions.  Of course, $u$ can be a vector of unknown variables ($\vc$ then becomes a matrix). 
+In all cases, a linear system of equations arises, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While $\phi_j(x)$ is restricted to RBFs in this context, note that spectral methods, finite-element or spectral-element methods can be formulated in similar fashion with alternative basis functions.  Of course, $u$ can be a vector of unknown variables ($\vc$ then becomes a matrix). 
 
 Table~\ref{tbl:rbfcolloctypes} classifies references according to their choice of collocation method and RBF 
 interpolation type. 
@@ -321,8 +324,7 @@ To eliminate degrees of freedom for well-posedness, $p$ should be greater than o
  (see Table~\ref{tbl:rbfs}) \cite{Iske2004}.  
 Note that Equation~\ref{eqn:pde_approx} is evaluated 
  at $\{x_j\}_{j=1}^{N}$ 
-data points through which the interpolant is required to pass with zero residual.  We refer to 
-the $x_j$'s as \emph{collocation points} (a.k.a. trial points), taken as the RBF centers. The test points, $x$, usually coincide with collocation points, although this is not a requirement. 
+data points through which the interpolant is required to pass with zero residual.  The $x_j$'s are known as \emph{collocation points} (a.k.a. trial points), taken as the RBF centers. The test points, $x$, usually coincide with collocation points, although this is not a requirement. 
 %$P_l(x)$ is needed to eliminate degrees of freedom for well-posedness \cite{Iske:2004}. 
 
 To clarify the role of the polynomial part in Equation~\ref{eqn:pde_approx}, it is necessary to
@@ -356,8 +358,8 @@ In $\R^d$, $M =$${m+d}\choose{d}$ \cite{Iske2004}, giving
 							 \end{array}
 						 \right) & = & \parray{c}{ f } \nonumber
 \end{eqnarray}
-where the second summation (referred to as \emph{interpolation conditions} \cite{Iske2004}) ensures the minimum degree of the interpolant. Refer to Table~\ref{tbl:rbfs} for a short list of recommended RBFs and minimally required orders of $m$. This document prefers the Gaussian RBF. Notice, in Equation~\ref{eqn:interpolation_constraints}, that the interpolation conditions add $M$ new degrees of freedom, so we must provide $M$ 
-additional constraints to square the system. In this case:
+where the second summation (referred to as \emph{interpolation conditions} \cite{Iske2004}) ensures the minimum degree of the interpolant. Refer to Table~\ref{tbl:rbfs} for a short list of recommended RBFs and minimally required orders of $m$. This document prefers the Gaussian RBF. Notice, in Equation~\ref{eqn:interpolation_constraints}, that the interpolation conditions add $M$ new degrees of freedom, so $M$ 
+additional constraints are necessary to square the system. In this case:
 $$
 \sum_{j=1}^{N} c_{j} P_l(x_j) = 0,  \hskip1.5em  l=1,..., M 
 $$
@@ -647,6 +649,7 @@ Most recently, Fornberg et al. \cite{Fornberg2012} introduced a new method calle
 RBF-generated Finite Differences (RBF-FD) were first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
 but it was the simultaneous, yet independent,
 efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. 
+
 The RBF-FD method 
 %(and the RBF-HFD, ``Hermite" equivalent \cite{WrightFornberg06})
 is similar in concept to classical 
@@ -655,7 +658,7 @@ finite-differences (FD), in that derivatives of a function $u(x)$ are approximat
         \left. \diffop{u(x)} \ \right|_{x = x_c} &\approx \sum_{j=1}^{n} c_j u(x_j) 
         \label{eq:derivFromFDWeights}
         \end{align}
-where $\diffop{u}$ again represents a differential operator on $u(x)$ (e.g., $\diffop{} = \pd{}{x}$). Here the $n$ nodes around $x_c$ are known as a \emph{stencil} with size $n$. The $c_j$ are \emph{stencil weights}. In practice stencils include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" can depend the choice of distance metric, but in all discussions to follow it is assumed to be Euclidean distance ($||x-x_c||_2$). 
+where $\diffop{u}$ again represents a differential operator on $u(x)$ (e.g., $\diffop{} = \pd{}{x}$). Here the $n$ nodes are known as a \emph{stencil} with size $n$. The $c_j$ are \emph{stencil weights}. In practice stencils include the center, $x_c$, plus the $n - 1$ nearest neighboring nodes. The definition of ``nearest" can depend the choice of distance metric, but in all discussions to follow it is assumed to be Euclidean distance ($||x-x_c||_2$). 
 
 \begin{figure}[htbp]
 \centering
@@ -671,25 +674,51 @@ where $\diffop{u}$ again represents a differential operator on $u(x)$ (e.g., $\d
 		\label{fig:stencil_example_sphere}
 	\end{subfigure}
 	\caption{Examples of stencils computable with RBF-FD}
-	%TODO: Consider: show example FD stencil (5pt with regular grid)
 	\label{fig:stencil_example}
 \end{figure}
 
-Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. A single stencil of size $n=13$ is depicted in Figure~\ref{fig:stencil_example_random} within in a domain of random points. The center, $x_c$, is represented by a green square, with 12 neighbors connected via red edges. The purple circle---the minimum covering circle for the stencil---illustrates that the 12 nearest neighbors are selected. Figure~\ref{fig:stencil_example_sphere} presents a larger stencil ($n=75$) on the unit sphere with red and blue disks surrounding the square center. Green disks are nodes outside of the stencil. Radii and color of the disks indicate magnitude and alternating sign of the weights, $c_j$.
+Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. A single stencil of size $n=13$ is depicted in Figure~\ref{fig:stencil_example_random} within a domain of random points. The center, $x_c$, is represented by a green square, with 12 neighbors connected via red edges. The purple circle---the minimum covering circle for the stencil---illustrates that the 12 nearest neighbors are selected. Figure~\ref{fig:stencil_example_sphere} presents a larger stencil ($n=75$) on the unit sphere with red and blue disks surrounding the square center. Green disks are nodes outside of the stencil. Radii and color of the disks indicate magnitude and alternating sign of the weights, $c_j$.
 
+Following \cite{FornbergLehto11}, weights for a 1D classical stencil can be obtained by solving a Vandermode system
+	\begin{eqnarray}        
+          \begin{bmatrix} 1 & 1 & \cdots & 1 \\ 
+            x_1 & x_2 & \cdots & x_n \\ 
+            x_1^2 & x_2^2 & \cdots & x_n^2 \\
+            \vdots & \ddots & \ddots & \vdots \\ 
+            x_1^{n-1} & x_2^{n-1} & \cdots & x_n^{n-1} \end{bmatrix} 
+            \begin{pmatrix} c_1 \\ c_2 \\ c_3 \\ \vdots \\ c_n \end{pmatrix} & = & \begin{pmatrix} \left.\diffop{1}\right|_{x=x_c} \\  \left.\diffop{x}\right|_{x=x_c} \\  \left.\diffop{x^2}\right|_{x=x_c} \\ \vdots \\  \left.\diffop{x^{n-1}}\right|_{x=x_c} \end{pmatrix} \label{eq:classical_fd_weight_system} 	\end{eqnarray}	
+where the the $x_j$ are assumed to be distinct for guaranteed nonsingularity. In higher dimensions, multivariate polynomials dissolve the guaranteed nonsingularity of the Vandermonde system, so FD stencils are typically composed by adding weights from individual spatial directions. 
 
-%TODO: fix this paragraph
-\authnote{Fix this paragraph:}
-Weights for classical FD stencils, typically obtained in one dimension, are easiest to acquire through the solution of a Vandermonde System with a 1-D polynomial basis set \cite{FornbergLehto11}. For multiple dimensions, one composes classical FD stencils by adding weights from individual dimensions. In contrast to this, RBF-FD replaces the polynomial basis functions with $d$-dimensional radial basis functions. Solving the resulting 
-but differs in that the underlying differentiation 
-weights are exact for RBFs rather than polynomials. The method contrasts with global RBF methods in the sense that it does not collocate the PDE. Instead, RBF-FD provides a set of generalized FD weights representing the discrete differential operator for a small neighborhood of nodes.
+In contrast to Equation~\ref{eq:classical_fd_weight_system}, RBF-FD weights arise by enforcing that they be exact within the space spanned by the RBFs that are centered at stencil nodes (i.e., $\phi_j(x) = \phi(\epsilon ||x-x_j||_2)$; an RBF centered at $x_j$). This amounts to replacing each polynomial basis function $\{1, x, x^2, \cdots, x^{n-1}\}$ in Equation~\ref{eq:classical_fd_weight_system} with a $d$-dimensional RBF, $\phi_j(x)$, which allows for nonsingularity in $d$-dimensions on irregular node placements. Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
+interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align*}
+	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i) + c_{n+1} p_0 \ \ \ \ \ \ \textrm{for }i=1,2,...,n  
+	\end{align*}
+	with $\diffop{\phi}_i$ provided by analytically applying the differential operator to the RBF. Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}c_i=\diffop{p_0}|_{x=x_{c}}=0$ completes the system: 
+	\begin{eqnarray}        
+          \begin{bmatrix} \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_n(x_{1}) & 1 \\ 
+            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_n(x_{2}) & 1\\ 
+            \vdots & \ddots & \ddots & \vdots & \vdots \\ 
+            \phi_{1}(x_n) & \phi_{2}(x_n) & \cdots & \phi_{n}(x_{n}) & 1 
+            \\ 1 & 1 & \cdots & 1 & 0 \end{bmatrix} 
+            \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_n \\ c_{n+1} \end{pmatrix} & = & \begin{pmatrix} \left.\diffop{\phi_1}(x)\ \right|_{x=x_c} \\  \left.\diffop{\phi_2}(x)\ \right|_{x=x_c} \\ \vdots \\  \left.\diffop{\phi_{n}}(x)\ \right|_{x=x_c} \\ 0 \end{pmatrix} \label{eq:rbffd_weight_system} \\
+\begin{bmatrix} \phi & P \\
+		P^T & 0 \end{bmatrix} \begin{pmatrix} c_\diffop{} \\ 
+							d_\diffop{} \end{pmatrix} & = & \begin{pmatrix} \phi_{\diffop{}} \\
+							0 \end{pmatrix}. \nonumber
+	\end{eqnarray}	
+The resulting structure of Equation~\ref{eq:rbffd_weight_system} is the same structure found in RBF scattered data interpolation (see Equation~\ref{eq:solve_rbf_scattered_interp}). 
+As with other RBF methods, the choice of $\diffop{}$ can be any linear operator. If $\diffop$ is the identity operator, then the above procedure leads to RBF-FD weights for interpolation. If $\diffop=\pd{}{x}$, one obtains the weights to approximate the first derivative in $x$. Refer to \cite{Fasshauer2007} for a table of commonly used RBF derivatives. Section~\ref{sec:weight_operators} provides a list of derivatives used in this work. 
+
+The small $(n + 1) \times (n + 1)$ system in Equation~\ref{eq:rbffd_weight_system} is dense, and is easily solved at a cost of $O(n^3)$ floating point operations (FLOPs) using direct methods like LU-decomposition. The resulting stencil weights, $c_\diffop{} = \{c_j\}_{j=1}^n$ can be substituted into Equation~\ref{eq:derivFromFDWeights} for the derivative approximation at $x_c$. Coefficient $c_{n+1}$ ($d_\diffop{} = c_{n+1}$), included in the solution of Equation~\ref{eq:rbffd_weight_system}, is of no use and discarded once the system has been solved. 
+
+Based on the choice of support parameter, $\epsilon$, the Equation~\ref{eq:rbffd_weight_system} may suffer problems with conditioning. In such cases, stable methods for solving the system like Contour--Pad\'{e} \cite{Wright2003}, RBF-QR \cite{Fornberg2011a,Davydov2011}, or RBF-GA \cite{Fornberg2012} may be preferred.  
 
 RBF-FD 
-share many advantages with global RBF methods. For example, the ability to function without an underlying mesh, easily extend to higher dimensions, and (in some cases) stability for large time steps. Unfortunately, spectral accuracy is lost due to its nature as a local method. 
+shares many advantages with global RBF methods. For example, the ability to function without an underlying mesh,  easily extend to higher dimensions, and (in some cases) stability for large time steps. Unfortunately, spectral accuracy is lost due to the local nature of this stencil method. 
 Other advantages of RBF-FD 
 include low computational complexity together with high-order accuracy
 (6th to 10th order accuracy is common). 
-As with classical FD methods, increasing the stencil size, $n$, increases the order accuracy of the approximation. While not a panacea for PDEs, RBF-FD is simple to code, and powerful in its ability to avoid singularities introduced by coordinate systems that might negatively impact other methods (see e.g., \cite{FlyerWright07,FornbergLehto11}). 
+As in classical FD methods, increasing the stencil size, $n$, increases the order accuracy of approximations. While not a panacea for PDEs, RBF-FD is simple to code, feature rich, and powerful in its ability to avoid singularities introduced by coordinate systems that might negatively impact other methods (see e.g., \cite{FlyerWright07,FornbergLehto11}). 
 
 %In some ways, RBF-FD and global RBF methods are plagued by shared difficulties. For example, both face a dilemma in choosing the optimal $\epsilon$ to compromise between conditioning and accuracy. A key difference---historically---is that in the multiple independent RBF-FD origins, Wright \cite{Wright2003} focused on bypassing ill-conditioning of RBF-FD and investigated its behavior in the limit as $\epsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm. So while global RBF methods suffered  
 
@@ -710,68 +739,12 @@ accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cec
 including Navier-Stokes equations \cite{Shu2003} have all been considered. 
 
 
-The method Given $N$ total nodes in the domain, $N$ linear systems, each of size $(n+1) \times (n+1)$, are solved to calculate the differentiation weights for derivatives at each node. With $n \ll N$, the RBF-FD preprocessing complexity can behave as $O(N)$; significantly lower than the global RBF or RBF-PS methods ($O(N^3)$). Additionally, the cost per time step is also dominated by $O(N)$. 
+\section{Differentiation Matrix}
 
 
+Typically, one needs derivatives at every node in the discretized domain to solve PDEs. To achieve this with RBF-FD, stencils are generated around every node in the domain. Stencils need not have the same size ($n$), but this is assumed here for simplicity in discussion, and is most common in literature. Furthermore, the number of stencils need not match the number of nodes in the domain, but this is also assumed. The small system solve in Equation~\ref{eq:rbffd_weight_system} is repeated $N$ times---once for each stencil---to obtain a total of $N \times n$ stencil weights. 
 
-
-Typically, one needs derivatives at every node in the discretized domain to solve PDEs. To achieve this with RBF-FD, stencils are generated around each node in the domain. Stencils need not have the same size ($n$), but this is assumed here for simplicity in discussion. Furthermore, the number of stencils need not match the number of nodes in the domain, but this is also assumed. 
-%TODO: need ref to example of ghost nodes and/or leave-one-out}.
-
-%TODO: convergence depends on stencil size
-
-
-%TODO: stencil does not need to be regular distribution.
-%One of the most appealing benefits of RBF-FD is its built-in support for irregular and unstructured node distributions. 
-
-
-
-
-
-% The center node and its neighbors define a \emph{stencil}, $\{\vx\}_{i=1}^{n}$, in a localized (small) region or \emph{neighborhood} of the domain. 
-
-
-%TODO: Weights for both classical Finite Difference and RBF-FD can be obtained through the solution of linear systems. In the case of Finite Difference, the system is a Vandermonde matrix. 
-%TODO: For RBF-FD the system is based on a symmetric distance matrix. 
-%TODO: Need better description and ref The key difference between FD and RBF-FD systems is the singularity that occurs when two nodes swap.
-
-\subsection{Stencil Weights} 
-
- To approximate $\diffop{u(x)}$, one requires the stencil \emph{weights} (coefficients), ${c_j}$. Stencil weights are a discrete representation of the differential operator at the stencil center and may vary by node location (e.g., nodes at the boundary are usually governed by another operator, $\boundop$). Weights are obtained by enforcing that they be exact within the space spanned by the RBFs centered at stencil nodes (i.e., $\phi_j(x) = \phi(\epsilon ||x-x_j||_2)$; an RBF centered at $x_j$). Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
-interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align*}
-	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i) + c_{n+1} p_0 \ \ \ \ \ \ \textrm{for }i=1,2,...,n  
-	\end{align*}
-	with $\diffop{\phi}_i$ provided by analytically applying the differential operator to the RBF. Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}c_i=\diffop{p_0}|_{x=x_{c}}=0$ completes the system: 
-	\begin{eqnarray}        
-          \begin{bmatrix} \phi_1(x_1) & \phi_2(x_1) & \cdots & \phi_n(x_{1}) & 1 \\ 
-            \phi_1(x_2) & \phi_2(x_2) & \cdots & \phi_n(x_{2}) & 1\\ 
-            \vdots & \ddots & \ddots & \vdots & \vdots \\ 
-            \phi_{1}(x_n) & \phi_{2}(x_n) & \cdots & \phi_{n}(x_{n}) & 1 
-            \\ 1 & 1 & \cdots & 1 & 0 \end{bmatrix} 
-            \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_n \\ c_{n+1} \end{pmatrix} & = & \begin{pmatrix} \left.\diffop{\phi_1}(x)\ \right|_{x=x_c} \\  \left.\diffop{\phi_2}(x)\ \right|_{x=x_c} \\ \vdots \\  \left.\diffop{\phi_{n}}(x)\ \right|_{x=x_c} \\ 0 \end{pmatrix} \label{eq:rbffd_weight_system} \\
-\begin{bmatrix} \phi & P \\
-		P^T & 0 \end{bmatrix} \begin{pmatrix} c_\diffop{} \\ 
-							d_\diffop{} \end{pmatrix} & = & \begin{pmatrix} \phi_{\diffop{}} \\
-							0 \end{pmatrix}. \nonumber
-	\end{eqnarray}	
-The choice of $\diffop{}$ can be any linear operator. As an example, if $\diffop$ is the identity operator, then the above procedure leads to RBF-FD weights for interpolation. If $\diffop=\pd{}{x}$, one obtains the weights to approximate the first derivative in $x$. Refer to \cite{Fasshauer2007} for a table of commonly used RBF derivatives. Section~\ref{sec:weight_operators} provides a list of derivatives used in this work. 
-
-The small $(n + 1) \times (n + 1)$ system in Equation~\ref{eq:rbffd_weight_system} is dense, and is solved at a cost of $O(n^3)$ floating point operations (FLOPs) using direct methods like LU-decomposition. The resulting stencil weights, $c_\diffop{} = \{c_j\}_{j=1}^n$ can be substituted into Equation~\ref{eq:derivFromFDWeights} for the derivative approximation at $x_c$. Coefficient $c_{n+1}$ ($d_\diffop{} = c_{n+1}$), included in the solution of Equation~\ref{eq:rbffd_weight_system}, is of no use and discarded once the system has been solved. 
-
-Based on the choice of support parameter, $\epsilon$, the Equation~\ref{eq:rbffd_weight_system} may suffer problems with conditioning. In such cases, stable methods like Contour--Pad\'{e} \cite{Wright2003} or RBF-QR \cite{Fornberg2011a,Davydov2011} may be preferred.  
-
-
-%The above procedure 
-%As an example, if $\diffop$ is the identity operator, 
-%then the above procedure leads to RBF-FD interpolation. If $\diffop=\pd{}{x}$, one obtains the DM that approximates the first derivative in $x$. 
-
-%TODO: Use of the 1's constraint is highly recommended. It keeps weights within magnitude 100, whereas not providing the constraint results in much higher magnitudes in the thousands or tens of thousands. Using first order monomials does not add benefit. Include examples of weights in 2D with 5 to 10 nodes.
-
-%TODO: weights applied to u
-\subsection{Differentiation Matrix}
-Note that Equation~\ref{eq:rbffd_weight_system} resolves the weights only for the stencil $x_c$. The small system solve is repeated $N$ times---once for each stencil---to obtain a total of $N \times n$ stencil weights. 
-
-For PDEs, it is common practice to assemble a \emph{differentiation matrix} (DM); a discrete representation of the PDE operator on the domain. Given the set of nodes in the domain $\{x_k\}_{k=1}^N$, the $c$-th row of the DM represents the discrete PDE operator for the stencil centered at node $x_c$ with stencil nodes $\{x_j\}_{j=1}^{n}$: 
+For PDEs, it is common practice to assemble a \emph{differentiation matrix} (DM); a discrete representation of the PDE operator on the domain. Given the set of nodes in the domain, $\{x_k\}_{k=1}^N$, the $c$-th row of the DM represents the discrete PDE operator for the stencil centered at node $x_c$ with stencil nodes $\{x_j\}_{j=1}^{n}$: 
 \begin{align*}
  \diffop{u(x)} & \approx D_{\diffop{}} u \\
 D_\diffop{}^{(c,k)} & = \begin{cases} c_j & x_k = x_j \\
@@ -782,7 +755,7 @@ where $(c,k)$ represents the (row, column) index of $D_\diffop{}$ and vector $u 
 \begin{align*}
 \left. \diffop{u(x)} \ \right|_{x = x_c} & \approx D_{\diffop{}}^{(c)} u \ \ .
 \end{align*}
-In the solution of PDEs the DMs are utilized in explicit and implicit modes. Here explicit implies evaluating the matrix-vector mulitply to get derivative values, $u'$, from explicitly known vector of solution values $u$: 
+DMs are utilized in both explicit and implicit modes. Here explicit implies evaluating the matrix-vector mulitply to get derivative values, $u'$, from explicitly known vector of solution values $u$: 
 \begin{align}
 u' = D_{\diffop{}} u
 \label{eq:explicit_eq}
@@ -802,25 +775,15 @@ An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this
 		\label{fig:example_DM_rows}
 \end{figure}
 
-%TODO: note that DM does not depend on $u(x)$; only x. if the function u(x) wer
-Differentiation matrices are assembled at a cost of $O(n^3 N)$ FLOPs. However, since the goal of RBF-FD is to keep stencil neighborhoods small ($n \ll N$), the cost of assembly scales as $O(N)$. Furthermore, RBF-FD weights are independent of function values ($u(x)$) and rely only on stencil node locations. The implications of this are as profound as in the context RBF-PS for time-dependent PDEs: the stencil weights are constant so long as the nodes are stationary. Thus, the DM assembly is part of a one-time preprocessing step.% and can applied explicitly in $O(N)$ operations  
+Differentiation matrices are assembled at a cost of $O(n^3 N)$ FLOPs. However, since the goal of RBF-FD is to keep stencils small ($n \ll N$), the cost of assembly scales as $O(N)$. Furthermore, RBF-FD weights are independent of function values ($u(x)$) and rely only on stencil node locations. The implications of this are as profound as in the context RBF-PS for time-dependent PDEs: the stencil weights are constant so long as the nodes are stationary. Thus, the DM assembly is part of a one-time preprocessing step.% and can applied explicitly in $O(N)$ operations  
 
-%TODO: verify
-% Generally speaking DM application at each time-step scales as $O(N)$ for explicit solutions and $O(N^2)$ for implicit. 
 
-The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD due to $n \ll N$. 
-%A problem of size $N$ with stencil size $n$ results in an $N \times N$ DM with only $N*n$ non-zeros. For $N=10,000$ and $n=31$, roughly $0.3\%$ of the matrix is non-zero, and the percentage only decreases as $N$ increases. 
-Best practices dictate that the DMs be stored in a compressed sparse storage format to retain only non-zeros and their corresponding indices in memory. 
-%TODO: This reduces the $N^2$ matrix elements to a memory footprint of  
-
-%TODO: storage in sparse rather than dense form
-%TODO: storage allows us to precompute and apply at later time-steps. 
-
-%TODO: swapping nodes does not cause singularity
+The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ and $n=31$ is only $0.3\%$ full, and the percentage continues to decrease as $N$ increases. 
+Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. In Chapter~\ref{chap:gpu_rbffd} the choice of sparse storage plays a pivotal role in the performance of RBF-FD. 
 
 
 
-\subsection{Multiple Operators}
+\section{Multiple Operators}
 
 In many cases, multiple derivatives (e.g., $\diffop{} = \nabla^2$, $\pd{}{x}$, $\pd{}{y}$, etc.) are required at stencil centers. This is common, for example, when solving coupled PDEs. For RBF-FD, acquiring weights for each additional operator can be both straight-forward and computationally efficient. For each change of differential operator, observe that only the RHS of Equation~\ref{eq:rbffd_weight_system} is modified. Thus, new operators amount to extending Equation~\ref{eq:rbffd_weight_system} to solve 
 \begin{eqnarray}
