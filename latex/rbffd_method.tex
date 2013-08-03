@@ -1272,10 +1272,26 @@ Rather than iterate through all $N$ nodes to find the true neighbors, or step th
 
 \begin{figure}
 \centering
-\includegraphics[width=6.5cm]{/Users/evan/Karen/figures/stencils/computeWeights_hash_vs_kdtree_hnx100.png}
-\includegraphics[width=6.5cm]{/Users/evan/Karen/figures/stencils/SpMV_hash_vs_kdtree_hnx100.png} \\
-\includegraphics[width=6.5cm]{/Users/evan/Karen/figures/stencils/speedup_hash_vs_kdtree_hnx100.png}
-\includegraphics[width=6.5cm]{/Users/evan/Karen/figures/stencils/hash_vs_kdtree_hnx100.png}
+\includegraphics[width=6.5cm]{../figures/stencils/computeWeights_hash_vs_kdtree_hnx100.png}
+\includegraphics[width=6.5cm]{../figures/stencils/SpMV_hash_vs_kdtree_hnx100.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/speedup_hash_vs_kdtree_hnx100.png}
+\includegraphics[width=6.5cm]{../figures/stencils/hash_vs_kdtree_hnx100_w_kdtree_new.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/SpMV_hash_vs_kdtree_hnx100.png}
+\includegraphics[width=6.5cm]{../figures/stencils/computeWeights_hash_vs_kdtree_hnx100.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/hash_vs_kdtree_hnx100.png}
+\includegraphics[width=6.5cm]{../figures/stencils/hash_vs_kdtree_hnx100_w_kdtree_new.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
+\includegraphics[width=6.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/reg_subsets_2m_spmv_speedup.png}
+\includegraphics[width=6.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
+\includegraphics[width=6.5cm]{../figures/stencils/speedup_hash_vs_kdtree_hnx100.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/speedup_hnx100_vs_kdtree_new.png}
+\includegraphics[width=6.5cm]{../figures/stencils/sphere_spmv_speedup.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
+\includegraphics[width=6.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png} \\
+\includegraphics[width=6.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
+\includegraphics[width=6.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
 \caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
 \label{fig:hash_results}
 \end{figure}
