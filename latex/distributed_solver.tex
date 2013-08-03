@@ -13,12 +13,8 @@
 \fi
 
 
-\chapter{Distributed, Multi-GPU RBF-FD}
-\label{chap:multigpu_rbffd}
-
-
-
 \chapter{GPU SpMV}
+\label{chap:gpu_rbffd}
 
 \section{Related Work}
 \cite{Bell2009} \cite{Kreuzer2012}
@@ -507,7 +503,7 @@ We consider a simple idealized problem where derivatives are computed over a reg
 
 
 \chapter{Distributed GPU SpMV}
-
+\label{chap:multigpu_rbffd}
 
 Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
 
