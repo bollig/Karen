@@ -71,6 +71,9 @@ The layout of this document is as follows. This chapter continues with a survey 
 
 \authnote{TODO: iterate through remainder of this chapter again}
 
+%TODO:	We bring together the combination of RBF-FD, MPI, GPU%TODO:	And we demonstrate combinations through applicaton to various problems%TODO:	Implicit and Explicit PDEs
+%TODO:	Goal is to construct building blocks for a large scale Geophysical simulation
+
 \section{On Parallel/Distributed RBF-FD} 
 
 %\authnote{Related work for start of Parallel/GPU chapter}
@@ -396,7 +399,7 @@ f(x_i) & = & \sum_{j=1}^{N} c_{j}  \phi_j(x_i) +  \sum_{l=1}^{M} d_{l} P_l(x_i) 
 
 
 \subsection{Reconstructing Solutions for PDEs}
-In the next few subsections, we will consider collocation equations based on this general form: 
+In the next few subsections, collocation equations are considered based on this general form: 
 \begin{eqnarray*}
 \diffop{u_\phi(x)} &=& f(x) \on{\Interior} \label{eqn:colloc_interior}\\ 
 \boundop{u_\phi(x)} &=& g(x) \on{\Boundary}  \label{eqn:colloc_boundary} 
@@ -423,7 +426,7 @@ u(x) & \approx &  \left.
 	 & \approx & B A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right) 
 	\label{eqn:solve_u}
 \end{eqnarray}
-Likewise, to obtain differential quantities we have: 
+Likewise, to obtain differential quantities, 
 \begin{eqnarray*}
 \diffop{u}(x) & \approx & \left.
 \left[ \begin{array}{c c} 
@@ -446,7 +449,7 @@ Likewise, to obtain differential quantities we have:
  
 \subsection{PDE Methods} 
 
-Now, since $u_{\phi}(x)$ from Equation~\ref{eqn:pde_approx} cannot (in general) satisfy the PDE everywhere, we enforce the PDE at a set of collocation points, which are  distributed over both the interior and the boundary. Again, these points do not necessarily coincide with the RBF centers, but it is convenient for this to be true in practice. Also, for each of the methods the choice of RBF can be either global, resulting in a large dense system, or compact, resulting in a large sparse system. 
+Now, since $u_{\phi}(x)$ from Equation~\ref{eqn:pde_approx} cannot (in general) satisfy the PDE everywhere, the PDE is enforced at a set of collocation points, which are  distributed over both the interior and the boundary. Again, these points do not necessarily coincide with the RBF centers, but it is convenient for this to be true in practice. Also, for each of the methods the choice of RBF can be either global, resulting in a large dense system, or compact, resulting in a large sparse system. 
 
 \subsubsection{Kansa's Method}
 
@@ -490,7 +493,7 @@ u_\phi(x_i) & = & \sum_{j=1}^{N_I}  c_j \diffop{\phi_j(x_i)} + \sum_{j=N_{I} + 1
 \end{eqnarray}
 as the interpolant passing through collocation points. Note $N_I$ is used here to specify the number of RBF centers in the interior of $\Omega$. Here the interpolant is similar to Equation~\ref{eqn:pde_approx}, but a change of basis functions is used for the expansion: $\diffop{\phi_j(x)}$ on the interior and $\boundop{\phi_j(x)}$ on the boundary.
 
-Substituting Equation~\ref{eqn:fasshauer_approx} into Equations~\ref{eqn:kansa_interior}-\ref{eqn:kansa_constraints} we get: 
+Substituting Equation~\ref{eqn:fasshauer_approx} into Equations~\ref{eqn:kansa_interior}-\ref{eqn:kansa_constraints} gives
 \begin{eqnarray}
 \sum_{j=1}^{N_I}c_j\diffop^2{\phi_j(x_i)} + \sum_{j=N_I+1}^{N}c_j\diffop{\boundop{\phi_j(x_i)}} + \sum_{l=1}^{M}d_l \diffop{P_l(x_i)} &=&f(x_i)  \hskip1.5em i = 1,...,n_I  \label{eqn:fasshauer_interior} \\ 
 \sum_{j=1}^{N_I}c_j\boundop{\diffop{\phi_j(x_i)}} + \sum_{j=N_I+1}^{N}c_j\boundop^2{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \boundop{P_l(x_i)} &=& g(x_i)  \hskip1.5em i = n_I + 1,..., n \label{eqn:fasshauer_boundary} \nonumber \\
@@ -530,7 +533,7 @@ In \emph{Direct collocation} (see \cite{Larsson2003, Fedoseyev2002}, the interpo
 \sum_{j=1}^{N}c_j\boundop{\phi_j(x_i)} + \sum_{l=1}^{M}d_l \boundop{P_l(x_i)} &=& g(x_i)  \hskip1.5em i = 1,..., n_B=n-n_I \label{eqn:direct_boundary} \nonumber \\
  \sum_{j=1}^{N} c_j P_l(x_j) &=& 0 \hskip3.0em l=1,...,M \label{eqn:direct_constraints} \nonumber 
 \end{eqnarray}
-Reformulating as a linear system we get: 
+Reformulating as a linear system provides: 
 \begin{eqnarray}
 \left[ \begin{array}{c c} 
 	\phi_{\diffop{}} & P_\diffop{} \\
@@ -766,19 +769,19 @@ D_{\diffop{}} u = f
 \label{eq:implicit_eq}
 \end{align}
 
-An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this example, assume operator $\diffop{} = \pd{}{x}$ is approximated at all $N$ stencil centers of an arbitrary domain. RBF-FD weights assemble the rows of the differentiation matrix, $D_{x}$. On each row, weights are indicated by blue dots. The sparsity of rows reflects the subset of $\{x_k\}_{k=1}^N$ included in corresponding stencils of size $n$. On the right hand side, discrete derivative values $\d{u}{x}$ are approximated at all stencil centers. 
+An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this example, assume operator $\diffop{} = \pd{}{x}$ is approximated at all $N$ stencil centers of an arbitrary domain. RBF-FD weights assemble the rows of the differentiation matrix, $D_{x}$. On each row, weights are indicated by blue dots. The sparsity of rows reflects the subset of $\{x_k\}_{k=1}^N$ included in corresponding stencils of size $n$. A mapping is assumed to exist that translates non-consecutive indices, $k$, to consecutive indices, $j$, and vice-versa. On the right hand side, discrete derivative values $\d{u}{x}$ are approximated at all stencil centers. 
 
 \begin{figure}[htbp]
 	\centering
 		\includegraphics[width=0.65\textwidth]{omnigraffle/DM_rows.pdf}
-		\caption{Differentiation matrix $D_x$ is applied to the solution values $u(x)$ to obtain derivative approximations, $\d{u}{x}$. }
+		\caption{Differentiation matrix $D_x$ is applied explicitly to calculate derivative approximations, $\d{}{x} u(x)$. }
 		\label{fig:example_DM_rows}
 \end{figure}
 
 Differentiation matrices are assembled at a cost of $O(n^3 N)$ FLOPs. However, since the goal of RBF-FD is to keep stencils small ($n \ll N$), the cost of assembly scales as $O(N)$. Furthermore, RBF-FD weights are independent of function values ($u(x)$) and rely only on stencil node locations. The implications of this are as profound as in the context RBF-PS for time-dependent PDEs: the stencil weights are constant so long as the nodes are stationary. Thus, the DM assembly is part of a one-time preprocessing step.% and can applied explicitly in $O(N)$ operations  
 
 
-The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ and $n=31$ is only $0.3\%$ full, and the percentage continues to decrease as $N$ increases. 
+The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ and $n=31$ is only $0.31\%$ full, and the percentage continues to decrease as $N$ increases. 
 Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. In Chapter~\ref{chap:gpu_rbffd} the choice of sparse storage plays a pivotal role in the performance of RBF-FD. 
 
 
@@ -791,9 +794,9 @@ In many cases, multiple derivatives (e.g., $\diffop{} = \nabla^2$, $\pd{}{x}$, $
 		P^T & 0 \end{bmatrix} \begin{bmatrix} c_{\nabla^2} & c_{x} & c_{y} & \cdots \\ 
 							d_{\nabla^2} & d_{x} & d_{y} & \dots \end{bmatrix} & = &     
 		\begin{bmatrix} \phi_{\nabla^2} & \phi_{x} & \phi_{y} & \cdots \\
-							0 & 0 & 0 & \cdots \end{bmatrix}. \nonumber
+							0 & 0 & 0 & \cdots \end{bmatrix}. \label{eq:multi_rhs_rbffd}
 	\end{eqnarray}
-where multiple sets of weights ($c_\nabla, c_x, c_y$) are obtained simultaneously. This dense, symmetric, multiple RHS linear system is considered ideal by linear algebra packages, and many highly optimized routines exist to solve them (e.g., LAPACK ``dgesv") \cite{Lapack1999}. 
+where multiple sets of weights ($c_\nabla, c_x, c_y$) are obtained simultaneously. This dense, symmetric, multiple RHS linear system is considered ideal by linear algebra packages. Many highly optimized routines exist to solve Equation~\ref{eq:multi_rhs_rbffd} (e.g., LAPACK ``dgesv") \cite{Lapack1999}. 
 
 %TODO: boundaries can be, but are not always handled by special operators
 %TODO: preprocessing complexity vs timestep 
@@ -1299,10 +1302,9 @@ In this work, we have attempted a variety of scalings on $\epsilon$. We forego d
 %TODO: what other epsilon tests? why not uniform epsilon? why not variable epsilon? 
 
 %TODO: add references and descriptions. 
-The optimal $\epsilon$ for general node distributions is out of the scope of this research and not necessary for our purposes. For now we assume that nodes are more or less regularly distributed, either via some algorithm such as Lloyd's method to create Centroidal Voronoi Tessellations, repelling springs (distmesh), minimum energy or minimum determinant, or some other algorithm. Except in cases where convergence on PDE solutions can not be attained via RBF-FD, we find that a direct solve for RBF-FD weights is sufficient. To a certain extent, this work considers parallelization of the method so it does not matter if our weights are precise or not. 
+The optimal $\epsilon$ for general node distributions is out of the scope of this research and not necessary for our purposes. For now assume that nodes are more or less regularly distributed, either via some algorithm such as Lloyd's method to create Centroidal Voronoi Tessellations, repelling springs (distmesh), minimum energy or minimum determinant, or some other algorithm. Except in cases where convergence on PDE solutions can not be attained via RBF-FD, a direct solve for RBF-FD weights is sufficient. To a certain extent, this work is predominantly concerned with parallelization of the method so the accuracy of the weights is not always significant.
 
-
-We adopt similar appraoch as \cite{FlyerLehto11} by choosing the same epsilon values specified in Table~\ref{tbl:vortex_hv_params}. 
+To choose values of $\epsilon$ consistently as the number of nodes in the domain grows, the approach from \cite{FlyerLehto11} is adopted: $\epsilon$ is expressed as a function Table~\ref{tbl:vortex_hv_params}. 
 
 I also produced a Matlab script to generate the contours for any stencil size and produced the following figures. 
 
