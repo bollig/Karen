@@ -816,7 +816,7 @@ The following are used in subsequent derviatives:
 
 
 
-\subsubsection{Cartesian Gradient ($\grad$)}
+\subsection{Cartesian Gradient ($\grad$)}
 The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) are produced via the chain rule:
 	\begin{align*} 
 	 \pd{\phi}{x} = \pd{r}{x} \pd{\phi}{r} = \frac{(x-x_{j})}{r} \pd{\phi}{r} \\
@@ -826,7 +826,7 @@ The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) 
 where $\pd{\phi}{r}$ for the Gaussian RBFs is given above. 
 
 
-\subsubsection{Cartesian Laplacian ($\Laplacian$)}
+\subsection{Cartesian Laplacian ($\Laplacian$)}
 Fasshauer \cite{Fasshauer2007} provides the general form of $\nabla^2$ in 2D as: 
 \begin{align*}
 \nabla^2 = \pdd{}{r}\phi(r) + \frac{1}{r}\pd{}{r} \phi(r) 
@@ -880,7 +880,7 @@ which all fit $\nabla^2 = \pdd{}{r}\phi(r) + \frac{d - 1}{r}\pd{}{r} \phi(r)$ fo
 %\end{verbatim}
 
 
-\subsubsection{Laplace-Beltrami ($\LaplaceBeltrami$) on the Sphere}
+\subsection{Laplace-Beltrami ($\LaplaceBeltrami$) on the Sphere}
 
 The $\Laplacian$ operator can be represented in spherical polar coordinates for $\mathbb{R}^3$ as: 
 \begin{align*} 
@@ -898,7 +898,7 @@ Although this originated in the spherical coordinate system, \cite{WrightFlyerYu
 \end{align*} 
 where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
 
-\subsubsection{Constrained Gradient ($P_{x} \cdot \grad$) on the Sphere}
+\subsection{Constrained Gradient ($P_{x} \cdot \grad$) on the Sphere}
 
 Following \cite{FlyerWright09, FlyerLehto11}, the gradient operator can be constrained to the sphere with this projection matrix: 
 %\frac{1}{||\mathbf{x}||}
@@ -928,7 +928,7 @@ Applying the projection matrix gives
 & =  - (\mathbf{P}\cdot\vx_k - 0)\frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) \\
 & = - (I-\vx\vx^T)(\vx_k
 )\frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) \\
-& = \begin{pmatrix} x \vx^T \vx_k - x_k \\ y \vx^T \vx_k -  y_k \\ z \vx^T \vx_k -z_k \end{pmatrix} \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) 
+& = \begin{pmatrix} x_1 \vx^T \vx_k - x_{1,k} \\ x_2 \vx^T \vx_k -  x_{2,k} \\ x_3 \vx^T \vx_k -x_{3,k} \end{pmatrix} \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) 
  \end{align*}
 Thus, weights for $P_{x}\cdot\grad{}$ can be computed directly by using these three operators on the RHS in Equation~\ref{eq:rbffd_weight_system}: 
 \begin{align*} 
@@ -943,8 +943,9 @@ P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \p
 %\authnote{Show accuracy of derivative approximation when using projected operator vs linear combinations of dx,dy,dz operators}
 
 
-\subsubsection{Hyperviscosity $\Delta^k$ for Stabilization}
+\subsection{Hyperviscosity $\Delta^k$ for Stabilization}
 
+The hyperviscosity filter for stabilization is introduced in \cite{FornbergLehto11} and was included in our previous investigations in \cite{BolligFlyerErlebacher2012}.
 When explicitly solving hyperbolic equations, differentiation matrices encode convective operators of the form 
 \begin{equation}
 D = \alpha \pd{}{\lambda} + \beta \pd{}{\theta} \label{eqconv}
@@ -966,10 +967,10 @@ are generated recursively (\cite{FornbergLehto11}):
 \begin{cases} 
 p_0(r) &=1, \\
 p_1(r) &= 4(\epsilon r)^2 - 2d, \\
-p_k(r) &= 4((\epsilon r)^2 - 2(k-1) - \frac{d}{2})  p_{k-1}(r) - 8(k-1)(2(k-1) - 2 + d) p_{k-2}(r), \ \ \ \ k = 2, 3, ...
+p_k(r) &= 4((\epsilon r)^2 - 2(k-1) - \frac{d}{2})  p_{k-1}(r) - 8(k-1)(2(k-1) - 2 + d) p_{k-2}(r), \ \ k = 2, 3, ...
 \end{cases}
 \end{align*}
-where $d$ is the dimension of the problem. The application of hyperviscosity in Chapter~\ref{chap:explicit_implicit_pdes}, utilizes the operator as a filter to shift eigenvalues and stabilize advection equations on the surface of the unit sphere. In that case, $d=2$ is assumed ksince individual RBF-FD stencils can be viewed as (nearly) lying on a plane. For small $N$, the diameter of the stencil may not be sufficiently 
+where $d$ is the dimension. The application of hyperviscosity in Chapter~\ref{chap:applications}, utilizes the operator as a filter to shift eigenvalues and stabilize advection equations on the surface of the unit sphere. In that case, $d=2$ can be assumed because individual RBF-FD stencils are viewed as (nearly) lying on a plane. A word of caution: for small $N$, the diameter of the stencil may not be sufficiently 
 small compared to the radius of the sphere, and hyperviscosity might not work as advertised. 
 %However,
 %numerical evidence in \cite{FornbergLehto11,BolligFlyer} \ci suggests that if the RBFs adequately resolve the convective operator, the 2D 
@@ -989,14 +990,12 @@ This shift is controlled by $k$, the order of the Laplacian, and a scaling param
 \begin{equation*}	
 H = \gamma \Delta^{k} = \gamma_c N^{-k} \Delta^{k}.
 \end{equation*}
-It was found in \cite{FlyerLehto11}, and verified in our own application, that $\gamma = \gamma_c N^{-k}$  provides stability and good accuracy for all values of $N$ considered here. It also ensures that the viscosity vanishes as $N\rightarrow\infty$ \cite{FlyerLehto11}.
-In general, the larger the stencil size, the higher the order of the Laplacian.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \cite{FornbergLehto11,FlyerLehto11}.
+It was found in \cite{FlyerLehto11}, and verified in our own application, that $\gamma = \gamma_c N^{-k}$  provides stability and good accuracy 
+%for all values of $N$ considered here. 
+as a function of $N$ on the unit sphere. It also ensures that the viscosity vanishes as $N\rightarrow\infty$ \cite{FlyerLehto11}.
+In general, the larger the stencil size, the higher the order of the Laplacian required as a filter.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \cite{FornbergLehto11,FlyerLehto11}.
 
-
-%TODO: sparsity
-%TODO: Node ordering
-%TODO: show blocks for boundary conditions (annulus)
-%TODO: application (explicit/implicit solution)
+In Chapter~\ref{chap:applications}, tuned parameters for hyperviscosity are provided. 
 
 \section{Implementation}
 
