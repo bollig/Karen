@@ -1271,10 +1271,22 @@ Querying neighbors requires searching at least the immediate cell one layer of n
 
 \begin{figure}
 \centering
-\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/node_orderings.eps} \\
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid.eps} \\
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid.eps} \includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid.eps} \\
-\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/spy_regulargrid.eps} 
+\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/node_orderings-eps-converted-to.pdf} \\
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid-eps-converted-to.pdf}
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
+\label{fig:orderings}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf} \includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
+\label{fig:orderings}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/spy_regulargrid-eps-converted-to.pdf} 
 \caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
 \label{fig:orderings}
 \end{figure}
@@ -1311,27 +1323,27 @@ Original data showed our algorithm as wildly successful against a version
 \centering
 \includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
 \includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png}
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
 \caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
 \label{fig:hash_results}
 \end{figure}
 \begin{figure}
 \centering
 \includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_2m_spmv_speedup.png}
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
 \caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
 \label{fig:hash_results}
 \end{figure}
 \begin{figure}
 \centering
 \includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
+\caption{Generating stencils for increasing subsets of the $N=1e6$ CVT nodes mesh.}
 \label{fig:hash_results}
 \end{figure}
 \begin{figure}
 \centering
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
 \includegraphics[width=9.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\caption{Based on the proper choice of overlay resolution, the hash stencil query can accelerate stencil generation, but the sophistication of the algorithm is low enough that negative impact is more likely. On the other hand, the impact on SpMV performance is always positive with the routine accelerated up to 4.9x faster.}
 \label{fig:hash_results}
 \end{figure}
 
