@@ -802,12 +802,12 @@ where multiple sets of weights ($c_\nabla, c_x, c_y$) are obtained simultaneousl
 %TODO: preprocessing complexity vs timestep 
 
 
-\subsection{Weight Operators}
+\section{Weight Operators}
 \label{sec:weight_operators}
 %Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs.
-In the course of this work we work with a variety of PDEs. This section enumerates a list of relevant operators and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. Whenever possible the general form of $\diffop{\phi}$ is provided; otherwise the Gaussian RBF ($\phi(r) = e^{-(\epsilon r)^2}$) is assumed. 
+In the course of this work a variety of operators are tested to solve PDEs. This section enumerates the operators and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. Whenever possible the general form of $\diffop{\phi}$ is provided; otherwise the Gaussian RBF ($\phi(r) = e^{-(\epsilon r)^2}$) is assumed. 
 
-\subsubsection{First and Second Derivatives ($\frac{1}{r}\pd{\phi}{r}, \pdd{\phi}{r}$)}
+\subsection{First and Second Derivatives ($\frac{1}{r}\pd{\phi}{r}, \pdd{\phi}{r}$)}
 The following are used in subsequent derviatives:
 \begin{align*}
 \frac{1}{r}\d{}{r}\phi(r) & = -2 \epsilon^2 \phi(r) \\
@@ -888,11 +888,11 @@ The $\Laplacian$ operator can be represented in spherical polar coordinates for 
 \end{align*}
 where $\LaplaceBeltrami$ is the Laplace-Beltrami operator---i.e., the Laplacian operator constrained to the surface of the sphere. This form nicely illustrates the separation of components into radial and angular terms. 
 
-In the case of PDEs solved on the unit sphere, there is no radial term, so we have:
+In the case of PDEs solved on the unit sphere, there is no radial term, resulting in:
 \begin{align}
 \Laplacian  \equiv \LaplaceBeltrami.
 \end{align}
-Although this originated in the spherical coordinate system, \cite{WrightFlyerYuen10} introduced the following Laplace-Beltrami operator for the surface of the sphere: 
+Although this originated in the spherical coordinate system, \cite{WrightFlyerYuen10} give the Laplace-Beltrami operator as
 \begin{align*} 
 \LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{\phi}{r} + \frac{4-3r^2}{r} \pd{\phi}{r} \right],
 \end{align*} 
@@ -913,28 +913,28 @@ P = I - \mathbf{x} \mathbf{x}^T =  \begin{pmatrix}
 where $\mathbf{x}$ is the unit normal at the stencil center. 
 
 
-The direct method of computing RBF-FD weights for the projected gradient for $\mathbf{P} \cdot \nabla $ is presented in \cite{FlyerWright09}. When solving for the weights, we apply the projection on the right hand side of our small linear system. We let $\vx = \begin{pmatrix} x_1, x_2, x_3 \end{pmatrix} $ be the stencil center, and $\vx_k=\begin{pmatrix} x_{1,k}, x_{2,k}, x_{3,k}\end{pmatrix}$ indicate an RBF-FD stencil node. 
+The direct method of computing RBF-FD weights for the projected gradient for $\mathbf{P} \cdot \nabla $ comes from \cite{FlyerWright09}. First, let $\vx = \begin{pmatrix} x_1, x_2, x_3 \end{pmatrix} $ be the stencil center Cartesian coordinates, and $\vx_k=\begin{pmatrix} x_{1,k}, x_{2,k}, x_{3,k}\end{pmatrix}$ be the coordinates of an RBF-FD stencil node. 
 
 Using the chain rule, and assumption that 
 $$r(\vx_k-\vx)=\vectornorm{\vx_k-\vx} = \sqrt{(x_{1,k}-x_1)^2 + (x_{2,k}-x_2)^2 + (x_{3,k}-x_3)^2},$$
- we obtain the unprojected gradient of $\phi$ as
+ the unprojected gradient of $\phi$ becomes
 \begin{align*}
-\nabla \phi(r(\vx_k - \vx)) = \pd{r}{\vx} \pd{\phi(r(\vx_k - \vx))}{r} = - (\vx_k - \vx)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} .
+\nabla \phi(r(\vx_k - \vx)) = \pd{r}{\vx}  \pd{}{r} \phi(r(\vx_k - \vx)) = - (\vx_k - \vx)\frac{1}{r(\vx_k - \vx)} \pd{}{r} \phi(r(\vx_k - \vx)) .
 \end{align*} 
 
 Applying the projection matrix gives 
 \begin{align*}
-\mathbf{P} \nabla \phi(r(\vx_k - \vx)) & = - (\mathbf{P} \cdot \vx_k - \mathbf{P}\cdot\vx)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} \\
-& =  - (\mathbf{P}\cdot\vx_k - 0)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} \\
+\mathbf{P} \nabla \phi(r(\vx_k - \vx)) & = - (\mathbf{P} \cdot \vx_k - \mathbf{P}\cdot\vx)\frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) \\
+& =  - (\mathbf{P}\cdot\vx_k - 0)\frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) \\
 & = - (I-\vx\vx^T)(\vx_k
-)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} \\
-& = \begin{pmatrix} x \vx^T \vx_k - x_k \\ y \vx^T \vx_k -  y_k \\ z \vx^T \vx_k -z_k \end{pmatrix} \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} 
+)\frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) \\
+& = \begin{pmatrix} x \vx^T \vx_k - x_k \\ y \vx^T \vx_k -  y_k \\ z \vx^T \vx_k -z_k \end{pmatrix} \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) 
  \end{align*}
-Thus, we directly compute the weights for $P_{x}\cdot\grad{}$ using these three RHS in Equation~\ref{eq:rbffd_weight_system}: 
+Thus, weights for $P_{x}\cdot\grad{}$ can be computed directly by using these three operators on the RHS in Equation~\ref{eq:rbffd_weight_system}: 
 \begin{align*} 
-P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j} \\
-P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j} \\
-P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} |_{\vx=\vx_j}
+P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) |_{\vx=\vx_j} \\
+P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) |_{\vx=\vx_j} \\
+P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) |_{\vx=\vx_j}
 \end{align*}
 
 %TODO: finish appendix
