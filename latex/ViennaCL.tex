@@ -14,66 +14,6 @@
 
 
 
-\chapter{ViennaCL}
-
-\authnote{4 pages}
-
-The ViennaCL project \cite{Rupp2010a, Rupp2010} is a sparse matrix library built on OpenCL that provides templated C++ API to easily and efficiently solve large sparse matrix problems. 
-
-Our decision to utilize ViennaCL stems from its 
-
-The API provides containers for sparse and dense matrices, vectors and views. The sparse formats available are COO, CSR, (...) ELL and HYB
-
-Matrix and Vector Views provide slices and subranges of containers. Subviews were recently added in version 1.2 with full functionality in v1.3. These views are essential to our work on multi-GPUs since we need to operate on views with full vectors containing the ghost values. (Show example of view). 
-
-Algorithms are provided for GMRES, CG, etc. 
-
-To build multi-GPU algorithms for GMRES we discard the ViennaCL arnoldi process in favor of the Givens rotations. Then we add MPI communication. 
-
-
-
-\section{ViennaCL Limitations}
-ViennaCL is a young library. When we began working with the library, it supported only CSR and COO formats. It has no support for multi-GPU computing. According to the author there were no intentions to extend it multiple GPUs due to the limited return of investment. 
-
-\section{ViennaCL Additions}
-Added support for distributed SpMV and SAXPY with MPI communication. 
-
-Extended library to support rectangular systems rather than just square systems. 
-
-Introduced alternative GMRES algorithm based on Givens Rotations
-
-Introduced preconditioner ILU0. 
-
-\section{ViennaCL Matrix Formats}
-
-ViennaCL supports numerous sparse matrix formats. 
-
-Assemble once in CSR format using direct access notation (e.g., mat(row,col) = val), internally convert to more efficient sparse representation. 
-
-
-
-\section{Numerical Libraries vs Low Level Kernels}
-
-When research began on this project, GPU computing was still in a stage that could be considered fresh. Porting our problem to the GPU, we faced the same challenge that most applications of the GPU face: can it be done better with an existing library or should we write low-level code. We argue that leveraging existing libraries is preferred when possible. There is no need to reproduce what already exists except in the cases where we seek to improve performance. 
-
-Having chosen to leverage numerical libraries where possible, we make attempts to generalize the problem of RBF-FD on Multiple GPUs in terms of simple existing primitives. As Figure~\ref{fig:workflow} illustrates, the bulk of computation can be reduced to simple sparse matrix-vector operations, with vector updates and a few vector reduce steps. From this perspective, then, RBF-FD is incredibly simple to code. 
-
-\section{ViennaCL}
-
-The ViennaCL library was chosen to 
-
-is leveraged for its sparse matrix and dense vector representations on the GPU, as w its efficient 
-
-
-
-
-\chapter{GMRES and Preconditioning}
-The first thing we need to discuss about the GMRES method of the basics of the algorithm. Once we have the basics we can discuss things such as our choice of pre-conditioner. Our work in RBF-FD is the first such test of pre-conditioners for RBS finite differences.The the best plan of attack for today will be to write up related works as I find them. This dictation mode actually allows me to move faster. Simple things like spelling of the RB FFT method in the GM rice method will be hiccups however it should be obvious when it Dragon Dictate has not made the correct spelling and I'll be able to go back through on my second pass and actually revise the phrases into whatever words I need.
-
-Would really like to know is where my computer is not really work. If I had that people put Dragon on the work computer connected Sydney office and dictated all night. It's easier to create by dictating than it is to type it out at least with dictation I can go back and edit later but it's all written in one text file in 90 percent of it is that. 
-
-
-
 
 
 

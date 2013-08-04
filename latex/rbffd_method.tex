@@ -798,21 +798,21 @@ In many cases, multiple derivatives (e.g., $\diffop{} = \nabla^2$, $\pd{}{x}$, $
 	\end{eqnarray}
 where multiple sets of weights ($c_\nabla, c_x, c_y$) are obtained simultaneously. This dense, symmetric, multiple RHS linear system is considered ideal by linear algebra packages. Many highly optimized routines exist to solve Equation~\ref{eq:multi_rhs_rbffd} (e.g., LAPACK ``dgesv") \cite{Lapack1999}. 
 
-%TODO: boundaries can be, but are not always handled by special operators
-%TODO: preprocessing complexity vs timestep 
-
 
 \section{Weight Operators}
 \label{sec:weight_operators}
 %Throughout the development of our parallel code we have verified code correctness through the solution of a variety of PDEs.
 In the course of this work a variety of operators are tested to solve PDEs. This section enumerates the operators and their corresponding equations for the RHS of Equation~\ref{eq:rbffd_weight_system}. Whenever possible the general form of $\diffop{\phi}$ is provided; otherwise the Gaussian RBF ($\phi(r) = e^{-(\epsilon r)^2}$) is assumed. 
 
+%TODO: finish appendix on composed operators. 
+%While the operators presented here allow for direct acquisition of weights through solution of Equation~\ref{eq:rbffd_weight_system}, Appendix~\ref{app:compose_weights} considers the possibility for reproducing operator DMs based on combinations of  computed weights. For example, the possibility of composing RBF-FD weights for $\Laplacian$ as a combination of $D_{\Laplacian} = D_x * D_x + D_y * D_y$
+
 \subsection{First and Second Derivatives ($\frac{1}{r}\pd{\phi}{r}, \pdd{\phi}{r}$)}
 The following are used in subsequent derviatives:
-\begin{align*}
-\frac{1}{r}\d{}{r}\phi(r) & = -2 \epsilon^2 \phi(r) \\
+\begin{align}
+\frac{1}{r}\d{}{r}\phi(r) & = -2 \epsilon^2 \phi(r) \label{eq:dphi_dr} \\
 \pdd{\phi}{r} & = \epsilon^2(-2 + 4(\epsilon r)^2)\phi(r)
-\end{align*}
+\end{align}
 
 
 
@@ -823,7 +823,7 @@ The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) 
 	 \pd{\phi}{y} = \pd{r}{y} \pd{\phi}{r} = \frac{(y-y_{j})}{r} \pd{\phi}{r} \\
 	 \pd{\phi}{z} = \pd{r}{z} \pd{\phi}{r} = \frac{(z-z_{j})}{r} \pd{\phi}{r}
 	\end{align*}
-where $\pd{\phi}{r}$ for the Gaussian RBFs is given above. 
+where $\pd{\phi}{r}$ for the Gaussian RBFs is given in Equation~\ref{eq:dphi_dr}. 
 
 
 \subsection{Cartesian Laplacian ($\Laplacian$)}
@@ -937,7 +937,7 @@ P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \p
 P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) |_{\vx=\vx_j}
 \end{align*}
 
-%TODO: finish appendix
+%TODO: include appendix
 %Alternatively, assuming weights for operators $\grad = \pd{}{x_{1}}, \pd{}{x_{2}}, \pd{}{x_{3}}$ are already computed, the projected operator could be constructed via weighting the unprojected gradient components. For example: 
 
 %\authnote{Show accuracy of derivative approximation when using projected operator vs linear combinations of dx,dy,dz operators}
@@ -995,11 +995,13 @@ It was found in \cite{FlyerLehto11}, and verified in our own application, that $
 as a function of $N$ on the unit sphere. It also ensures that the viscosity vanishes as $N\rightarrow\infty$ \cite{FlyerLehto11}.
 In general, the larger the stencil size, the higher the order of the Laplacian required as a filter.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \cite{FornbergLehto11,FlyerLehto11}.
 
-In Chapter~\ref{chap:applications}, tuned parameters for hyperviscosity are provided. 
+Tuned parameters for hyperviscosity are provided in Chapter~\ref{chap:applications}. 
 
 \section{Implementation}
 
-This section provides an overview of how one implements RBF-FD. Consider Algorithm~\ref{alg:rbffd_high_level}. The algorithm is partitioned into two phases: preprocessing and application. The complexity of each phase depends on the choice of algorithms/method utilized for each task. 
+% TODO: High level algorithm should lay out: grid gen/load, stencil gen, weight gen, domain decomposition, assemble PDE, solve PDE and update solution. 
+% TODO: no details on 
+This section provides an overview of how one implements RBF-FD. Consider Algorithm~\ref{alg:rbffd_high_level}, which is has two phases: preprocessing and application. The complexity of each phase depends on the choice of algorithms/method utilized for each task. 
 
 Preprocessing encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output from these tasks one expects one or more DMs representing the discrete differential operators. Assuming the grid nodes do not move, the DMs remain constant for the duration of the second phase. Additionally, DMs can be loaded from disk on subsequent runs to effectively bypass the cost of all preprocessing. 
 
@@ -1070,8 +1072,14 @@ MD node sets were introduced to the RBF community due to their success in spheri
 \begin{figure} 
 \centering
 \includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N4096_points.pdf} 
-\caption{Example of $N=4096$ maximum determinant (MD) node sets on the unit sphere.} 
+\caption{Quasi-regular nodes with $N=4096$ maximum determinant (MD) node sets on the unit sphere.} 
 \label{fig:md_nodes}
+\end{figure}
+\begin{figure} 
+\centering
+\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/ICOS2562.pdf} 
+\caption{$N=2562$ icosahedral nodes on the unit sphere.} 
+\label{fig:icos_nodes}
 \end{figure}
 
 The MD node files are available for download on the authors' web site (\url{http://web.maths.unsw.edu.au/~rsw/Sphere}), and range in size from $N=4$ up to N=27,556 nodes on the sphere. Figure~\ref{fig:md_nodes} plots the $N=4096$ node set to illustrate the irregularity in distribution. Node sets greater than N=27,556 are not available. Unlike regular grids, each MD node set is a refinement of the sphere, but not a subdivision, so extending beyond N=27,556 nodes would require complete regeneration.
@@ -1174,26 +1182,43 @@ Rather than iterate through all $N$ nodes to find the true neighbors, or step th
 
 \begin{figure}
 \centering
-\includegraphics[width=6.5cm]{../figures/stencils/computeWeights_hash_vs_kdtree_hnx100.png}
-\includegraphics[width=6.5cm]{../figures/stencils/SpMV_hash_vs_kdtree_hnx100.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/speedup_hash_vs_kdtree_hnx100.png}
-\includegraphics[width=6.5cm]{../figures/stencils/hash_vs_kdtree_hnx100_w_kdtree_new.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/SpMV_hash_vs_kdtree_hnx100.png}
-\includegraphics[width=6.5cm]{../figures/stencils/computeWeights_hash_vs_kdtree_hnx100.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/hash_vs_kdtree_hnx100.png}
-\includegraphics[width=6.5cm]{../figures/stencils/hash_vs_kdtree_hnx100_w_kdtree_new.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
-\includegraphics[width=6.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/reg_subsets_2m_spmv_speedup.png}
-\includegraphics[width=6.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
-\includegraphics[width=6.5cm]{../figures/stencils/speedup_hash_vs_kdtree_hnx100.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/speedup_hnx100_vs_kdtree_new.png}
-\includegraphics[width=6.5cm]{../figures/stencils/sphere_spmv_speedup.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
-\includegraphics[width=6.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png} \\
-\includegraphics[width=6.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
-\includegraphics[width=6.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
+%\includegraphics[width=6.5cm]{../figures/stencils/computeWeights_hash_vs_kdtree_hnx100.png}
+%\includegraphics[width=6.5cm]{../figures/stencils/SpMV_hash_vs_kdtree_hnx100.png} \\
+%\includegraphics[width=6.5cm]{../figures/stencils/speedup_hash_vs_kdtree_hnx100.png}
+%\includegraphics[width=6.5cm]{../figures/stencils/hash_vs_kdtree_hnx100_w_kdtree_new.png} \\
+%\includegraphics[width=6.5cm]{../figures/stencils/hash_vs_kdtree_hnx100.png}
+%\includegraphics[width=6.5cm]{../figures/stencils/speedup_hash_vs_kdtree_hnx100.png} \\
+%\includegraphics[width=6.5cm]{../figures/stencils/speedup_hnx100_vs_kdtree_new.png}
+\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
+\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_2m_spmv_speedup.png}
+\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png} 
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
 \caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
 \label{fig:hash_results}
 \end{figure}

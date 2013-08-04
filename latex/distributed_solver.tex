@@ -112,6 +112,14 @@ To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sp
 
 
 We compare the performance of our custom kernel to ViennaCL kernels (ELL, CSR, COO, HYB, DIAG), UBlas (COO, CSR) and Eigen (COO, CSR, ELL)
+%
+%
+%Hardware architecture%•	Memory layout%•	Processing cores%•	Trends in hardware since 2006 (additions and benfits)%Optimization%•	SpMV memory layout%•	Scheduling threads%•	Reductions%OpenCL%•	Why? %o	Cross platform support%o	Asynchronous Queuing with Dependencies%•	Implementations details%o	Kernel%o	Work-Item%o	Work-Group%o	NDRange%o	Queue%o	Etc.%•	How does it compare to CUDA? Phi%•	Latest trends%o	Phi: bind against MKL for optimized CPU and MIC%o	CUDA-MPI%o	CUDA Sub-Kernel calls%o	CUDA uptake %•	E.g., Matlab (MEX compiled kernel wrappers)%Conclusions on GPGPU%•	Benefits are good%o	Cheap to purchase < $1K%o	superior performance 1.2 TFLOPs possible in one card%o	was a trending technology (major uptake in supercomputing and national labs)%•	Downsides were varied%•	Overall Impression is that%o	Uptake was wide-spread for research projects%o	Focus was on determining limits of the hardware%•	Many studies focused on optimization of primitives which allow general use in applications such as RBF-FD without recreating the wheel when it comes to optimal algorithms. Allows researchers to concentrate on other investigations into application, preconditioning, data analysis, etc.%Newcomers to the field are interested USING gpgpu applications, rather than writing them  
+
+
+
+
+
 
 
 

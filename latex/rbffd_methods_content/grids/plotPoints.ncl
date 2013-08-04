@@ -21,7 +21,7 @@ PS=1            ; EPS
 PDF=0           ; PDF
 
 ; FILE NAME FOR EXPORTING
-exportName = "tracer"
+exportName = "ICOS2562"
 
 
 ;
@@ -55,7 +55,7 @@ end if
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fdat            = "./initial_condition.dat"     ; ScalarField
-xdat            = "./N100000cvt_nodes.ascii"              ; Nodes
+xdat            = "./nodes.ascii"              ; Nodes
 gdat            = "./geometry.dat"          ; Description of Nodes file (dimensions)
 
 
