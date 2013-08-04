@@ -1106,8 +1106,6 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 
 
 
-%% TODO: mention other grids generated with CVTs and provide examples 
-%\subsubsection{Other Grids}
 %
 %% TODO: wanted to test without the presence of boundary conditions 
 %% TODO: other grids tested boundary conditions
@@ -1121,6 +1119,50 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 %\item Nested Sphere CVT
 %\item a
 %\end{itemize}
+
+
+\subsection{On Choosing the Right $\epsilon$} 
+% TODO: expand missing content
+
+\authnote{perhaps this belongs in an appendix}
+
+%First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
+
+If solving for the weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system}), one must carefully choose $\epsilon$ to prevent ill-conditioning. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing, $h$, stencil size $n$, etc. In general, the values provided are particular to the specific problem and/or grid under consideration. No fool-proof method exists to select the support parameters, so the prospect of hassle-free application of the RBF-FD method is still out of reach. 
+
+Modern algorithms introduced in the last couple years provide methods for acquiring weights. Contour-Pad\'{e}, RBF-QR, and RBF-GA are all options for weights corresponding to the $\epsilon \rightarrow 0$. These methods appear to resolve many issues including conditioning of implicit systems for more accurate solutions \cite{Davydov2011}  \cite{Fornberg2013} 
+
+In this work, we have attempted a variety of scalings on $\epsilon$. We forego discussion of these attempts since they are outside our current scope of investigation. In the end, we find that the most effective method for choosing $\epsilon$ was to adopt the approach introduced in \cite{FlyerLehto11}, wherein $\epsilon$ is expressed as a function of the number of nodes $N$ and desired mean condition number, $\bar{\kappa}_A$. 
+
+%TODO: what papers provide epsilon choice? based on grid? based on node density? proportional to what?
+%TODO: what is the algorithm to choose epsilon?
+%TODO: what examples are provided? 
+%TODO: does the choice of c1 and c2 depend on the problem? 
+%TODO: what level coarse grid is necessary to get contours? 
+%TODO: what other epsilon tests? why not uniform epsilon? why not variable epsilon? 
+
+%TODO: add references and descriptions. 
+The optimal $\epsilon$ for general node distributions is out of the scope of this research and not necessary for our purposes. For now assume that nodes are more or less regularly distributed, either via some algorithm such as Lloyd's method to create Centroidal Voronoi Tessellations, repelling springs (distmesh), minimum energy or minimum determinant, or some other algorithm. Except in cases where convergence on PDE solutions can not be attained via RBF-FD, a direct solve for RBF-FD weights is sufficient. To a certain extent, this work is predominantly concerned with parallelization of the method so the accuracy of the weights is not always significant.
+
+To choose values of $\epsilon$ consistently as the number of nodes in the domain grows, the approach from \cite{FlyerLehto11} is adopted: $\epsilon$ is expressed as a function Table~\ref{tbl:vortex_hv_params}. 
+
+I also produced a Matlab script to generate the contours for any stencil size and produced the following figures. 
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n20.pdf}
+\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n40.pdf}
+\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n60.pdf}
+\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n80.pdf}
+\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n100.pdf}
+\caption{Contours for choosing $\epsilon$ for $n=20$, 40, 60, 80 and 100 on the unit sphere as a function of $\sqrt{N}$. Contours assume near uniform distribution of nodes (e.g., maximum determinant nodes, icosahedral grids and spherical centroidal voronoi tessellations). Superimposed above each contour are parameters for the linear regression of the line, $c_{1} \sqrt{N} - c_{2}$. }
+\label{fig:epsilon_contours}
+\end{figure}
+
+
+
+
+
 
 \chapter{Generating Stencils for RBF-FD}
 \label{chap:stencils}
@@ -1178,44 +1220,6 @@ The author of \cite{Fasshauer2007} queries $n$ nearest neighbors for a compact-s
 Our work in \cite{BolligFlyerErlebacher2012} leveraged an alternative to $k$-D tree, based loosely on space-filling curve orderings common in Lagrangian schemes like Smoothed Particle Hydrodynamics (e.g., \cite{IanThesis}, \cite{Kelager}). %TODO: I have used Locality Sensitive Hashing \cite{Indyk} in the past. According to Samet \cite{Samet "Multidimensional and Metric..."}, LSH uses a set of random hashes to assign indices for each node. Our case uses space-filling curve, so we use . 
 
 Rather than iterate through all $N$ nodes to find the true neighbors, or step through a k-D tree in something like $O(log N)$ that requires extra built-out, ANN allows us to use a set of nodes that satisfy
-
-
-\begin{figure}
-\centering
-\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
-%\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
-\begin{figure}
-\centering
-\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
-\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png}
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
-\begin{figure}
-\centering
-\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_2m_spmv_speedup.png}
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
-\begin{figure}
-\centering
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
-\begin{figure}
-\centering
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
-
 
 
 \subsubsection{KDTree}
@@ -1295,44 +1299,40 @@ Original data showed our algorithm as wildly successful against a version
 Obviously, the ideal case for bandwidth is when all rows contain the $\frac{n}{2}$ nodes corresponding to solution value to either side of $u_j$. In 1-D this corresponds to every node containing the $\frac{n}{2}$ nodes to the left and right of $x_j$. In 2-D this is only possible if the nodes in the domain are properly indexed such that stencils contain the proper set of neighbors---a stringent requirement that will 
 
 
-
-
-\subsection{On Choosing the Right $\epsilon$} 
-% TODO: expand missing content
-
-
-
-%First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
-
-If solving for the weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system}), one must carefully choose $\epsilon$ to prevent ill-conditioning. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing, $h$, stencil size $n$, etc. In general, the values provided are particular to the specific problem and/or grid under consideration. No fool-proof method exists to select the support parameters, so the prospect of hassle-free application of the RBF-FD method is still out of reach. 
-
-Modern algorithms introduced in the last couple years provide methods for acquiring weights. Contour-Pad\'{e}, RBF-QR, and RBF-GA are all options for weights corresponding to the $\epsilon \rightarrow 0$. These methods appear to resolve many issues including conditioning of implicit systems for more accurate solutions \cite{Davydov2011}  \cite{Fornberg2013} 
-
-In this work, we have attempted a variety of scalings on $\epsilon$. We forego discussion of these attempts since they are outside our current scope of investigation. In the end, we find that the most effective method for choosing $\epsilon$ was to adopt the approach introduced in \cite{FlyerLehto11}, wherein $\epsilon$ is expressed as a function of the number of nodes $N$ and desired mean condition number, $\bar{\kappa}_A$. 
-
-%TODO: what papers provide epsilon choice? based on grid? based on node density? proportional to what?
-%TODO: what is the algorithm to choose epsilon?
-%TODO: what examples are provided? 
-%TODO: does the choice of c1 and c2 depend on the problem? 
-%TODO: what level coarse grid is necessary to get contours? 
-%TODO: what other epsilon tests? why not uniform epsilon? why not variable epsilon? 
-
-%TODO: add references and descriptions. 
-The optimal $\epsilon$ for general node distributions is out of the scope of this research and not necessary for our purposes. For now assume that nodes are more or less regularly distributed, either via some algorithm such as Lloyd's method to create Centroidal Voronoi Tessellations, repelling springs (distmesh), minimum energy or minimum determinant, or some other algorithm. Except in cases where convergence on PDE solutions can not be attained via RBF-FD, a direct solve for RBF-FD weights is sufficient. To a certain extent, this work is predominantly concerned with parallelization of the method so the accuracy of the weights is not always significant.
-
-To choose values of $\epsilon$ consistently as the number of nodes in the domain grows, the approach from \cite{FlyerLehto11} is adopted: $\epsilon$ is expressed as a function Table~\ref{tbl:vortex_hv_params}. 
-
-I also produced a Matlab script to generate the contours for any stencil size and produced the following figures. 
-
-\begin{figure}[htbp]
+\begin{figure}
 \centering
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n20.pdf}
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n40.pdf}
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n60.pdf}
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n80.pdf}
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n100.pdf}
-\caption{Contours for choosing $\epsilon$ for $n=20$, 40, 60, 80 and 100 on the unit sphere as a function of $\sqrt{N}$. Contours assume near uniform distribution of nodes (e.g., maximum determinant nodes, icosahedral grids and spherical centroidal voronoi tessellations). Superimposed above each contour are parameters for the linear regression of the line, $c_{1} \sqrt{N} - c_{2}$. }
-\label{fig:epsilon_contours}
+\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
+%\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
+\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png}
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_2m_spmv_speedup.png}
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
 \end{figure}
 
 
