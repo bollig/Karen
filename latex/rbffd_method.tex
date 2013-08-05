@@ -1076,11 +1076,11 @@ RBF-FD has no requirement for structured grids, or need for a well-refined mesh/
 
 %The choice of grid is only relevant to the extent that it impacts the connectivity between nodes in stencils. Connectivity translates to non-zeros in rows of the DMs, so the various grid distributions result in a number of sparsity patterns. For all other intents and purposes, the choice of grid is only pertinent to ensure consistency with the PDEs to solve. 
 
-The RBF-FD implementation presented in this work is verified and benchmarked on a number of grids. The following grids are chosen for two reasons: a) to easily construct refinements in 2D/3D for consistent benchmarking and convergence studies, and b) to verify solutions against existing methods. 
+The RBF-FD implementation presented in this work is verified and benchmarked on a number of grids. The following grids are chosen for two reasons: a) to easily construct refinements in 2D/3D for consistent benchmarking and convergence studies, and b) to verify solutions against existing methods. All grids mentioned here are available for public download \cite{BolligSphereGrids}.
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 
-\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in multiple dimensions are simple to generate. Additionally, refinements---for convergence tests---are direct subsamples. 
+\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in multiple dimensions are simple to generate. Additionally, refinements---for scaling benchmarks and convergence tests---are direct subsamples. 
 
 In theory, RBF-FD functions the same whether nodes are uniformly spaced or random. However, regular grids do not fully exercise advantages that RBF-FD has over other methods with its ability to operate on scattered nodes.
 
@@ -1097,6 +1097,15 @@ MD node sets were originally utilized by the RBF community due to their success 
 \caption{Quasi-regular nodes with $N=4096$ maximum determinant (MD) node sets on the unit sphere.} 
 \label{fig:md_nodes}
 \end{figure}
+
+The MD node files are available for download on the authors' web site \cite{WomersleySloanMDNodes}, and range in size from $N=4$ up to N=27,556 nodes on the sphere. Figure~\ref{fig:md_nodes} plots the $N=4096$ node set to illustrate the irregularity in distribution. Node sets greater than N=27,556 are not available. Unlike regular grids, each MD node set is a refinement of the sphere, but not a subdivision, so extending beyond N=27,556 nodes would require complete regeneration.
+
+%The process of generating new MD node sets greater than $N=27,556$ nodes would require recomputing the entire distribution. 
+
+\subsubsection{Icosahedral Nodes on the Sphere}
+
+Figure~\ref{fig:icos_nodes} shows Icosahedral nodes on the sphere. Icosahedral grids, which are nearly homogenous and isotropic, have been in use since the 1960s \cite{Randall2002}. The grids originate as an icosohedron which is refined by subdividing edges equally and projecting back onto the unit sphere. The direct subdivisions imply that tests on icosahedral grids are true refinements of previous grids (in contrast to MD-nodes). This work tests Icosahedral grids with N=42 up to N=163842 (i.e., the first through 7th refinements). 
+
 \begin{figure} 
 \centering
 \includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/ICOS2562.pdf} 
@@ -1104,14 +1113,9 @@ MD node sets were originally utilized by the RBF community due to their success 
 \label{fig:icos_nodes}
 \end{figure}
 
-The MD node files are available for download on the authors' web site (\url{http://web.maths.unsw.edu.au/~rsw/Sphere}), and range in size from $N=4$ up to N=27,556 nodes on the sphere. Figure~\ref{fig:md_nodes} plots the $N=4096$ node set to illustrate the irregularity in distribution. Node sets greater than N=27,556 are not available. Unlike regular grids, each MD node set is a refinement of the sphere, but not a subdivision, so extending beyond N=27,556 nodes would require complete regeneration.
-
-%The process of generating new MD node sets greater than $N=27,556$ nodes would require recomputing the entire distribution. 
-
-
 \subsubsection{Centroidal Voronoi Tessellations}
 
-While the MD nodes suffice for verification against related work, our objective is to scale RBF-FD to problem sizes never attempted. To this end, we sought approximately regular grids on the sphere on the order of hundreds of thousands and even millions of nodes. To this end we leverage Spherical Centroidal Voronoi Tessellations (SCVTs) to generate approximately regular node distributions on the sphere \cite{Du2003b, Womeldorff2008}. 
+While the MD nodes suffice for verification against related work, the objective is to scale RBF-FD to problem sizes that can justify the need for HPC. For this, approximately regular grids on the sphere on the order of hundreds of thousands and even millions of nodes were needed. To this end we leverage Spherical Centroidal Voronoi Tessellations (SCVTs) to generate approximately regular node distributions on the sphere \cite{Du2003b, Womeldorff2008}. 
 
 SCVTs come with a sense of ``optimality" in node locations due to energy minimizing properties \cite{Du2003b}. The process to generate SCVTs involves constructing a Voronoi diagram, computing the mass centroids for each Voronoi partition, and updating node locations to the mass centroids projected onto the sphere. After a number of iterations the nodes coincide with the projected mass centroids and a converged SCVT is produced. In most large-scale applications, this iterative process leverages a probabilistic Lloyd's method, where integrals to compute mass centroids are approximated through random sampling \cite{Womeldorff2008, Du2003b}. While SCVTs in theory converge to a regular node distribution, the probabilistic nature of the centroid calculation introduces irregularities in distribution reminiscent of MD nodes. 
 
@@ -1122,7 +1126,7 @@ SCVTs come with a sense of ``optimality" in node locations due to energy minimiz
 \label{fig:scvt_nodes}
 \end{figure}
 
-Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. On the left, the full sphere; on the right, a close-up of the same node set. The close-up perspective clearly demonstrates the random artifacts/scarring of irregularly distributed nodes. For benchmarking purposes we use node sets N=100,000, N=500,000 and N=1,000,000 generated by the SCVT library from \cite{Womeldorff2008}. These SCVT grids are publicly available from: \url{https://github.com/bollig/sphere_grids.git}.
+Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. On the left, the full sphere; on the right, a close-up of the same node set. The close-up perspective clearly demonstrates the random artifacts/scarring of irregularly distributed nodes. For benchmarking purposes we use node sets N=100,000, N=500,000 and N=1,000,000 generated by the SCVT library from \cite{Womeldorff2008}. These SCVT grids are publicly available \cite{BolligSphereGrids}.
 
 %Not considered here: it is possible to refine grids using density functions in the calculation of the mass centroids. 
 
