@@ -796,7 +796,6 @@ An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this
 
 Differentiation matrices are assembled at a cost of $O(n^3 N)$ FLOPs. However, since the goal of RBF-FD is to keep stencils small ($n \ll N$), the cost of assembly scales as $O(N)$. Furthermore, RBF-FD weights are independent of function values ($u(x)$) and rely only on stencil node locations. The implications of this are as profound as in the context RBF-PS for time-dependent PDEs: the stencil weights are constant so long as the nodes are stationary. Thus, the DM assembly is part of a one-time preprocessing step.% and can applied explicitly in $O(N)$ operations  
 
-%TODO: direct solve vs compose DM for operators
 For simple PDEs one often assembles a single DM to represent the operator for the entire differential equation, but RBF-FD allows flexibility in how operators are handled. Rather than a single DM, with weights from a new operator on the RHS of Equation~\ref{eq:multi_rhs_rbffd}, one may approximate the operator based on lower order derivatives. Consider for example, the 2-D Laplacian operator, $\Laplacian = \pdd{}{x} + \pdd{}{y} $: 
 \begin{align*}
 \Laplacian u \approx D_{\Laplacian{} } u
@@ -817,6 +816,7 @@ On top of memory savings, this concept of composing DMs based on lower order ope
 The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ and $n=31$ is only $0.31\%$ full, and the percentage continues to decrease as $N$ increases. Contrary to initial appearance, RBF-FD DMs are not symmetric. This is true for two reasons: a) a stencil around a center is generated based on $n$ nearest neighbors with no guarantee that any stencil nodes will include the center in their stencils; and  b) even if the stencil connectivity were symmetric, each row of the DM contains a distinct set of weights that are a function of independent stencils.
 
 Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. Note that with DMs stored as sparse representations, the matrix-vector multiply operation is distinguished as a \emph{sparse matrix-vector multiply} (SpMV). SpMVs avoid unnecessary operations by only multiplying the nonzero elements of the matrix matched to corresponding values in the vector. The actual algorithm for SpMV depends on the choice of sparse storage. Chapter~\ref{chap:gpu_rbffd} demonstrates the pivotal role that sparse formats play in the performance of SpMV, and thus RBF-FD. 
+
 
 
 \section{Weight Operators}
@@ -1019,12 +1019,9 @@ Tuned parameters for hyperviscosity are provided in Chapter~\ref{chap:applicatio
 
 \section{RBF-FD Implementation for Time-dependent PDEs}
 
-% TODO: High level algorithm should lay out: grid gen/load, stencil gen, weight gen, domain decomposition, assemble PDE, solve PDE and update solution. 
-This section considers at a high level how one implements RBF-FD to solve PDEs. To simplify in the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: preprocessing and application. The complexity of each phase can vary based the algorithms utilized for each task. 
+This section considers at a high level how one leverages RBF-FD to solve PDEs. To simplify in the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: preprocessing and application. The complexity of each phase can vary based the algorithms utilized for each task. 
 
-Preprocessing encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output from these tasks one expects one or more DMs representing the discrete differential operators. Assuming the grids do not evolve in time, the DMs remain constant for the duration of the second phase; otherwise, the second loop would join the second phase. Furthermore, both grids and DMs can be loaded from disk on subsequent runs to effectively bypass the cost of all preprocessing. 
-
-%TODO: why implement independent of PETSc, Deal.II, Trilinos, etc. 
+The Preprocessing phase encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output the phase produces one or more DMs. Note that Preprocessing is a one time cost: grids, stencils, and DMs can be loaded from disk on subsequent runs to effectively bypass the all cost in this phase. 
 
 \begin{algorithm}                      
 \caption{A High-Level View of RBF-FD}          
@@ -1035,7 +1032,8 @@ Preprocessing encompasses tasks such as grid setup/generation, stencil generatio
    	\For {$j = 1$ to $N$} \label{alg:stencil_gen} 
    	    \State Stencil $\{S_{j,i}\}_{i=1}^{n}$ = QueryNeighbors($x_j$)
    	\EndFor
-    \For {$j = 1$ to $N$} \label{alg:weight_calc} 
+    \State $\{x\}_{j=1}^{N_p} = $ DecomposeDomain($D_{\diffop{}}$, $\{x\}_{j=1}^N$)
+    \For {$j = 1$ to $N_p$} \label{alg:weight_calc} 
    	    \State $\{w_{j,i}\}_{i=1}^{n} = $ SolveForWeights($\{S_j\}$)
    	    \State $D_{\diffop{}}^{(j)} = $ AssembleDM($\{w_j\}$)     
     \EndFor
@@ -1053,20 +1051,22 @@ Preprocessing encompasses tasks such as grid setup/generation, stencil generatio
 \end{algorithmic}
 \end{algorithm}
 
+The algorithm starts by loading/generating a grid. RBF-FD requires only node coordinates, and in some cases an indication of whether nodes are on a boundary. Information on mesh edges/connectivity is optional, but could be used to bypass stencil generation. The QueryNeighbors step forms stencils and constructs a directed adjacency matrix that indicates the connectivity of stencils. Either the grid or the adjacency matrix can be partitioned (see Chapter~\ref{chap:distributed_rbffd}) for distribution across multiple processors in the DecomposeDomain step. Finally, one or more processors operate independently to compute weights and assemble local DMs. The assumption in this work is that grids do not evolve in time, so DMs remain constant for the duration of the phase 2 (Application). In the event of moving nodes, weight calculation and DM assembly would move into the second phase and the method would become a Lagrangian particle method (e.g., \cite{SpH}). 
 
-In the Application phase, the constructed DMs are used to solve a PDE either explicitly (Equation~\ref{eq:explicit_dm}) or implicitly (Equation~\ref{eq:implicit_dm}). 
-%TODO: FiX
-\authnote{Fix:} Note that regardless of the explicit or implicit method, this phase reduces to a Sparse Matrix-Vector Multiply (SpMV) within the SolvePDE step. For explicit solutions, SolvePDE computes the SpMV in Equation~\ref{eq:explicit_eq}. In the implicit case, SolvePDE must invert the DM in Equation~\ref{eq:implicit_eq} via a direct or iterative linear system solve. In the case of time-dependent PDEs, RBF-FD is applied the same as any other finite difference method within a time-stepping scheme (represented by UpdateSolution). % (e.g., Runge-Kutta, Adams-Bashforth, etc.) may require multiple applications of the DM, with the outputs weighted and combined within UpdateSolution. 
 
-Tuning the performance of RBF-FD requires one to focus on the Application phase. This is especially true for time-dependent PDEs where an increase in grid size results in proportional increase in the number time-steps. The recurring cost of computing an SpMV each time-step quickly amortizes the one-time cost of preprocessing. 
- 
-On the other hand, preprocessing tasks have more impact on accuracy, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, smaller required grid size, and faster convergence (i.e., fewer iterations) within iterative linear system solves.
 
-Here we discuss various design decisions in implementing the preprocessing tasks for RBF-FD and consider potential impacts on performance (if any).  Chapter~\ref{chap:rbffd_multi_gpu} will discuss Application and SpMV performance in more detail. 
+Once in the Application phase, the constructed DMs are applied to solve a PDE either explicitly (e.g., Equation~\ref{eq:explicit_dm}) or implicitly (e.g., Equation~\ref{eq:implicit_dm}). In the case of time-dependent PDEs, RBF-FD is applied the same as any classical FD method with a time-stepping scheme (represented by UpdateSolution). Examples of valid time-schemes include Runge-Kutta, Adams-Bashforth, and Crank Nicholson methods among many others. Based on the choice of time-scheme, one frequently needs multiple iterations through SolvePDE to assemble intermediate solutions that are weighted and combined in the the UpdateSolution step.
 
-\subsection{Choice of Grid} 
+%TODO: add refs for RBF-FD uses of these schemes. 
 
-An implementation of RBF-FD begins with the grid. The method has no requirement for structured grids, or for a well-refined mesh/lattice that limits connectivity between nodes. It operates both on structured grids and random point clouds; although, the choice of grid does impact the accuracy of the method. This freedom to function on domains of any shape, dimension, and granularity is a major selling point for RBF-FD and often impossible for many other PDE methods. 
+In general the performance of RBF-FD hinges on the cost of SolvePDE. This is especially true for time-dependent PDEs where an increase in grid resolution results in proportional increase in the number time-steps to satisfy the CFL condition \cite{CFL}. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact performance SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, smaller required grid size, and faster convergence.
+
+\section{Grids} 
+
+RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can impact accuracy of the method. This function portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for many other methods. 
+
+
+%TODO: Note, however, that the choice of grid impacts the accuracy of RBF-FD as it would in other methods. 
 %Typically, the only constraint placed on the grid is that nodes should not coincide. If two nodes do coincide it is possible for a stencil to include both, and 
 
 %TODO: cubed, ying-yang
@@ -1074,9 +1074,9 @@ An implementation of RBF-FD begins with the grid. The method has no requirement 
 % TODO: Discontinuous Galerkin? How deep do I want to go?
 %are possible for many methods (e.g., Finite Volume on multi-resolution \cite{RinglerJuGunzberger2008}) and Finite Element methods \cite{TODO}, but such methods still have a strong dependence on a Delaunay Triangulation or other mesh to determine the connectivity between nodes. 
 
-The choice of grid is only relevant to the extent that it impacts the connectivity between nodes in stencils. Connectivity translates to non-zeros in rows of the DMs, so the various grid distributions result in a number of sparsity patterns. For all other intents and purposes, the choice of grid is only pertinent to ensure consistency with the PDEs to solve. 
+%The choice of grid is only relevant to the extent that it impacts the connectivity between nodes in stencils. Connectivity translates to non-zeros in rows of the DMs, so the various grid distributions result in a number of sparsity patterns. For all other intents and purposes, the choice of grid is only pertinent to ensure consistency with the PDEs to solve. 
 
-In the course of this work, we applied RBF-FD to a number of PDEs and grid distributions. Here we focus on the subset utilized in Chapters~\ref{chap:explicit_implicit_pdes} and \ref{chap:benchmarks}. This subset is chosen for two reasons: a) to easily construct refinements in 2D/3D for consistent benchmarking and convergence studies, and b) to verify our solutions against existing methods. 
+The RBF-FD implementation presented in this work is verified and benchmarked on a number of grids. The following grids are chosen for two reasons: a) to easily construct refinements in 2D/3D for consistent benchmarking and convergence studies, and b) to verify solutions against existing methods. 
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 
@@ -1087,9 +1087,9 @@ In theory, RBF-FD functions the same whether nodes are uniformly spaced or rando
 
 \subsubsection{Maximum Determinant Nodes}
 
-In Chapter~\ref{chap:explicit_implicit_pdes} we verify our RBF-FD implementation by solving PDEs on the unit sphere. For consistency with respect to related investigations (e.g., \cite{Fornberg2009a, Fornberg2007,FornbergLehto11}), we choose the Maximum Determinant (MD) node sets \cite{Womersley2001, Sloan2003}. %TODO: need ref Womersley2001
+Chapter~\ref{chap:applications} applies RBF-FD to solve PDEs on the unit sphere. For consistency with respect to related investigations (e.g., \cite{Fornberg2009a, Fornberg2007,FornbergLehto11}), the the Maximum Determinant (MD) node sets \cite{Womersley2001, Sloan2003} are chosen. 
 
-MD node sets were introduced to the RBF community due to their success in spherical harmonics interpolation, where the seemingly irregular node distributions gain an order of magnitude accuracy compared to regular looking (Minimum Energy) node distributions \cite{Womersley2001}. RBF interpolation tends to reproduce spherical harmonics interpolants on the sphere when $\epsilon \rightarrow 0$, and RBF methods have been shown to benefit similarly from a subtle irregularity in node locations \cite{Fornberg2007}. 
+MD node sets were originally utilized by the RBF community due to their success in spherical harmonics interpolation \cite{Fornberg2007}. For spherical harmonics, the seemingly irregular node distributions achieve an order of magnitude higher accuracy compared to regular looking node distributions (i.e., minimum energy nodes) \cite{Womersley2001}. In similar fashion, RBF methods have been shown to benefit from a subtle irregularity in node locations on the sphere due to the tendency in RBF interpolation to reproduce spherical harmonics interpolants when $\epsilon \rightarrow 0$ \cite{Fornberg2007}. 
 
 \begin{figure} 
 \centering
@@ -1143,7 +1143,7 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 %\end{itemize}
 
 
-\subsection{On Choosing the Right $\epsilon$} 
+\section{On Choosing the Right $\epsilon$} 
 % TODO: expand missing content
 
 \authnote{perhaps this belongs in an appendix}
