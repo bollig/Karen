@@ -804,11 +804,11 @@ which can be expanded as:
 \begin{align*}
 \Laplacian u \approx \left(D_{x^2} + D_{y^2}\right) u = D_{x^2} u + D_{y^2} u \ .
 \end{align*}
-where either a single DM is composed by adding two lower order DMs, or the lower order DMs are directly multiplied against the vector $u$. Another option is uses even lower order operators:
+where either a single DM is composed by adding two lower order DMs, or the lower order DMs are directly multiplied against the vector $u$. Another option applies even lower order operators:
 \begin{align}
 \Laplacian u \approx D_{x} D_{x} u + D_{y} D_{y} u \label{eq:composed_dm}\ .
 \end{align}
-The choice of how the operators are approximated depends on application and can be influenced by system memory limitations. For example, assume a coupled system of equations in 2-D where operators $\nabla$ and $\nabla^2$ are required. Then, Equation~\ref{eq:multi_rhs_rbffd} is assembled and solved for the operators $\{\pd{}{x}, \pd{}{y}, \nabla^2\}$, with each DM stored in memory. This process is sufficient assuming all DMs fit adequately in memory. As an alternative, one may solve Equation~\ref{eq:multi_rhs_rbffd} for operators $\{\pd{}{x}, \pd{}{y}\}$, reproduce $\nabla^2$ with Equation~\ref{eq:composed_dm}, and reduce memory usage by 30\%. 
+The choice of how the operators are approximated depends on the PDE and can be influenced by system memory limitations. For example, assume a coupled system of equations in 2-D where operators $\nabla$ and $\nabla^2$ are required. Then, Equation~\ref{eq:multi_rhs_rbffd} is assembled and solved for the operators $\{\pd{}{x}, \pd{}{y}, \nabla^2\}$, with each DM stored in memory. This process is sufficient assuming all DMs fit adequately. As an alternative, one may solve Equation~\ref{eq:multi_rhs_rbffd} for operators $\{\pd{}{x}, \pd{}{y}\}$, reproduce $\nabla^2$ with Equation~\ref{eq:composed_dm}, and reduce memory usage by 30\%. 
 % TODO: while multiple DM applications may result in compounding errors, this behavior is not pronounced in practice
 On top of memory savings, this concept of composing DMs based on lower order operators extends to cases where PDEs require complex operators that are sufficiently difficult to apply to RBFs when deriving a new RHS for Equation~\ref{eq:multi_rhs_rbffd}.  
  
@@ -1082,7 +1082,8 @@ The RBF-FD implementation presented in this work is verified and benchmarked on 
 
 \subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in multiple dimensions are simple to generate. Additionally, refinements---for scaling benchmarks and convergence tests---are direct subsamples. 
 
-In theory, RBF-FD functions the same whether nodes are uniformly spaced or random. However, regular grids do not fully exercise advantages that RBF-FD has over other methods with its ability to operate on scattered nodes.
+In theory, RBF-FD functions the same whether nodes are uniformly spaced or random. However, regular grids do not fully exercise advantages that RBF-FD has over other methods with its ability to operate on scattered nodes. For this reason regular grids are only used here for benchmarking purposes and range in size from $N=10^3$ to $N=160^3 =$ 4,096,000 nodes. 
+
 
 
 \subsubsection{Maximum Determinant Nodes}
@@ -1104,7 +1105,7 @@ The MD node files are available for download on the authors' web site \cite{Wome
 
 \subsubsection{Icosahedral Nodes on the Sphere}
 
-Figure~\ref{fig:icos_nodes} shows Icosahedral nodes on the sphere. Icosahedral grids, which are nearly homogenous and isotropic, have been in use since the 1960s \cite{Randall2002}. The grids originate as an icosohedron which is refined by subdividing edges equally and projecting back onto the unit sphere. The direct subdivisions imply that tests on icosahedral grids are true refinements of previous grids (in contrast to MD-nodes). This work tests Icosahedral grids with N=42 up to N=163842 (i.e., the first through 7th refinements). 
+Figure~\ref{fig:icos_nodes} shows Icosahedral nodes on the sphere. Icosahedral grids are nearly homogenous and isotropic, and have been in use since the 1960s \cite{Randall2002}. The grids originate as an icosahedron which is refined by subdividing edges equally and projecting back onto the unit sphere. The direct subdivisions imply that tests on icosahedral grids are true refinements of previous grids (in contrast to MD-nodes). This work tests Icosahedral grids with N=42 up to N=163842 (i.e., the first through 7th refinements). 
 
 \begin{figure} 
 \centering
@@ -1115,22 +1116,19 @@ Figure~\ref{fig:icos_nodes} shows Icosahedral nodes on the sphere. Icosahedral g
 
 \subsubsection{Centroidal Voronoi Tessellations}
 
-While the MD nodes suffice for verification against related work, the objective is to scale RBF-FD to problem sizes that can justify the need for HPC. For this, approximately regular grids on the sphere on the order of hundreds of thousands and even millions of nodes were needed. To this end we leverage Spherical Centroidal Voronoi Tessellations (SCVTs) to generate approximately regular node distributions on the sphere \cite{Du2003b, Womeldorff2008}. 
+On the sphere, MD nodes suffice for verification against related work on small to mid size grids (i.e., ~30,000 nodes), and Icosahedral grid subdivisions allow for scaling tests and slightly larger mid-sized problems (i.e., ~160,000). However, the objective is to scale RBF-FD to large problem sizes that can justify the need for HPC. For this, approximately regular grids on the sphere on the order of millions of nodes are needed. To this end, Spherical Centroidal Voronoi Tessellations (SCVTs) are leveraged to generate high resolution, approximately regular node distributions on the sphere \cite{Du2003b, Womeldorff2008}. 
 
-SCVTs come with a sense of ``optimality" in node locations due to energy minimizing properties \cite{Du2003b}. The process to generate SCVTs involves constructing a Voronoi diagram, computing the mass centroids for each Voronoi partition, and updating node locations to the mass centroids projected onto the sphere. After a number of iterations the nodes coincide with the projected mass centroids and a converged SCVT is produced. In most large-scale applications, this iterative process leverages a probabilistic Lloyd's method, where integrals to compute mass centroids are approximated through random sampling \cite{Womeldorff2008, Du2003b}. While SCVTs in theory converge to a regular node distribution, the probabilistic nature of the centroid calculation introduces irregularities in distribution reminiscent of MD nodes. 
+The process to generate SCVTs involves constructing a Voronoi diagram, computing the mass centroids for each Voronoi partition, and updating node locations to the mass centroids projected onto the sphere. After a number of iterations, the nodes converge to nearly coincide with the projected mass centroids, and a converged SCVT is produced. SCVTs come with a sense of ``optimality" in node locations due to energy minimizing properties (see \cite{Du2003b}). 
+In most large-scale applications, the iteration in SCVT generation is a probabilistic Lloyd's algorithm, with integrals computed through random sampling \cite{Womeldorff2008, Du2003b}. While SCVTs in theory converge to a near isotropic node distribution, the probabilistic nature of the centroid calculation introduces irregularities reminiscent of MD nodes. 
 
 \begin{figure} 
 \centering
-\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N100000_points.png}\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N100000_closeup.png} 
+\includegraphics[width=0.4\textwidth]{rbffd_methods_content/grids/N100000_points.png}\includegraphics[width=0.405\textwidth]{rbffd_methods_content/grids/N100000_closeup2.png} 
 \caption{(Left) N=100,000 Spherical Centroidal Voronoi Tessellation nodes. (Right) Close-up of the same N=100,000 nodes to illustrate the irregularities in the grid.} 
 \label{fig:scvt_nodes}
 \end{figure}
 
-Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. On the left, the full sphere; on the right, a close-up of the same node set. The close-up perspective clearly demonstrates the random artifacts/scarring of irregularly distributed nodes. For benchmarking purposes we use node sets N=100,000, N=500,000 and N=1,000,000 generated by the SCVT library from \cite{Womeldorff2008}. These SCVT grids are publicly available \cite{BolligSphereGrids}.
-
-%Not considered here: it is possible to refine grids using density functions in the calculation of the mass centroids. 
-
-
+Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. On the left, the full sphere; on the right, a close-up of the same node set. The close-up perspective clearly demonstrates the random artifacts/scarring of irregularly distributed nodes. For benchmarking purposes we use node sets N=100,000, N=500,000 and N=1,000,000 generated by the SCVT library from \cite{Womeldorff2008}. 
 
 %
 %% TODO: wanted to test without the presence of boundary conditions 
@@ -1138,41 +1136,24 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 %
 %While not discussed in detail in this work, various attempts to leverage Centroidal Voronoi Tessellations have been made in our investigation of RBF-FD. Figures~\ref{fig:cvt_other} were used to generate other complex geometries such as the 3D sphere shell, 2D annulus, ellipse and ellipsoid, 
 %
-%Other grids considered during the thesis, but not included in the applications below: 
-%
-%\begin{itemize}
-%\item Anulus
-%\item Nested Sphere CVT
-%\item a
-%\end{itemize}
-
 
 \section{On Choosing the Right $\epsilon$} 
 % TODO: expand missing content
 
-\authnote{perhaps this belongs in an appendix}
 
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
-If solving for the weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system}), one must carefully choose $\epsilon$ to prevent ill-conditioning. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing, $h$, stencil size $n$, etc. In general, the values provided are particular to the specific problem and/or grid under consideration. No fool-proof method exists to select the support parameters, so the prospect of hassle-free application of the RBF-FD method is still out of reach. 
+If solving for the weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system}), one must balance the choice of $\epsilon$ to avoid ill-conditioning but achieve a reasonable accuracy for the weights. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). \authnote{see RBF-QR and RBF-GA papers for refs} At the end of the day, most values provided in literature are particular to one application and/or grid. No fool-proof method exists to select the support parameters.
 
-Modern algorithms introduced in the last couple years provide methods for acquiring weights. Contour-Pad\'{e}, RBF-QR, and RBF-GA are all options for weights corresponding to the $\epsilon \rightarrow 0$. These methods appear to resolve many issues including conditioning of implicit systems for more accurate solutions \cite{Davydov2011}  \cite{Fornberg2013} 
+During the course of this work, a variety of scalings on $\epsilon$ for RBF-Direct weights were tested. The most reliable method for choosing $\epsilon$ was to adopt the approach introduced in \cite{FlyerLehto11}, wherein $\epsilon$ is expressed as a function of the number of nodes $N$ and desired mean condition number of Equation~\ref{eq:rbffd_weight_system}, $\bar{\kappa}_A$. 
 
-In this work, we have attempted a variety of scalings on $\epsilon$. We forego discussion of these attempts since they are outside our current scope of investigation. In the end, we find that the most effective method for choosing $\epsilon$ was to adopt the approach introduced in \cite{FlyerLehto11}, wherein $\epsilon$ is expressed as a function of the number of nodes $N$ and desired mean condition number, $\bar{\kappa}_A$. 
-
-%TODO: what papers provide epsilon choice? based on grid? based on node density? proportional to what?
+The tiles in Figure~\ref{fig:epsilon_contours} illustrate 
 %TODO: what is the algorithm to choose epsilon?
 %TODO: what examples are provided? 
 %TODO: does the choice of c1 and c2 depend on the problem? 
 %TODO: what level coarse grid is necessary to get contours? 
 %TODO: what other epsilon tests? why not uniform epsilon? why not variable epsilon? 
 
-%TODO: add references and descriptions. 
-The optimal $\epsilon$ for general node distributions is out of the scope of this research and not necessary for our purposes. For now assume that nodes are more or less regularly distributed, either via some algorithm such as Lloyd's method to create Centroidal Voronoi Tessellations, repelling springs (distmesh), minimum energy or minimum determinant, or some other algorithm. Except in cases where convergence on PDE solutions can not be attained via RBF-FD, a direct solve for RBF-FD weights is sufficient. To a certain extent, this work is predominantly concerned with parallelization of the method so the accuracy of the weights is not always significant.
-
-To choose values of $\epsilon$ consistently as the number of nodes in the domain grows, the approach from \cite{FlyerLehto11} is adopted: $\epsilon$ is expressed as a function Table~\ref{tbl:vortex_hv_params}. 
-
-I also produced a Matlab script to generate the contours for any stencil size and produced the following figures. 
 
 \begin{figure}[htbp]
 \centering
@@ -1185,12 +1166,11 @@ I also produced a Matlab script to generate the contours for any stencil size an
 \label{fig:epsilon_contours}
 \end{figure}
 
+Modern algorithms like Contour-Pad\'{e} \cite{Wright2003}, RBF-QR \cite{Fornberg2007, Fornberg2011a, Davydov2011}, and RBF-GA \cite{Fornberg2012} attempt to address the concern of choosing a stable and accurate $\epsilon$. These methods appear to resolve many issues including conditioning of implicit systems for more accurate solutions, and are deemed necessary for future investigation. 
 
 
 
-
-
-\chapter{Generating Stencils for RBF-FD}
+\chapter{A Novel Stencil Generation Algorithm for RBF-FD}
 \label{chap:stencils}
 
 TODO:
