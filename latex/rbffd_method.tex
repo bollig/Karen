@@ -774,15 +774,15 @@ where $(c,k)$ represents the (row, column) index of $D_\diffop{}$ and vector $u 
 \left. \diffop{u(x)} \ \right|_{x = x_c} & \approx D_{\diffop{}}^{(c)} u \ \ .
 \end{align*}
 DMs are utilized in both explicit and implicit modes. Here explicit implies evaluating the matrix-vector mulitply to get derivative values, $u'$, from explicitly known vector of solution values $u$: 
-\begin{align*}
+\begin{align}
 u' = D_{\diffop{}} u
-%\label{eq:explicit_eq}
-\end{align*}
+\label{eq:explicit_dm}
+\end{align}
 whereas implicit solves for unknown $u$:
-\begin{align*}
+\begin{align}
 D_{\diffop{}} u = f
-%\label{eq:implicit_eq}
-\end{align*}
+\label{eq:implicit_dm}
+\end{align}
 Note that the non-zeros in $D_{\diffop{}}$ are independent of the values in $u$. Approximating $\diffop{}$ over any function reduces to sampling the function values at nodes $\{x_k\}_{k=1}^N$ and performing a matrix-vector multiply. 
 
 An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this example, assume operator $\diffop{} = \pd{}{x}$ is approximated at all $N$ stencil centers of an arbitrary domain. RBF-FD weights assemble the rows of the differentiation matrix, $D_{x}$. On each row, weights are indicated by blue dots. The sparsity of rows reflects the subset of $\{x_k\}_{k=1}^N$ included in corresponding stencils of size $n$. A mapping is assumed to exist that translates non-consecutive indices, $k$, to consecutive indices, $j$, and vice-versa. On the right hand side, discrete derivative values $\d{u}{x}$ are approximated at all stencil centers. 
@@ -1020,9 +1020,9 @@ Tuned parameters for hyperviscosity are provided in Chapter~\ref{chap:applicatio
 \section{RBF-FD Implementation for Time-dependent PDEs}
 
 % TODO: High level algorithm should lay out: grid gen/load, stencil gen, weight gen, domain decomposition, assemble PDE, solve PDE and update solution. 
-This section considers at a high level how one implements RBF-FD to solve PDEs as outlined in Algorithm~\ref{alg:rbffd_high_level}. Here the Algorithm is split into two phases: preprocessing and application. The complexity of each phase can vary based the algorithms utilized for each task. 
+This section considers at a high level how one implements RBF-FD to solve PDEs. To simplify in the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: preprocessing and application. The complexity of each phase can vary based the algorithms utilized for each task. 
 
-Preprocessing encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output from these tasks one expects one or more DMs representing the discrete differential operators. Assuming the grid nodes do not move, the DMs remain constant for the duration of the second phase. Additionally, DMs can be loaded from disk on subsequent runs to effectively bypass the cost of all preprocessing. 
+Preprocessing encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output from these tasks one expects one or more DMs representing the discrete differential operators. Assuming the grids do not evolve in time, the DMs remain constant for the duration of the second phase; otherwise, the second loop would join the second phase. Furthermore, both grids and DMs can be loaded from disk on subsequent runs to effectively bypass the cost of all preprocessing. 
 
 %TODO: why implement independent of PETSc, Deal.II, Trilinos, etc. 
 
@@ -1054,7 +1054,9 @@ Preprocessing encompasses tasks such as grid setup/generation, stencil generatio
 \end{algorithm}
 
 
-The constructed DMs are applied in the Application phase to solve a PDE either explicitly or implicitly. Note that regardless of the explicit or implicit method, this phase reduces to a Sparse Matrix-Vector Multiply (SpMV) within the SolvePDE step. For explicit solutions, SolvePDE computes the SpMV in Equation~\ref{eq:explicit_eq}. In the implicit case, SolvePDE must invert the DM in Equation~\ref{eq:implicit_eq} via a direct or iterative linear system solve. In the case of time-dependent PDEs, RBF-FD is applied the same as any other finite difference method within a time-stepping scheme (represented by UpdateSolution). % (e.g., Runge-Kutta, Adams-Bashforth, etc.) may require multiple applications of the DM, with the outputs weighted and combined within UpdateSolution. 
+In the Application phase, the constructed DMs are used to solve a PDE either explicitly (Equation~\ref{eq:explicit_dm}) or implicitly (Equation~\ref{eq:implicit_dm}). 
+%TODO: FiX
+\authnote{Fix:} Note that regardless of the explicit or implicit method, this phase reduces to a Sparse Matrix-Vector Multiply (SpMV) within the SolvePDE step. For explicit solutions, SolvePDE computes the SpMV in Equation~\ref{eq:explicit_eq}. In the implicit case, SolvePDE must invert the DM in Equation~\ref{eq:implicit_eq} via a direct or iterative linear system solve. In the case of time-dependent PDEs, RBF-FD is applied the same as any other finite difference method within a time-stepping scheme (represented by UpdateSolution). % (e.g., Runge-Kutta, Adams-Bashforth, etc.) may require multiple applications of the DM, with the outputs weighted and combined within UpdateSolution. 
 
 Tuning the performance of RBF-FD requires one to focus on the Application phase. This is especially true for time-dependent PDEs where an increase in grid size results in proportional increase in the number time-steps. The recurring cost of computing an SpMV each time-step quickly amortizes the one-time cost of preprocessing. 
  
