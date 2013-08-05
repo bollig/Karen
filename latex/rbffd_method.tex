@@ -682,14 +682,14 @@ where $\diffop{u}$ again represents a differential operator on $u(x)$ (e.g., $\d
 
 Figure~\ref{fig:stencil_example} provides two examples of RBF-FD stencils. A single stencil of size $n=13$ is depicted in Figure~\ref{fig:stencil_example_random} within a domain of random points. The center, $x_c$, is represented by a green square, with 12 neighbors connected via red edges. The purple circle---the minimum covering circle for the stencil---illustrates that the 12 nearest neighbors are selected. Figure~\ref{fig:stencil_example_sphere} presents a larger stencil ($n=75$) on the unit sphere with red and blue disks surrounding the square center. Green disks are nodes outside of the stencil. Radii and color of the disks indicate magnitude and alternating sign of the weights, $c_j$.
 
-Following \cite{FornbergLehto11}, weights for a 1D classical stencil can be obtained by solving a Vandermode system
+Following \cite{FornbergLehto11}, weights for a 1-D classical-FD stencil can be obtained by solving a Vandermode system,
 	\begin{eqnarray}        
           \begin{bmatrix} 1 & 1 & \cdots & 1 \\ 
             x_1 & x_2 & \cdots & x_n \\ 
             x_1^2 & x_2^2 & \cdots & x_n^2 \\
             \vdots & \ddots & \ddots & \vdots \\ 
             x_1^{n-1} & x_2^{n-1} & \cdots & x_n^{n-1} \end{bmatrix} 
-            \begin{pmatrix} c_1 \\ c_2 \\ c_3 \\ \vdots \\ c_n \end{pmatrix} & = & \begin{pmatrix} \left.\diffop{1}\right|_{x=x_c} \\  \left.\diffop{x}\right|_{x=x_c} \\  \left.\diffop{x^2}\right|_{x=x_c} \\ \vdots \\  \left.\diffop{x^{n-1}}\right|_{x=x_c} \end{pmatrix} \label{eq:classical_fd_weight_system} 	\end{eqnarray}	
+            \begin{pmatrix} c_1 \\ c_2 \\ c_3 \\ \vdots \\ c_n \end{pmatrix} & = & \begin{pmatrix} \left.\diffop{1}\right|_{x=x_c} \\  \left.\diffop{x}\right|_{x=x_c} \\  \left.\diffop{x^2}\right|_{x=x_c} \\ \vdots \\  \left.\diffop{x^{n-1}}\right|_{x=x_c} \end{pmatrix} \label{eq:classical_fd_weight_system} ,	\end{eqnarray}	
 where the the $x_j$ are assumed to be distinct for guaranteed nonsingularity. In higher dimensions, multivariate polynomials dissolve the guaranteed nonsingularity of the Vandermonde system, so FD stencils are typically composed by adding weights from individual spatial directions. 
 
 In contrast to Equation~\ref{eq:classical_fd_weight_system}, RBF-FD weights arise by enforcing that they be exact within the space spanned by the RBFs that are centered at stencil nodes (i.e., $\phi_j(x) = \phi(\epsilon ||x-x_j||_2)$; an RBF centered at $x_j$). This amounts to replacing each polynomial basis function $\{1, x, x^2, \cdots, x^{n-1}\}$ in Equation~\ref{eq:classical_fd_weight_system} with a $d$-dimensional RBF, $\phi_j(x)$, which allows for nonsingularity in $d$-dimensions on irregular node placements. Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
@@ -742,10 +742,25 @@ accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cec
 including Navier-Stokes equations \cite{Shu2003} have all been considered. 
 
 
-\section{Differentiation Matrix}
+
+\section{Multiple Operators}
+
+In many cases, multiple derivatives (e.g., $\diffop{} = \nabla^2$, $\pd{}{x}$, $\pd{}{y}$, etc.) are required at stencil centers. This is common, for example, when solving coupled PDEs. For RBF-FD, acquiring weights for each additional operator can be both straight-forward and computationally efficient. For each change of differential operator, observe that only the RHS of Equation~\ref{eq:rbffd_weight_system} is modified. Thus, new operators amount to extending Equation~\ref{eq:rbffd_weight_system} to solve 
+\begin{eqnarray}
+    \begin{bmatrix} \phi & P \\
+		P^T & 0 \end{bmatrix} \begin{bmatrix} c_{\nabla^2} & c_{x} & c_{y} & \cdots \\ 
+							d_{\nabla^2} & d_{x} & d_{y} & \dots \end{bmatrix} & = &     
+		\begin{bmatrix} \phi_{\nabla^2} & \phi_{x} & \phi_{y} & \cdots \\
+							0 & 0 & 0 & \cdots \end{bmatrix}. \label{eq:multi_rhs_rbffd}
+	\end{eqnarray}
+where multiple sets of weights ($c_\nabla, c_x, c_y$) are obtained simultaneously. This dense, symmetric, multiple RHS linear system is considered ideal by linear algebra packages. Many highly optimized routines exist to solve Equation~\ref{eq:multi_rhs_rbffd} (e.g., LAPACK ``dgesv") \cite{Lapack1999}. 
 
 
-Typically, one needs derivatives at every node in the discretized domain to solve PDEs. To achieve this with RBF-FD, stencils are generated around every node in the domain. Stencils need not have the same size ($n$), but this is assumed here for simplicity in discussion, and is most common in literature. Furthermore, the number of stencils need not match the number of nodes in the domain, but this is also assumed. The small system solve in Equation~\ref{eq:rbffd_weight_system} is repeated $N$ times---once for each stencil---to obtain a total of $N \times n$ stencil weights. 
+
+\section{Differentiation Matrices and Sparse Matrix-Vector Multiply (SpMV)}
+
+
+Typically, one needs derivatives at every node in the discretized domain to solve PDEs. To achieve this with RBF-FD, stencils are generated around every node in the domain. Stencils need not have the same size ($n$), but this is assumed here for simplicity in discussion, and is most common in literature. Furthermore, the number of stencils need not match the number of nodes in the domain, but this is also assumed. The small system solve in Equation~\ref{eq:rbffd_weight_system} or \ref{eq:multi_rhs_rbffd}  is repeated $N$ times---once for each stencil---to obtain a total of $N \times n$ stencil weights. 
 
 For PDEs, it is common practice to assemble a \emph{differentiation matrix} (DM); a discrete representation of the PDE operator on the domain. Given the set of nodes in the domain, $\{x_k\}_{k=1}^N$, the $c$-th row of the DM represents the discrete PDE operator for the stencil centered at node $x_c$ with stencil nodes $\{x_j\}_{j=1}^{n}$: 
 \begin{align*}
@@ -759,15 +774,16 @@ where $(c,k)$ represents the (row, column) index of $D_\diffop{}$ and vector $u 
 \left. \diffop{u(x)} \ \right|_{x = x_c} & \approx D_{\diffop{}}^{(c)} u \ \ .
 \end{align*}
 DMs are utilized in both explicit and implicit modes. Here explicit implies evaluating the matrix-vector mulitply to get derivative values, $u'$, from explicitly known vector of solution values $u$: 
-\begin{align}
+\begin{align*}
 u' = D_{\diffop{}} u
-\label{eq:explicit_eq}
-\end{align}
+%\label{eq:explicit_eq}
+\end{align*}
 whereas implicit solves for unknown $u$:
-\begin{align}
+\begin{align*}
 D_{\diffop{}} u = f
-\label{eq:implicit_eq}
-\end{align}
+%\label{eq:implicit_eq}
+\end{align*}
+Note that the non-zeros in $D_{\diffop{}}$ are independent of the values in $u$. Approximating $\diffop{}$ over any function reduces to sampling the function values at nodes $\{x_k\}_{k=1}^N$ and performing a matrix-vector multiply. 
 
 An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this example, assume operator $\diffop{} = \pd{}{x}$ is approximated at all $N$ stencil centers of an arbitrary domain. RBF-FD weights assemble the rows of the differentiation matrix, $D_{x}$. On each row, weights are indicated by blue dots. The sparsity of rows reflects the subset of $\{x_k\}_{k=1}^N$ included in corresponding stencils of size $n$. A mapping is assumed to exist that translates non-consecutive indices, $k$, to consecutive indices, $j$, and vice-versa. On the right hand side, discrete derivative values $\d{u}{x}$ are approximated at all stencil centers. 
 
@@ -780,23 +796,27 @@ An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this
 
 Differentiation matrices are assembled at a cost of $O(n^3 N)$ FLOPs. However, since the goal of RBF-FD is to keep stencils small ($n \ll N$), the cost of assembly scales as $O(N)$. Furthermore, RBF-FD weights are independent of function values ($u(x)$) and rely only on stencil node locations. The implications of this are as profound as in the context RBF-PS for time-dependent PDEs: the stencil weights are constant so long as the nodes are stationary. Thus, the DM assembly is part of a one-time preprocessing step.% and can applied explicitly in $O(N)$ operations  
 
+%TODO: direct solve vs compose DM for operators
+For simple PDEs one often assembles a single DM to represent the operator for the entire differential equation, but RBF-FD allows flexibility in how operators are handled. Rather than a single DM, with weights from a new operator on the RHS of Equation~\ref{eq:multi_rhs_rbffd}, one may approximate the operator based on lower order derivatives. Consider for example, the 2-D Laplacian operator, $\Laplacian = \pdd{}{x} + \pdd{}{y} $: 
+\begin{align*}
+\Laplacian u \approx D_{\Laplacian{} } u
+\end{align*}
+which can be expanded as: 
+\begin{align*}
+\Laplacian u \approx \left(D_{x^2} + D_{y^2}\right) u = D_{x^2} u + D_{y^2} u \ .
+\end{align*}
+where either a single DM is composed by adding two lower order DMs, or the lower order DMs are directly multiplied against the vector $u$. Another option is uses even lower order operators:
+\begin{align}
+\Laplacian u \approx D_{x} D_{x} u + D_{y} D_{y} u \label{eq:composed_dm}\ .
+\end{align}
+The choice of how the operators are approximated depends on application and can be influenced by system memory limitations. For example, assume a coupled system of equations in 2-D where operators $\nabla$ and $\nabla^2$ are required. Then, Equation~\ref{eq:multi_rhs_rbffd} is assembled and solved for the operators $\{\pd{}{x}, \pd{}{y}, \nabla^2\}$, with each DM stored in memory. This process is sufficient assuming all DMs fit adequately in memory. As an alternative, one may solve Equation~\ref{eq:multi_rhs_rbffd} for operators $\{\pd{}{x}, \pd{}{y}\}$, reproduce $\nabla^2$ with Equation~\ref{eq:composed_dm}, and reduce memory usage by 30\%. 
+% TODO: while multiple DM applications may result in compounding errors, this behavior is not pronounced in practice
+On top of memory savings, this concept of composing DMs based on lower order operators extends to cases where PDEs require complex operators that are sufficiently difficult to apply to RBFs when deriving a new RHS for Equation~\ref{eq:multi_rhs_rbffd}.  
+ 
 
-The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ and $n=31$ is only $0.31\%$ full, and the percentage continues to decrease as $N$ increases. 
-Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. In Chapter~\ref{chap:gpu_rbffd} the choice of sparse storage plays a pivotal role in the performance of RBF-FD. 
+The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ and $n=31$ is only $0.31\%$ full, and the percentage continues to decrease as $N$ increases. Contrary to initial appearance, RBF-FD DMs are not symmetric. This is true for two reasons: a) a stencil around a center is generated based on $n$ nearest neighbors with no guarantee that any stencil nodes will include the center in their stencils; and  b) even if the stencil connectivity were symmetric, each row of the DM contains a distinct set of weights that are a function of independent stencils.
 
-
-
-\section{Multiple Operators}
-
-In many cases, multiple derivatives (e.g., $\diffop{} = \nabla^2$, $\pd{}{x}$, $\pd{}{y}$, etc.) are required at stencil centers. This is common, for example, when solving coupled PDEs. For RBF-FD, acquiring weights for each additional operator can be both straight-forward and computationally efficient. For each change of differential operator, observe that only the RHS of Equation~\ref{eq:rbffd_weight_system} is modified. Thus, new operators amount to extending Equation~\ref{eq:rbffd_weight_system} to solve 
-\begin{eqnarray}
-    \begin{bmatrix} \phi & P \\
-		P^T & 0 \end{bmatrix} \begin{bmatrix} c_{\nabla^2} & c_{x} & c_{y} & \cdots \\ 
-							d_{\nabla^2} & d_{x} & d_{y} & \dots \end{bmatrix} & = &     
-		\begin{bmatrix} \phi_{\nabla^2} & \phi_{x} & \phi_{y} & \cdots \\
-							0 & 0 & 0 & \cdots \end{bmatrix}. \label{eq:multi_rhs_rbffd}
-	\end{eqnarray}
-where multiple sets of weights ($c_\nabla, c_x, c_y$) are obtained simultaneously. This dense, symmetric, multiple RHS linear system is considered ideal by linear algebra packages. Many highly optimized routines exist to solve Equation~\ref{eq:multi_rhs_rbffd} (e.g., LAPACK ``dgesv") \cite{Lapack1999}. 
+Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. Note that with DMs stored as sparse representations, the matrix-vector multiply operation is distinguished as a \emph{sparse matrix-vector multiply} (SpMV). SpMVs avoid unnecessary operations by only multiplying the nonzero elements of the matrix matched to corresponding values in the vector. The actual algorithm for SpMV depends on the choice of sparse storage. Chapter~\ref{chap:gpu_rbffd} demonstrates the pivotal role that sparse formats play in the performance of SpMV, and thus RBF-FD. 
 
 
 \section{Weight Operators}
@@ -997,14 +1017,14 @@ In general, the larger the stencil size, the higher the order of the Laplacian r
 
 Tuned parameters for hyperviscosity are provided in Chapter~\ref{chap:applications}. 
 
-\section{Implementation}
+\section{RBF-FD Implementation for Time-dependent PDEs}
 
 % TODO: High level algorithm should lay out: grid gen/load, stencil gen, weight gen, domain decomposition, assemble PDE, solve PDE and update solution. 
-% TODO: no details on 
-This section provides an overview of how one implements RBF-FD. Consider Algorithm~\ref{alg:rbffd_high_level}, which is has two phases: preprocessing and application. The complexity of each phase depends on the choice of algorithms/method utilized for each task. 
+This section considers at a high level how one implements RBF-FD to solve PDEs as outlined in Algorithm~\ref{alg:rbffd_high_level}. Here the Algorithm is split into two phases: preprocessing and application. The complexity of each phase can vary based the algorithms utilized for each task. 
 
 Preprocessing encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output from these tasks one expects one or more DMs representing the discrete differential operators. Assuming the grid nodes do not move, the DMs remain constant for the duration of the second phase. Additionally, DMs can be loaded from disk on subsequent runs to effectively bypass the cost of all preprocessing. 
 
+%TODO: why implement independent of PETSc, Deal.II, Trilinos, etc. 
 
 \begin{algorithm}                      
 \caption{A High-Level View of RBF-FD}          
@@ -1042,7 +1062,7 @@ On the other hand, preprocessing tasks have more impact on accuracy, stability a
 
 Here we discuss various design decisions in implementing the preprocessing tasks for RBF-FD and consider potential impacts on performance (if any).  Chapter~\ref{chap:rbffd_multi_gpu} will discuss Application and SpMV performance in more detail. 
 
-\subsection{Grid} 
+\subsection{Choice of Grid} 
 
 An implementation of RBF-FD begins with the grid. The method has no requirement for structured grids, or for a well-refined mesh/lattice that limits connectivity between nodes. It operates both on structured grids and random point clouds; although, the choice of grid does impact the accuracy of the method. This freedom to function on domains of any shape, dimension, and granularity is a major selling point for RBF-FD and often impossible for many other PDE methods. 
 %Typically, the only constraint placed on the grid is that nodes should not coincide. If two nodes do coincide it is possible for a stencil to include both, and 
@@ -1267,11 +1287,11 @@ Querying neighbors requires searching at least the immediate cell one layer of n
 %TODO: Node ordering
 %TODO: show blocks for boundary conditions (annulus)
 
+A prototype implementation of this method allowed for a variety of space filling curves to reorder the cells. The curves are created through integer dilation \cite{IntegerD} 
 
 
 \begin{figure}
 \centering
-\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/node_orderings-eps-converted-to.pdf} \\
 \includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid-eps-converted-to.pdf}
 \caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
 \label{fig:orderings}
@@ -1286,6 +1306,7 @@ Querying neighbors requires searching at least the immediate cell one layer of n
 
 \begin{figure}
 \centering
+\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/node_orderings-eps-converted-to.pdf} \\
 \includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/spy_regulargrid-eps-converted-to.pdf} 
 \caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
 \label{fig:orderings}
@@ -1341,8 +1362,8 @@ Original data showed our algorithm as wildly successful against a version
 \end{figure}
 \begin{figure}
 \centering
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
+\includegraphics[width=10.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
+\includegraphics[width=10.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
 \caption{Based on the proper choice of overlay resolution, the hash stencil query can accelerate stencil generation, but the sophistication of the algorithm is low enough that negative impact is more likely. On the other hand, the impact on SpMV performance is always positive with the routine accelerated up to 4.9x faster.}
 \label{fig:hash_results}
 \end{figure}

@@ -13,6 +13,9 @@
 \fi
 
 
+%TODO: finish fill-in
+When matrix is sparse, a direct LU decomposition causes fill-in on factorization. In some cases the fill-in can be minimal, but in general one must assume that fill in can turn the sparse matrix into a dense matrix. To invert and solve Equation~\ref{eq:implicit_eq}, use an iterative solver like GMRES. The GMRES algorithm (described further in Chapter~\ref{chap:applications} applies successive SpMVs along with other vector operations to converge on a solution. Due to the dominance of SpMV in GMRES, the performance of RBF-FD reduces once again to SpMV.
+
 \chapter{GPU SpMV}
 \label{chap:gpu_rbffd}
 
@@ -222,6 +225,10 @@ METIS divides stencils into contiguous partitions of nearly equivalent size.
 \end{center}
 \end{figure}
 
+In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symmetry. Since the goal is to partition the physical domain, this added connectivity is harmless to RBF-FD. However, with respect to load balancing, this may not be ideal. For every new nonzero introduced to a row, METIS assumes an additional node utilized by the partition. When the node is a false connection, it is one fewer centers that METIS will assign to the partition in an attempt to keep all partitions balanced. \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
+
+
+
 \begin{figure}[ht!]
 \begin{center}
 \includegraphics[width=0.8\textwidth]{rbffd_methods_content/decompositions/gpmetis_decomp_sphere_4parts.png}
@@ -365,7 +372,7 @@ The data transfers involved in this process are illustrated at the bottom of Fig
     Each GPU operates on the local indices ordered 
 according to Equation~(\ref{eqn:decompose_g}). The set 
 $\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU then maps local to global indices and transfers $\setProvide$ to other CPUs. CPUs send only the subset of node values from $\setProvide$ that is required by the destination processors, but it is important to note that node information might be sent to several destinations. 
-As the set $\setDepend$ is received, the CPU converts back from global to local indices before copying a contiguous block of memory to the GPU. 
+As the set $\setDepend$ is received, the CPU converts back from global to local indices before copying a contiguous block of memory to the GPU. \authnote{remember distributed case: no decode}
 
         This approach is scalable to a very large number of 
 		processors, since the individual processors do not require the 
