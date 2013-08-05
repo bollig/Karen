@@ -1143,11 +1143,13 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
-If solving for the weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system}), one must balance the choice of $\epsilon$ to avoid ill-conditioning but achieve a reasonable accuracy for the weights. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). \authnote{see RBF-QR and RBF-GA papers for refs} At the end of the day, most values provided in literature are particular to one application and/or grid. No fool-proof method exists to select the support parameters.
+If solving for the weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system}), one must balance the choice of $\epsilon$ to avoid ill-conditioning but achieve a reasonable accuracy for the weights. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). 
+%TODO{see RBF-QR and RBF-GA papers for refs} 
+At the end of the day, most values provided in literature are particular to one application and/or grid. No fool-proof method exists to select the support parameters.
 
 During the course of this work, a variety of scalings on $\epsilon$ for RBF-Direct weights were tested. The most reliable method for choosing $\epsilon$ was to adopt the approach introduced in \cite{FlyerLehto11}, wherein $\epsilon$ is expressed as a function of the number of nodes $N$ and desired mean condition number of Equation~\ref{eq:rbffd_weight_system}, $\bar{\kappa}_A$. 
 
-The tiles in Figure~\ref{fig:epsilon_contours} illustrate 
+The tiles of Figure~\ref{fig:epsilon_contours} illustrate a number of nearly linear contours. Each contour line is numbered to indicate the $\log_{10}\bar{\kappa}_A$ value based on samples 
 %TODO: what is the algorithm to choose epsilon?
 %TODO: what examples are provided? 
 %TODO: does the choice of c1 and c2 depend on the problem? 
