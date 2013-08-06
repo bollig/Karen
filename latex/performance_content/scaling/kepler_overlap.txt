@@ -1,0 +1,9 @@
+Tested Kepler overlap on 2 K20s. Observations:
+
+100K nodes; n=101
+1 proc : 1.28 ms
+2 procs (1ppn): 0.95 ms
+4 procs (2ppn): 1.3020 ms 
+
+
+Will run full scaling on M2070s to see how older cards handle it. 

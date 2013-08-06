@@ -1118,7 +1118,7 @@ Figure~\ref{fig:icos_nodes} shows Icosahedral nodes on the sphere. Icosahedral g
 
 On the sphere, MD nodes suffice for verification against related work on small to mid size grids (i.e., ~30,000 nodes), and Icosahedral grid subdivisions allow for scaling tests and slightly larger mid-sized problems (i.e., ~160,000). However, the objective is to scale RBF-FD to large problem sizes that can justify the need for HPC. For this, approximately regular grids on the sphere on the order of millions of nodes are needed. To this end, Spherical Centroidal Voronoi Tessellations (SCVTs) are leveraged to generate high resolution, approximately regular node distributions on the sphere \cite{Du2003b, Womeldorff2008}. 
 
-The process to generate SCVTs involves constructing a Voronoi diagram, computing the mass centroids for each Voronoi partition, and updating node locations to the mass centroids projected onto the sphere. After a number of iterations, the nodes converge to nearly coincide with the projected mass centroids, and a converged SCVT is produced. SCVTs come with a sense of ``optimality" in node locations due to energy minimizing properties (see \cite{Du2003b}). 
+The process to generate SCVTs involves constructing a Voronoi diagram, computing the mass centroids for each Voronoi partition, and updating node locations to the mass centroids projected onto the sphere. After a number of iterations, the nodes converge to nearly coincide with the projected mass centroids, and the resulting distribution is a SCVT. SCVTs come with a sense of ``optimality" in node locations due to energy minimizing properties (see \cite{Du2003b}). 
 In most large-scale applications, the iteration in SCVT generation is a probabilistic Lloyd's algorithm, with integrals computed through random sampling \cite{Womeldorff2008, Du2003b}. While SCVTs in theory converge to a near isotropic node distribution, the probabilistic nature of the centroid calculation introduces irregularities reminiscent of MD nodes. 
 
 \begin{figure} 
@@ -1343,27 +1343,28 @@ Original data showed our algorithm as wildly successful against a version
 \end{figure}
 \begin{figure}
 \centering
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
+\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
+\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
 \caption{Generating stencils for increasing subsets of the $N=1e6$ CVT nodes mesh.}
 \label{fig:hash_results}
 \end{figure}
 \begin{figure}
 \centering
-\includegraphics[width=12.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
-\includegraphics[width=12.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
+\includegraphics[width=10.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
+\includegraphics[width=10.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
 \caption{Based on the proper choice of overlay resolution, the hash stencil query can accelerate stencil generation, but the sophistication of the algorithm is low enough that negative impact is more likely. On the other hand, the impact on SpMV performance is always positive with the routine accelerated up to 4.9x faster.}
 \label{fig:hash_results}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=10.5cm]{../figures/stencils/cvt1m_stencil_gen_speedup.png}
-\includegraphics[width=10.5cm]{../figures/stencils/cvt1m_spmv_speedup.png} 
+\includegraphics[width=7.5cm]{../figures/stencils/cvt1m_stencil_gen_speedup.png}
+\includegraphics[width=7.5cm]{../figures/stencils/cvt1m_spmv_speedup.png} 
 \caption{As the coarse grid resolution increases the hashing algorithm achieves both 2x faster than KDTree in stencil generation, with greater than 4x gain in SpMV performance (for free).}
 \label{fig:hash_results}
 \end{figure}
 
+\section{Conclusions on Stencil Generation}
 
 }
 
