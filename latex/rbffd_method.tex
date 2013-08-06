@@ -1304,7 +1304,7 @@ The KDTree implementation used in this work is from
 
 Original data showed our algorithm as wildly successful against a version  
 
-
+The Cuthill McKee algorithms can be equated to a breadth-first search. The algorithm queues nodes in order of degree at each level of the search and traverses the lowest degree priority. The Reverse variant of Cuthill-McKee inverts the node order so that the lowest degree and top level node are at the end of the matrix rather than the beginning. Aside from ordering, the Reverse and Standard Cuthill McKee algorithms are identical processes. RCM is the more popular of the variants though, due to storage savings and reduced fill-in for some decompositions \cite{LiuSherman1976}.	. 
 %TODO: get the compareKDTreeLSH.m output; this was for my C++ code and compared queries on 
 %\begin{figure}
 %\centering
