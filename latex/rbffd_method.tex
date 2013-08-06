@@ -1337,7 +1337,7 @@ Original data showed our algorithm as wildly successful against a version
 \end{figure}
 \begin{figure}
 \centering
-\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_2m_spmv_speedup.png}
+\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_spmv_speedup.png}
 \caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
 \label{fig:hash_results}
 \end{figure}
@@ -1350,8 +1350,8 @@ Original data showed our algorithm as wildly successful against a version
 \end{figure}
 \begin{figure}
 \centering
-\includegraphics[width=10.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
-\includegraphics[width=10.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
+\includegraphics[width=12.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
+\includegraphics[width=12.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
 \caption{Based on the proper choice of overlay resolution, the hash stencil query can accelerate stencil generation, but the sophistication of the algorithm is low enough that negative impact is more likely. On the other hand, the impact on SpMV performance is always positive with the routine accelerated up to 4.9x faster.}
 \label{fig:hash_results}
 \end{figure}
