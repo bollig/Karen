@@ -1153,19 +1153,21 @@ The tiles of Figure~\ref{fig:epsilon_contours} illustrate a number of contours g
 
 Regression slope and intercept parameters ($c1$ and $c2$) are superimposed in Figure~\ref{fig:epsilon_contours} to aid others in choosing $\epsilon$ in new applications. These parameters reproduce contours as $\epsilon(\sqrt{N}) = c_1 \sqrt{N} - c_2$.  In  \cite{FlyerLehto11} condition numbers on the order $10^{10}$ to $10^{12}$ are found to function well for competitive accuracy compared to other methods in literature; the method begins to degrade on large grids (i.e., $N > 1e5$). Similar observations are made in Chapter~\ref{chap:applications}. 
 
+%In light of the objective to scale RBF-FD to large problem sizes fitting for HPC, the observations in \cite{FlyerLehto11} and Chapter~\ref{chap:applications} regarding resolution limits 
+Stable weight algorithms like Contour-Pad\'{e} \cite{Wright2003}, RBF-QR \cite{Fornberg2007, Fornberg2011a, Davydov2011}, and RBF-GA \cite{Fornberg2012} can allow RBF-FD to scale beyond the limits of RBF-Direct and will be included in future investigation. 
+
+
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n20.pdf}
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n40.pdf}
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n60.pdf}
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n80.pdf}
-\includegraphics[width=0.45\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n100.pdf}
-\caption{Contours for choosing $\epsilon$ for $n=20$, 40, 60, 80 and 100 on the unit sphere as a function of $\sqrt{N}$. Contours assume near uniform distribution of nodes (e.g., maximum determinant (MD) nodes, icosahedral grids and spherical centroidal voronoi tessellations), and were generated based on the MD nodeset. Superimposed above each contour are parameters for the linear regression of the line, $c_{1} \sqrt{N} - c_{2}$. }
+\includegraphics[width=0.475\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n20.pdf}
+\includegraphics[width=0.475\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n40.pdf}
+\includegraphics[width=0.475\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n60.pdf}
+\includegraphics[width=0.475\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n80.pdf}
+\includegraphics[width=0.475\textwidth]{../figures/chapter2/epsilon_contours/labeled_contour_n100.pdf}
+\caption{Contours for $\epsilon$ as a function of $\sqrt{N}$ for stencil sizes $n=20$, 40, 60, 80 and 100 on the unit sphere. Contours assume near uniform distribution of nodes (e.g., maximum determinant (MD) nodes, icosahedral grids or spherical CVTs). Also present: parameters for each contour to produce $\epsilon(\sqrt{N}) = c_{1} \sqrt{N} - c_{2}$. }
 \label{fig:epsilon_contours}
 \end{figure}
 
-%In light of the objective to scale RBF-FD to large problem sizes fitting for HPC, the observations in \cite{FlyerLehto11} and Chapter~\ref{chap:applications} regarding resolution limits 
-Stable weight algorithms like Contour-Pad\'{e} \cite{Wright2003}, RBF-QR \cite{Fornberg2007, Fornberg2011a, Davydov2011}, and RBF-GA \cite{Fornberg2012} can allow RBF-FD to scale beyond the limits of RBF-Direct and will be included in future investigation. 
 
 
 \chapter{A Novel Stencil Generation Algorithm for RBF-FD}
