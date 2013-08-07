@@ -59,6 +59,16 @@ The latest version of OpenMP (v4.0) introduces pragmas for offloading computatio
 
 \section{GMRES for Stokes}
 
+\chapter{Discussion and Conclusions}
+
+This work leads to a number of additional investigations:
+\begin{itemize}
+\item Transitioning away from RBF-FD specific OpenCL kernels and into the higher level matrix algebra library ViennaCL reveals new optimizations for SpMV, possible only when treating the sparse matrix from a higher level. There are a number of alternatives for SpMV that target various matrix features (e.g., jagged diagonal, blocked ELL, etc). New investigation will determine the which, if any, alternatives can benefit RBF-FD. 
+
+\item ViennaCL has support for multiple backends, including the Intel Phi. Initial experiments result in performance $\frac{1}{10}$th as fast as the K20 GPU. Those results are: a) limited by a beta driver for OpenCL on Intel Phi; and b) using OpenCL kernels intended for the GPU architecture. Continued investigations are targeting features (language, vector instructions, etc.) of the Phi. 
+\item To improve the accuracy of RBF-FD weights, an experimental RBF-GA implementation was started. The initial exposure to the algorithm leaves the impression that the change of basis on the RHS is a nuisance. In effort to bypass the difficulty in deriving new RHS expressions, we plan to assemble complex DMs using DMs of lower (i.e., first-) order operators.
+\end{itemize}
+
 
 
 \ifstandalone
