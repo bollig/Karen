@@ -14,6 +14,9 @@
 \chapter{Projected Weights on the Sphere} 
 \label{app:indirect_weights}
 
+
+\authnote{Simplify (already appears in chapter 2). Dust off code that generated images and fix}
+
 It is shown in \cite{FlyerWright09, FlyerLehto11} that a projection operator
 
 $$ 
@@ -66,7 +69,11 @@ diag(1-X^{2}) \D_{\pd{x}{x}} - diag(XY) \D_{\d{}{y}} - diag(XZ) \D_{\d{}{z}} \\
 \authnote{Cleanup:}
 This concept equates to classical Finite Differences where for example, the standard 5-point finite difference formula for approximating the Laplacian can be expressed a weighted combination of differences for 
 
-\authnote{Have not found in literature any mention of the fact that RBF-FD weights can be used to compose operators like this. Generally, its easier to directly compute weights and assumed to be more accurate. But how much more accurate?}
+Check these for cases where operators are composed: 
+\cite{FlyerLehto11}
+\cite{WrightFlyerYuen10}
+\cite{FornbergLehto11}
+\authnote{Generally, its easier to indirectly compose weights, but cheaper to directly compute weights for operators. Direct operators are assumed to be more accurate. But how much more accurate? }
 
 One benefit of indirect weights is conservation of memory. For example, for complex operators, a single DM on $N=1 \text{million}$ nodes and $n=101$ requires roughly $1.6$ GB of memory. If the PDE is coupled and requires 
 
