@@ -475,6 +475,11 @@ We also find that a large Krylov subspace must be saved. GMRES converges best wh
 
 \authnote{ Need to comment on the conditioning of the system and how stencils can influence convergence }.
 %\authnote{So my matlab code also demonstrates the behavior I was seeing in C++. The $n=31$ case converges VERY quickly with ILU0. However $n=40$ is slow. Another case that works well is $n=110$. I will have to go back and figure out how Im generating the stencils differently. I wonder if the $log(\kappa) = 14$ for $n=40$ is pushing conditioning too high to use? }
+GMRES in CUSP is based on the Givens rotations for the Arnoldi process. 
+
+GMRES in ViennaCL is based on Householder reflections for the Arnoldi process. 
+
+We opted to leverage the ViennaCL package in most of our implementations. 
 
 Need a table/plot comparing convergence of various preconditioners (ILU0, ILUT, AMG, etc.). We will justify our use of ILU0 even if it is the most basic and frequently least beneficial approach.
 

@@ -25,100 +25,6 @@
 
 { \graphicspath{{rbffd_methods_content/}} 
 
-%introduction
-%	- argue what we show within (i.e., first GPGPU, first multi-CPU, approximate nearest neighbors, etc.)
-%numerical method
-%	- TOD: Explain that preliminaries cover status entering the field
-%		- DONE: global RBFs formulation, applications
-%		- DONE: compact RBFs formulation, applications
-%	- which brings us to our method of choice, RBF-FD
-%		- Benefits in complexity, versatility
-%		- inherits global RBFs
-%		- new method with limited application
-%implementation
-%	- describe our neighbor queries
-%		- approximate neighbors are good enough
-%		- benchmark performance of kDTree vs LSH Raster
-%		- Plot bandwidth of each method vs N on sphere
-%		- 
-
-
-
-
-\chapter{Introduction}
-\label{chap:introduction}
-
-The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. At the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions to generate weights for finite-differencing stencils, utilizing the weights in turn to approximate derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
-
-As ``meshless" methods, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $d$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
-
-While most of the literature surrounding RBFs for PDEs involves collocation (see Chapter~\ref{chap:background}), the hot topic in the community today is RBF-generated Finite Differences (RBF-FD). RBF-FD is a hybrid of RBF scattered data interpolation and classical Finite Difference (FD). It shares many of the benefits from other RBF methods to generalize to scattered node layouts in any dimension, and allows for high order accurate solutions.
-
-The idea behind classical FD is to express derivatives at a single node (center) as a weighted combination/difference of solution values from a small neighborhood (i.e., a stencil) around the center. Common approximations such as upwind differencing, center differencing, and other higher order approximations are of this form. 
-In similar fashion, RBF-FD combines solutions values based on stencils, but it does so in a more generalized sense than standard FD. For example, classical FD is typically restricted to regular meshes and often symmetric stencils in practice with the same set of weights for each stencil. Weights can be derived from polynomial expansion and obtained in 1D by solving a Vandermonde interpolation matrix \cite{FornbergLehto11}. Higher dimension FD stencils are composed from combinations of 1D formulas applied to each dimension. This implies restrictions on the shape/layout of stencils. In contrast to this, RBF-FD is designed for stencils with irregular node placement and can easily provide a unique set of weights for each stencil with no restrictions on stencil shape. 
-
-%TODO:  \cite{Wright2004, Wright2003, WrightFornberg06, Chandhini2007}. 
-
-The concept of RBF-FD was first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
-but it was the simultaneous, yet independent,
-efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. Introduced over a decade ago, the method is only recently showing signs that it has obtained the critical-mass following necessary for the method's use in large-scale scientific models. At the onset of this work, most of the literature considered RBF-FD for problem sizes up to a few thousand or tens of thousands of nodes. Similar to most RBF methods, RBF-FD is predominantly implemented within small-scale, serial computing environments. Under most circumstances the community at large continues investigation and extension development within MATLAB. 
-
-Our goal is to scale RBF-FD solutions on high resolution meshes across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. Chapter~\ref{chap:distributed_rbffd} focuses on the problem of distributing RBF-FD across independent compute nodes, and demonstrates the scalability of RBF-FD to a thousand processors. As part of the push to HPC, leveraging Graphics Processing Units (GPUs) for computation is considered critical. GPUs, introduced in Chapter~\ref{chap:gpu_rbffd}, are many-core accelerators capable of general purpose, embarrassingly parallel computations. Accelerators represent the latest trend in HPC, where compute nodes are commonly supplemented by one or more accessory boards for offload parallel tasks. Chapter~\ref{chap:multigpu_rbffd} continues the discussion of RBF-FD on GPUs by tackling the problem of spanning a GPU cluster with an algorithm for overlapping communication and computation to hide the latency in data transfer between accelerators. Our effort leads the way for application of RBF-FD in an age when compute nodes with attached accelerator boards are considered key to breaching the exa-scale computing barrier \cite{GPUandExascale2011}. 
-%Additional key challenges lie in the choice of grid, the choice of stencil, and stability of scalable solutions. 
-%To demonstrate Chapter~\ref{chap:applied_rbffd} verifies 
-
-The layout of this document is as follows. This chapter continues with a survey of work related on parallelizing RBF-FD, targeting the GPU, and spanning a multi-GPU cluster. Chapter~\ref{chap:background} provides a historical survey of RBF methods as a backdrop to present RBF-FD in Chapter~\ref{chap:rbffd_method}. Chapter~\ref{chap:stencils} introduces a novel, fast algorithm for generating RBF-FD stencils as a substitute for the $k$-D Tree algorithm widely used by the RBF community. In Chapter~\ref{chap:distributed_rbffd}, the first scalable implementation of RBF-FD to span one thousand processors is preseted. Chapter~\ref{chap:gpu_rbffd} continues with the challenge of offloading computation to GPUs, and Chapter~\ref{chap:multigpu_rbffd} expands the discussion to a multi-GPU cluster. Chapter~\ref{chap:applications} verifies the parallel RBF-FD implementation with both explicit and implicit solutions to geophysical problems. Finally, this document concludes with a summary of results and future directions in Chapter~\ref{chap:discussion}.
-
-\authnote{TODO: iterate through remainder of this chapter again}
-
-%TODO:	We bring together the combination of RBF-FD, MPI, GPU%TODO:	And we demonstrate combinations through applicaton to various problems%TODO:	Implicit and Explicit PDEs
-%TODO:	Goal is to construct building blocks for a large scale Geophysical simulation
-
-\section{On Parallel/Distributed RBF-FD} 
-
-%\authnote{Related work for start of Parallel/GPU chapter}
-Parallel implementations of RBF methods rely on domain decomposition. Depending on the implementation, domain decomposition not only accelerates solution procedures, but can decrease the ill-conditioning that plague all global RBF methods \cite{Divo2007}. The ill-conditioning is reduced if each domain is treated as a separate RBF domain, and the boundary update is treated separately. Domain decomposition methods for RBFs were introduced by Beatson et al. \cite{Beatson2000} in the year 2000 as a way to increase problem sizes into the millions of nodes.
-
-This work leverages a domain decomposition, but not for the purpose of conditioning. Instead the focus is on decomposing the domain in order to scale RBF-FD across more than a thousand CPU cores of an HPC cluster. Add to this the twist of incorporating a novel implementation on the GPU with overlapping communication and computation. This combination is unmatched in related work. However, RBF methods do have a bit of history of parallel implementations. 
-
-In 2007, Divo and Kassab \cite{Divo2007} used a domain decomposition method with artificial 
-subdomain boundaries for their implementation of a local collocation method \cite{Divo2007}. 
-The subdomains are processed independently, with derivative values 
-at artificial boundary points averaged to maintain global consistency of physical values. Their implementation 
-was designed for a 36 node cluster, but benchmarks and scalability tests are not provided.
-
-% Divo: it seems almost unnecessary to use domain decomposition if they have the local method.
-% I suppose the domain decomposition is necessary for averaging physical values more than RBF collocation.
-
-
-Kosec and \v{S}arler \cite{Kosec2008} have the only known (to our knowledge) OpenMP implementation for RBFs. The authors parallelize coupled heat transfer 
-and fluid flow problems on a single workstation. 
-The application involves the local RBF collocation method, explicit time-stepping and Neumann boundary conditions. A speedup 
-factor of 1.85x over serial execution was achieved by executing on two CPU cores; no further 
-results from scaling tests were provided. 
-
-Stevens et al. \cite{Stevens2009a} mention a parallel implementation under development, but no document is available at this time. 
-
-Perhaps the most competitive parallel implementation of RBFs is the PetRBF \cite{Yokota2010} branch of PETSc \cite{PETSc}. The authors of PetRBF (also developers for PETSc) have implemented a highly scalable, efficient RBF interpolation method based on compact RBFs (i.e., they operate on sparse matrices). The authors demonstrate efficient weak scaling of PetRBF across 1024 processes on a Blue Gene/L, and strong scaling up to 128 processes on the same hardware. Additionally, strong scaling was tested on a Cray XT4. On the Blue Gene/L, PetRBF is demonstrated to achieve an impressive 74\% parallel weak scaling efficiency on 1024 processes (operating on over 50 million points), and 84\% strong scaling efficiency for 128 processes. For the Cray XT4, strong scaling tops out at 36\% for 128 processes, a respectable number---and similar to observed results for our own code on 128 processes.  
-
-
-\section{On GPU RBF Methods}
-Related work on RBFs and GPUs is sparse. In 2009, Schmidt et al. \cite{Schmidt2009a, Schmidt2009b} implemented a global RBF method for Tsunami simulation on the GPU using the AccelerEyes Jacket \cite{JacketGuide2009} add-on for MATLAB. Jacket provides a MATLAB interface to data structures and routines that internally call to the NVidia CUDA API. Their model was based on a single large dense matrix solve, and with the help of Jacket the authors were able to achieve approximately 7x speedup over the standard MATLAB solution on the then current generation of the MacBook Pro laptop. The authors compared the laptop CPU (processor details not specified) to the built-in NVidia GeForce 8600M GT GPU. Schmidt et al.'s implementation was the first contribution to the RBF community to leverage accelerators. The results were significant and promising, but no further contributions were made on the topic. 
-
-While both Schmidt et al.'s method and the method presented here are based on RBFs, the two problems are only distantly related when it comes to implementation on the GPU. Dense matrix operations have a high computational complexity, are considered ideal (or near to) by linear algebra libraries like BLAS \cite{BLAS} and LAPACK \cite{Lapack1999}, and were demonstrated to fit well on GPUs from the onset of General Purpose GPU (GPGPU) Computing. In fact, NVidia included CUBLAS \cite{CUBLAS} (a GPU based BLAS library for their hardware) with their initial public release of the game-changing CUDA development kit in 2006. In stark contrast to this, sparse matrix operations have minimal computational complexity and are less than ideal for the GPU.
-
-
-Earlier this year (2013), Cuomo et al. \cite{Cuomo2013} implemented RBF-interpolation on the GPU for surface reconstruction. Their implementation utilizes PetRBF \cite{Yokota2010}, and new built-in extensions that allow GPU access within PETSc. PETSc internally wraps the CUSP project \cite{CUSP} for sparse matrix algebra on the GPU. With the help of these libraries, Cuomo et al. solve and apply sparse interpolation systems on the GPU for up to three million nodes on an NVidia Fermi C1060 GPU (4GB). They compare results to a single core CPU implementation on an Intel i7-940 CPU and demonstrate that the GPU accelerate their solutions between 6x and 25x. Unfortunately, the authors do not show evidence of scaling the interpolation across multiple GPUs; so while evidence exists that PetRBF now has full GPU support, it remains to be seen how well the code can scale in GPU mode. 
- 
-\section{On Multi-GPU Methods}
- 
-Multi-GPU Jacobi iteration for Navier stokes flow in cavity \url{http://scholarworks.boisestate.edu/cgi/viewcontent.cgi?article=1003&context=mecheng_facpubs}
-
-Thibault et al. have multiple works on Multi-GPU and overlapping comm and comp. 
-
-
-
-
 \part{Preliminaries}
 
 
@@ -129,15 +35,31 @@ The process of solving partial differential equations (PDEs) using radial basis 
 
 As ``meshless" methods, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $d$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
 
+
 This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the 
 RBF-generated Finite Differences (RBF-FD) method. Beginning with a brief introduction to RBFs and a historical survey, related methods are into classified into three types: global, compact, and local methods. Following this, the general approximation problem is introduced, with a look at the core of all three method classificiations: RBF scattered-data interpolation. %We categorize existing methods for solving PDEs with RBFs as either global 
 %or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies 
 %the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant 
 %at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
 
-Three global RBF collocation methods are presented: Kansa's method, Fasshauer's method and Direct collocation.
+
+Like most numerical methods, RBFs come with certain
+limitations. For example, RBF interpolation is---in general---not a well-posed
+problem, so it requires careful choice of positive definite or conditionally
+positive definite basis functions \cite{Iske2004,Fasshauer2007}. 
+The example 2D RBFs presented in Figure~\ref{fig:rbfs} are infinitely smooth and satisfy the (conditional) positive definite requirements. 
+
+Infinitely smooth RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon r)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. The conditioning of the system also dramatically degrades as the number of nodes in the problem increases. Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2007, Fornberg2011a} allow for numerically stable computation of interpolants in the nearly flat RBF regime (i.e., $\epsilon \rightarrow 0$) where high accuracy has been observed \cite{Larsson2003, Fornberg2008}.
+
+
+Historically, the most common way to leverage RBFs for PDE solutions is in a global interpolation sense. That is, the value of a function value or any of its derivatives 
+at a node location is a linear combination of all the function values over the \textit{entire} domain, just as in a pseudospectral method. If using infinitely smooth RBFs, this can lead to spectral (exponential) convergence of the RBF interpolant for smooth data \cite{Fornberg2005}. %(need reference 
+
+
+Three global RBF collocation methods are presented here: Kansa's method, Fasshauer's method and Direct collocation.
 % Within the historical context of RBF methods we highlight extensions that lead to local interpolation matrices instead of a single global interpolation matrix. 
 Additionally, the RBF-pseudospectral (RBF-PS) method is shown as an extension to fit global RBF methods into the framework of lower complexity pseudo-spectral methods. %Finally, we discuss the most recent methods for solving PDEs, emphasizing RBF-FD as the focus of this work. 
+
 
 This survey of RBF PDE methods frames the context in which RBF-FD was developed, and illustrates both the benefits and pitfalls inherited from its predecessors. 
 
@@ -576,7 +498,7 @@ An LU-decomposition ($O(N^3)$) in preprocessing with forward- and back-solves ($
 Since matrix $D_{\diffop{}}$ is independent of functions $u(x)$ and $f(x)$, the matrix requires update only if the RBF centers move---a compelling benefit for time-dependent problems on stationary nodes. The complexity of RBF-PS for time-dependent solutions is then reduced to a matrix-vector multiply ($O(N^2)$) for each time-step. In contrast, classic RBF collocation methods also construct LU factors of $A_{\diffop{}}^{-1}$ in preprocessing, but delay application of forward- and back-solves to acquire time-dependent weighting coefficients at each time-step. This is then followed by the pre-multiply of $B$ (i.e., additional $O(N^2)$) to complete the time-step.
  
 
-%TODO: RBF-PS literature \cite{Fasshauer2006, Fasshauer2007}\cite{FasshauerZhang2007}\cite{WrightFlyerYuen10}\cite{Neves2009}
+%TODO: RBF-PS literature \cite{Fasshauer2006, Fasshauer2007}\cite{FasshauerZhang2007}\cite{WrightFlyerYuen10}\cite{Neves2009}\cite{FuselierWright2012}
 
 
 \subsection{Local Methods}
@@ -723,6 +645,9 @@ As in classical FD methods, increasing the stencil size, $n$, increases the orde
 
 %In some ways, RBF-FD and global RBF methods are plagued by shared difficulties. For example, both face a dilemma in choosing the optimal $\epsilon$ to compromise between conditioning and accuracy. A key difference---historically---is that in the multiple independent RBF-FD origins, Wright \cite{Wright2003} focused on bypassing ill-conditioning of RBF-FD and investigated its behavior in the limit as $\epsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm. So while global RBF methods suffered  
 
+%TODO: expand these descriptions
+\authnote{Expand these reference descriptions} 
+
 RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
 %Another local alternative for solving PDEs with RBFs was presented by Wright and Fornberg \cite{Wright2004, WrightFornberg06}. 
@@ -730,6 +655,8 @@ incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transpo
 %\togordon{Statement about RBF-FD and Kansa's method is given without proof.}
 %According to Wright and Fornberg \cite{Wright2004}, RBF-FD (and \emph{RBF-HFD} for the Hermite version) was i%ndependently 
 %proposed by many authors including Wright \cite{Wright2003} in his dissertation, Tolstykh \cite{Tolstykh2000,Tolstykh2003a, Tolstykh2003b}, Shu et al. \cite{Shu2003}, and Cecil et al. \cite{Cecil2004}. 
+%RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
+%incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
 Shu et al. \cite{Shu2006} compared the RBF-FD method to Least Squares FD (LSFD) in context of 2D incompressible viscous 
 cavity flow, and found that under similar conditions, the RBF-FD method was more accurate than LSFD, but the solution required 
 more iterations of an iterative solver. RBF-FD was applied to Poisson's 
@@ -758,7 +685,7 @@ where multiple sets of weights ($c_\nabla, c_x, c_y$) are obtained simultaneousl
 \section{Differentiation Matrices and Sparse Matrix-Vector Multiply (SpMV)}
 
 
-Typically, one needs derivatives at every node in the discretized domain to solve PDEs. To achieve this with RBF-FD, stencils are generated around every node in the domain. Stencils need not have the same size ($n$), but this is assumed here for simplicity in discussion, and is most common in literature. Furthermore, the number of stencils need not match the number of nodes in the domain, but this is also assumed. The small system solve in Equation~\ref{eq:rbffd_weight_system} or \ref{eq:multi_rhs_rbffd}  is repeated $N$ times---once for each stencil---to obtain a total of $N \times n$ stencil weights. 
+Typically, one needs derivatives at every node in the discretized domain to solve PDEs. To achieve this with RBF-FD, stencils are generated around every node in the domain. Stencils need not have the same size ($n$), but this is assumed here for simplicity in discussion, and is most common in literature. Furthermore, the number of stencils need not match the number of nodes in the domain, but this is also assumed. The small system solve in Equation~\ref{eq:rbffd_weight_system} or \ref{eq:multi_rhs_rbffd}  is repeated $N$ times---once for each stencil---to obtain a total of $N \times n$ stencil weights per operator. 
 
 For PDEs, it is common practice to assemble a \emph{differentiation matrix} (DM); a discrete representation of the PDE operator on the domain. Given the set of nodes in the domain, $\{x_k\}_{k=1}^N$, the $c$-th row of the DM represents the discrete PDE operator for the stencil centered at node $x_c$ with stencil nodes $\{x_j\}_{j=1}^{n}$: 
 \begin{align*}
@@ -806,12 +733,12 @@ where either a single DM is composed by adding two lower order DMs, or the lower
 \begin{align}
 \Laplacian u \approx D_{x} D_{x} u + D_{y} D_{y} u \label{eq:composed_dm}\ .
 \end{align}
-The choice of how the operators are approximated depends on the PDE and can be influenced by system memory limitations. For example, assume a coupled system of equations in 2-D where operators $\nabla$ and $\nabla^2$ are required. Then, Equation~\ref{eq:multi_rhs_rbffd} is assembled and solved for the operators $\{\pd{}{x}, \pd{}{y}, \nabla^2\}$, with each DM stored in memory. This process is sufficient assuming all DMs fit adequately. As an alternative, one may solve Equation~\ref{eq:multi_rhs_rbffd} for operators $\{\pd{}{x}, \pd{}{y}\}$, reproduce $\nabla^2$ with Equation~\ref{eq:composed_dm}, and reduce memory usage by 30\%. 
+The choice of how the operators are approximated depends on the PDE and can be influenced by system memory limitations. For example, assume a coupled system of equations in 2-D where operators $\nabla$ and $\nabla^2$ are required. Then, Equation~\ref{eq:multi_rhs_rbffd} is assembled and solved for the operators $\{\pd{}{x}, \pd{}{y}, \nabla^2\}$, with each DM stored in memory. This process is sufficient assuming all DMs fit adequately in the memory available. As an alternative, one may solve Equation~\ref{eq:multi_rhs_rbffd} for operators $\{\pd{}{x}, \pd{}{y}\}$, reproduce $\nabla^2$ with Equation~\ref{eq:composed_dm}, and reduce memory usage by 30\%. 
 % TODO: while multiple DM applications may result in compounding errors, this behavior is not pronounced in practice
 On top of memory savings, this concept of composing DMs based on lower order operators extends to cases where PDEs require complex operators that are sufficiently difficult to apply to RBFs when deriving a new RHS for Equation~\ref{eq:multi_rhs_rbffd}.  
  
 
-The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ and $n=31$ is only $0.31\%$ full, and the percentage continues to decrease as $N$ increases. Contrary to initial appearance, RBF-FD DMs are not symmetric. This is true for two reasons: a) a stencil around a center is generated based on $n$ nearest neighbors with no guarantee that any stencil nodes will include the center in their stencils; and  b) even if the stencil connectivity were symmetric, each row of the DM contains a distinct set of weights that are a function of independent stencils.
+The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ nodes and stencil size $n=31$ is only $0.31\%$ full (i.e., $99.79\%$ of the matrix elements are zeros), and the percentage continues to decrease as $N$ increases. Contrary to initial appearance, RBF-FD DMs like Figure~\ref{fig:example_DM_rows} are not symmetric. This is true for two reasons: a) a stencil is generated based on $n-1$ nearest neighbors to a center with no guarantee that any of the stencil nodes will include the center in their stencils; and  b) even if the stencil connectivity were symmetric, each row of the DM contains a distinct set of weights that are a function of independent stencils. The only way to guarantee a symmetric system is to ensure all stencils are shaped the same, with the same number of nodes and node distribution relative to the center, plus all stencil nodes must have a bijective relationship (i.e., if $A$ is connected to $B$, then $B$ connects to $A$). 
 
 Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. Note that with DMs stored as sparse representations, the matrix-vector multiply operation is distinguished as a \emph{sparse matrix-vector multiply} (SpMV). SpMVs avoid unnecessary operations by only multiplying the nonzero elements of the matrix matched to corresponding values in the vector. The actual algorithm for SpMV depends on the choice of sparse storage. Chapter~\ref{chap:gpu_rbffd} demonstrates the pivotal role that sparse formats play in the performance of SpMV, and thus RBF-FD. 
 
@@ -1017,7 +944,7 @@ Tuned parameters for hyperviscosity are provided in Chapter~\ref{chap:applicatio
 
 \section{RBF-FD Implementation for Time-dependent PDEs}
 
-This section considers at a high level how one leverages RBF-FD to solve PDEs. To simplify in the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: preprocessing and application. The complexity of each phase can vary based the algorithms utilized for each task. 
+This section considers at a high level how one leverages RBF-FD to solve PDEs. To simplify in the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: preprocessing and application. The same processes would be The complexity of each phase can vary based the algorithms utilized for each task. 
 
 The Preprocessing phase encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output the phase produces one or more DMs. Note that Preprocessing is a one time cost: grids, stencils, and DMs can be loaded from disk on subsequent runs to effectively bypass the all cost in this phase. 
 
@@ -1060,6 +987,19 @@ Once in the Application phase, the constructed DMs are applied to solve a PDE ei
 In general the performance of RBF-FD hinges on the cost of SolvePDE. This is especially true for time-dependent PDEs where an increase in grid resolution results in proportional increase in the number time-steps to satisfy the CFL condition \cite{CFL}. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact performance SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, smaller required grid size, and faster convergence.
 
 \section{Grids} 
+
+%TODO: fill in points
+\begin{itemize} 
+\item scattered nodes
+
+\begin{itemize}
+\item place samples where they are necessary, not where the grid requires
+\item maximize the representation of nodes and minimize interpolation error
+\item higher order accuracy than standard 
+\end{itemize}
+
+\end{itemize}
+
 
 RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can impact accuracy of the method. This function portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for many other methods. 
 

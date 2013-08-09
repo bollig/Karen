@@ -3,6 +3,17 @@
 \usepackage{standalone}
 \input{all_usepackages}
 
+\usepackage{xcolor}
+% Sepia
+\definecolor{myBGcolor}{HTML}{F6F0D6}
+\definecolor{myTextcolor}{HTML}{4F452C}
+% Dark
+%\definecolor{myBGcolor}{HTML}{3E3535}
+%\definecolor{myTextcolor}{HTML}{CFECEC}
+\pagecolor{myBGcolor}
+%\color{myTextcolor}
+
+
 
 \title{Multi-GPU Solutions of Geophysical PDEs with Radial Basis Function-generated Finite Differences}
 \author{Evan F. Bollig}
@@ -17,30 +28,32 @@
 %\keywords{keyterm1; keyterm2; keyterm3; ...}
 
 \committeeperson{Gordon Erlebacher}{Professor Directing Thesis}
-\committeeperson{Natasha Flyer}{Professor Directing Thesis}
+\committeeperson{Natasha Flyer}{Outside University Representative}
 \committeeperson{Mark Sussman}{University Representative}
 \committeeperson{Dennis Slice}{Committee Member}
 \committeeperson{Ming Ye}{Committee Member}
+\committeeperson{Janet Peterson}{Committe Member}
 
 \begin{document}
 
 %% UNCOMMENT THIS FOR ETD CLEARANCE
 \frontmatter
-%\maketitle
-%\makecommitteepage
+\maketitle
+\makecommitteepage
 %%
-%\input{dedication.tex}
-%\input{acknowledgments.tex}
+\include{dedication}
+\include{acknowledgments}
 %%
 \tableofcontents
-%\listoftables
-%\listoffigures
-%\listofalgorithms
+\listoftables
+\listoffigures
+\listofalgorithms
 %%
-%\input{symbols.tex}
-%\input{abbreviations.tex}
-	%
-	%\input{abstract.tex}
+\include{symbols}
+%\input{notation_and_symbols}
+\include{abbreviations}
+%%
+\input{abstract.tex}
 
 \mainmatter
 
@@ -56,10 +69,12 @@
 \include{explicit_pde_solutions}
 \include{implicit_pde_solutions}
 \include{performance_analysis} 
-	\include{publications}
+\include{publications}
+
+\include{conclusions}
+
 
 \appendix
-%\input{notation_and_symbols.tex}
 \include{rbffd_avoid_pole_singularities}
 \include{rbffd_weights_on_sphere}
 

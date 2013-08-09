@@ -16,12 +16,50 @@
 \chapter{A Novel Stencil Generation Algorithm for RBF-FD}
 \label{chap:stencils}
 
-RBF-FD, like all RBF methods, is designed to handle irregular node distributions. These distributions are typically point clouds with no mesh or edges connecting nodes. 
+RBF-FD, like all RBF methods, is designed to handle irregular node distributions. While nothing prevents implementations of RBF-FD from utilizing existing meshes/lattices, most work in the field concentrates on simple geometries like the sphere \cite{FlyerWright07,FlyerLehto10,FlyerLehto11,FlyerWright09} and quadrilateral/prism \cite{FiNDTHESE} to better study properties of the method and develop extensions such as hyperviscosity \cite{FornbergLehto11}. 
+%TODO: find refs
 
-One could argue that RBF-FD generates its own mesh when it generates stencils. 
+Without mesh/lattice connectivity, RBF-FD is forced to generate stencils by 
+
+\authnote{Formal definition of k-NN query}
+
+In a sense, RBF-FD generates its own mesh when generating stencils. 
+
+The process of generating 
 
 
 Therefore, it is not essential that stencils contain only nearest neighbors. Instead, one can acquire the \emph{approximate nearest neighbors}. Figure~\ref{fig:ann_example} demonstrates a case where a does not contain all nearest neighbors. As illustrated in the Figure, the ANN stencil and true nearest neighbor stencil differ by one node. THis is not dire
+
+
+\section{$k$-D Tree}
+\begin{itemize} 
+\item Tree build algorithm
+\item Query algorithm
+\item Total complexity due to the fact that we only need to query stencils once, so the build and query times are joint. 
+\end{itemize}
+
+
+\section{A Novel Hashing Algorithm}
+
+What does Samet call this? A clustered spatial tree algorithm? 
+
+\begin{itemize} 
+\item Algorithm to hash each node, push onto queue for each hash, sort by hash
+\item Query by jumping to hash, building raster spheres
+\item Need a good handle on the complexity. 
+\item possibility to use space filling curves
+\end{itemize}
+
+\section{Performance Comparison}
+
+\section{Conclusion}
+\begin{itemize}
+\item Performance improvement
+\item SpMV impact
+\item impact from space filling curves
+\end{itemize}
+
+
 
 
 
@@ -265,7 +303,7 @@ Q: the complexity of the algorithm?
 Q: the sphere I understand: its localizing the search to small patches on the sphere, and 
 
 
-\subsecton{Integer Dilation}
+\subsection{Integer Dilation}
 One frequently hears that ordering via space filling curves like Morton Ordering and/or gray codes can benefit memory access patterns. 
 
 (Related? \url{http://publish.uwo.ca/~shaque4/presentationSONAD.pdf} \url{http://www.cs.duke.edu/~alvy/papers/sc98/} \url{http://www.cs.indiana.edu/~dswise/Arcee/Papers/medea06.pdf} \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.118.7720&rep=rep1&type=pdf} \url{http://stackoverflow.com/questions/4260002/benefits-of-nearest-neighbor-search-with-morton-order})
