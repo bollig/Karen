@@ -32,17 +32,6 @@ may be straightforward in one- or two-dimensions, the extension
 into higher dimensions becomes increasingly more cumbersome
 \cite{Li2007}. Also, it is often the case that methods have limited support for irregular node distributions (e.g., FD)
 
-Complex geometries, irregular boundaries and mesh refinement also pose a problem for meshed methods. As the complexity of 
-the geometry/boundaries increases, so too should the resolution of the approximating mesh in order to 
-accurately reconstruct the detail present. A na\"{i}ve approach to refinement increases the density of nodes uniformly across the 
-domain, adding much more computation and memory storage than necessary for activity that is localized to sub-regions 
-of the domain. Multiresolution methods attempt to compromise between accurate approximation of the domain and 
-reduced resolution by one of two approaches: a) \emph{multilevel methods} that decompose the model into a hierarchy with 
-several levels of mesh detail, then only use a level when it is required to capture phenomena; and b) \emph{adaptive irregular 
-sampling} which has one level of detail, but non-uniform nodal density concentrated in areas of high activity \cite
-{Iske2004}. Such techniques require robust methods and complex code capable of either coarsening/smoothing the 
-approximate solutions to new level, or handling non-uniform node placement, element size etc. 
-
 Ideally, we seek a method defined on arbitrary geometries, that behaves regularly in any dimension, and avoids the cost of 
 mesh generation. The ability to locally refine areas of interest in a practical fashion is also desirable. Fortunately, meshfree 
 methods provide all of these properties: based wholly on a set of independent points in $n$-dimensional space, 
