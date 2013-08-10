@@ -17,6 +17,8 @@
 Many scientific problems of importance can be expressed as a collection of partial differential equations defined for some domain. In order to solve these 
 problems, computational numerical methods are employed on a discretized version of the domain. Traditionally, numerical methods have been \emph{meshed methods}, in that they rely on some underlying grid/lattice to connect discretized points in a well-defined manner. More recently a new class of methods surfaced, called \emph{meshfree methods}, which discard the requirement for connectivity information and operate only on point clouds. Each class of methods offers numerous and often complementary benefits. This work focuses on a recent method that draws inspiration from both meshed and meshfree methods, called \emph{Radial Basis Function-generated Finite Differences (RBF-FD)}.
 
+%TODO: fix paragraph
+\authnote{this paragraph does not fit well}
 The first task in traditional meshed methods is to generate an
 underlying grid/mesh. Node placement can be done in a variety of
 ways including uniform, non-uniform and random (monte carlo)
@@ -24,7 +26,9 @@ sampling, or through iterative methods like Lloyd's algorithm
 that generate a regularized sampling of the domain (see e.g.,
 \cite{Du1999}). In addition to choosing nodes, meshed methods
 require connectivity/adjacency lists to form stencils (e.g., Finite Differences) or
-elements (e.g., Finite Elements). Well defined meshes can 
+elements (e.g., Finite Element Method). 
+
+Well balanced meshes play a significant role in isolating nodes and allowing methods to be partitioned for distributed computing. 
 
 this implies an added challenge to cover
 the domain closure with a chosen element type. While these tasks
@@ -39,12 +43,12 @@ there is minimal cost for mesh generation, and refinement is as simple as adding
 they are needed. 
 
 Since their adoption by the mathematics community in the 1980s (\cite{Fasshauer2007}), a plethora of meshfree methods have 
-arisen for the solution of PDEs. For example, smoothed particle hydrodynamics, partition of unity method, element-free Galerkin 
-method and others have been considered for fluid flow problems \cite{Chandhini2007}. For a recent survey of methods see \cite{Li2007}.
+arisen for the solution of partial differential equations (PDEs). For example, smoothed particle hydrodynamics, partition of unity method, element-free Galerkin 
+method and others have been considered for fluid flow problems \cite{Chandhini2007}. A good survey of meshfree methods can be found in \cite{Li2007}.
 
 
 A subset of meshfree methods of particular interest to the
-community today revolves around Radial Basis Functions (RBFs).
+numerical modeling community today revolves around Radial Basis Functions (RBFs).
 RBFs are a class of radially symmetric functions (i.e.,
 symmetric about a point, $x_j$, called the \emph{center}) of the
 form: 
@@ -54,15 +58,11 @@ form:
 where the value of the univariate function $\phi$ is a
 function of the Euclidean distance from the center point $\vx_j$ given by
 $r(\vx) = ||\vx-\vx_j||_2 = \sqrt{(x-x_j)^2 + (y-y_j)^2 + (z-z_j)^2}$. Examples of
-commonly used RBFs are available in \hl{Table}~\ref{tbl:rbfs}
-with their corresponding plots in Figure~\ref{fig:rbfs}. RBF
+commonly used RBFs are shown in Figure~\ref{fig:rbfs} (for corresponding equations refer to Table~\ref{tbl:rbfs}). RBF
 methods are based on a superposition of translates of these
 radially symmetric functions, providing a linearly independent
 but non-orthogonal basis used to interpolate between nodes in
-$n$-dimensional space. An example of RBF interpolation in 2D
-using 15 Gaussians is shown in
-Figure~\ref{fig:rbfInterpolation}, where $\phi_j(r(\vx))$ is an
-RBF centered at $\{\vx_j\}_{j=1}^{n}$.
+$n$-dimensional space. 
 
 \begin{figure}[ht]
 \centering
@@ -81,45 +81,41 @@ RBF centered at $\{\vx_j\}_{j=1}^{n}$.
 		\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/mq_rbf2d-eps-converted-to.pdf} 
 		\caption{Multiquadric}
 	\end{subfigure} 
-    \caption{Commonly used RBFs.}
+    \caption{Commonly Used Radial Basis Functions (RBFs).}
     \label{fig:rbfs}
 \end{figure}
 
-
-
-The process of solving partial differential equations (PDEs) using radial basis functions (RBFs) dates back to 1990 \cite{Kansa1990a,Kansa1990b}. At the core of all RBF methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions to generate weights for finite-differencing stencils, utilizing the weights in turn to approximate derivatives. Regardless, to track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. 
+To track the history of RBF methods, one must look back to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. Solving PDEs with RBFs dates back to 1990 \cite{Kansa1990a,Kansa1990b}. At the core of all RBF-based PDE methods lies the fundamental problem of approximation/interpolation. Some methods (e.g., global- and compact-RBF methods) apply RBFs to approximate derivatives directly. Others (e.g., RBF-generated Finite Differences) leverage the basis functions to generate stencil weights for finite-difference approximations of derivatives. 
 
 As ``meshless" methods, RBF methods excel at solving problems that require geometric flexibility with scattered node layouts in $d$-dimensional space. They naturally extend into higher dimensions without significant increase in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. In addition to competitive accuracy and convergence compared with other state-of-the-art methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, they also boast stability for large time steps.
 
-While most of the literature surrounding RBFs for PDEs involves collocation (see Chapter~\ref{chap:background}), the hot topic in the community today is RBF-generated Finite Differences (RBF-FD). RBF-FD is a hybrid of RBF scattered data interpolation and classical Finite Difference (FD). It shares many of the benefits from other RBF methods to generalize to scattered node layouts in any dimension, and allows for high order accurate solutions.
+While most of the literature surrounding RBFs for PDEs involves collocation (see Chapter~\ref{chap:background}), trends have shifted to place RBF-FD top of the list in the community today. RBF-FD is a hybrid of RBF scattered data interpolation and classical Finite Difference (FD). It shares many of the benefits from other RBF methods, like the ability to handle scattered node layouts in any dimension, as well as high-order accurate solutions. Likewise, RBF-FD exhibits many benefits akin to classical FD including compact stencils for localized derivative approximation, and low computational complexity.
 
 The idea behind classical FD is to express derivatives at a single node (center) as a weighted combination/difference of solution values from a small neighborhood (i.e., a stencil) around the center. Common approximations such as upwind differencing, center differencing, and other higher order approximations are of this form. 
 In similar fashion, RBF-FD combines solutions values based on stencils, but it does so in a more generalized sense than standard FD. For example, classical FD is typically restricted to regular meshes and often symmetric stencils in practice with the same set of weights for each stencil. Weights can be derived from polynomial expansion and obtained in 1D by solving a Vandermonde interpolation matrix \cite{FornbergLehto11}. Higher dimension FD stencils are composed from combinations of 1D formulas applied to each dimension. This implies restrictions on the shape/layout of stencils. In contrast to this, RBF-FD is designed for stencils with irregular node placement and can easily provide a unique set of weights for each stencil with no restrictions on stencil shape. 
 
 %TODO:  \cite{Wright2004, Wright2003, WrightFornberg06, Chandhini2007}. 
 
-The concept of RBF-FD was first introduced by Tolstykh in 2000 \cite{Tolstykh2000}, 
-but it was the simultaneous, yet independent,
-efforts in \cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004} that gave the method its real start. Introduced over a decade ago, the method is only recently showing signs that it has obtained the critical-mass following necessary for the method's use in large-scale scientific models. At the onset of this work, most of the literature considered RBF-FD for problem sizes up to a few thousand or tens of thousands of nodes. Similar to most RBF methods, RBF-FD is predominantly implemented within small-scale, serial computing environments. Under most circumstances the community at large continues investigation and extension development within MATLAB. 
+The concept of RBF-FD was first introduced in 2000 \cite{Tolstykh2000}, but it took another few years for the method to really get a start (\cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004}). Introduced over a decade ago, the method is only recently showing signs that it has obtained the critical-mass following necessary for the method's use in large-scale scientific models. At the onset of this work, most of the literature considered RBF-FD for problem sizes up to a few thousand nodes; at most tens of thousands of nodes. Similar to most RBF methods, RBF-FD is predominantly implemented within small-scale, serial computing environments. Under most circumstances the community at large continues investigation and extension development within MATLAB. 
 
 
-Our goal is to scale RBF-FD solutions on high resolution meshes across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. Chapter~\ref{chap:distributed_rbffd} focuses on the problem of distributing RBF-FD across independent compute nodes, and demonstrates the scalability of RBF-FD to a thousand processors. As part of the push to HPC, leveraging Graphics Processing Units (GPUs) for computation is considered critical. GPUs, introduced in Chapter~\ref{chap:gpu_rbffd}, are many-core accelerators capable of general purpose, embarrassingly parallel computations. Accelerators represent the latest trend in HPC, where compute nodes are commonly supplemented by one or more accessory boards for offload parallel tasks. Chapter~\ref{chap:multigpu_rbffd} continues the discussion of RBF-FD on GPUs by tackling the problem of spanning a GPU cluster with an algorithm for overlapping communication and computation to hide the latency in data transfer between accelerators. Our effort leads the way for application of RBF-FD in an age when compute nodes with attached accelerator boards are considered key to breaching the exa-scale computing barrier \cite{GPUandExascale2011}. 
+The goal of this dissertation is to scale RBF-FD solutions on high resolution meshes across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. Chapter~\ref{chap:distributed_rbffd} focuses on the problem of distributing RBF-FD across independent compute nodes, and demonstrates the scalability of RBF-FD on over a thousand processors. As part of the push to HPC, leveraging Graphics Processing Units (GPUs) for computation is considered critical. GPUs, introduced in Chapter~\ref{chap:gpu_rbffd}, are many-core accelerators capable of general purpose, embarrassingly parallel computations. Accelerators represent the latest trend in HPC, where compute nodes are commonly supplemented by one or more accessory boards for offload parallel tasks. Chapter~\ref{chap:multigpu_rbffd} continues the discussion of RBF-FD on GPUs by tackling the problem of spanning a GPU cluster with an algorithm for overlapping communication and computation to hide the latency in data transfer between accelerators. Our effort leads the way for RBF-FD applicationss in an age when compute nodes with attached accelerator boards are considered key to breaching the exa-scale computing barrier \cite{GPUandExascale2011}. 
 %Additional key challenges lie in the choice of grid, the choice of stencil, and stability of scalable solutions. 
 %To demonstrate Chapter~\ref{chap:applied_rbffd} verifies 
 
 
+%
+%Even today, RBFs are still up-and-coming in the scientific world with many avenues of research left to consider. Global formulations are understood to have spectral convergence properties, high accuracy and other benefits like adaptivity and ease of implementation over meshed methods \cite{Fasshauer:2007}. However, little is known about the behavior of local and RBF-FD methods. Open questions include (but are in no way limited to): a) ideal node placement to eliminate singularities; b) data-structures for stencil storage and evaluation; c) problem sizes larger than a few thousand nodes; and d) parallel implementations across new heterogeneous multi- and many-core architectures. In response to this, our group, in collaboration with researchers assembled from a national lab and four universities (see Chapter~\ref{chap:funding}), has been granted funds by the National Science Foundation to collaboratively:
+%
+%\begin{quote}
+%\emph{``Bring RBFs to the forefront of multi-scale geophysical modeling by developing fast, efficient, and parallelizable RBF algorithms in arbitrary geometries, with performance enhanced by hardware accelerators, such as graphic processing units (GPUs)."} \cite{RBF_proposal:2009}
+%\end{quote}
+%
+%
 
-Even today, RBFs are still up-and-coming in the scientific world with many avenues of research left to consider. Global formulations are understood to have spectral convergence properties, high accuracy and other benefits like adaptivity and ease of implementation over meshed methods \cite{Fasshauer:2007}. However, little is known about the behavior of local and RBF-FD methods. Open questions include (but are in no way limited to): a) ideal node placement to eliminate singularities; b) data-structures for stencil storage and evaluation; c) problem sizes larger than a few thousand nodes; and d) parallel implementations across new heterogeneous multi- and many-core architectures. In response to this, our group, in collaboration with researchers assembled from a national lab and four universities (see Chapter~\ref{chap:funding}), has been granted funds by the National Science Foundation to collaboratively:
-
-\begin{quote}
-\emph{``Bring RBFs to the forefront of multi-scale geophysical modeling by developing fast, efficient, and parallelizable RBF algorithms in arbitrary geometries, with performance enhanced by hardware accelerators, such as graphic processing units (GPUs)."} \cite{RBF_proposal:2009}
-\end{quote}
 
 
-
-
-
-The layout of this document is as follows. This chapter continues with a survey of work related on parallelizing RBF-FD, targeting the GPU, and spanning a multi-GPU cluster. Chapter~\ref{chap:background} provides a historical survey of RBF methods as a backdrop to present RBF-FD in Chapter~\ref{chap:rbffd_method}. Chapter~\ref{chap:stencils} introduces a novel, fast algorithm for generating RBF-FD stencils as a substitute for the $k$-D Tree algorithm widely used by the RBF community. In Chapter~\ref{chap:distributed_rbffd}, the first scalable implementation of RBF-FD to span one thousand processors is preseted. Chapter~\ref{chap:gpu_rbffd} continues with the challenge of offloading computation to GPUs, and Chapter~\ref{chap:multigpu_rbffd} expands the discussion to a multi-GPU cluster. Chapter~\ref{chap:applications} verifies the parallel RBF-FD implementation with both explicit and implicit solutions to geophysical problems. Finally, this document concludes with a summary of results and future directions in Chapter~\ref{chap:discussion}.
+The layout of this document is as follows. This chapter continues with a survey of work related on parallelizing RBF-FD, targeting the GPU, and spanning a multi-GPU cluster. Chapter~\ref{chap:background} provides a historical survey of RBF methods as a backdrop to present RBF-FD in Chapter~\ref{chap:rbffd_method}. Chapter~\ref{chap:stencils} introduces a novel, fast algorithm for generating RBF-FD stencils as a faster alternative to the $k$-D Tree algorithm widely in use by the RBF community. In Chapter~\ref{chap:distributed_rbffd}, the first scalable implementation of RBF-FD to span one thousand processors is described in detail. Chapter~\ref{chap:gpu_rbffd} continues with the challenge of offloading computation to GPUs, and Chapter~\ref{chap:multigpu_rbffd} expands the discussion to a multi-GPU cluster. Chapter~\ref{chap:applications} verifies the parallel RBF-FD implementation with both explicit and implicit solutions to geophysical problems. Finally, this document concludes with a summary of results and discussion of future directions in Chapter~\ref{chap:conclusion}.
 
 \authnote{TODO: iterate through remainder of this chapter again}
 

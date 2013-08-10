@@ -837,7 +837,7 @@ In the case of PDEs solved on the unit sphere, there is no radial term, resultin
 \begin{align}
 \Laplacian  \equiv \LaplaceBeltrami.
 \end{align}
-Although this originated in the spherical coordinate system, \cite{WrightFlyerYuen10} give the Laplace-Beltrami operator as
+Although this originated in the spherical coordinate system, \cite{WrightFlyerYuen10} gives the Laplace-Beltrami operator as
 \begin{align*} 
 \LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{\phi}{r} + \frac{4-3r^2}{r} \pd{\phi}{r} \right],
 \end{align*} 
@@ -988,7 +988,8 @@ In general the performance of RBF-FD hinges on the cost of SolvePDE. This is esp
 
 \section{Grids} 
 
-%TODO: fill in points
+
+RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can impact accuracy of the method. This functional portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for other methods. 
 \begin{itemize} 
 \item scattered nodes
 
@@ -1000,10 +1001,6 @@ In general the performance of RBF-FD hinges on the cost of SolvePDE. This is esp
 
 \end{itemize}
 
-
-RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can impact accuracy of the method. This function portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for many other methods. 
-
-
 %TODO: Note, however, that the choice of grid impacts the accuracy of RBF-FD as it would in other methods. 
 %Typically, the only constraint placed on the grid is that nodes should not coincide. If two nodes do coincide it is possible for a stencil to include both, and 
 
@@ -1014,7 +1011,7 @@ RBF-FD has no requirement for structured grids, or need for a well-refined mesh/
 
 %The choice of grid is only relevant to the extent that it impacts the connectivity between nodes in stencils. Connectivity translates to non-zeros in rows of the DMs, so the various grid distributions result in a number of sparsity patterns. For all other intents and purposes, the choice of grid is only pertinent to ensure consistency with the PDEs to solve. 
 
-The RBF-FD implementation presented in this work is verified and benchmarked on a number of grids. The following grids are chosen for two reasons: a) to easily construct refinements in 2D/3D for consistent benchmarking and convergence studies, and b) to verify solutions against existing methods. All grids mentioned here are available for public download \cite{BolligSphereGrids}.
+The RBF-FD implementation presented in this work is verified and benchmarked on a number of grids. The following grids are chosen for two reasons: a) to easily construct refinements in 2D/3D for consistent benchmarking and convergence studies, and b) to verify solutions against existing methods. All grids mentioned here are available for public download (see \cite{BolligSphereGrids}).
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 

@@ -94,6 +94,8 @@ Many GPU applications claim a 50x or higher speedup. This will never be the case
 \subsection{Naive Kernels}
 \subsection{SpMV Formats/Kernels}
 
+CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
+
 \section{Performance Comparison}
 \subsection{Performance of Cosine CL vs VCL}
 \subsection{VCL Formats Comparison}
@@ -166,6 +168,9 @@ When matrix is sparse, a direct LU decomposition causes fill-in on factorization
 
 \chapter{Distributed RBF-FD}
 \label{chap:distributed_rbffd}
+
+
+Overlapping algorithm: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
 
 Parallelizing RBF-FD in a distributed environment requires three
 design decisions \cite{Saad2003}. First, the problem is partitioned in some fashion to distribute work across multiple processes. Intelligent partitioning
@@ -456,14 +461,18 @@ The actual implementation of MPI\_Alltoall and MPI\_Alltoallv likely use Isend a
 \begin{figure}[ht!]
 \begin{center}
 \includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
-\caption{The MPI\_Alltoallv collective compresses the interchange from MPI\_Alltoall by allowing for variable message sizes between all processors. Assume message sizes are proportional to square size in figure.}
+\caption{The MPI\_Alltoallv collective compresses the interchange from MPI\_Alltoall by allowing for variable message sizes between all processors. Assume message sizes are proportional to square size in figure. When packet sizes are null MPI\_Alltoallv has undefined behavior.}
 \label{fig:mpi_alltoallv_visual}
 \end{center}
+
+Figure~\ref{fig:mpi_alltoallv_visual}: \url{http://www.mcs.anl.gov/papers/P1699.pdf} observes that the zero-byte messages still add up due to processing required to analyze send-buffer and determine when connection is required. 
+
+
 \end{figure}
 \begin{figure}[ht!]
 \begin{center}
 \includegraphics[width=9cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
-\caption{The MPI\_Isend/MPI\_Irecv collective allows for variable message sizes, and truncates the number of connections between processors to only required connections.}
+\caption{The ``subset-to-subset" (MPI\_Isend/MPI\_Irecv) collective allows for variable message sizes, and truncates the number of connections between processors to only required connections.}
 \label{fig:mpi_isendirecv_visual}
 \end{center}
 \end{figure}
