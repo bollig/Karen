@@ -2,12 +2,145 @@
 %% http://bibdesk.sourceforge.net/
 
 
-%% Created for Evan Bollig at 2013-08-09 03:30:19 -0500 
+%% Created for Evan Bollig at 2013-08-12 03:25:41 -0500 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
 
 
+
+@mastersthesis{Krog2010,
+	Abstract = {{Snow is a physical phenomenon that is hard to simulate due to the wide range of
+behaviors that can be found. Snow avalanches are of interest due to their complex
+physical properties and because they can have a very high cost, both in terms of
+economic impact and lives lost. In this thesis, we investigate the possibility of using
+fluid dynamics to model snow avalanches at real-time speeds. Real-time simulations
+allow for interactivity which again may accelerate the speed of development processes.
+It also allows for the simulations to be used as an interactive educational tool.
+Although modern GPUs (Graphics Processing Units) are primarily designed to
+accelerate graphics calculations in computer games, their computational power
+can now also be harnessed by several other applications. This thesis builds on
+our previous work on a simple Smoothing Particle Hydrodynamics (SPH) fluid
+dynamics model accelerated by GPUs. We extend this work by developing a more
+complex SPH model and integrate these two models in our novel framework for
+GPU simulations. The simple SPH model is suitable for interactive simulations
+of low-viscosity Newtonian fluids, whereas our more complex SPH model includes
+support for Non-Newtonian fluids through the use of rheological models. By using
+a rheological model that describes the Non-Newtonian flow characteristics of snow
+avalanches, we can reproduce the flowing behavior of dense flowing snow avalanches
+at interactive speeds.
+Our work shows that using the GPU can lead to very large performance improve-
+ments that make it possible to do real-time simulations which previously required
+costly specialized hardware or took minutes or hours to run. Using our highly
+optimized framework, we demonstrate a large improvement in performance for the
+simple model, and achieve generally very high performance for both implementations
+compared to other state-of-the-art implementations. Our recent results on the new
+NVIDIA GeForce GTX 470 Fermi-based card, achieves 215.4 IPS (iterations per
+seconds) for 64K particles using our simple model, and 122.2 IPS and 64.9IPS for
+128K and 256K particles, respectively. For the complex model, 69.6 IPS at 64K
+particles, 37.4 IPS at 128K particles and 19.1 IPS at 256K particles were achieved.
+Real-time simulations enabling interactivity for the simple model is achieved for up
+to 256K particles, and up to 32/64K particles for the complex model.
+Many other features, such as additional snow and fluid effects, could extend this
+work. A list of this and other possible avenues for future work is also included.}},
+	Author = {Krog, {\O}ystein E.},
+	Citeulike-Article-Id = {7752490},
+	Citeulike-Linkout-0 = {http://code.google.com/p/gpusphsim/},
+	Date-Added = {2013-08-12 08:17:07 +0000},
+	Date-Modified = {2013-08-12 08:17:11 +0000},
+	Month = jun,
+	Posted-At = {2010-09-01 17:09:56},
+	Priority = {2},
+	School = {Norwegian University of Science and Technology},
+	Title = {{GPU-based Real-Time Snow Avalanche Simulations}},
+	Url = {http://code.google.com/p/gpusphsim/},
+	Year = {2010},
+	Bdsk-Url-1 = {http://code.google.com/p/gpusphsim/}}
+
+@article{Gumerov2007,
+	Acmid = {1329094},
+	Address = {Philadelphia, PA, USA},
+	Author = {Gumerov, Nail A. and Duraiswami, Ramani},
+	Date-Added = {2013-08-12 04:20:17 +0000},
+	Date-Modified = {2013-08-12 04:20:45 +0000},
+	Doi = {10.1137/060662083},
+	Issn = {1064-8275},
+	Issue_Date = {September 2007},
+	Journal = {SIAM J. Sci. Comput.},
+	Keywords = {cardinal function preconditioner, computational geometry, fast multipole method, preconditioned conjugate gradient, radial basis function interpolation},
+	Month = sep,
+	Number = {5},
+	Numpages = {24},
+	Pages = {1876--1899},
+	Publisher = {Society for Industrial and Applied Mathematics},
+	Title = {Fast Radial Basis Function Interpolation via Preconditioned Krylov Iteration},
+	Url = {http://dx.doi.org/10.1137/060662083},
+	Volume = {29},
+	Year = {2007},
+	Bdsk-Url-1 = {http://dx.doi.org/10.1137/060662083}}
+
+@article{Ying2006,
+	Author = {Lexing Ying},
+	Date-Added = {2013-08-12 04:16:18 +0000},
+	Date-Modified = {2013-08-12 04:16:18 +0000},
+	Doi = {http://dx.doi.org/10.1016/j.jcp.2005.09.010},
+	Issn = {0021-9991},
+	Journal = {Journal of Computational Physics},
+	Keywords = {Multiscale method},
+	Number = {2},
+	Pages = {451 - 457},
+	Title = {A kernel independent fast multipole algorithm for radial basis functions},
+	Url = {http://www.sciencedirect.com/science/article/pii/S0021999105004298},
+	Volume = {213},
+	Year = {2006},
+	Bdsk-Url-1 = {http://www.sciencedirect.com/science/article/pii/S0021999105004298},
+	Bdsk-Url-2 = {http://dx.doi.org/10.1016/j.jcp.2005.09.010}}
+
+@inproceedings{Arya1994,
+	Author = {Sunil Arya and David M. Mount and Nathan S. Netanyahu and Ruth Silverman and Angela Y. Wu},
+	Booktitle = {ACM-SIAM SYMPOSIUM ON DISCRETE ALGORITHMS},
+	Date-Added = {2013-08-11 20:37:14 +0000},
+	Date-Modified = {2013-08-11 20:37:22 +0000},
+	Pages = {573--582},
+	Title = {An Optimal Algorithm for Approximate Nearest Neighbor Searching in Fixed Dimensions},
+	Year = {1994}}
+
+@inproceedings{Wendland2002,
+	Author = {Holger Wendland},
+	Booktitle = {Approximation Theory X: Wavelets, Splines, and Applications},
+	Date-Added = {2013-08-11 20:06:47 +0000},
+	Date-Modified = {2013-08-11 20:06:52 +0000},
+	Pages = {473--483},
+	Publisher = {Vanderbilt University Press},
+	Title = {Fast Evaluation of Radial Basis Functions: Methods Based on Partition of Unity},
+	Year = {2002}}
+
+@misc{TagliasacchiMFE,
+	Author = {Andrea Tagliasacchi},
+	Date-Added = {2013-08-11 07:13:20 +0000},
+	Date-Modified = {2013-08-12 03:42:09 +0000},
+	Howpublished = {\url{http://www.mathworks.com/matlabcentral/fileexchange/21512-kd-tree-for-matlab}},
+	Month = {Sep},
+	Title = {kd-tree for matlab},
+	Year = {2010}}
+
+@misc{MatlabKDTreeSearcher,
+	Date-Added = {2013-08-11 06:19:49 +0000},
+	Date-Modified = {2013-08-11 06:21:31 +0000},
+	Howpublished = {MATLAB R2013a Documentation (\url{http://www.mathworks.com/help/stats/kdtreesearcherclass.html})},
+	Month = {Aug},
+	Title = {KDTreeSearcher Class},
+	Year = {2013}}
+
+@book{Samet2005,
+	Address = {San Francisco, CA, USA},
+	Author = {Samet, Hanan},
+	Date-Added = {2013-08-11 05:11:01 +0000},
+	Date-Modified = {2013-08-11 05:11:13 +0000},
+	Isbn = {0123694469},
+	Publisher = {Morgan Kaufmann Publishers Inc.},
+	Title = {Foundations of Multidimensional and Metric Data Structures (The Morgan Kaufmann Series in Computer Graphics and Geometric Modeling)},
+	Year = {2005}}
 
 @article{BolligFlyerErlebacher2012,
 	Author = {Evan F. Bollig and Natasha Flyer and Gordon Erlebacher},
@@ -184,9 +317,16 @@
 	Year = {2004},
 	Bdsk-Url-1 = {http://books.google.com/books?id=XV4sOeECgF0C}}
 
-@misc{cite-key,
+@techreport{Gumerov2003,
+	Author = {N. A. Gumerov AND R. Duraiswami AND E. A. Borovikov},
 	Date-Added = {2012-08-12 04:51:56 -0400},
-	Date-Modified = {2012-08-12 04:51:56 -0400}}
+	Date-Modified = {2013-08-12 04:30:48 +0000},
+	Institution = {University of Maryland (College Park, Md.)},
+	Month = {Apr},
+	Number = {UMIACS-TR-2003-28},
+	Title = {Data Structures, Optimal Choice of Parameters, and Complexity Results for Generalized Multilevel Fast Multipole Methods in $d$ Dimensions},
+	Type = {Technical Report},
+	Year = {2003}}
 
 @misc{GPUandExascale2011,
 	Author = {Sylvie Barak},

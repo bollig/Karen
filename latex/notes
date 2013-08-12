@@ -1,0 +1,16 @@
+- Need to explain: 
+	KDTree
+	RCM
+	ELL
+	CSR
+	COO
+	GPU hardware
+	OpenCL
+	Where does the GFLOP rate come from
+	MPI benchmarks where is the time spent?
+	PDEs
+	GMRES algorithm (high level; refer to other papers)
+	GPU SpMV vs CPU SpMV
+	CPU SpMV in UBLAS, MKL(?)
+
+	SpMV on GPU for increasing N (generate new regular grids now that KDTree works well) 
