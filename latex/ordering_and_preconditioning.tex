@@ -40,13 +40,16 @@ A na\"{i}ve approach to neighbor queries would be a brute-force search that chec
 For the most part, investigations in RBF communities that delve into efficient neighbor queries are limited to work on the Partition of Unity method for approximation (e.g., \cite{Wendland2002,WendlandBook}) and particle methods like the Fast Multipole Method (e.g., \cite{Ying2006, Gumerov2003}) or Smoothed Particle Hydrodynamics (e.g., \cite{Krog2010}); all methods which depend on ball queries. Examples of fast algorithms employed these fields include the fixed-grid method \cite{WendlandBook,Krog2010}, $k$-D Trees \cite{WendlandBook}, Range Trees \cite{Wendland2002,WendlandBook}, and also $2^d$-Trees (i.e., Quad- and Octrees) \cite{Gumerov2003, Ying2006}. Surprisingly, while these other communities continue the quest for fast neighbor queries, RBF collocation and RBF-FD communities have been slow on the uptake. For many years, the standard in the RBF communities has been to use $k$-D Trees (see e.g., \cite{Fasshauer2007, FlyerLehto11,FornbergLehto11}). 
 
 
-This chapter presents a novel algorithm to generate stencils for RBF-FD. It is based loosely on the fixed grid method from \cite{Krog2010}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. However, due to the fact that nodes are mapped into memory based on spatial hash it is often referred to here as the \emph{Hashing Algorithm}. The Hashing Algorithm loosens the requirements for $k$-nearest neighbors ($k$-NN) stencils to allow $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves.
+This chapter presents a novel algorithm to generate stencils for RBF-FD. It is based loosely on the fixed grid method from \cite{Krog2010}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. However, due to the use of spatial hashing to order nodes in memory it is referred to here as the \emph{Hash Algorithm}. 
 
-, and is demonstrated to perform up to 2x faster than a widely-used and efficient implementation of $k$-D Tree from \cite{TagliasacchiMFE}
+The Hash Algorithm loosens the requirements for $k$-nearest neighbors ($k$-NN) stencils to allow $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the Hash Algorithm is compared to an efficient implementation of $k$-D Tree (\cite{TagliasacchiMFE}). Benchmarks demonstrate that with the proper choice of parameters the Hash Algorithm is up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV on quasi-random nodes due to reordered nodes during the stencil queries. 
 
 
+\section{$k$-D Tree}
 
-\section{$k$-D Trees}
+Given a set of nodes in $d$-dimensional space, a $k$-D Tree partitions the data 
+kD Trees partition 
+
 
 $k$-D Trees can be constructed in $O(N \log N)$ time with each query resulting in a $O(\log N)$ cost \cite{WendlandBook}.
 
@@ -62,7 +65,6 @@ In addition to $k$-D Trees, the author of \cite{WendlandBook} recommends two oth
 
 
 
-\section{$k$-D Tree}
 \begin{itemize} 
 \item Tree build algorithm
 \item Query algorithm
@@ -89,8 +91,31 @@ Our benchmarks and testing focus on the more challenging problem of $k$-NN
 The algorithm introduced here is the same as the Fixed-Grid Method in \cite{WendlandBook}.     
 
 
+\begin{figure}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
+\caption{High level overview of Locality Sensitive Hashing algorithm. First we overlay a coarse regular grid on the bounding box of the domain. The cells of the coarse grid cells are reordered in memory according to a space filling curve. Then we query neighbors by starting search with \authnote{Illustrate the query process} cell containing stencil center and append neighboring cells until stencil size $n$ nodes are found. We take $n$ closest neighbors (brute force search) if more than $n$ are appended to the list of candidates. }
+\end{figure} 
+
+
+
+
+
+
+Hashing, shown in Figure~\ref{fig:hashing_example} overlays a regular grid. This is equivalent to an axis aligned bounding box AABB, with refinement. In other words, we form a quad-tree in 2D, an octree in 3D. The neighbor query starts with the cell in which $x_c$ resides. Since we use an axis aligned bounding box, this cell index is easily calculated given the coordinate and number of subdivisions in each dimension. Once the cell index is resolved, the stencil is populated by taking the $n$ nearest neighbors from within the current cell. If the cell does not contain sufficient number of nodes to fill the stencil, the search for neighbors expands to include the cells immediately adjoining the center cell, taking only the nearest nodes in the provided cells. The search continues to expand outward in a rasterized circle/sphere until $n$ is satisifed. This search is considered approximate because it can happen that a true nearest neighbor would lie in a cell that is is not included in the rasterized circle, and other nodes are substituted from the far reaches of the discretized grid.
+
+%TODO: cite lagrangian sph knn
+The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
+
+
+
 
 \subsection{$k$-NN vs $k$-ANN} 
+
+Start at the center cell and add the 8 cells immediately surrounding it. Add to this the 16 cells in the second halo for a total of 25 cells. 
+
+So while a $k$-NN stencil of size $n=8$ in Figure~\ref{fig:nearest_neighbor_example} would contain the black node in the right-most column of the grid. The $k$-ANN generated a stencil of size $n=8$ would opt for the black node to the top right because it is in the second halo and accepted as ``closer" because the stencil can be satisfied without querying the extra 24 cells on the outermost halo. 
+
 
 One of the easiest ways to reduce complexity of 
 
@@ -106,10 +131,31 @@ RBF-FD operates on general node distributions. Historically, stencils are unifor
 Alternative queries are possible: ball query and approximate nearest neighbor. The approximate is of particular interest because nodes closest to the stencil will always be selected, whereas the nodes further away have minimal influence so swapping out cant hurt. The justification in altering the selection is for reduced complexity in neighbor queries.  
 
 
+\begin{figure}
+\centering
+\includegraphics[width=8.5cm]{rbffd_methods_content/neighbors/neighbor_incorrect.png}
+\caption{A stencil generated with $k$-ANN satisfies the required stencil size, but is not guaranteed to choose the true nearest neighbors.}
+\label{fig:approximate_nearest_neighbors}
+\end{figure}
+
+
+
+
 \subsection{Integer Dilation and Node Reordering}
 
 
-
+\begin{figure}
+\centering
+\begin{subfigure}{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/bruteforce_N6400_n50-eps-converted-to.png}
+\caption{k-D Tree} 
+\end{subfigure} 
+\begin{subfigure}{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/lsh_N6400_n50-eps-converted-to.png}
+\caption{LSH}
+\end{subfigure}
+\caption{Example effects of node reordering within neighbor query algorithm for MD node set $N=6400$ with $n=50$. Matrix is $0.78\%$ full. k-D Tree maintains original ordering of the nodes and deceptively appears nearly dense. LSH algorithm reorders nodes according to raster ordering and reveals sparsity of the problem.  }
+\end{figure} 
 
 \cite{Samet2005} labels this type of algorithm as a \emph{fixed grid bucket algorithm} with the twist that it also has \emph{one dimensional ordering}
 \begin{itemize} 
@@ -239,48 +285,11 @@ We use implementation provided by Andrea Tagliasacchi \cite{tagliasacchi} as a M
 
 We started with a CPU implementation to test appropriateness. 
 
-\authnote{Compare performance of stencil generation in C++}
-
-\begin{figure}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
-\caption{High level overview of Locality Sensitive Hashing algorithm. First we overlay a coarse regular grid on the bounding box of the domain. The cells of the coarse grid cells are reordered in memory according to a space filling curve. Then we query neighbors by starting search with \authnote{Illustrate the query process} cell containing stencil center and append neighboring cells until stencil size $n$ nodes are found. We take $n$ closest neighbors (brute force search) if more than $n$ are appended to the list of candidates. }
-\end{figure} 
-
-\begin{figure}
-\centering
-\begin{subfigure}{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/bruteforce_N6400_n50-eps-converted-to.png}
-\caption{k-D Tree} 
-\end{subfigure} 
-\begin{subfigure}{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/lsh_N6400_n50-eps-converted-to.png}
-\caption{LSH}
-\end{subfigure}
-\caption{Example effects of node reordering within neighbor query algorithm for MD node set $N=6400$ with $n=50$. Matrix is $0.78\%$ full. k-D Tree maintains original ordering of the nodes and deceptively appears nearly dense. LSH algorithm reorders nodes according to raster ordering and reveals sparsity of the problem.  }
-\end{figure} 
 
 
 
 Approximate nearest neighbors will be nearly balanced. 
 We observe that RBF-FD functions as well on stencils of true nearest neighbors as it does on approximate nearest neighbors.
-
-Consider Figure~\ref{fig:ann_stencil} in which an Approximate Nearest Neighbor stencil is constructed. For this stencil, all but one of the nearest neighboring nodes are chosen. 
-
-\begin{figure}
-\centering
-\includegraphics[width=0.6\textwidth]{rbffd_methods_content/neighbors/neighbor_incorrect.png}
-\caption{Example of an Approximate Nearest Neighbor (ANN) stencil, with all but one of the true nearest neighbors included in the stencil. }
-\label{fig:ann_stencil}
-\end{figure}
-
-
-
-Hashing, shown in Figure~\ref{fig:hashing_example} overlays a regular grid. This is equivalent to an axis aligned bounding box AABB, with refinement. In other words, we form a quad-tree in 2D, an octree in 3D. The neighbor query starts with the cell in which $x_c$ resides. Since we use an axis aligned bounding box, this cell index is easily calculated given the coordinate and number of subdivisions in each dimension. Once the cell index is resolved, the stencil is populated by taking the $n$ nearest neighbors from within the current cell. If the cell does not contain sufficient number of nodes to fill the stencil, the search for neighbors expands to include the cells immediately adjoining the center cell, taking only the nearest nodes in the provided cells. The search continues to expand outward in a rasterized circle/sphere until $n$ is satisifed. This search is considered approximate because it can happen that a true nearest neighbor would lie in a cell that is is not included in the rasterized circle, and other nodes are substituted from the far reaches of the discretized grid.
-
-%TODO: cite lagrangian sph knn
-The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
-
 
 To demonstrate the savings in choice of stencil generation method, we provide Figure~\ref{fig:sten_methods_compare}. 
  
@@ -301,7 +310,7 @@ A prototype implementation of this method allowed for a variety of space filling
 \begin{figure}
 \centering
 \includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid-eps-converted-to.pdf}
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{REGENERATE FIGURES WITH RANDOM/HALTON NODES}}
 \label{fig:orderings}
 \end{figure}
 
