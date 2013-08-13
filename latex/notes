@@ -14,3 +14,15 @@
 	CPU SpMV in UBLAS, MKL(?)
 
 	SpMV on GPU for increasing N (generate new regular grids now that KDTree works well) 
+
+- Need benchmarks: 
+
+    How does stencil query scale with N
+    How does stencil query impact SpMV
+    How does stencil ordering impact SpMV
+
+
+    How does SpMV strongly scale as n varies and N is 4096000
+        -> tells us how stencil size impacts overlap and how MPI time grows
+    How does SpMV weakly scale as N varies for multiple n? 
+        -> Tells us how efficient the 
