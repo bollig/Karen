@@ -1,3 +1,6 @@
+.DS_Store
+.texpadtmp
+*.swp
 fsu_2012/
 karen_references/
 keeneland_benchmarks/
