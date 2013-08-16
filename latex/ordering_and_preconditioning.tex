@@ -47,11 +47,33 @@ The Hash Algorithm loosens the requirements for $k$-nearest neighbors ($k$-NN) s
 
 \section{$k$-D Tree}
 
+A $k$-D Tree is considered a special case of binary tree in $k$-dimensions. If the domain consists of $k$-dimensional points, then the $k$-D Tree partitions the nodes into a binary tree of 
+
+The splitting dimension, the splitting value and the 
+
+
 The $k$-D tree implementation compared in this work is the \emph{$kd$-Tree Matlab} library from Tagliasacchi \cite{TagliasacchiMFE,TagliasacchiGC}. Originally posted to the Matlab FileExchange and now maintained as a Google Code project. Until the addition of $KNNsearcher$ in Matlab 
 
 A $k$-D Tree partitions data in $k$-dimensions. 
 Given a set of nodes in $d$-dimensional space, a $k$-D Tree partitions the data 
 kD Trees partition 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{rbffd_methods_content/neighbors/kdTree_Start.png}
+\caption{An example $k$-D Tree in 2-Dimensions partitioning nodes with a cyclic splitting rule (i.e., splits occur first in $X$, then $Y$, then $X$, etc.). Splits occur at the median node in each dimension.}
+\label{fig:kdtree_example}
+\end{figure}
+
+A modification to the tree definition restricts the dimensionality to 3. 
+
+
+Tagliasacchi \cite{TagliasacchiGC} uses the standard split by median in each dimension, with alternating chosen by incrementing the dimension by one, modulo the number of dimensions (e.g., in 2D the order is $X, Y, X, Y, ...$). Wendland \cite{WendlandBook} suggests a number of more advanced median cuts such as 
+
+\begin{itemize} 
+\item cutting by the median with dimension determined by the maximum spread in each dimension, which allows dimensions to be repeated consecutively. 
+\item 
+\end{itemize}
 
 
 $k$-D Trees can be constructed in $O(N \log N)$ time with each query resulting in a $O(\log N)$ cost \cite{WendlandBook}.
