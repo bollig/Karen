@@ -54,10 +54,17 @@ A distinguishing feature for $k$-D Trees is the use of \emph{half-planes} for pa
 $k$-D Trees do not require that splitting planes partition the bounding volume evenly. Often, the half-planes split data into equal sized groups and result in unevenly partitioned volumes. The choice of dimension for the splitting plane, in conjunction with a variety of methods for choosing the splitting values allows for many flavors of $k$-D Trees (see e.g., \cite{Samet2005, Skiena2008} for comprehensive lists). \emph{Point $k$-D Trees}, \emph{$2^d$ Trees} (i.e., quad-/octrees), \emph{BSP-Trees}, and \emph{R-trees} are all members of the general $k$-D Tree class \cite{Skiena2008,Ying2006}. 
 
 
-This work considers \emph{Point $k$-D Trees}, which partition a set of nodes into equal sized groups and results in uneven cuts in the bounding volume. Point $k$-D Trees are distinguished by the assumption that all splitting values occur at nodes rather than allowing arbitrary cuts in the volume. 
+This work considers \emph{Point $k$-D Trees}, which partition a set of nodes into equal sized groups and results in uneven cuts in the bounding volume. Point $k$-D Trees are distinguished by the assumption that all splitting values occur at nodes rather than allowing arbitrary cuts in the volume. This assumption simplifies the structure of the corresponding binary tree such that each level of the tree corresponds to the node used as the splitting value.
 
 
-The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of seven nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension and then back to the $x$-dimension. This approach is referred to as \emph{cyclic splitting} \cite{Samet2005}. An alternative applied to RBFs in \cite{WendlandBook} chooses the splitting dimension based on the maximum spread in data for each sub-volume. Note that the maximum spread allows for consecutive cuts in a single dimension. $k$-D Tree most frequently partitions each dimension at the median value in the data. For Point $k$-D Tree this corresponds to sorting the points by coordinate value and selecting the median. 
+The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of eight nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension, then back to the $x$-dimension, and a final cut in $y$. This approach is referred to as \emph{cyclic splitting} as consecutive cuts are applied by cycling dimensions in a round-robin fashion \cite{Samet2005}. The first cut, shown in green, splits the nodes into two sets at node $A$. In the corresponding tree to the right, node $A$ is set as the root with all nodes having $x$-coordinates less than $A$ to the left, and all nodes having $x$-coordinates greater than or equal to $A$ to the right. The second level of the tree, in blue, is constructed by splitting the half-planes on either side of $A$ at nodes $B$ and $C$. The splits for each half-plane are independent and occur in the $y$-dimension. Similarly, the third and fourth levels (red and black) split the space based on $x$ and $y$ dimensions respectively.    
+
+The splitting value for each level of Figure~\ref{fig:kdtree_example} is chosen to be the coordinate of the median node in each half-plane. 
+
+An alternative applied to RBFs in \cite{WendlandBook} chooses the splitting dimension based on the maximum spread in data for each sub-volume. Note that the maximum spread allows for consecutive cuts in a single dimension. 
+ 
+
+$k$-D Tree most frequently partitions each dimension at the median value in the data. For Point $k$-D Tree this corresponds to sorting the points by coordinate value and selecting the median. 
 
 
 
@@ -101,7 +108,7 @@ kD Trees partition
 
 \begin{figure}
 \centering
-\includegraphics[width=0.7\textwidth]{rbffd_methods_content/neighbors/kdTree_Start.png}
+\includegraphics[width=0.8\textwidth]{rbffd_methods_content/neighbors/kdTree_Start.png}
 \caption{An example $k$-D Tree in 2-Dimensions. Nodes are partitioned with a cyclic dimension splitting rule (i.e., splits occur first in $X$, then $Y$, then $X$, etc.); all splits occur at the median node in each dimension.}
 \label{fig:kdtree_example}
 \end{figure}
