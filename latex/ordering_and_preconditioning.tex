@@ -13,7 +13,7 @@
 
 
 
-\chapter{A Novel Stencil Generation Algorithm for RBF-FD}
+\chapter{An Alternative Stencil Generation Algorithm for RBF-FD}
 \label{chap:stencils}
 
 Like all RBF methods, RBF-FD is designed to handle irregular node distributions, so the emphasis in literature focuses on how the method manages point clouds. While nothing prevents implementations of RBF-FD from utilizing existing meshes/lattices, most work in the field concentrates on simple geometries like the sphere \cite{FlyerWright07,FlyerLehto10,FlyerLehto11,FlyerWright09} and quadrilateral/prism \cite{FiNDTHESE} to better understand properties of the method and develop extensions. 
@@ -40,14 +40,55 @@ A na\"{i}ve approach to neighbor queries would be a brute-force search that chec
 For the most part, investigations in RBF communities that delve into efficient neighbor queries are limited methods which depend on ball queries, For example, the Partition of Unity method for approximation (e.g., \cite{Wendland2002,WendlandBook}) and particle methods like the Fast Multipole Method (e.g., \cite{Ying2006, Gumerov2003}) or Smoothed Particle Hydrodynamics (e.g., \cite{Krog2010}). Examples of fast algorithms employed in these fields include the fixed-grid method \cite{WendlandBook,Krog2010}, $k$-D Trees \cite{WendlandBook}, Range Trees \cite{Wendland2002,WendlandBook}, and $2^d$-Trees (i.e., Quad- and Octrees) \cite{Gumerov2003, Ying2006}. Surprisingly, while other communities continue the quest for fast neighbor queries, RBF collocation and RBF-FD communities have been slow on the uptake. For many years, the standard in the community has been to use $k$-D Trees (see e.g., \cite{Fasshauer2007, FlyerLehto11,FornbergLehto11}). 
 
 
-This chapter presents a novel algorithm to generate stencils for RBF-FD. It is based loosely on the fixed grid method from \cite{Krog2010}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. However, due to the use of spatial hashing to order nodes in memory it is referred to here as the \emph{Hash Algorithm}. 
+This chapter considers the use of an alternative algorithm to generate stencils for RBF-FD. It is based loosely on the fixed-grid method from \cite{Krog2010}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. However, due to the use of spatial hashing to order nodes in memory it is referred to here as the \emph{Hash Algorithm}. 
 
 The Hash Algorithm loosens the requirements for $k$-nearest neighbors ($k$-NN) stencils to allow $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the Hash Algorithm is compared to an efficient implementation of $k$-D Tree (\cite{TagliasacchiMFE}). Benchmarks demonstrate that with the proper choice of parameters the Hash Algorithm is up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV on quasi-random nodes due to the spatial reordering that occurs during stencil generation. 
 
 
 \section{$k$-D Tree}
 
-A $k$-D Tree is considered a special case of binary tree in $k$-dimensions. If the domain consists of $k$-dimensional points, then the $k$-D Tree partitions the nodes into a binary tree of 
+A $k$-D Tree is a spatial data structure that generally decomposes a space/volume into a small number of cells. All $k$-D Trees are binary and iteratively subdivide volumes and sub-volumes into two parts. The ``$k$" in $k$-D Tree refers to the dimensionality of the data/volume  partitioned. 
+
+A distinguishing feature for $k$-D Trees is the use of \emph{half-planes} for partitioning. Given a set of points bounded by a $k$-dimensional volume, a half-plane is defined as a $(k-1)$-dimensional line/plane/hyperplane that equally splits the data (or volume) in half. A $k$-D Tree iteratively applies half-plane splits until a number of small cells contain only one value. A binary tree is constructed by storing splitting information (i.e., the splitting dimension and splitting value) at each node of the tree. Branches then represent the two halves of the sub-volume, and leaves of the tree contain the data within cells. 
+
+$k$-D Trees do not require that splitting planes partition the bounding volume evenly. Often, the half-planes split data into equal sized groups and result in unevenly partitioned volumes. The choice of dimension for the splitting plane, in conjunction with a variety of methods for choosing the splitting values allows for many flavors of $k$-D Trees (see e.g., \cite{Samet2005, Skiena2008} for comprehensive lists). \emph{Point $k$-D Trees}, \emph{$2^d$ Trees} (i.e., quad-/octrees), \emph{BSP-Trees}, and \emph{R-trees} are all members of the general $k$-D Tree class \cite{Skiena2008,Ying2006}. 
+
+
+This work considers \emph{Point $k$-D Trees}, which partition a set of nodes into equal sized groups and results in uneven cuts in the bounding volume. Point $k$-D Trees are distinguished by the assumption that all splitting values occur at nodes rather than allowing arbitrary cuts in the volume. 
+
+
+The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of seven nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension and then back to the $x$-dimension. This approach is referred to as \emph{cyclic splitting} \cite{Samet2005}. An alternative applied to RBFs in \cite{WendlandBook} chooses the splitting dimension based on the maximum spread in data for each sub-volume. Note that the maximum spread allows for consecutive cuts in a single dimension. $k$-D Tree most frequently partitions each dimension at the median value in the data. For Point $k$-D Tree this corresponds to sorting the points by coordinate value and selecting the median. 
+
+
+
+This assumption allows simplification in the binary tree to have each node of the tree 
+
+
+
+
+Due to the assumption that all splits correspond to a node coordinate, the corresponding tree can be constructed as 
+
+
+Frequently, the terms \emph{$k$-D Tree} and \emph{Point $k$-D Tree} are used synonymously; a convention assumed here. 
+
+
+In this example, splitting planes occur at median nodes in each subset. 
+
+
+
+
+
+ For this reason, the term $k$-D Tree has come to refer to a general class of data structures. 
+$k$-D Tree  unique construction. 
+
+
+A half-plane is 
+
+, a $k$-D Tree  the domain consists of $k$-dimensional points, then the $k$-D Tree partitions the nodes into a binary tree with branches of the tree corresponding to cuts along a single dimension of the space. The basic assumption for $k$-D Tree is that nodes are 
+
+There is no unique way to construct a $k$-D Tree---in fact, \cite{Samet2005} presents more than a dozen different cases including \emph{Point $k$-D Trees}, \emph{PR $k$-D Trees}, \emph{BD Trees}, etc. This work considers only the \emph{Point $k$-D Tree}. 
+
+In a Point $k$-D Tree, hereafter referred to as $k$-D Tree, 
 
 The splitting dimension, the splitting value and the 
 
@@ -119,7 +160,7 @@ The algorithm introduced here is the same as the Fixed-Grid Method in \cite{Wend
 \begin{figure}
 \centering
 \includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
-\caption{High level overview of Locality Sensitive Hashing algorithm. First we overlay a coarse regular grid on the bounding box of the domain. The cells of the coarse grid cells are reordered in memory according to a space filling curve. Then we query neighbors by starting search with \authnote{Illustrate the query process} cell containing stencil center and append neighboring cells until stencil size $n$ nodes are found. We take $n$ closest neighbors (brute force search) if more than $n$ are appended to the list of candidates. }
+\caption{High level overview of the \emph{Fixed-Grid Bucket} (a.k.a. Hash) Algorithm. A coarse regular grid is overlaid on the domain. Nodes coordinates are hashed to containing cell indices and pushed onto a list for the appropriate cell. The cells are reordered in memory according to a space filling curve (i.e., Raster (IJK), Morton (Z), Graycode (U), etc.). Stencil queries start search with the cell containing the stencil center and expand to neighboring cells until at least $n$ candidate nodes are found. The candidate list is truncated to the $n$ closest neighbors. }
 \end{figure} 
 
 
