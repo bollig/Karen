@@ -26,3 +26,28 @@
         -> tells us how stencil size impacts overlap and how MPI time grows
     How does SpMV weakly scale as N varies for multiple n? 
         -> Tells us how efficient the 
+
+
+Ok so today I can finish one chapter on stencil generation. Tomorrow I can do the distributed. But I am still off by at least two chapters. Especially the GPU details. I need to get all this to Gordon by the end of the week but I am going to have interruptions in WI. It is not looking good. I really need to move faster. 
+
+So what I need to do is: 
+
+a) finish complexity of the KDTree stencil generation (k log N)
+b) Introduce the fixed grid method
+	- How are nodes hashed
+	- Complexity to query neighbors? Worst O(N). Typical: O(log N)
+c) Benchmarks
+	- Implementation used
+	- System tested
+	- Actual cost of methods
+d) Node orderings 
+	- How are cells ordered
+		- U, X, Z, 4z, IJK, RCM
+		- Include high-level algorithm for RCM
+	- Benchmark tables (impact of ordering)
+
+(probably close to 20 pages)
+
+
+
+	- 

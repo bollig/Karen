@@ -67,7 +67,9 @@ Frequently, the terms \emph{$k$-D Tree} and \emph{Point $k$-D Tree} are used syn
 \subsection{Todo: KDTree KNN complexity}
 $k$-D Trees are efficient for querying nearest neighbors given any sample node in space. Starting at the root of the tree, the $x$-coordinate of the sample node determines which half-plane the sample resides in. Similarly, the $y$-coordinate narrows the search in the second level half-planes. 
 \cite{Friedan1977}
-The process continues by traversing the $k$-D Tree until a leaf is found. At that point, the distance from the leaf node to the sample node is calculated, and traverses back up the branch to check  Comparing distances from the sample node to each of the nodes traversed in the tree provides the nearest neighbor. Due to the depth of traversal, the complexity of nearest neighbor searching is on average $O(\log{N})$ (i.e., the height of the tree)
+The process continues by traversing the $k$-D Tree until a leaf is found. At that point, the distance from the leaf node to the sample node is calculated, and traverses back up the branch to check 
+
+Comparing distances from the sample node to each of the nodes traversed in the tree provides the nearest neighbor. Due to the depth of traversal, the complexity of nearest neighbor searching is on average $O(\log{N})$ (i.e., the height of the tree)
 
 $k$-NN queries are evaluated against a $k$-D Tree with an average complexity of $O(k \log{N})$ and $O(kN)$ worst-case. 
 
@@ -77,26 +79,18 @@ $k$-NN queries are evaluated against a $k$-D Tree with an average complexity of 
 %TODO: complexity
 %\subsection{Complexity to build}
 
-In the benchmarks below, $k$-D Tree implementation by Tagliasacchi \cite{TagliasacchiGC,TagliasacchiMFE}. In it
+In the benchmarks below, a $k$-D Tree implementation by Tagliasacchi \cite{TagliasacchiGC,TagliasacchiMFE}. The implementation follows the construction process and 
 
-  
+it was a popular package offered on the MATLAB FileExchange and garnered attention due to its MEX compiled interface that allowed use as both a C++ and MATLAB library. 
 
+  Most of the RBF community leverages the $k$-D tree, due to its low computational complexity for querying neighbors and its wide availability as standalone software in the public domain (e.g., matlab central has a few implementations for download, and the MATLAB Statistics Toolbox includes an efficient k-D Tree). 
 
-
-
-\subsection{$k$-Nearest Neighbor Queries}
-
-Ball queries each query resulting in a $O(\log N)$ cost \cite{WendlandBook}.
-
-
-\subsection{Complexity to range query}
-Range queries on a $k$-D Tree are completed efficiently 
-
-Total complexity due to the fact that we only need to query stencils once, so the build and query times are joint. 
-
+The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
 
 
 \section{A Fixed-Grid Hashing Algorithm}
+
+While the $k$-D Tree functions well for queries, its downfall is a large cost in preprocessing to build the tree. For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
 
 
 
@@ -104,6 +98,22 @@ The algorithm introduced here is the same as the Fixed-Grid Method in \cite{Wend
 
 \subsection{ANN}
 Our benchmarks and testing focus on the more challenging problem of $k$-NN
+
+As part of the preprocessing stage for RBF-FD, the scattered point cloud must
+be analyzed to generate stencils. To generate a stencil, any collection of
+nodes can be selected. However, by choosing nodes close to the stencil center
+and well balanced around it, we stand to get the best possible approximations
+to derivatives. 
+
+Why? well, the approximations are based on differences. Similar to classic FD,
+draw a secant connecting two nodes of a stencil. The slope of the secant
+determines the gradient at either point or a point in between. In the limit as
+the points are moved closer to the same spot, the approximation to the
+derivative at that point becomes exact. 
+
+So ideally every RBF-FD stencil will operate on nearest neighbors. 
+
+
 
  can be described as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering} as classified by \cite{Samet2005}. 
 
@@ -211,25 +221,13 @@ Many algorithms exist to query the $k$-nearest neighbors (equivalently all nodes
 
 For the purpose of generating RBF-FD stencils the $k$D-Tree is built and all queries are made once. There is no reuse of the tree so the build and query times are combined into one. 
 
-TODO:
-\begin{itemize}
-\item Finish KDTree complexity
-\item Hashing neighbor query algorithm description
-\item Cite refs on multi-dim spatial data structures
-\item Complexity of algorithms
-\item impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on condition considered in future chapter. 
-\item what is best overlay resolution? based on time to generate. choose resolution as n/2, n/9? etc? 
-\item perform neighbor queries on raster order because its easiest to jump cells. then each cell can be reordered according to z,x,u, etc. for better memory locality. Matlab script to do this (can be ported to C)
-\end{itemize}
+impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on condition considered in future chapter. 
 
-With a grid present, stencils are generated by querying $n$ neighbors for each $N$ total nodes in the domain. While not required, one typically assumes a stencil of $n$ nodes must be the nearest neighbors to a stencil center. Afterall, as the distance between stencil nodes and the stencil center decreases, the accuracy of derivatives increases. 
+what is best overlay resolution? based on time to generate. choose resolution as n/2, n/9? etc? 
 
-Brute force searching for neighbors---computing the distance between every pair of nodes and then selecting the $n$ nearest---is discouraged due to its $O(N^2)$ complexity. Common practice in the RBF community is to construct $k$D-Trees to decrease the cost of queries (e.g., \cite{Fasshauer2007, FlyerLehto11, FornbergLehto11}). 
+perform neighbor queries on raster order because its easiest to jump cells. then each cell can be reordered according to z,x,u, etc. for better memory locality. Matlab script to do this (can be ported to C)
 
-\authnote{Incomplete here to end of section}
 \url{http://www.vincentgarcia.org/data/Garcia_2010_ICIP.pdf}
-
-Leveraging $k$D-Trees involves two costs: a) the initial tree construction, and b) $k$-nearest neighbor queries. 
 
 GPU version of Locality Sensitive Hashing could reduce complexity further \cite{Pan2011}
 
@@ -242,51 +240,11 @@ Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $
 Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
 
 
-%RBF methods are traditionally described as general and meshless in that they apply to unstructured clouds of points in arbitrary dimensions. However, although the term meshless implies a method capable of operating with no node connectivity, all numerical methods---meshless RBF methods included---connect nodes in the domain. For example, the ``meshless'' global RBF method connects every node in the domain to all other nodes. Compact support or local RBF methods like RBF-FD limit connections to nodes that lie within a predetermined radius.
-
-%The connections between nodes form a directed adjacency graph with edges that dictate the paths along which data/phenomena can travel. For example, a plus shaped stencil of five points with a center node and four neighboring nodes allows values to propagate north, south, east and west; not northeast, southeast, etc.
-
-
-%They are robust and function on scattered point clouds. RBF-FD in particular requires stencils to be generated from $n$ nearest neighbors to a stencil center. The cost of these neighbor queries can vary greatly depending on the choice of algorithm or data-structure used to make the query. 
-
-For example, in general brute force is inefficient 
-The author of \cite{Fasshauer2007} queries $n$ nearest neighbors for a compact-support RBF partition of unity example with a $k$-D tree. In \cite{FlyerLehto11,FornbergLehto11} a $k$-D Tree is leveraged for all neighbor queries for RBF-FD. 
-
 Our work in \cite{BolligFlyerErlebacher2012} leveraged an alternative to $k$-D tree, based loosely on space-filling curve orderings common in Lagrangian schemes like Smoothed Particle Hydrodynamics (e.g., \cite{IanThesis}, \cite{Kelager}). %TODO: I have used Locality Sensitive Hashing \cite{Indyk} in the past. According to Samet \cite{Samet "Multidimensional and Metric..."}, LSH uses a set of random hashes to assign indices for each node. Our case uses space-filling curve, so we use . 
 
-Rather than iterate through all $N$ nodes to find the true neighbors, or step through a k-D tree in something like $O(log N)$ that requires extra built-out, ANN allows us to use a set of nodes that satisfy
-
-
-\subsubsection{KDTree}
-Most of the RBF community leverages the $k$-D tree, due to its low computational complexity for querying neighbors and its wide availability as standalone software in the public domain (e.g., matlab central has a few implementations for download, and the MATLAB Statistics Toolbox includes an efficient k-D Tree). 
-
-The complexity of assembling he tree is
-
-The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
-
-While the $k$-D Tree functions well for queries, its downfall is a large cost in preprocessing to build the tree. For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
 
 
 
-As part of the preprocessing stage for RBF-FD, the scattered point cloud must
-be analyzed to generate stencils. To generate a stencil, any collection of
-nodes can be selected. However, by choosing nodes close to the stencil center
-and well balanced around it, we stand to get the best possible approximations
-to derivatives. 
-
-Why? well, the approximations are based on differences. Similar to classic FD,
-draw a secant connecting two nodes of a stencil. The slope of the secant
-determines the gradient at either point or a point in between. In the limit as
-the points are moved closer to the same spot, the approximation to the
-derivative at that point becomes exact. 
-
-So ideally every RBF-FD stencil will operate on nearest neighbors. One way to
-generate nearest neighbors is brute force $O(N^{2})$; very inefficient. 
-
-Alternatives exist including k-D Tree
-
-
-We use implementation provided by Andrea Tagliasacchi \cite{tagliasacchi} as a MEX compiled set of routines for Matlab. These same routines are then linked into C/C++. 
 
 \subsection{Hashing}
 
