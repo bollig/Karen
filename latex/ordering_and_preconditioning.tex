@@ -37,7 +37,7 @@ The $k$-NN and ball query problems are similar, but the former is harder to solv
 A na\"{i}ve approach to neighbor queries would be a brute-force search that checks distances from all nodes to every other node. Obviously the cost of such a method is high: $O(N^2)$. Multi-dimensional data structures can limit the scope of searching and reduce the cost of queries as low as $O(N)$. %TODO: correct lower bound? 
 
 
-For the most part, investigations in RBF communities that delve into efficient neighbor queries are limited methods which depend on ball queries, For example, the Partition of Unity method for approximation (e.g., \cite{Wendland2002,WendlandBook}) and particle methods like the Fast Multipole Method (e.g., \cite{Ying2006, Gumerov2003}) or Smoothed Particle Hydrodynamics (e.g., \cite{Krog2010}). Examples of fast algorithms employed in these fields include the fixed-grid method \cite{WendlandBook,Krog2010}, $k$-D Trees \cite{WendlandBook}, Range Trees \cite{Wendland2002,WendlandBook}, and $2^d$-Trees (i.e., Quad- and Octrees) \cite{Gumerov2003, Ying2006}. Surprisingly, while other communities continue the quest for fast neighbor queries, RBF collocation and RBF-FD communities have been slow on the uptake. For many years, the standard in the community has been to use $k$-D Trees (see e.g., \cite{Fasshauer2007, FlyerLehto11,FornbergLehto11}). 
+For the most part, investigations in RBF communities that delve into efficient neighbor queries are limited methods that depend on ball queries. For example, the Partition of Unity method for approximation (e.g., \cite{Wendland2002,WendlandBook}), and particle methods like the Fast Multipole Method (e.g., \cite{Ying2006, Gumerov2003}) or Smoothed Particle Hydrodynamics (e.g., \cite{Krog2010}). Examples of fast algorithms employed in these fields include the fixed-grid method \cite{WendlandBook,Krog2010}, $k$-D Trees \cite{WendlandBook}, Range Trees \cite{Wendland2002,WendlandBook}, and $2^d$-Trees (i.e., Quad- and Octrees) \cite{Gumerov2003, Ying2006}. Surprisingly, while other communities continue the quest for fast neighbor queries, RBF collocation and RBF-FD communities have been slow on the uptake. For many years, the standard in the community has been to use $k$-D Trees (see e.g., \cite{Fasshauer2007, FlyerLehto11,FornbergLehto11}). 
 
 
 This chapter considers the use of an alternative algorithm to generate stencils for RBF-FD. It is based loosely on the fixed-grid method from \cite{Krog2010}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. However, due to the use of spatial hashing to order nodes in memory it is referred to here as the \emph{Hash Algorithm}. 
@@ -47,121 +47,76 @@ The Hash Algorithm loosens the requirements for $k$-nearest neighbors ($k$-NN) s
 
 \section{$k$-D Tree}
 
-A $k$-D Tree is a spatial data structure that generally decomposes a space/volume into a small number of cells. All $k$-D Trees are binary and iteratively subdivide volumes and sub-volumes into two parts. The ``$k$" in $k$-D Tree refers to the dimensionality of the data/volume  partitioned. 
-
-A distinguishing feature for $k$-D Trees is the use of \emph{half-planes} for partitioning. Given a set of points bounded by a $k$-dimensional volume, a half-plane is defined as a $(k-1)$-dimensional line/plane/hyperplane that equally splits the data (or volume) in half. A $k$-D Tree iteratively applies half-plane splits until a number of small cells contain only one value. A binary tree is constructed by storing splitting information (i.e., the splitting dimension and splitting value) at each node of the tree. Branches then represent the two halves of the sub-volume, and leaves of the tree contain the data within cells. 
-
-$k$-D Trees do not require that splitting planes partition the bounding volume evenly. Often, the half-planes split data into equal sized groups and result in unevenly partitioned volumes. The choice of dimension for the splitting plane, in conjunction with a variety of methods for choosing the splitting values allows for many flavors of $k$-D Trees (see e.g., \cite{Samet2005, Skiena2008} for comprehensive lists). \emph{Point $k$-D Trees}, \emph{$2^d$ Trees} (i.e., quad-/octrees), \emph{BSP-Trees}, and \emph{R-trees} are all members of the general $k$-D Tree class \cite{Skiena2008,Ying2006}. 
+A $k$-D Tree is a spatial data structure that generally decomposes a space/volume into a small number of cells. All $k$-D Trees are binary and iteratively subdivide volumes and sub-volumes into two parts. The ``$k$" in $k$-D Tree refers to the dimensionality of the data/volume  partitioned---that is $k \equiv d$. 
 
 
-This work considers \emph{Point $k$-D Trees}, which partition a set of nodes into equal sized groups and results in uneven cuts in the bounding volume. Point $k$-D Trees are distinguished by the assumption that all splitting values occur at nodes rather than allowing arbitrary cuts in the volume. This assumption simplifies the structure of the corresponding binary tree such that each level of the tree corresponds to the node used as the splitting value.
+Given a set of points bounded by a $d$-dimensional volume, a $k$-D Tree subdivides the volume through a hierarchy of $(d-1)$-dimensional axis parallel lines/planes/hyperplanes referred to as \emph{splitting planes}. At each level of the hierarchy the splitting planes partition the volume into two partitions or \emph{half-planes} \cite{Skiena2008}. Consecutive splits intercept one another at a \emph{splitting value}. $k$-D Trees do not require that half-planes equally subdivide a volume; more often it is the data contained within the volume that is equally partitioned. The choice of dimension for the splitting plane, in conjunction with a variety of methods for choosing the splitting values allows for many flavors of $k$-D Trees (see e.g., \cite{Samet2005, Skiena2008, Berg2008} for comprehensive lists). \emph{Point $k$-D Trees}, \emph{$2^d$ Trees} (i.e., quad-/octrees), \emph{BSP-Trees}, and \emph{R-trees} are all members of the general $k$-D Tree class \cite{Skiena2008,Ying2006}.
 
-
-The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of eight nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension, then back to the $x$-dimension, and a final cut in $y$. This approach is referred to as \emph{cyclic splitting} as consecutive cuts are applied by cycling dimensions in a round-robin fashion \cite{Samet2005}. The first cut, shown in green, splits the nodes into two sets at node $A$. In the corresponding tree to the right, node $A$ is set as the root with all nodes having $x$-coordinates less than $A$ to the left, and all nodes having $x$-coordinates greater than or equal to $A$ to the right. The second level of the tree, in blue, is constructed by splitting the half-planes on either side of $A$ at nodes $B$ and $C$. The splits for each half-plane are independent and occur in the $y$-dimension. Similarly, the third and fourth levels (red and black) split the space based on $x$ and $y$ dimensions respectively.    
-
-The splitting value for each level of Figure~\ref{fig:kdtree_example} is chosen to be the coordinate of the median node in each half-plane. 
-
-An alternative applied to RBFs in \cite{WendlandBook} chooses the splitting dimension based on the maximum spread in data for each sub-volume. Note that the maximum spread allows for consecutive cuts in a single dimension. 
- 
-
-$k$-D Tree most frequently partitions each dimension at the median value in the data. For Point $k$-D Tree this corresponds to sorting the points by coordinate value and selecting the median. 
-
-
-
-This assumption allows simplification in the binary tree to have each node of the tree 
-
-
-
-
-Due to the assumption that all splits correspond to a node coordinate, the corresponding tree can be constructed as 
-
-
-Frequently, the terms \emph{$k$-D Tree} and \emph{Point $k$-D Tree} are used synonymously; a convention assumed here. 
-
-
-In this example, splitting planes occur at median nodes in each subset. 
-
-
-
-
-
- For this reason, the term $k$-D Tree has come to refer to a general class of data structures. 
-$k$-D Tree  unique construction. 
-
-
-A half-plane is 
-
-, a $k$-D Tree  the domain consists of $k$-dimensional points, then the $k$-D Tree partitions the nodes into a binary tree with branches of the tree corresponding to cuts along a single dimension of the space. The basic assumption for $k$-D Tree is that nodes are 
-
-There is no unique way to construct a $k$-D Tree---in fact, \cite{Samet2005} presents more than a dozen different cases including \emph{Point $k$-D Trees}, \emph{PR $k$-D Trees}, \emph{BD Trees}, etc. This work considers only the \emph{Point $k$-D Tree}. 
-
-In a Point $k$-D Tree, hereafter referred to as $k$-D Tree, 
-
-The splitting dimension, the splitting value and the 
-
-
-The $k$-D tree implementation compared in this work is the \emph{$kd$-Tree Matlab} library from Tagliasacchi \cite{TagliasacchiMFE,TagliasacchiGC}. Originally posted to the Matlab FileExchange and now maintained as a Google Code project. Until the addition of $KNNsearcher$ in Matlab 
-
-A $k$-D Tree partitions data in $k$-dimensions. 
-Given a set of nodes in $d$-dimensional space, a $k$-D Tree partitions the data 
-kD Trees partition 
-
+This work considers \emph{Point $k$-D Trees} \cite{Samet2005}, which partition a set of discrete points/nodes. Point $k$-D Trees assume that splitting planes intercept nodes rather than occur arbitrarily along the half-plane. The splitting value at each level of the tree is set to the \emph{median} coordinate of the points in the half-plane, which ensures the tree is well balanced on initial construction. All nodes with coordinate less than or equal to the splitting value are contained by the left half-plane, and all nodes with coordinate greater than the splitting value are contained by the right. Half-planes containing only one element correspond to leaves of the tree. The median coordinate of a half-plane is found by sorting the $n$ node coordinates contained by the partition and selecting the $\lceil \frac{n}{2} \rceil$-th element \cite{Berg2008}. 
 \begin{figure}
 \centering
-\includegraphics[width=0.8\textwidth]{rbffd_methods_content/neighbors/kdTree_Start.png}
-\caption{An example $k$-D Tree in 2-Dimensions. Nodes are partitioned with a cyclic dimension splitting rule (i.e., splits occur first in $X$, then $Y$, then $X$, etc.); all splits occur at the median node in each dimension.}
+\includegraphics[width=0.8\textwidth]{rbffd_methods_content/neighbors/kdTree_example.png}
+\caption{An example $k$-D Tree in 2-Dimensions. Nodes are partitioned with a cyclic dimension splitting rule (i.e., splits occur first in $X$, then $Y$, then $X$, etc.); all splits occur at the median node in each dimension. }
 \label{fig:kdtree_example}
 \end{figure}
 
-A modification to the tree definition restricts the dimensionality to 3. 
+The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of eight nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension, then back to the $x$-dimension. This approach is referred to as \emph{cyclic splitting}, as consecutive cuts are applied by iterating dimensions in a round-robin fashion \cite{Samet2005}. The first cut, $L1$, shown in green, splits the nodes into two sets on either side of $A$. The corresponding tree in the center of Figure~\ref{fig:kdtree_example} shows $L1$ as the tree root with all nodes having $x$-coordinates less than or equal to $A$ to the left, and all nodes having $x$-coordinates greater than $A$ to the right. The second level of the tree, $L2$ and $L3$ (in blue), splits the half-planes on either side of $A$ at nodes $B$ and $C$. The axis parallel splits for each half-plane intercept $L1$ independently to partition half-planes along the $y$-dimension; once again, nodes with coordinates less than or equal to the splitting value (i.e., below the cut) branch left in the tree, and $y$-coordinates greater than the value (i.e., above) branch right. The third level (red) returns to splitting half-planes in the $x$-dimension. Nodes $D$ and $H$ are not intersected by a splitting plane; their half-planes contain only one node so they immediately become leaves of the tree. This process to build a Point $k$-D Tree has a complexity of $O(N \log N)$ with $O(N)$ storage required \cite{Berg2008,Samet2005}. 
+
+Frequently, the terms \emph{$k$-D Tree} and \emph{Point $k$-D Tree} are used synonymously by the RBF community (see e.g., \cite{Fasshauer2007,FlyerLehto11,FornbergLehto11}); the same convention adopted here. 
+
+\subsection{Todo: KDTree KNN complexity}
+$k$-D Trees are efficient for querying nearest neighbors given any sample node in space. Starting at the root of the tree, the $x$-coordinate of the sample node determines which half-plane the sample resides in. Similarly, the $y$-coordinate narrows the search in the second level half-planes. 
+\cite{Friedan1977}
+The process continues by traversing the $k$-D Tree until a leaf is found. At that point, the distance from the leaf node to the sample node is calculated, and traverses back up the branch to check  Comparing distances from the sample node to each of the nodes traversed in the tree provides the nearest neighbor. Due to the depth of traversal, the complexity of nearest neighbor searching is on average $O(\log{N})$ (i.e., the height of the tree)
+
+$k$-NN queries are evaluated against a $k$-D Tree with an average complexity of $O(k \log{N})$ and $O(kN)$ worst-case. 
 
 
-Tagliasacchi \cite{TagliasacchiGC} uses the standard split by median in each dimension, with alternating chosen by incrementing the dimension by one, modulo the number of dimensions (e.g., in 2D the order is $X, Y, X, Y, ...$). Wendland \cite{WendlandBook} suggests a number of more advanced median cuts such as 
+%In \cite{WendlandBook} the author leverages another form of $k$-D Tree, which selects the splitting dimension based on the maximum spread in data for each half-plane. %Note that the maximum spread would allow for consecutive cuts in a single dimension, but it would also perpetuate the need to store the splitting dimension at each node of the tree. 
 
-\begin{itemize} 
-\item cutting by the median with dimension determined by the maximum spread in each dimension, which allows dimensions to be repeated consecutively. 
-\item 
-\end{itemize}
+%TODO: complexity
+%\subsection{Complexity to build}
 
+In the benchmarks below, $k$-D Tree implementation by Tagliasacchi \cite{TagliasacchiGC,TagliasacchiMFE}. In it
 
-$k$-D Trees can be constructed in $O(N \log N)$ time with each query resulting in a $O(\log N)$ cost \cite{WendlandBook}.
-
-
- when Wendland mentioned $k$-D tree as an option for ball queries in compact RBF partition of unity approximations---ironically the author opted to test two other data structures instead. Wendland later returned in \cite{WendlandBook} to fully describe $k$-D Tree for . 
-
-
-In addition to $k$-D Trees, the author of \cite{WendlandBook} recommends two other data-structures that would be appropriate for RBF methods: a fixed-grid method, and $bd$-trees. While justification for both alternatives is sound, to our knowledge neither have been applied to RBF-FD or other RBF PDE methods. Until now that is. This chapter introduces a novel neighbor query for the $k$-NN problem in RBF-FD based on the fixed-grid method. 
-
-\cite{TagliasacchiMFE}. 
-\cite{MatlabKDTreeSearcher}
+  
 
 
 
 
-\begin{itemize} 
-\item Tree build algorithm
-\item Query algorithm
-\item Total complexity due to the fact that we only need to query stencils once, so the build and query times are joint. 
-\end{itemize}
-\cite{Fasshauer2007}
+\subsection{$k$-Nearest Neighbor Queries}
 
-$k$-D Trees can be extended to use the concept of buckets \cite{Friedman1977}, although these have not been applied in the RBF community. 
+Ball queries each query resulting in a $O(\log N)$ cost \cite{WendlandBook}.
+
+
+\subsection{Complexity to range query}
+Range queries on a $k$-D Tree are completed efficiently 
+
+Total complexity due to the fact that we only need to query stencils once, so the build and query times are joint. 
 
 
 
 \section{A Fixed-Grid Hashing Algorithm}
 
-The implementation runs entirely on the CPU (\cite{Krog2010} runs on the GPU). 
-
-
- can be described as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering} as classified by \cite{Samet2005}. 
-
-Our method can handle both ball queries and $k$-NN. For the former simply include all cells that lie within the radius. It will continue to be approximate due to rasterization effects, but the radius could be enforced by sorting nodes by distance and truncating by the actual radius. The $k$-NN is a more challenging problem, because it requires additional effort in the query step to expand the search range until the desired $n$ neighbors have been found. 
-
-Our benchmarks and testing focus on the more challenging problem of $k$-NN
 
 
 The algorithm introduced here is the same as the Fixed-Grid Method in \cite{WendlandBook}.     
+
+\subsection{ANN}
+Our benchmarks and testing focus on the more challenging problem of $k$-NN
+
+ can be described as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering} as classified by \cite{Samet2005}. 
+
+The implementation runs entirely on the CPU (\cite{Krog2010} runs on the GPU). 
+
+The $k$-D tree implementation compared in this work is the \emph{$kd$-Tree Matlab} library from Tagliasacchi \cite{TagliasacchiMFE,TagliasacchiGC}. Originally posted to the Matlab FileExchange and now maintained as a Google Code project. Until the addition of $KNNsearcher$ in Matlab 
+
+Tagliasacchi \cite{TagliasacchiGC} uses the standard split by median in each dimension, with alternating chosen by incrementing the dimension by one, modulo the number of dimensions (e.g., in 2D the order is $X, Y, X, Y, ...$). Wendland \cite{WendlandBook} suggests a number of more advanced median cuts such as 
+
+\cite{TagliasacchiMFE}. 
+\cite{MatlabKDTreeSearcher}
+
+Hashing, shown in Figure~\ref{fig:hashing_example} overlays a regular grid. This is equivalent to an axis aligned bounding box AABB, with refinement. In other words, we form a quad-tree in 2D, an octree in 3D. The neighbor query starts with the cell in which $x_c$ resides. Since we use an axis aligned bounding box, this cell index is easily calculated given the coordinate and number of subdivisions in each dimension. Once the cell index is resolved, the stencil is populated by taking the $n$ nearest neighbors from within the current cell. If the cell does not contain sufficient number of nodes to fill the stencil, the search for neighbors expands to include the cells immediately adjoining the center cell, taking only the nearest nodes in the provided cells. The search continues to expand outward in a rasterized circle/sphere until $n$ is satisifed. This search is considered approximate because it can happen that a true nearest neighbor would lie in a cell that is is not included in the rasterized circle, and other nodes are substituted from the far reaches of the discretized grid.
 
 
 \begin{figure}
@@ -169,13 +124,6 @@ The algorithm introduced here is the same as the Fixed-Grid Method in \cite{Wend
 \includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
 \caption{High level overview of the \emph{Fixed-Grid Bucket} (a.k.a. Hash) Algorithm. A coarse regular grid is overlaid on the domain. Nodes coordinates are hashed to containing cell indices and pushed onto a list for the appropriate cell. The cells are reordered in memory according to a space filling curve (i.e., Raster (IJK), Morton (Z), Graycode (U), etc.). Stencil queries start search with the cell containing the stencil center and expand to neighboring cells until at least $n$ candidate nodes are found. The candidate list is truncated to the $n$ closest neighbors. }
 \end{figure} 
-
-
-
-
-
-
-Hashing, shown in Figure~\ref{fig:hashing_example} overlays a regular grid. This is equivalent to an axis aligned bounding box AABB, with refinement. In other words, we form a quad-tree in 2D, an octree in 3D. The neighbor query starts with the cell in which $x_c$ resides. Since we use an axis aligned bounding box, this cell index is easily calculated given the coordinate and number of subdivisions in each dimension. Once the cell index is resolved, the stencil is populated by taking the $n$ nearest neighbors from within the current cell. If the cell does not contain sufficient number of nodes to fill the stencil, the search for neighbors expands to include the cells immediately adjoining the center cell, taking only the nearest nodes in the provided cells. The search continues to expand outward in a rasterized circle/sphere until $n$ is satisifed. This search is considered approximate because it can happen that a true nearest neighbor would lie in a cell that is is not included in the rasterized circle, and other nodes are substituted from the far reaches of the discretized grid.
 
 %TODO: cite lagrangian sph knn
 The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
@@ -188,9 +136,6 @@ The complexity of the method is still higher than the more efficient implementat
 Start at the center cell and add the 8 cells immediately surrounding it. Add to this the 16 cells in the second halo for a total of 25 cells. 
 
 So while a $k$-NN stencil of size $n=8$ in Figure~\ref{fig:nearest_neighbor_example} would contain the black node in the right-most column of the grid. The $k$-ANN generated a stencil of size $n=8$ would opt for the black node to the top right because it is in the second halo and accepted as ``closer" because the stencil can be satisfied without querying the extra 24 cells on the outermost halo. 
-
-
-One of the easiest ways to reduce complexity of 
 
 
 Therefore, it is not essential that stencils contain only nearest neighbors. Instead, one can acquire the \emph{approximate nearest neighbors}. Figure~\ref{fig:ann_example} demonstrates a case where a does not contain all nearest neighbors. As illustrated in the Figure, the ANN stencil and true nearest neighbor stencil differ by one node. THis is not dire
@@ -263,15 +208,12 @@ At the start of this dissertation, the most widely used $k$-D Tree implementatio
 
 Many algorithms exist to query the $k$-nearest neighbors (equivalently all nodes in the minimum/smallest enclosing circle). Some algorithms overlay a grid similar to Locality Sensitive Hashing and query such as... \cite{HarPeledMazumdar2003}.
 
-Throughout the RBF community, one commonly finds $k$D-Trees in use for nearest neighbor queries. The data structure is recommended for its $O(N)$ complexity in querying nearby neighbors. 
-
-
 
 For the purpose of generating RBF-FD stencils the $k$D-Tree is built and all queries are made once. There is no reuse of the tree so the build and query times are combined into one. 
 
 TODO:
 \begin{itemize}
-\item Finish KDTree description
+\item Finish KDTree complexity
 \item Hashing neighbor query algorithm description
 \item Cite refs on multi-dim spatial data structures
 \item Complexity of algorithms
@@ -325,9 +267,6 @@ The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the s
 While the $k$-D Tree functions well for queries, its downfall is a large cost in preprocessing to build the tree. For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
 
 
-\subsubsection{Hashing}
-
-\section{Neighbor Queries} 
 
 As part of the preprocessing stage for RBF-FD, the scattered point cloud must
 be analyzed to generate stencils. To generate a stencil, any collection of
@@ -346,21 +285,16 @@ generate nearest neighbors is brute force $O(N^{2})$; very inefficient.
 
 Alternatives exist including k-D Tree
 
-\subsection{k-D Tree}
-Build complexity, seek times. Internal ordering 
 
 We use implementation provided by Andrea Tagliasacchi \cite{tagliasacchi} as a MEX compiled set of routines for Matlab. These same routines are then linked into C/C++. 
 
-\subsection{Locality Sensitive Hashing}
+\subsection{Hashing}
 
 \cite{Connor2009} provide a fast parallel 
 
 \cite{Henke2012} is working on parallel generation. \cite{IanJohnsonThesis} has OpenCL neighbor queries
 
 We started with a CPU implementation to test appropriateness. 
-
-
-
 
 Approximate nearest neighbors will be nearly balanced. 
 We observe that RBF-FD functions as well on stencils of true nearest neighbors as it does on approximate nearest neighbors.
@@ -374,9 +308,6 @@ has is to To quantify the sparsity of a Differentiation Matrix we consider the r
 Querying neighbors requires searching at least the immediate cell one layer of neighbors. by including one extra layer we ensure that small stencils near the border of the immediate cell can pick up neighbors in adjacent cells.
 
 
-%TODO: sparsity
-%TODO: Node ordering
-%TODO: show blocks for boundary conditions (annulus)
 
 A prototype implementation of this method allowed for a variety of space filling curves to reorder the cells. The curves are created through integer dilation \cite{IntegerD} 
 
@@ -400,13 +331,6 @@ The KDTree implementation used in this work is from
 Original data showed our algorithm as wildly successful against a version  
 
 The Cuthill McKee algorithms can be equated to a breadth-first search. The algorithm queues nodes in order of degree at each level of the search and traverses the lowest degree priority. The Reverse variant of Cuthill-McKee inverts the node order so that the lowest degree and top level node are at the end of the matrix rather than the beginning. Aside from ordering, the Reverse and Standard Cuthill McKee algorithms are identical processes. RCM is the more popular of the variants though, due to storage savings and reduced fill-in for some decompositions \cite{LiuSherman1976}.	. 
-%TODO: get the compareKDTreeLSH.m output; this was for my C++ code and compared queries on 
-%\begin{figure}
-%\centering
-%\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/
-%\end{figure}
-
-
 
 %TODO: \cite{Indyk "Algorithms for Nearest Neighbor Search"} for reference on quad vs kd vs lsh
 %TODO: \cite{ChenChang "Neighbor-Finding Based on Space-Filling Curves"} 
