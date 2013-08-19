@@ -83,9 +83,6 @@ Frequently, the terms \emph{$k$-D Tree} and \emph{Point $k$-D Tree} are used syn
 
 Generating an RBF-FD stencil with a $k$-D Tree can be efficiently accomplished in $O(n \log{N})$ time---where $n$ is the stencil size---following an approach introduced in \cite{Friedman1977}, and presented in Algorithm~\ref{alg:kdtree_knn}. The $k$-NN search starts a depth-first recursive search of the $k$-D Tree to find the nearest neighbor to a query point, $X_q$. Traversal of the the tree occurs by following branches left or right based on comparison of $X_q$ coordinates to the splitting value stored at each node of the tree. The search traverses the height of the tree in $O(\log N)$ steps to find the leaf that stores the nearest neighbor to $X_q$. The neighbor point plus its distance from $X_q$ are inserted into a global priority queue, $pq$. Points in the priority queue are sorted in descending order according to distance. 
 
-After finding the nearest neighbor the algorithm returns to the previous node in the tree and onto the opposing half-plane (i.e., down the far branch) to look for other leaves. So long as the size of $pq$ is at less than capacity ($n$) the search automatically adds points to the queue. If $pq$ reaches capacity the algorithm starts to pop off excess points with the understanding that the action removes those farthest away. 
-
-In order to prune branches from the search and avoid touching every node like a brute-force algorithm, Algorithm~\ref{alg:kdtree_knn} makes use of a routine called ``BoundsOverlapBall". ``BoundsOverlapBall" checks if any boundaries of the current level half-plane intersect/overlap with a closed ball centered at $X_q$. The ball is given a radius equal to the maximum distance in $pq$. Then, if the ball and a boundary intersect, the search will continue onto the half-plane on the opposite side of the boundary, since its possible for nearer nodes to occur in the overlap space. If the ball and boundary do not intersect, then the opposing half-plane and its related subtree are pruned from the search. Additional details on the implementation of ``BoundsOverlapBall" can be found in \cite{Friedman1977,TagliasacchiGC}. The authors of \cite{Friedman1977} find Algorithm~\ref{alg:kdtree_knn} capable of querying the $n$-nearest neighbors with a complexity proportional to $O(\log{N})$. 
 
 \begin{algorithm} 
 \caption{KNNSearchKDTree($X_q$, $n$, $root$, $depth$)}         \label{alg:kdtree_knn}  
@@ -128,31 +125,11 @@ In order to prune branches from the search and avoid touching every node like a 
     \end{algorithmic}
 \end{algorithm}
 
+After finding the nearest neighbor the algorithm returns to the previous node in the tree and onto the opposing half-plane (i.e., down the far branch) to look for other leaves. So long as the size of $pq$ is at less than capacity ($n$) the search automatically adds points to the queue. If $pq$ reaches capacity the algorithm starts to pop off excess points with the understanding that the action removes those farthest away. 
 
+In order to prune branches from the search and avoid touching every node like a brute-force algorithm, Algorithm~\ref{alg:kdtree_knn} makes use of a routine called ``BoundsOverlapBall". ``BoundsOverlapBall" checks if any boundaries of the current level half-plane intersect/overlap with a closed ball centered at $X_q$. The ball is given a radius equal to the maximum distance in $pq$. Then, if the ball and a boundary intersect, the search will continue onto the half-plane on the opposite side of the boundary, since its possible for nearer nodes to occur in the overlap space. If the ball and boundary do not intersect, the opposing half-plane and its related subtree are pruned from the search. Additional details on the implementation of ``BoundsOverlapBall" can be found in \cite{Friedman1977,TagliasacchiGC}. 
 
-
-\subsection{Todo: KDTree KNN complexity}
-$k$-D Trees are efficient for querying nearest neighbors given any sample node in space. Starting at the root of the tree, the $x$-coordinate of the sample node determines which half-plane the sample resides in. Similarly, the $y$-coordinate narrows the search in the second level half-planes. 
-\cite{Friedman1977}
-The process continues by traversing the $k$-D Tree until a leaf is found. At that point, the distance from the leaf node to the sample node is calculated, and traverses back up the branch to check 
-
-Comparing distances from the sample node to each of the nodes traversed in the tree provides the nearest neighbor. Due to the depth of traversal, the complexity of nearest neighbor searching is on average $O(\log{N})$ (i.e., the height of the tree)
-
-$k$-NN queries are evaluated against a $k$-D Tree with an average complexity of $O(k \log{N})$ and $O(kN)$ worst-case. 
-
-
-%In \cite{WendlandBook} the author leverages another form of $k$-D Tree, which selects the splitting dimension based on the maximum spread in data for each half-plane. %Note that the maximum spread would allow for consecutive cuts in a single dimension, but it would also perpetuate the need to store the splitting dimension at each node of the tree. 
-
-%TODO: complexity
-%\subsection{Complexity to build}
-
-In the benchmarks below, a $k$-D Tree implementation by Tagliasacchi \cite{TagliasacchiGC,TagliasacchiMFE}. The implementation follows the construction process and 
-
-it was a popular package offered on the MATLAB FileExchange and garnered attention due to its MEX compiled interface that allowed use as both a C++ and MATLAB library. 
-
-  Most of the RBF community leverages the $k$-D tree, due to its low computational complexity for querying neighbors and its wide availability as standalone software in the public domain (e.g., matlab central has a few implementations for download, and the MATLAB Statistics Toolbox includes an efficient k-D Tree). 
-
-The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
+The authors of \cite{Friedman1977} find Algorithm~\ref{alg:kdtree_knn} capable of querying the $n$-nearest neighbors on large node sets with a complexity proportional to $O(\log{N})$, which comes from traversing the height of the tree. To reflect the relationship between stencil size $n$ and grid size $N$, the complexity os better written $O(n \log{N})$. 
 
 
 \section{A Fixed-Grid Hashing Algorithm}
@@ -206,6 +183,14 @@ Hashing, shown in Figure~\ref{fig:hashing_example} overlays a regular grid. This
 The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
 
 
+
+In the benchmarks below, a $k$-D Tree implementation by Tagliasacchi \cite{TagliasacchiGC,TagliasacchiMFE}. The implementation follows the construction process and 
+
+it was a popular package offered on the MATLAB FileExchange and garnered attention due to its MEX compiled interface that allowed use as both a C++ and MATLAB library. 
+
+  Most of the RBF community leverages the $k$-D tree, due to its low computational complexity for querying neighbors and its wide availability as standalone software in the public domain (e.g., matlab central has a few implementations for download, and the MATLAB Statistics Toolbox includes an efficient k-D Tree). 
+
+The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
 
 
 \subsection{$k$-NN vs $k$-ANN} 
