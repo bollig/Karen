@@ -34,8 +34,7 @@ The $k$-NN and ball query problems are similar, but the former is harder to solv
 \end{figure}
 
 
-A na\"{i}ve approach to neighbor queries would be a brute-force search that checks distances from all nodes to every other node. Obviously the cost of such a method is high: $O(N^2)$. Multi-dimensional data structures can limit the scope of searching and reduce the cost of queries as low as $O(N \log{N})$. %TODO: correct lower bound? 
-
+A na\"{i}ve approach to neighbor queries would be a brute-force search that checks distances from all nodes to every other node. Obviously the cost of such a method is high: $O(N^2)$ for all stencils. Multi-dimensional data structures can limit the scope of searching and reduce the cost of stencil generation to $O(N \log{N})$. 
 
 For the most part, investigations in RBF communities that delve into efficient neighbor queries are limited methods that depend on ball queries. For example, the Partition of Unity method for approximation (e.g., \cite{Wendland2002,WendlandBook}), and particle methods like the Fast Multipole Method (e.g., \cite{Ying2006, Gumerov2003}) or Smoothed Particle Hydrodynamics (e.g., \cite{Krog2010}). Examples of fast algorithms employed in these fields include the fixed-grid method \cite{WendlandBook,Krog2010}, $k$-D Trees \cite{WendlandBook}, Range Trees \cite{Wendland2002,WendlandBook}, and $2^d$-Trees (i.e., Quad- and Octrees) \cite{Gumerov2003, Ying2006}. Surprisingly, while other communities continue the quest for fast neighbor queries, RBF collocation and RBF-FD communities have been slow on the uptake. For many years, the standard in the community has been to use $k$-D Trees (see e.g., \cite{Fasshauer2007, FlyerLehto11,FornbergLehto11}). 
 
@@ -89,7 +88,7 @@ Generating an RBF-FD stencil with a $k$-D Tree can be efficiently accomplished i
 \begin{algorithmic}[1]    
     \State \textbf{Input:} A query node $X_q$, number of desired neighbors ($n$), the current \emph{root} of the $k$-D Tree, and the current $depth$ of traversal.
     \State \textbf{Output:} A global priority queue, $pq$, containing the $n$-nearest neighbors to $X_q$ sorted by distance from $X_q$ in descending order.
-    \State \textbf{Assume:} A routine named ``BoundsOverlapBall" exists to determine if the boundaries of the current half-plane are intersected by the ball centered at $X_q$ with radius equal to the maximum distance in $pq$. As long as $pq.size < n$, ``BoundsOverlapBall" returns true. %$B_{+}$ and $B_{-}$ are $d$-dimensional arrays initialized to $\pm \infty$ on first call and used within BoundsOverlapBall.
+    \State \textbf{Assume:} A routine named ``BoundsOverlapBall" exists to determine if the boundaries of the current half-plane are intersected by the ball centered at $X_q$ with radius equal to the maximum distance in $pq$. As long as $pq.size < n$, ``BoundsOverlapBall" defaults to true. %$B_{+}$ and $B_{-}$ are $d$-dimensional arrays initialized to $\pm \infty$ on first call and used within BoundsOverlapBall.
     \State
     \If{$root$ is leaf}
         \State Insert $\{root,\text{dist}(X_q,root)\}$ into $pq$
@@ -127,14 +126,18 @@ Generating an RBF-FD stencil with a $k$-D Tree can be efficiently accomplished i
 
 After finding the nearest neighbor the algorithm returns to the previous node in the tree and onto the opposing half-plane (i.e., down the far branch) to look for other leaves. So long as the size of $pq$ is at less than capacity ($n$) the search automatically adds points to the queue. If $pq$ reaches capacity the algorithm starts to pop off excess points with the understanding that the action removes those farthest away. 
 
-In order to prune branches from the search and avoid touching every node like a brute-force algorithm, Algorithm~\ref{alg:kdtree_knn} makes use of a routine called ``BoundsOverlapBall". ``BoundsOverlapBall" checks if any boundaries of the current level half-plane intersect/overlap with a closed ball centered at $X_q$. The ball is given a radius equal to the maximum distance in $pq$. Then, if the ball and a boundary intersect, the search will continue onto the half-plane on the opposite side of the boundary, since its possible for nearer nodes to occur in the overlap space. If the ball and boundary do not intersect, the opposing half-plane and its related subtree are pruned from the search. Additional details on the implementation of ``BoundsOverlapBall" can be found in \cite{Friedman1977,TagliasacchiGC}. 
+In order to prune branches from the search, Algorithm~\ref{alg:kdtree_knn} makes use of a routine called ``BoundsOverlapBall", which checks if any boundaries of the current level half-plane intersect/overlap with a closed ball centered at $X_q$. The ball is given a radius equal to the maximum distance in $pq$. Then, if the ball and a boundary intersect, the search will continue onto the half-plane on the opposite side of the boundary. This step handles the possibility that nearer nodes occur within the overlapped region in the other half-plane. If the ball and boundary do not intersect, the opposing half-plane and its related subtree are pruned from the search. Additional details on the implementation of ``BoundsOverlapBall" can be found in \cite{Friedman1977,TagliasacchiGC}. 
 
-The authors of \cite{Friedman1977} find Algorithm~\ref{alg:kdtree_knn} capable of querying the $n$-nearest neighbors on large node sets with a complexity proportional to $O(\log{N})$, which comes from traversing the height of the tree. To reflect the relationship between stencil size $n$ and grid size $N$, the complexity os better written $O(n \log{N})$. 
+The authors of \cite{Friedman1977} find Algorithm~\ref{alg:kdtree_knn} capable of efficiently querying the $n$-nearest neighbors with a complexity proportional to $O(\log{N})$ (dominated by the cost of tree traversal). Their estimate assumes large node sets to hide the impact of $n$; the relationship between stencil size $n$, and grid size, $N$, is better expressed as $O(n \log{N})$ for one stencil. 
 
+Since RBF-FD only needs to generate stencils once, the overall time to acquire them subsumes the cost of tree construction and $N$ queries. The resulting overall complexity is proportional to $O(N\log{N})$. %The implementation of $k$-D Tree tested in Section~\ref{sec:stencils_benchmarks} reflects this complexity. 
 
 \section{A Fixed-Grid Hashing Algorithm}
 
-While the $k$-D Tree functions well for queries, its downfall is a large cost in preprocessing to build the tree. For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
+While a $k$-D Tree functions well for queries, its downfall is the cost in preprocessing to build the tree. 
+
+
+For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
 
 
 
