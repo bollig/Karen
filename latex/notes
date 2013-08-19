@@ -32,7 +32,7 @@ Ok so today I can finish one chapter on stencil generation. Tomorrow I can do th
 
 So what I need to do is: 
 
-a) finish complexity of the KDTree stencil generation (k log N)
+a) finish complexity of the KDTree stencil generation (O(n log N) for one stencil)
 b) Introduce the fixed grid method
 	- How are nodes hashed
 	- Complexity to query neighbors? Worst O(N). Typical: O(log N)
