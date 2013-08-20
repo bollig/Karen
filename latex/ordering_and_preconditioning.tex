@@ -130,11 +130,11 @@ In order to prune branches from the search, Algorithm~\ref{alg:kdtree_knn} makes
 
 The authors of \cite{Friedman1977} find Algorithm~\ref{alg:kdtree_knn} capable of efficiently querying the $n$-nearest neighbors with a complexity proportional to $O(\log{N})$ (dominated by the cost of tree traversal). Their estimate assumes large node sets to hide the impact of $n$; the relationship between stencil size $n$, and grid size, $N$, is better expressed as $O(n \log{N})$ for one stencil. 
 
-Since RBF-FD only needs to generate stencils once, the overall time to acquire them subsumes the cost of tree construction and $N$ queries. The resulting overall complexity is proportional to $O(N\log{N})$. %The implementation of $k$-D Tree tested in Section~\ref{sec:stencils_benchmarks} reflects this complexity. 
+RBF-FD only needs to generate stencils once, so the overall time to acquire them subsumes the cost of tree construction and $N$ queries. The resulting overall complexity is proportional to $O(N\log{N})$. %The implementation of $k$-D Tree tested in Section~\ref{sec:stencils_benchmarks} reflects this complexity. 
 
 \section{A Fixed-Grid Hashing Algorithm}
 
-While a $k$-D Tree functions well for queries, its downfall is the cost in preprocessing to build the tree. 
+While a $k$-D Tree functions well for queries, the cost is dominated by the tree build process. 
 
 
 For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
@@ -260,7 +260,6 @@ At the start of this dissertation, the most widely used $k$-D Tree implementatio
 
 
 
-\section{Conclusion}
 \begin{itemize}
 \item Performance improvement
 \item SpMV impact
@@ -295,7 +294,7 @@ Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $
 Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
 
 
-Our work in \cite{BolligFlyerErlebacher2012} leveraged an alternative to $k$-D tree, based loosely on space-filling curve orderings common in Lagrangian schemes like Smoothed Particle Hydrodynamics (e.g., \cite{IanThesis}, \cite{Kelager}). %TODO: I have used Locality Sensitive Hashing \cite{Indyk} in the past. According to Samet \cite{Samet "Multidimensional and Metric..."}, LSH uses a set of random hashes to assign indices for each node. Our case uses space-filling curve, so we use . 
+Our work in \cite{BolligFlyerErlebacher2012} leveraged an alternative to $k$-D tree, based loosely on space-filling curve orderings common in Lagrangian schemes like Smoothed Particle Hydrodynamics (e.g., \cite{IanThesis}, \cite{Kelager}). %TODO: I have used Locality Sensitive Hashing \cite{Indyk} in the past. According to Samet \cite{Samet2005} LSH uses a set of random hashes to assign indices for each node. Our case uses space-filling curve, so we use . 
 
 
 
@@ -349,7 +348,7 @@ The Cuthill McKee algorithms can be equated to a breadth-first search. The algor
 %TODO: \cite{ChenChang "Neighbor-Finding Based on Space-Filling Curves"} 
 %TODO: \cite{Stocco and Schrack "On Spatial Orders and Location Codes"}
 
-Obviously, the ideal case for bandwidth is when all rows contain the $\frac{n}{2}$ nodes corresponding to solution value to either side of $u_j$. In 1-D this corresponds to every node containing the $\frac{n}{2}$ nodes to the left and right of $x_j$. In 2-D this is only possible if the nodes in the domain are properly indexed such that stencils contain the proper set of neighbors---a stringent requirement that will 
+Obviously, the ideal case for bandwidth is when all rows contain the $\frac{n}{2}$ nodes corresponding to solution value to either side of $u_j$. In 1-D this corresponds to every node containing the $\frac{n}{2}$ nodes to the left and right of $x_j$. In 2-D this is only possible if the nodes in the domain are properly indexed such that stencils contain the proper set of neighbors---a stringent requirement that will 
 
 
 \begin{figure}
