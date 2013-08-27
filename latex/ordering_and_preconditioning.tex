@@ -134,11 +134,82 @@ RBF-FD only needs to generate stencils once, so the overall time for the step su
 
 \section{A Fixed-Grid Hashing Algorithm}
 
-While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, some alternatives like fixed-grid methods can bypass construction and focus directly on performing nearest neighbor queries. 
+While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, alternatives like fixed-grid (a.k.a. uniform grid \cite{Krog2010}) methods bypass most of the cost in construction with an assumption that only lower dimensions (i.e., 2-D or 3-D) are significant. This discards the need for a tree and shifts the focus onto performing the nearest neighbor queries. 
 
-The fixed-grid method was suggested by \cite{Wendland2002}
+Fixed-grid queries are popular in particle-based methods like Smoothed Particle Hydrodynamics \cite{Krog2010,Krog2010b}, where neighbors are determined based on spatial proximity in lower dimensions (i.e., 2-D or 3-D). Since RBF-FD stencils are also based on spatial proximity it is possible to 
 
-\cite{WendlandBook} suggests 
+ The low cost of both construction and query phases allow methods with moving nodes to perform updated nearest neighbor queries at each iteration without significant overhead. 
+
+Since stencil are rarely based on high dimensional data. It suffices to use a 
+
+
+
+Having witnessed the success of the fixed-grid method in particle-based simulations at the onset of this work (\cite{Krog2010,Krog2010b,Purcell2003}), a prototype 
+
+
+The algorithm used in this work is considered a particular
+
+The fixed-grid algorithm 
+
+Figure~\ref{fig:hash_highlevel} clarifies this algorithm presents the variant of the fixed-grid method used in this work from a high-level perspective. Starting with an input set of points, steps 1 through 3 are 
+
+
+Fixed grid method from a high level. 
+Works great for quasi-regular nodes. 
+Avoids construction with overlaid grid of known cell indices. 
+
+\begin{figure}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
+\caption{High level overview of the \emph{Fixed-Grid Bucket} (a.k.a. Hash) Algorithm. A coarse regular grid is overlaid on the domain. Nodes coordinates are hashed to containing cell indices and pushed onto a list for the appropriate cell. The cells are reordered in memory according to a space filling curve (i.e., Raster (IJK), Morton (Z), Graycode (U), etc.). Stencil queries start search with the cell containing the stencil center and expand to neighboring cells until at least $n$ candidate nodes are found. The candidate list is truncated to the $n$ closest neighbors. }
+\label{fig:hash_highlevel}
+\end{figure} 
+
+
+The fixed-grid method 
+
+\begin{algorithm} 
+\caption{BuildFixedGrid($P$,$hnx$)}         
+\label{alg:fixed_grid}  
+\begin{algorithmic}[1]    
+    \State \textbf{Input:} A set of $d$-dimensional points $P$, and the desired resolution of the overlay grid, $hnx$.
+    \State \textbf{Output:} The sorted set of points $\hat{P}$.
+    \State Get $min$ and $max$ coordinates from $P$
+    \For{Point $p$ in $P$}
+       \State $c = (max - min) ./ hnx$ 
+       \State $cell = ((c_x * hnx) + cy) * hnx + cz$
+    \EndFor
+%    std::vector< std::vector<unsigned int> > cell_hash(hnx*hny*hnz);//, (unsigned int)0); 
+%    // list of lists 
+%//    cell_hash.resize(hnx * hny * hnz);  
+%
+%    double cdx = (xmax - xmin) / hnx;
+%    //double cdx = (hnx > 1) ? (xmax - xmin) / (hnx - 1.) : (xmax - xmin) / hnx;
+%    double cdy = (ymax - ymin) / hny;
+%    double cdz = (zmax - zmin) / hnz;
+%
+%    NodeType cell_start(xmin, ymin, zmin);
+%    NodeType cell_end(xmax, ymax, zmax);
+%
+%    // We'll sort our nodes according to hash (roughly sorted), to try to improve caching
+%    std::vector<NodeType> hash_sorted_nodes(nb_nodes);
+%
+%    // Foreach node: 
+%    //     determine hashid (cellid)
+%    //          node(x,y,z) exists in cellid((x-xmin)/dx, (y-ymin)/dy, (z-zmin)/dz)
+%    //          linearize cellid(xc, yc, zc) = ((xc*NY) + yc)*NZ + zc
+%    //          append node to list contained in list[cellid]
+%    for (unsigned int i = 0; i < this->nb_nodes; i++) {
+%        NodeType node = this->getNode(i);
+%
+%        
+    \end{algorithmic}
+\end{algorithm}
+
+
+An implementation of the method used in \cite{Wendland2002}, discussed in \cite{WendlandBook} and 
+
+
 
 
 For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
@@ -180,11 +251,6 @@ Tagliasacchi \cite{TagliasacchiGC} uses the standard split by median in each dim
 Hashing, shown in Figure~\ref{fig:hashing_example} overlays a regular grid. This is equivalent to an axis aligned bounding box AABB, with refinement. In other words, we form a quad-tree in 2D, an octree in 3D. The neighbor query starts with the cell in which $x_c$ resides. Since we use an axis aligned bounding box, this cell index is easily calculated given the coordinate and number of subdivisions in each dimension. Once the cell index is resolved, the stencil is populated by taking the $n$ nearest neighbors from within the current cell. If the cell does not contain sufficient number of nodes to fill the stencil, the search for neighbors expands to include the cells immediately adjoining the center cell, taking only the nearest nodes in the provided cells. The search continues to expand outward in a rasterized circle/sphere until $n$ is satisifed. This search is considered approximate because it can happen that a true nearest neighbor would lie in a cell that is is not included in the rasterized circle, and other nodes are substituted from the far reaches of the discretized grid.
 
 
-\begin{figure}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
-\caption{High level overview of the \emph{Fixed-Grid Bucket} (a.k.a. Hash) Algorithm. A coarse regular grid is overlaid on the domain. Nodes coordinates are hashed to containing cell indices and pushed onto a list for the appropriate cell. The cells are reordered in memory according to a space filling curve (i.e., Raster (IJK), Morton (Z), Graycode (U), etc.). Stencil queries start search with the cell containing the stencil center and expand to neighboring cells until at least $n$ candidate nodes are found. The candidate list is truncated to the $n$ closest neighbors. }
-\end{figure} 
 
 %TODO: cite lagrangian sph knn
 The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
