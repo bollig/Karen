@@ -128,13 +128,17 @@ After finding the nearest neighbor the algorithm returns to the previous node in
 
 In order to prune branches from the search, Algorithm~\ref{alg:kdtree_knn} makes use of a routine called ``BoundsOverlapBall", which checks if any boundaries of the current level half-plane intersect/overlap with a closed ball centered at $X_q$. The ball is given a radius equal to the maximum distance in $pq$. Then, if the ball and a boundary intersect, the search will continue onto the half-plane on the opposite side of the boundary. This step handles the possibility that nearer nodes occur within the overlapped region in the other half-plane. If the ball and boundary do not intersect, the opposing half-plane and its related subtree are pruned from the search. Additional details on the implementation of ``BoundsOverlapBall" can be found in \cite{Friedman1977,TagliasacchiGC}. 
 
-The authors of \cite{Friedman1977} find Algorithm~\ref{alg:kdtree_knn} capable of efficiently querying the $n$-nearest neighbors with a complexity proportional to $O(\log{N})$ (dominated by the cost of tree traversal). Their estimate assumes large node sets to hide the impact of $n$; the relationship between stencil size $n$, and grid size, $N$, is better expressed as $O(n \log{N})$ for one stencil. 
+The authors of \cite{Friedman1977} find Algorithm~\ref{alg:kdtree_knn} capable of efficiently querying the $n$-nearest neighbors with a complexity proportional to $O(\log{N})$ (dominated by the cost of tree traversal). The relationship between stencil size $n$, and grid size, $N$, is better expressed as $O(n \log{N})$ for one stencil. 
 
-RBF-FD only needs to generate stencils once, so the overall time to acquire them subsumes the cost of tree construction and $N$ queries. The resulting overall complexity is proportional to $O(N\log{N})$. %The implementation of $k$-D Tree tested in Section~\ref{sec:stencils_benchmarks} reflects this complexity. 
+RBF-FD only needs to generate stencils once, so the overall time for the step subsumes the cost of tree construction and $N$ queries. The resulting overall complexity is proportional to $O(N\log{N})$. %The implementation of $k$-D Tree tested in Section~\ref{sec:stencils_benchmarks} reflects this complexity. 
 
 \section{A Fixed-Grid Hashing Algorithm}
 
-While a $k$-D Tree functions well for queries, the cost is dominated by the tree build process. 
+While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, some alternatives like fixed-grid methods can bypass construction and focus directly on performing nearest neighbor queries. 
+
+The fixed-grid method was suggested by \cite{Wendland2002}
+
+\cite{WendlandBook} suggests 
 
 
 For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
