@@ -67,16 +67,14 @@ This work considers \emph{Point $k$-D Trees} \cite{Samet2005}, which partition a
 \end{algorithmic}
 \end{algorithm}
 
+The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of eight nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension, then back to the $x$-dimension. This approach is referred to as \emph{cyclic splitting}, as consecutive cuts are applied by iterating dimensions in a round-robin fashion \cite{Samet2005}. The first cut, $L1$, shown in green, splits the nodes into two sets on either side of $A$. The corresponding tree in the center of Figure~\ref{fig:kdtree_example} shows $L1$ as the tree root with all nodes having $x$-coordinates less than or equal to $A$ to the left, and all nodes having $x$-coordinates greater than $A$ to the right. The second level of the tree, $L2$ and $L3$ (in blue), splits the half-planes on either side of $A$ at nodes $B$ and $C$. The axis parallel splits for each half-plane intercept $L1$ independently to partition half-planes along the $y$-dimension; once again, nodes with coordinates less than or equal (i.e., below the cut) to the splitting value branch left in the tree, and $y$-coordinates greater than  (i.e., above) the value branch right. The third level (red) returns to splitting half-planes in the $x$-dimension. Nodes $D$ and $H$ are not intersected by a splitting plane; their half-planes contain only one node so they immediately become leaves of the tree. This process to build a Point $k$-D Tree has a complexity of $O(N \log N)$ with $O(N)$ storage required \cite{Berg2008,Samet2005}.
+
 \begin{figure}
 \centering
 \includegraphics[width=0.9\textwidth]{rbffd_methods_content/neighbors/kdTree_example.png}
 \caption{An example $k$-D Tree in 2-Dimensions. Nodes are partitioned with a cyclic dimension splitting rule (i.e., splits occur first in $X$, then $Y$, then $X$, etc.); all splits occur at the median node in each dimension. }
 \label{fig:kdtree_example}
 \end{figure}
-
-
-
-The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of eight nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension, then back to the $x$-dimension. This approach is referred to as \emph{cyclic splitting}, as consecutive cuts are applied by iterating dimensions in a round-robin fashion \cite{Samet2005}. The first cut, $L1$, shown in green, splits the nodes into two sets on either side of $A$. The corresponding tree in the center of Figure~\ref{fig:kdtree_example} shows $L1$ as the tree root with all nodes having $x$-coordinates less than or equal to $A$ to the left, and all nodes having $x$-coordinates greater than $A$ to the right. The second level of the tree, $L2$ and $L3$ (in blue), splits the half-planes on either side of $A$ at nodes $B$ and $C$. The axis parallel splits for each half-plane intercept $L1$ independently to partition half-planes along the $y$-dimension; once again, nodes with coordinates less than or equal (i.e., below the cut) to the splitting value branch left in the tree, and $y$-coordinates greater than  (i.e., above) the value branch right. The third level (red) returns to splitting half-planes in the $x$-dimension. Nodes $D$ and $H$ are not intersected by a splitting plane; their half-planes contain only one node so they immediately become leaves of the tree. This process to build a Point $k$-D Tree has a complexity of $O(N \log N)$ with $O(N)$ storage required \cite{Berg2008,Samet2005}.
 
 Frequently, the terms \emph{$k$-D Tree} and \emph{Point $k$-D Tree} are used synonymously by the RBF community (see e.g., \cite{Fasshauer2007,FlyerLehto11,FornbergLehto11}); the same is convention adopted here. 
 
@@ -134,9 +132,39 @@ RBF-FD only needs to generate stencils once, so the overall time for the step su
 
 \section{A Fixed-Grid Hashing Algorithm}
 
-While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, alternatives like fixed-grid (a.k.a. uniform grid \cite{Krog2010}) methods bypass most of the cost in construction with an assumption that only lower dimensions (i.e., 2-D or 3-D) are significant. This discards the need for a tree and shifts the focus onto performing the nearest neighbor queries. 
+While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, alternatives like fixed-grid (a.k.a. uniform grid \cite{Krog2010}) methods bypass much of the cost in construction with an assumption that only lower spatial dimensions (e.g., 2-D or 3-D) are significant. This discards the need to build a tree and shifts the focus onto performing the nearest neighbor queries. 
 
-Fixed-grid queries are popular in particle-based methods like Smoothed Particle Hydrodynamics \cite{Krog2010,Krog2010b}, where neighbors are determined based on spatial proximity in lower dimensions (i.e., 2-D or 3-D). Since RBF-FD stencils are also based on spatial proximity it is possible to 
+Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is overlaid on the domain. The $d$-dimensional grid divides the domain's axis aligned bounding box (AABB)---that is, the minimum bounding box containing the entire domain---into $(h_n)^d$ cells. Subdivisions are uniform, so one can easily identify cell containing any sample point, $p$, based on the spatial coordinates of $p$ and the coordinates of the AABB. For example, let $(c_x, c_y, c_z)$ be the desired coordinates of the containing cell in 3-D, and $(x_{min}, y_{min}, z_{min})$ and $(x_{max}, y_{max}, z_{max})$ be the minimum and maximum coordinates of the AABB (resp.). Then the coordinates of the containing cell are given by:  
+\begin{align}
+(dx, dy, dz) & = \left(\frac{(x_{max} - x_{min})}{h_n}, \frac{(y_{max} - y_{min})}{h_n}, \frac{(z_{max} - z_{min})}{h_n}\right) \nonumber \\
+(c_x, c_y, c_z) & = \left(\left\lfloor\frac{(p_x - x_{min})}{dx}\right\rfloor , \left\lfloor\frac{(p_y - y_{min})}{dy}\right\rfloor , \left\lfloor\frac{(p_z - z_{min})}{dz}\right\rfloor \right).
+\label{eq:cell_hash}
+\end{align}
+Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding $\pm v$ to each coordinate where $v = 1, 2, 3, ...$ is the valence around the center cell. 
+
+At a high level, fixed-grid methods have the following preprocessing steps \cite{Krog2010}:
+\begin{enumerate}
+\item Subdivide the domain with the overlay grid.
+\item For each node, identify the containing cell coordinates.
+\item For each node, use the cell coordinates as input to a spatial hash function (space-filling curve).
+\item Sort the nodes according to their spatial hash.
+\end{enumerate}
+Particular details of how nodes are sorted, the spatial hash function, etc. determine the specific type of fixed-grid method and complexity. 
+
+%TODO: related work here on how fixed-grid is implemented
+%TODO: radix sort on GPU
+%TODO: alternatives for space filling curves
+Space filling curves are . Examples include $Z$- or \emph{Morton} ordering, $U$- or \emph{Greycode}-ordering, $X$-ordering, etc. Hilbert curves have been demonstrated to be the most efficient \cite{INREFS}. 
+
+The algorithm chosen for this work is provided in Algorithm~\ref{alg:hash_build}. The algorithm starts by creating a list of lists representing the $(h_n)^d$ cells. As nodes are matched with cell indices, the node index is appended to the 
+
+
+
+These tests assume $dx = dy = dz$ to ensure spherical stencils. 
+
+With regularly spacing it is possible to directly access the $(i,j,k)$-th cell in the domain with the formula $cell = ((h_n * i) + j) * h_n + k$.
+
+ Each cell of the overlay  queries are popular in particle-based methods like Smoothed Particle Hydrodynamics \cite{Krog2010,Krog2010b}, where neighbors are determined based on spatial proximity in lower dimensions (i.e., 2-D or 3-D). Since RBF-FD stencils are also based on spatial proximity it is possible to 
 
  The low cost of both construction and query phases allow methods with moving nodes to perform updated nearest neighbor queries at each iteration without significant overhead. 
 
@@ -169,7 +197,7 @@ Avoids construction with overlaid grid of known cell indices.
 The fixed-grid method 
 
 \begin{algorithm} 
-\caption{BuildFixedGrid($P$,$hnx$)}         
+\caption{BuildFixedGrid($P$,$h_n$)}         
 \label{alg:fixed_grid}  
 \begin{algorithmic}[1]    
     \State \textbf{Input:} A set of $d$-dimensional points $P$, and the desired resolution of the overlay grid, $hnx$.
