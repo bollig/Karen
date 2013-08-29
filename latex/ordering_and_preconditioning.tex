@@ -139,7 +139,7 @@ RBF-FD only needs to generate stencils once, so the overall time for the step su
 
 \section{A Fixed-Grid Hashing Algorithm}
 
-While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, alternatives like fixed-grid (a.k.a. uniform grid \cite{Krog2010}) methods bypass much of the cost in construction with an assumption that only lower spatial dimensions (e.g., 2-D or 3-D) are significant. This discards the need to build a tree and shifts the focus onto performing the nearest neighbor queries. 
+While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, alternatives like fixed-grid methods \cite{Samet2005,Wendland2002,WendlandBook} (a.k.a. uniform grid \cite{Krog2010,Purcell2003}) bypass much of the cost in construction with an assumption that only lower spatial dimensions (e.g., 2-D or 3-D) are significant. This discards the need to build a tree and shifts the focus onto performing the nearest neighbor queries. 
 
 Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is overlaid on the domain. The $d$-dimensional grid divides the domain's axis aligned bounding box (AABB)---that is, the minimum bounding box containing the entire domain---into $(h_n)^d$ cells. Subdivisions are uniform, so one can easily identify cell containing any sample point, $p$, based on the spatial coordinates of $p$ and the coordinates of the AABB. For example, let $(c_x, c_y, c_z)$ be the desired coordinates of the containing cell in 3-D, and $(x_{min}, y_{min}, z_{min})$ and $(x_{max}, y_{max}, z_{max})$ be the minimum and maximum coordinates of the AABB (resp.). Then the coordinates of the containing cell are given by:  
 \begin{align}
@@ -156,10 +156,21 @@ At a high level, fixed-grid methods have the following preprocessing steps \cite
 \item For each node, use the cell coordinates as input to a spatial hash function (space-filling curve).
 \item Sort the nodes according to their spatial hash.
 \end{enumerate}
-Particular details of how nodes are sorted, the spatial hash function, etc. determine the specific type of fixed-grid method and complexity. \cite{Samet2005} provides a comprehensive list of options and classifications. 
+Particular details of how nodes are sorted, the spatial hash function, etc. determine the specific type of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}.
+ 
+The approach tested in this work is inspired by fixed-grid methods for GPU particle simulations \cite{Krog2010,Green2010,Johnson2012}. Particle methods require a ball query at each time-step. Since each time-step is often dominated by the cost to find neighbors, the community devotes significant effort to finding the most efficient query algorithms possible. The fixed-grid method is favored for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a space filling curve are typically close in memory to their neighbors, resulting in a higher likelihood that data at neighbors will be cached when required. 
 
-The algorithm tested in this work was inspired by the use of fixed-grid methods for fast neighbor queries in GPU particle simulations \cite{Krog2010,Green}, who
+Implementations of fixed-grid often assume that no more than two nodes reside in any one cell.  
 
+This implementation is CPU only. Porting the one time stencil generation to the GPU was seen as 
+
+%TODO: low cost of build and easy to query ball
+use of fixed-grid methods originated due to low overhead before performing queries.
+Although all three related works focus on offloading simulations to the GPU, the method is also popular for CPU implementations 
+
+In \cite{Wendland2002} and later \cite{WendlandBook}, Wendland presents the fixed-grid method as a low-cost alternative for RBF methods based on Partition of Unity. %TODO: state what wendland did or did not do
+
+\cite{Purcell2003} adopt the a similar approach that incrementally grows the 
 
 Following \cite{Samet2005}, the method used in this work is classified as a fixed-grid \emph{bucket} method with one dimensional ordering. The emphasis on bucket arises from the application of a coarse grid that allows 
 
@@ -194,6 +205,8 @@ The fixed-grid algorithm
 
 Figure~\ref{fig:hash_highlevel} clarifies this algorithm presents the variant of the fixed-grid method used in this work from a high-level perspective. Starting with an input set of points, steps 1 through 3 are 
 
+
+\cite{Brown2010} introduce a minimal $k$-D Tree for the GPU which 
 
 Fixed grid method from a high level. 
 Works great for quasi-regular nodes. 
