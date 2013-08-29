@@ -156,8 +156,14 @@ At a high level, fixed-grid methods have the following preprocessing steps \cite
 \item For each node, use the cell coordinates as input to a spatial hash function (space-filling curve).
 \item Sort the nodes according to their spatial hash.
 \end{enumerate}
-Particular details of how nodes are sorted, the spatial hash function, etc. determine the specific type of fixed-grid method and complexity. 
+Particular details of how nodes are sorted, the spatial hash function, etc. determine the specific type of fixed-grid method and complexity. \cite{Samet2005} provides a comprehensive list of options and classifications. 
 
+The algorithm tested in this work was inspired by the use of fixed-grid methods for fast neighbor queries in GPU particle simulations \cite{Krog2010,Green}, who
+
+
+Following \cite{Samet2005}, the method used in this work is classified as a fixed-grid \emph{bucket} method with one dimensional ordering. The emphasis on bucket arises from the application of a coarse grid that allows 
+
+ implementations of the method leverage radix sort to directly sort nodes based on their spatial hash. The radix sort completely reorders nodes based on their 
 %TODO: related work here on how fixed-grid is implemented
 %TODO: radix sort on GPU
 %TODO: alternatives for space filling curves
