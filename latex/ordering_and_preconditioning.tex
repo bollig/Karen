@@ -147,7 +147,7 @@ Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is 
 (c_x, c_y, c_z) & = \left(\left\lfloor\frac{(p_x - x_{min})}{dx}\right\rfloor , \left\lfloor\frac{(p_y - y_{min})}{dy}\right\rfloor , \left\lfloor\frac{(p_z - z_{min})}{dz}\right\rfloor \right).
 \label{eq:cell_hash}
 \end{align}
-Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding $\pm v$ to each coordinate where $v = 1, 2, 3, ...$ is the valence around the center cell. 
+Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding $\pm v$ to each coordinate where $v = 1, 2, 3, ...$ is the valence around the center cell. Note that the fixed-grid is virtual. Nodes are matched with cell coordinates, but the full grid is never explicitly constructed.
 
 At a high level, fixed-grid methods have the following preprocessing steps \cite{Krog2010}:
 \begin{enumerate}
@@ -156,9 +156,19 @@ At a high level, fixed-grid methods have the following preprocessing steps \cite
 \item For each node, use the cell coordinates as input to a spatial hash function (space-filling curve).
 \item Sort the nodes according to their spatial hash.
 \end{enumerate}
-Particular details of how nodes are sorted, the spatial hash function, etc. determine the specific type of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}.
+A spatial hash function 
+Particular details of how nodes are sorted, the spatial hash function, etc. determine the specific class of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}.
  
-The approach tested in this work is inspired by fixed-grid methods for GPU particle simulations \cite{Krog2010,Green2010,Johnson2012}. Particle methods require a ball query at each time-step. Since each time-step is often dominated by the cost to find neighbors, the community devotes significant effort to finding the most efficient query algorithms possible. The fixed-grid method is favored for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a space filling curve are typically close in memory to their neighbors, resulting in a higher likelihood that data at neighbors will be cached when required. 
+The approach tested in this work is inspired by fixed-grid approaches for GPU particle simulations \cite{Krog2010,Green2010,Johnson2012}. Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to finding the most efficient algorithms possible. The fixed-grid method is favored for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a space filling curve are typically closer in memory to their neighbors, resulting in a higher likelihood that data for neighbor nodes will be cached when required. 
+
+Although RBF-FD only requires neighbor queries once, the results at the end of this chapter reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes
+
+Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging the fixed-grid method on the GPU is difficult to justify. The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. The added complexity in reproducing the efficient fixed-grid method on the GPU could be the subject of future work for moving nodes. 
+
+    
+\cite{Krog2010} assumes that at each time-step a new virtual fixed grid is generated 
+
+The fixed-grid method is not entirely new to the RBF community. Wendland applied a variant to a Partition of Unity method based on compact RBFs in \cite{Wendland2002}. The approach taken here 
 
 Implementations of fixed-grid often assume that no more than two nodes reside in any one cell.  
 
