@@ -168,9 +168,9 @@ At a high level, fixed-grid methods have the following preprocessing steps \cite
 \end{enumerate}
 Particular details of how nodes are sorted, the choice of hashing function, etc. determine the specific class of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}. 
 
-The implementation in this work is inspired by fixed-grid approaches for GPU particle simulations \cite{Krog2010,Green2010,Johnson2011}. Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to finding the most efficient algorithms possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a space filling curve are typically closer in memory to their neighbors, resulting in a higher likelihood that data will be cached when required. 
+The implementation in this work is inspired by fixed-grid approaches for GPU particle simulations \cite{Krog2010,Green2010,Johnson2011}. Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to finding the most efficient algorithms possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to their spatial hash are typically closer in memory to their neighbors than unsorted nodes, resulting in a higher likelihood that data will be cached when required. 
 
-The choice of spatial hash function certainly impacts memory access patterns. 
+In \cite{Krog2010} a s
 
 \begin{algorithm} 
 \caption{BuildFixedGrid($P$, $h_n$)}         
@@ -194,6 +194,9 @@ The choice of spatial hash function certainly impacts memory access patterns.
     \State \Return $\hat{P}$, $Q$
     \end{algorithmic}
 \end{algorithm}
+
+The choice of spatial hash function certainly impacts memory access patterns. 
+
 
 
 
