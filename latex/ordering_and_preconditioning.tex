@@ -147,9 +147,9 @@ Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is 
 (c_x, c_y, c_z) & = \left(\left\lfloor\frac{(p_x - x_{min})}{dx}\right\rfloor , \left\lfloor\frac{(p_y - y_{min})}{dy}\right\rfloor , \left\lfloor\frac{(p_z - z_{min})}{dz}\right\rfloor \right).
 \label{eq:cell_hash}
 \end{align}
-Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding positive and negative offsets to each coordinate. Note that the fixed-grid in the fixed-grid method is virtual. Nodes are matched with cell coordinates, but the full grid is never explicitly constructed.
+Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding positive and negative offsets to each coordinate. Note that the fixed-grid in this method is virtual. Nodes are matched with cell coordinates, but the full grid is never explicitly constructed.
 
-Cells of the fixed-grid are assigned a linear index based on \emph{space filling curves}. Space filling curves pass through every point in $d$-dimensional space, and through each point only once. Equivalently, space filling curves map $d$-dimensional space down to 1-D, where every point is mapped to an index or traversal order. Traversing the $d$-dimensional points based on their mappings (i.e., playing ``connect the dots") draws the space filling curve. Note that one-dimensional orderings are not unique. Figure~\ref{fig:space_filling_curves} presents two common orderings of a 2-D fixed-grid. On the left is the Raster-, Scanline- or $ijk$-ordering: $((c_x * h_n) + c_y) * h_n + c_z$. The right half of Figure~\ref{fig:space_filling_curves} shows an ordering known as Morton or $Z$-ordering. The mapped index of each cell is indicated in the bottom left corner. Traversing the cells in order results in the curves superimposed in red. 
+Fixed grid methods also make use of \emph{space filling curves}. Space filling curves pass through every point in $d$-dimensional space, and through each point only once. Equivalently, space filling curves map $d$-dimensional space down to 1-D, where every point is converted to a unique index or traversal order based on its spatial coordinates. These mapping properties make space filling curves ideal for use as hash functions. Traversing the $d$-dimensional points (i.e., playing ``connect the dots") draws the space filling curve. Figure~\ref{fig:space_filling_curves} presents two common orderings of a 2-D fixed-grid. Note that one-dimensional orderings are not unique. On the left is a \emph{Raster}-ordering (a.k.a. Scanline- or $ijk$-ordering): $f(c_x,c_y,c_z) = ((c_x * h_n) + c_y) * h_n + c_z$. The right half of Figure~\ref{fig:space_filling_curves} shows an ordering known as Morton- or $Z$-ordering; construction of this ordering is discussed later in this chapter. The lower left corner of each cell in Figure~\ref{fig:space_filling_curves} indicates the mapped index. Traversing the cells in order produces the curves superimposed in red. 
 
 \begin{figure}
 \centering
@@ -158,8 +158,6 @@ Cells of the fixed-grid are assigned a linear index based on \emph{space filling
 \label{fig:space_filling_curves}
 \end{figure} 
 
-
-\subsection{Construction}
 
 At a high level, fixed-grid methods have the following preprocessing steps \cite{Krog2010}:
 \begin{enumerate}
@@ -170,32 +168,9 @@ At a high level, fixed-grid methods have the following preprocessing steps \cite
 \end{enumerate}
 Particular details of how nodes are sorted, the choice of hashing function, etc. determine the specific class of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}. 
 
-The approach in this work is inspired by fixed-grid approaches for GPU particle simulations \cite{Krog2010,Green2010,Johnson2011}. Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to finding the most efficient algorithms possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a space filling curve are typically closer in memory to their neighbors, resulting in a higher likelihood that data will be cached when required. 
-
-A space filling curve is any path 
-
-
-map multidimensional data into 1-D. The curves traverse all data When used to index data, space filling curves give a variety of solutions for ordering data. 
-Given the cells of a fixed-grid, a space filling curve assigns a unique index to each cell 
-
-Example space filling curves are presented in Figure~\ref{fig:space_filling_curves}
-
-When the fixed-grid is mapped into linear memory, cell coordinates are passed through a hash function to produce a unique index for each cell. 
- % One could just as easily use the transposed ordering, $kji$, to give priority to $x$-coordinates for FORTRAN or MATLAB.  
-Alternatively, one might use another 
-
-Space filling curves like the options shown in Figure~\ref{fig:space_filling_curves} 
-
-In what follows, 
-
-as a \emph{spatial hash function} 
-
-For now assume the spatial hash function is the standard Raster- or $ijk$-ordering (with $k$ varying fastest): $ind = ((c_x * h_n) + c_y) * h_n + c_z$. To get the coordinates of the cell, simply swap the two $h_n$ terms with $d_x$ and $d_y$. 
-
+The implementation in this work is inspired by fixed-grid approaches for GPU particle simulations \cite{Krog2010,Green2010,Johnson2011}. Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to finding the most efficient algorithms possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a space filling curve are typically closer in memory to their neighbors, resulting in a higher likelihood that data will be cached when required. 
 
 The choice of spatial hash function certainly impacts memory access patterns. 
-
- %TODO: introduce spatial hash functions. What are they? why are they beneficial
 
 \begin{algorithm} 
 \caption{BuildFixedGrid($P$, $h_n$)}         
