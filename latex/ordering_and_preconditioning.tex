@@ -139,7 +139,7 @@ RBF-FD only needs to generate stencils once, so the overall time for the step su
 
 \section{A Fixed-Grid Hashing Algorithm}
 
-While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, alternatives like fixed-grid methods \cite{Samet2005,Wendland2002,WendlandBook} (a.k.a. uniform grid \cite{Krog2010,Purcell2003}) bypass much of the cost in construction with an assumption that only lower spatial dimensions (e.g., 2-D or 3-D) are significant. This discards the need to build a tree and shifts the focus onto performing the nearest neighbor queries. 
+While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, alternatives like fixed-grid methods \cite{Samet2005,Wendland2002,WendlandBook} (a.k.a. uniform grid \cite{Krog2010,Green2010}) bypass much of the cost in construction with an assumption that only lower spatial dimensions (e.g., 2-D or 3-D) are significant. This discards the need to build a tree and shifts the focus onto performing the nearest neighbor queries. 
 
 Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is overlaid on the domain. The $d$-dimensional grid divides the domain's axis aligned bounding box (AABB)---that is, the minimum bounding box containing the entire domain with edges parallel to axes---into $(h_n)^d$ cells. Subdivisions are uniform, so one can easily identify the cell containing any sample point, $p$, given the spatial coordinates of $p$ and the coordinates of the AABB. For example, let $(c_x, c_y, c_z)$ be the desired coordinates of the containing cell in 3-D, and $(x_{min}, y_{min}, z_{min})$ and $(x_{max}, y_{max}, z_{max})$ be the minimum and maximum coordinates of the AABB (resp.). Then the coordinates of the containing cell are given by:  
 \begin{align}
@@ -147,7 +147,7 @@ Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is 
 (c_x, c_y, c_z) & = \left(\left\lfloor\frac{(p_x - x_{min})}{dx}\right\rfloor , \left\lfloor\frac{(p_y - y_{min})}{dy}\right\rfloor , \left\lfloor\frac{(p_z - z_{min})}{dz}\right\rfloor \right).
 \label{eq:cell_hash}
 \end{align}
-Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding $\pm v$ to each coordinate where $v = 1, 2, 3, ...$ is the valence around the center cell. Note that the fixed-grid is virtual. Nodes are matched with cell coordinates, but the full grid is never explicitly constructed.
+Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding offsets to each coordinate. Note that the fixed-grid is virtual. Nodes are matched with cell coordinates, but the full grid is never explicitly constructed.
 
 
 \subsection{Construction}
@@ -156,14 +156,19 @@ At a high level, fixed-grid methods have the following preprocessing steps \cite
 \begin{enumerate}
 \item Subdivide the domain with the overlay grid.
 \item For each node, identify the containing cell coordinates.
-\item For each node, use the cell coordinates as input to a spatial hash function (space-filling curve).
+\item For each node, use the cell coordinates as input to a spatial hash function (i.e., a space-filling curve).
 \item Sort the nodes according to their spatial hash.
 \end{enumerate}
 Particular details of how nodes are sorted, the choice of hashing function, etc. determine the specific class of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}.
 
-The approach in this work is inspired by fixed-grid approaches for GPU particle simulations \cite{Krog2010,Green2010,Johnson2011}. Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to finding the most efficient algorithms possible. The fixed-grid method is favored for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a space filling curve are typically closer in memory to their neighbors, resulting in a higher likelihood that data for neighbor nodes will be cached when required. 
+The approach in this work is inspired by fixed-grid approaches for GPU particle simulations \cite{Krog2010,Green2010,Johnson2011}. Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to finding the most efficient algorithms possible. The fixed-grid method is favored for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a space filling curve are typically closer in memory to their neighbors, resulting in a higher likelihood that data will be cached when required. 
 
-Spatial hash functions %TODO: introduce spatial hash functions. What are they? why are they beneficial
+For now we assume the cell hash function is the standard Raster or $ijk$-ordering (with $k$ varying fastest): $ind = ((h_n * c_x) + c_y) * h_n + c_z$.
+
+
+The choice of spatial hash function certainly impacts memory access patterns. Example space filling curves are presented in Figure~\ref{fig:space_filling_curves}
+
+ %TODO: introduce spatial hash functions. What are they? why are they beneficial
 
 \begin{algorithm} 
 \caption{BuildFixedGrid($P$, $h_n$)}         
