@@ -39,9 +39,7 @@ A na\"{i}ve approach for neighbor queries would be a brute-force search that che
 For the most part, investigations in RBF communities that delve into efficient neighbor queries are limited to ball queries. For example, the Partition of Unity method for approximation (e.g., \cite{Wendland2002,WendlandBook}), and particle methods like the Fast Multipole Method (e.g., \cite{Ying2006, Gumerov2003}) or Smoothed Particle Hydrodynamics (e.g., \cite{Krog2010}). Examples of fast algorithms employed in these fields include the fixed-grid method \cite{WendlandBook,Krog2010}, $k$-D Trees \cite{WendlandBook}, Range Trees \cite{Wendland2002,WendlandBook}, and $2^d$-Trees (i.e., Quad- and Octrees) \cite{Gumerov2003, Ying2006}. Surprisingly, while other communities continue the quest for fast neighbor queries, RBF collocation and RBF-FD communities have been slow on the uptake. For many years, the standard in the community has been to use $k$-D Trees (see e.g., \cite{Fasshauer2007, FlyerLehto11,FornbergLehto11}). 
 
 
-This chapter considers the use of an alternative neighbor query algorithm to generate RBF-FD stencils. It is based loosely on the fixed-grid method from \cite{Krog2010,Green2010,Johnson2011}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}, but is referred to also as the \emph{Hash Algorithm} due to the use of a spatial hash function to order nodes in memory. 
-
-The Hash Algorithm loosens the requirements for $k$-nearest neighbors ($k$-NN) stencils to allow $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the Hash Algorithm is compared to an efficient implementation of $k$-D Tree available for use in C++ and MATLAB (\cite{TagliasacchiMFE}). Benchmarks demonstrate that with the proper choice of parameters the Hash Algorithm is up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV due to the impact of spatial reordering that occurs by default during stencil generation. 
+This chapter considers the use of an alternative neighbor query algorithm to generate RBF-FD stencils. It is based loosely on the fixed-grid method from \cite{Krog2010,Green2010,Johnson2011}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. The fixed-grid method loosens the requirements for finding the $k$-nearest neighbors ($k$-NN) stencils to accept $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the fixed-grid method is compared to an efficient implementation of $k$-D Tree available for use in C++ and MATLAB (\cite{TagliasacchiMFE}). Benchmarks demonstrate that, with the proper choice of parameters for the fixed-grid, the method is up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV due to the impact of spatial reordering that occurs by default during stencil generation. 
 
 
 \section{$k$-D Tree}
@@ -137,7 +135,7 @@ RBF-FD only needs to generate stencils once, so the overall time for the step su
 
 
 
-\section{A Fixed-Grid Hashing Algorithm}
+\section{A Fixed-Grid Algorithm}
 
 While a $k$-D Tree functions well for queries, the cost to build the tree structure is unnecessary overhead. Among the many data-structures that exist for nearest neighbor queries, alternatives like fixed-grid methods \cite{Samet2005,Wendland2002,WendlandBook} (a.k.a. uniform grid \cite{Krog2010,Green2010}) bypass much of the cost in construction with an assumption that only lower spatial dimensions (e.g., 2-D or 3-D) are significant for choosing neighbors. This discards the need to build a tree and shifts focus onto querying neighbors. 
 
@@ -168,13 +166,15 @@ At a high level, fixed-grid methods have the following construction steps \cite{
 \end{enumerate}
 Particular details of how nodes are sorted, the choice of hashing function, the number of nodes allowed per cell, etc. determine the specific class of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}. 
 
-The implementation in this work is inspired by fixed-grid approaches for GPU particle simulations (\cite{Krog2010,Green2010,Johnson2011}). Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to seek out the most efficient algorithms possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to their spatial hash reside closer in memory to their nearest neighbors than unsorted nodes, resulting in a higher likelihood that data will be cached when required. Note that reordering by cell hash sorts nodes across cells but not within them---that is, nodes contained by the same cell end up contiguous in memory, but they are arbitrarily ordered with respect one another. Fortunately, with contiguous groups of nodes, it is possible to step directly to the starting node index for the cell and iterate over the correct number of indices on a query. 
+\subsection{Fixed-grid Construction}
+The algorithm in this work is inspired by fixed-grid approaches for GPU particle simulations (\cite{Krog2010,Green2010,Johnson2011}). Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to seek out the most efficient solutions possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a spatial hash reside closer in memory to nearby neighbors than in the case of unsorted nodes. The spatial locality results in a higher likelihood that data will be cached when required. Note that reordering by cell hash sorts nodes across cells but not within them---that is, nodes contained by the same cell are contiguous in memory, but remain arbitrarily ordered with respect one another. Fortunately, with contiguous groups of nodes, nearest neighbor queries can directly access all nodes per cell. 
 
 
-The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one valence of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. As a point of difference in implementations, the authors of \cite{Green2010, Krog2010} leverage a fast radix sort algorithm based on hash index to order nodes, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforce a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained for each cell that has the indices of all contained nodes. Unfortunately, iterating through those lists implies random access on nodes and associated data in memory.    
+The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one valence of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. %TODO: is it constant time here?
+ As a point of difference in implementations, the authors of \cite{Green2010, Krog2010} leverage a fast radix sort algorithm based on hash index to order nodes, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforce a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained for each cell that has the indices of all contained nodes, which implies random memory access when operating on the nodes of a cell.    
 
 
-The implementation presented here is a hybrid of the related algorithms. For example, this implementation opts to sort cells based on raster-ordering, but drops the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed number of cell valences. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new valence of cells at each iteration. This multi-pass ball-query was demonstrated in Figure~\ref{fig:nearest_neighbor_example}. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.
+The implementation presented here is a hybrid of the related algorithms. For example, cells are sorted based on raster-ordering, but without the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed number of cell valences. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new valence of cells at each iteration. This multi-pass ball-query was demonstrated in Figure~\ref{fig:nearest_neighbor_example}. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.
 %TODO: Figure~\ref{fig:hash_highlevel} demonstrates the algorithm 
 %\begin{figure}
 %\centering
@@ -183,21 +183,12 @@ The implementation presented here is a hybrid of the related algorithms. For exa
 %\label{fig:hash_highlevel}
 %\end{figure} 
 
-
-
-This implementation would be classified by \cite{Samet2005} as a \emph{fixed-grid bucket method with one-dimensional ordering}. The term \emph{bucket} refers to the allowance for each cell to contain an arbitrary number of nodes. The \emph{one-dimensional ordering} is indicative of attempts later in the chapter to employ alternative space-filling curves in place of raster-ordering.   
-
-
-Additional detail for the build process is given in Algorithm~\ref{alg:fixed_grid_build} presents the process to build the data structures necessary for the fixed-grid method. 
-
-
-
 \begin{algorithm} 
 \caption{BuildFixedGrid($P$, $h_n$)}         
 \label{alg:fixed_grid_build}  
 \begin{algorithmic}[1]    
-    \State \textbf{Input:} A set of $d$-dimensional points $P$, and the desired resolution of the overlay grid, $h_n$.
-    \State \textbf{Output:} The sorted set of points $\hat{P}$.
+    \State \textbf{Input:} A set points $P$, and the fixed-grid resolution, $h_n$.
+    \State \textbf{Output:} The reordered points in $P$, and corresponding cell buckets $Q$.
     \State
     \State Create $Q$: an $(h_n)^d$ array of empty buckets. 
     \For{point $p_i$ in $P$}
@@ -205,15 +196,59 @@ Additional detail for the build process is given in Algorithm~\ref{alg:fixed_gri
        \State $ind := \text{SpatialHash}(c)$
        \State Append index $i$ onto $Q[ind]$
     \EndFor
-    \For{each $Q[j]$, $j=0,1,...,(h_n)^d$}
+    \For{$j=0,1,...,(h_n)^d$}
     \If{$Q[j]$ is not empty}
         \State Append the set $P[Q[j]]$ onto $\hat{P}$
         \State Overwrite the set $Q[j]$ with new indices of $\hat{P}$ 
     \EndIf
     \EndFor
-    \State \Return $\hat{P}$, $Q$
+    \State $P := \hat{P}$
+    \State \Return 
     \end{algorithmic}
 \end{algorithm}
+
+Algorithm~\ref{alg:fixed_grid_build} presents the fixed-grid build process. The routine starts with the allocation an array of empty buckets, $Q$. Next $Q$ is populated based on the spatially hashed cell coordinates. The second for-loop in Algorithm~\ref{alg:fixed_grid_build} is the most complex portion of the build process. Here the loop iterates through $Q$, looking for non-empty buckets. If one is found, nodes referenced by that bucket are transcribed/appended onto the ``sorted" list of nodes $\hat{P}$. This way the nodes in each cell are contiguous, but maintain the original ordering with respect to one another. Additionally, node indices in $\hat{P}$ replace the old indices within $Q$.
+
+The entire build process has $O(N)$ complexity, and requires $O((h_n)^d + N)$ storage. Samet \cite{Samet2005} would classify this approach as a \emph{fixed-grid bucket method with one-dimensional ordering}. The term \emph{bucket} refers to the allowance for each cell to contain an arbitrary number of nodes. \emph{One-dimensional ordering} is indicative of attempts later in the chapter to employ alternative space-filling curves in place of raster-ordering. 
+
+A special note: the final step of Algorithm~\ref{alg:fixed_grid_build} overwrites the original list of nodes with the sorted equivalent. The spatially sorted list is included in the cost of stencil generation, but available for reuse elsewhere. Since the first step in RBF-FD applications is to generate stencils, overwriting the input node set can guarantee that the node values throughout the entire life-cycle of an RBF-FD application will benefit from the same spatial locality as stencil generation. This benefit is (almost) free. 
+
+Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matrices generated based on the same $N=6400$ MD-node set (unit sphere), with each row representing RBF-FD stencils of $n=50$ non-zeros. The left matrix in Figure~\ref{fig:reorder_example} is generated with stencils queried by a $k$-D Tree. The $k$-D Tree maintains the original ordering on $P$. The matrix on the right of Figure~\ref{fig:reorder_example} is a permuted equivalent of the left matrix with stencils connecting the exact same nodes. In this case, the fixed-grid cells have a raster-based ordering with $h_n = 10$. Looking at Figure~\ref{fig:reorder_example} it should be obvious that reordering the nodes can improve memory access patterns for SpMV. If each row is applied as a sparse dot-product with a dense vector, the more condensed non-zeros are in the row, the more likely values from the dense vector will be resident in cache when needed. Later in this chapter, the impact of spatial orderings are compared to determine how RBF-FD can benefit the most. 
+
+\begin{figure}
+\centering
+\begin{subfigure}{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/bruteforce_N6400_n50-eps-converted-to.png}
+\caption{$k$-D Tree} 
+\end{subfigure} 
+\begin{subfigure}{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/lsh_N6400_n50-eps-converted-to.png}
+\caption{Fixed-Grid}
+\end{subfigure}
+\caption{Example effects of node reordering for MD node set $N=6400$ with $n=50$. The differentiation matrices are permuted equivalents and roughly $0.78\%$ full. a) Stencils generated based on $k$-D Tree maintain the original node ordering. b) The reordered node set generated using an $h_n=10$ fixed-grid condenses non-zeros for improved cache effects.}
+\label{fig:reorder_example}
+\end{figure} 
+
+The $k$-NN query process for the fixed-grid method is found in Algorithm~\ref{alg:fixed_grid_query}.
+
+
+
+
+%TODO: bandwidth definition
+%TODO: dilation for orderings
+%TODO: maximum number of cells that we can reorder given 64-bit integer. 
+
+The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
+At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
+% While transcription is done in constant time, it does require random access on the point list $P$. Post sort
+
+
+
+The complexity BuildFixedGrid is proportional to $O(N + (h_n)^d)$.
+
+The cell bucket list, $Q$, consumes $O((h_n)^d + N)$ storage. Each bucket of $Q$ is an STL Vector type to allow efficient (constant time on average) appends. 
+ 
+
 
 %TODO: at the end of algorithm \hat{P} can be used for queries only OR it can be copied over the input set of nodes so that the ordering persists throughout the code. We assume the latter case. 
 
@@ -224,7 +259,7 @@ Additional detail for the build process is given in Algorithm~\ref{alg:fixed_gri
 
 \begin{algorithm} 
 \caption{QueryFixedGrid($\hat{P}$, $Q$, $h_n$)}         
-\label{alg:fixed_grid}  
+\label{alg:fixed_grid_query}  
 \begin{algorithmic}[1]    
     \State \textbf{Input:} A set of $d$-dimensional points $P$, and the desired resolution of the overlay grid, $hnx$.
     \State \textbf{Output:} The sorted set of points $\hat{P}$.
@@ -391,18 +426,7 @@ Alternative queries are possible: ball query and approximate nearest neighbor. T
 
 \cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
 
-\begin{figure}
-\centering
-\begin{subfigure}{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/bruteforce_N6400_n50-eps-converted-to.png}
-\caption{k-D Tree} 
-\end{subfigure} 
-\begin{subfigure}{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/lsh_N6400_n50-eps-converted-to.png}
-\caption{LSH}
-\end{subfigure}
-\caption{Example effects of node reordering within neighbor query algorithm for MD node set $N=6400$ with $n=50$. Matrix is $0.78\%$ full. k-D Tree maintains original ordering of the nodes and deceptively appears nearly dense. LSH algorithm reorders nodes according to raster ordering and reveals sparsity of the problem.  }
-\end{figure} 
+
 
 \cite{Samet2005} labels this type of algorithm as a \emph{fixed grid bucket algorithm} with the twist that it also has \emph{one dimensional ordering}
 
@@ -559,6 +583,8 @@ Q: the sphere I understand: its localizing the search to small patches on the sp
 \label{fig:hash_results}
 \end{figure}
 
+
+%TODO: add function for N=1e5, 1e4 to see as a function of N and hnx. 
 \begin{figure}
 \centering
 \includegraphics[width=7.5cm]{../figures/stencils/cvt1m_stencil_gen_speedup.png}
@@ -588,18 +614,22 @@ Q: what is the best conditioning from ordering?
 Q: what is the relative cost of ordering?
 
 
-
+%TODO: add RCM and fix order
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_orderings-eps-converted-to.pdf} \\
 \includegraphics[width=\textwidth]{rbffd_methods_content/hashing/spy_regulargrid-eps-converted-to.pdf} 
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right. }
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right.}  }
 \label{fig:orderings}
 \end{figure}
 
 
 \section{Conclusions on Stencil Generation}
 
+For quasi-regular distributions and small to medium sized grids the $k$-D Tree performs well enough in comparison to the fixed-grid method. However, the difference in 
+%TODO: what value? 
+
+There is an ideal $h_n$. %TODO: what is is as a function of N?
 
 
 \ifstandalone
