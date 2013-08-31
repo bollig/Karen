@@ -147,7 +147,7 @@ Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is 
 (c_x, c_y, c_z) & = \left(\left\lfloor\frac{(p_x - x_{min})}{dx}\right\rfloor , \left\lfloor\frac{(p_y - y_{min})}{dy}\right\rfloor , \left\lfloor\frac{(p_z - z_{min})}{dz}\right\rfloor \right).
 \label{eq:cell_hash}
 \end{align}
-Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding positive and negative offsets to each coordinate. Note that the fixed-grid in this method is virtual. Nodes are matched with cell coordinates, but the full grid is never explicitly constructed.
+Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding positive and negative offsets to each coordinate. %Note that the fixed-grid in this method is virtual. Nodes are matched with cell coordinates, but the full grid (i.e., vertices/edges) is never explicitly constructed.
 
 Fixed grid methods also make use of \emph{space filling curves}. Space filling curves pass through every point in $d$-dimensional space, and through each point only once. Equivalently, space filling curves map $d$-dimensional space down to 1-D, where every point is converted to a unique index or traversal order based on its spatial coordinates. These mapping properties make space filling curves ideal for use as hash functions. Traversing the $d$-dimensional points (i.e., playing ``connect the dots") draws the space filling curve. Figure~\ref{fig:space_filling_curves} presents two common orderings of a 2-D fixed-grid. Note that one-dimensional orderings are not unique. On the left is a \emph{Raster}-ordering (a.k.a. Scanline- or $ijk$-ordering): $f(c_x,c_y,c_z) = ((c_x * h_n) + c_y) * h_n + c_z$. The right half of Figure~\ref{fig:space_filling_curves} shows an ordering known as Morton- or $Z$-ordering. $Z$-ordering construction is discussed later in this chapter. On both sides of Figure~\ref{fig:space_filling_curves}, the lower left corner of each cell indicates the mapped index. Traversing the cells in order produces the curves superimposed in red. 
 
@@ -168,25 +168,29 @@ At a high level, fixed-grid methods have the following construction steps \cite{
 \end{enumerate}
 Particular details of how nodes are sorted, the choice of hashing function, the number of nodes allowed per cell, etc. determine the specific class of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}. 
 
-The implementation in this work is inspired by fixed-grid approaches for GPU particle simulations (\cite{Krog2010,Green2010,Johnson2011}). Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to finding the most efficient algorithms possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to their spatial hash reside closer in memory to their nearest neighbors than unsorted nodes, resulting in a higher likelihood that data will be cached when required. Note that sorting by cell hash sorts nodes across cells but not within them---that is, nodes contained by the same cell end up contiguous in memory, but they are not reordered with respect one another. Fortunately, with contiguous groups of nodes, querying is possible by stepping directly to the starting node index for teh cell and iterating over the correct number of indices. 
+The implementation in this work is inspired by fixed-grid approaches for GPU particle simulations (\cite{Krog2010,Green2010,Johnson2011}). Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to seek out the most efficient algorithms possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to their spatial hash reside closer in memory to their nearest neighbors than unsorted nodes, resulting in a higher likelihood that data will be cached when required. Note that reordering by cell hash sorts nodes across cells but not within them---that is, nodes contained by the same cell end up contiguous in memory, but they are arbitrarily ordered with respect one another. Fortunately, with contiguous groups of nodes, it is possible to step directly to the starting node index for the cell and iterate over the correct number of indices on a query. 
 
 
-The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is refined enough to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one valence of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. As a point of difference in implementations, the authors of \cite{Green2010, Krog2010} leverage a fast radix sort algorithm based on hash index to order nodes, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes the logic to refine the fixed-grid to enforce a maximum limit on the number of nodes per cell, which allows user specified resolutions to allow arbitrary numbers of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained for each cell that has the indices of all contained nodes. Unfortunately, iterating through those lists implies random access on memory.    
+The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one valence of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. As a point of difference in implementations, the authors of \cite{Green2010, Krog2010} leverage a fast radix sort algorithm based on hash index to order nodes, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforce a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained for each cell that has the indices of all contained nodes. Unfortunately, iterating through those lists implies random access on nodes and associated data in memory.    
 
 
-The implementation presented here is a hybrid of the related algorithms. For example, this implementation opts to sort cells based on raster-ordering, but drops the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed number of cell valences. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new valence of cells at each iteration. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.  
+The implementation presented here is a hybrid of the related algorithms. For example, this implementation opts to sort cells based on raster-ordering, but drops the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed number of cell valences. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new valence of cells at each iteration. This multi-pass ball-query was demonstrated in Figure~\ref{fig:nearest_neighbor_example}. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.
+%TODO: Figure~\ref{fig:hash_highlevel} demonstrates the algorithm 
+%\begin{figure}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
+%\caption{High level overview of the \emph{Fixed-Grid Bucket} (a.k.a. Hash) Algorithm. A coarse regular grid is overlaid on the domain. Nodes coordinates are hashed to containing cell indices and pushed onto a list for the appropriate cell. The cells are reordered in memory according to a space filling curve (i.e., Raster (IJK), Morton (Z), Graycode (U), etc.). Stencil queries start search with the cell containing the stencil center and expand to neighboring cells until at least $n$ candidate nodes are found. The candidate list is truncated to the $n$ closest neighbors. }
+%\label{fig:hash_highlevel}
+%\end{figure} 
 
-This implementation would be classified by \cite{Samet2005} as a \emph{fixed-grid bucket method with one-dimensional ordering}. The term \emph{bucket} refers to the allowance for each cell to contain an arbitrary number of nodes. The \emph{one-dimensional ordering} is indicative of attempts later in this chapter to employ alternative space-filling curves in place of raster-ordering.   
 
 
+This implementation would be classified by \cite{Samet2005} as a \emph{fixed-grid bucket method with one-dimensional ordering}. The term \emph{bucket} refers to the allowance for each cell to contain an arbitrary number of nodes. The \emph{one-dimensional ordering} is indicative of attempts later in the chapter to employ alternative space-filling curves in place of raster-ordering.   
 
-Algorithm~\ref{alg:fixed_grid_build} presents the process to build the data structures necessary for the fixed-grid method. 
 
-This work tested a simple prototype to determine ROI
-The fixed-grid algorithm in this work is presented in . In it
+Additional detail for the build process is given in Algorithm~\ref{alg:fixed_grid_build} presents the process to build the data structures necessary for the fixed-grid method. 
 
-%TODO: refer to figure showing two valences of cells
-%TODO: refer to 
+
 
 \begin{algorithm} 
 \caption{BuildFixedGrid($P$, $h_n$)}         
@@ -282,16 +286,7 @@ With regularly spacing it is possible to directly access the $(i,j,k)$-th cell i
 
  The low cost of both construction and query phases allow methods with moving nodes to perform updated nearest neighbor queries at each iteration without significant overhead. 
 
-Since stencil are rarely based on high dimensional data. It suffices to use a 
 
-
-
-Having witnessed the success of the fixed-grid method in particle-based simulations at the onset of this work (\cite{Krog2010,Krog2010b,Purcell2003}), a prototype 
-
-
-The algorithm used in this work is considered a particular
-
-The fixed-grid algorithm 
 
 Figure~\ref{fig:hash_highlevel} clarifies this algorithm presents the variant of the fixed-grid method used in this work from a high-level perspective. Starting with an input set of points, steps 1 through 3 are 
 
@@ -302,12 +297,6 @@ Fixed grid method from a high level.
 Works great for quasi-regular nodes. 
 Avoids construction with overlaid grid of known cell indices. 
 
-\begin{figure}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/LSH_Concept.png}
-\caption{High level overview of the \emph{Fixed-Grid Bucket} (a.k.a. Hash) Algorithm. A coarse regular grid is overlaid on the domain. Nodes coordinates are hashed to containing cell indices and pushed onto a list for the appropriate cell. The cells are reordered in memory according to a space filling curve (i.e., Raster (IJK), Morton (Z), Graycode (U), etc.). Stencil queries start search with the cell containing the stencil center and expand to neighboring cells until at least $n$ candidate nodes are found. The candidate list is truncated to the $n$ closest neighbors. }
-\label{fig:hash_highlevel}
-\end{figure} 
 
 
 The fixed-grid method 
@@ -602,9 +591,9 @@ Q: what is the relative cost of ordering?
 
 \begin{figure}
 \centering
-\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/node_orderings-eps-converted-to.pdf} \\
-\includegraphics[width=0.65\textwidth]{rbffd_methods_content/hashing/spy_regulargrid-eps-converted-to.pdf} 
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
+\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_orderings-eps-converted-to.pdf} \\
+\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/spy_regulargrid-eps-converted-to.pdf} 
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right. }
 \label{fig:orderings}
 \end{figure}
 
