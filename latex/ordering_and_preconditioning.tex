@@ -235,7 +235,7 @@ Querying the $k$-nearest neighbors for a single query node, $X_q$, is the subjec
 
 It is possible for the number nodes in $c$ to exceed $n$. However, the algorithm conservatively assumes that it is necessary to search at least one valence of cells around $c$. This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will balanced. For certain fixed-grid resolutions, a single valence may not satisfy the stencil size requirements, so the algorithm iterates outward into valences. As cells are checked, their nodes are appended onto $pq$. 
 
-The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance from all candidate nodes to $X_q$, and uses that metric to sort $pq$ in ascending order. The first $n$ nodes in $pq$ are returned as the stencil.
+The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance from all candidate nodes to $X_q$, and uses that metric to sort $pq$ in ascending order. The first $n$ nodes in $pq$ are returned as the stencil. 
 \begin{algorithm} 
 \caption{QueryFixedGrid($X_q$, $n$, $P$, $Q$ )}         
 \label{alg:fixed_grid_query}  
@@ -264,7 +264,8 @@ The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance 
 \end{algorithm}
 
 
-The complexity of Algorithm~\ref{alg:fixed_grid_query} can vary depending on whether nodes are distributed quasi-regular. If quasi-regular, a ball query can be completed in constant time \cite{Wendland2002}. For a sufficiently refined grid the $k$-ANN is dominated by the cost of the \emph{while-loop} and behaves as $O(\log h_n)$. If $h_n$ is small, the cost of sorting nodes dominates with a worst case of $O(N \log N)$ (for a C++ stl::sort). %TODO: verify with Gordon.  
+Complexity of Algorithm~\ref{alg:fixed_grid_query} can vary based on the choice of $h_n$. For a sufficiently refined fixed-grid the $k$-ANN is dominated by the cost of the \emph{while-loop} and behaves as $O(\log h_n)$. In the worst case, when $h_n$ is small, the cost of sorting $pq$ dominates proportional to $O(N \log N)$ (using a C++ STL Sort). %TODO: verify with Gordon.  
+Results below demonstrate that it is fairly simple to choose $h_n$ appropriately to maintain logarithmic complexity similar to the $k$-D Tree query. 
 
 
 The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the green center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternative black node is selected even though it is more distant. This is true because the more distant black node occupies the second valence of cells around the stencil center, whereas the true near neighbor is in the third valence. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second valence by satisfying the requirement on $n$. 
@@ -489,7 +490,7 @@ Q: the complexity of the algorithm?
 Q: the sphere I understand: its localizing the search to small patches on the sphere, and 
 
 
-
+%TODO: if we overrefine the fixed-grid then the query complexity $\log h_n > \log N$, so the fixed-grid method again starts to lose ground on the $k$-D Tree.
 
 
 \begin{figure}
