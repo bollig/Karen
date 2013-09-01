@@ -261,23 +261,7 @@ Querying the $k$-nearest neighbors from the fixed-grid is the subject of Algorit
 
 %TODO: in case node is near the boundary of its cell all queries must check at least the first valence of cells. 
 
-\subsection{Orderings}
 
-%TODO: bandwidth definition
-%TODO: dilation for orderings
-%TODO: maximum number of cells that we can reorder given 64-bit integer. 
-
-The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
-At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
-% While transcription is done in constant time, it does require random access on the point list $P$. Post sort
-
-
-%TODO: at the end of algorithm \hat{P} can be used for queries only OR it can be copied over the input set of nodes so that the ordering persists throughout the code. We assume the latter case. 
-
-%TODO: The choice of spatial hash function certainly impacts memory access patterns. 
-%TODO: \hat{P} is used in place of P. 
-
-\subsection{$k$-NN with Fixed-Grid}
 
 Start at the center cell and add the 8 cells immediately surrounding it. Add to this the 16 cells in the second halo for a total of 25 cells. 
 
@@ -295,6 +279,17 @@ The query is approximate because nodes such as the white node in Figure~\ref{fig
 \caption{A stencil generated with $k$-ANN satisfies the required stencil size, but is not guaranteed to choose the true nearest neighbors.}
 \label{fig:approximate_nearest_neighbors}
 \end{figure}
+
+
+
+\subsection{Orderings}
+
+%TODO: bandwidth definition
+%TODO: dilation for orderings
+%TODO: maximum number of cells that we can reorder given 64-bit integer. 
+
+The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
+At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
 
 
 \subsection{Performance} 
