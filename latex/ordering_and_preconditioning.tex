@@ -234,25 +234,27 @@ Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matri
 Querying the $k$-nearest neighbors from the fixed-grid is the subject of Algorithm~\ref{alg:fixed_grid_query}. First, the query node is hashed to identify its cell. Second 
 
 \begin{algorithm} 
-\caption{QueryFixedGrid($\hat{P}$, $Q$, $h_n$)}         
+\caption{QueryFixedGrid($X_q$, $n$, $P$, $Q$ )}         
 \label{alg:fixed_grid_query}  
 \begin{algorithmic}[1]    
-    \State \textbf{Input:} A set of $d$-dimensional points $P$, and the desired resolution of the overlay grid, $hnx$.
-    \State \textbf{Output:} The sorted set of points $\hat{P}$.
-    \State Get $min$ and $max$ coordinates from $P$
-    \State Create a vector of $(h_n)^d$ empty vectors, $Q$. 
-    \For{point $p_i$ in $P$}
-       \State $c := \text{CellCoords}(p_i)$ 
-       \State $ind := \text{SpatialHash}(c)$
-       \State Append $i$ to $Q[ind]$
-    \EndFor
-    \For{each $Q[j]$, $j=0,1,...,(h_n)^d$}
-    \If{$Q[j]$ is not empty}
-        \State Append all (unsorted) nodes in $P[Q[j]]$ to $\hat{P}$
-        \State Overwrite $Q[j]$ with new indices from $\hat{P}$ 
-    \EndIf
-    \EndFor
-    \State \Return $\hat{P}$, $Q$
+    \State \textbf{Input:} A query point, $X_q$; the desired number of neighbors, $n$; a set of $d$-dimensional points $P$; and the matching cell bucket list, $Q$.
+    \State \textbf{Output:} The $n$-nearest neighbors list $pq$.
+    \State     
+    \State $valence := 1$
+    \State $c := \text{CellCoords}(X_q)$ 
+    \While{$pq$.size $< n$ OR $valence < 2$}
+        \State $cells := \text{NeighboringCellCoords}(c, valence)$
+        \State $inds := \text{SpatialHash}(cells)$
+        \For{each $q$ in $Q[inds]$}
+            \If{$q$ is not empty} 
+            \State Append node list $P[q]$ onto $pq$
+            \EndIf
+        \EndFor
+        \State $valence := valence + 1$
+    \EndWhile
+    \State $dists := \text{ComputeDistances}(pq)$
+    \State Sort $pq$ by $dists$
+    \State \Return $pq$.first($n$)
     \end{algorithmic}
 \end{algorithm}
 
