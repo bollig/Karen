@@ -207,9 +207,9 @@ The implementation presented here is a hybrid of the related algorithms. For exa
     \end{algorithmic}
 \end{algorithm}
 
-Algorithm~\ref{alg:fixed_grid_build} presents the fixed-grid build process. The routine starts with the allocation an array of empty buckets, $Q$. Next $Q$ is populated based on the spatially hashed cell coordinates. The second for-loop in Algorithm~\ref{alg:fixed_grid_build} is the most complex portion of the build process. Here the loop iterates through $Q$, looking for non-empty buckets. If one is found, nodes referenced by that bucket are transcribed/appended onto the ``sorted" list of nodes $\hat{P}$. This way the nodes in each cell are contiguous, but maintain the original ordering with respect to one another. Additionally, node indices in $\hat{P}$ replace the old indices within $Q$.
+Algorithm~\ref{alg:fixed_grid_build} presents the fixed-grid build process. The routine starts with the allocation an array of empty buckets, $Q$. Next $Q$ is populated based on the spatially hashed cell coordinates. The second for-loop in Algorithm~\ref{alg:fixed_grid_build} iterates through $Q$, looking for non-empty buckets. When one is found, nodes referenced by that bucket are transcribed/appended onto the ``sorted" list of nodes $\hat{P}$. This way the nodes in each cell are contiguous, but maintain the original ordering with respect to one another. Additionally, node indices in $\hat{P}$ replace the old indices within $Q$.
 
-The entire build process has $O(N)$ complexity, and requires $O((h_n)^d + N)$ storage. Samet \cite{Samet2005} would classify this approach as a \emph{fixed-grid bucket method with one-dimensional ordering}. The term \emph{bucket} refers to the allowance for each cell to contain an arbitrary number of nodes. \emph{One-dimensional ordering} is indicative of attempts later in the chapter to employ alternative space-filling curves in place of raster-ordering. 
+The entire build process complexity is proportional to $O(N)$, and requires $O((h_n)^d + N)$ storage. Samet \cite{Samet2005} would classify this approach as a \emph{fixed-grid bucket method with one-dimensional ordering}. The term \emph{bucket} refers to the allowance for each cell to contain an arbitrary number of nodes. \emph{One-dimensional ordering} is indicative of attempts later in the chapter to employ alternative space-filling curves in place of raster-ordering. 
 
 A special note: the final step of Algorithm~\ref{alg:fixed_grid_build} overwrites the original list of nodes with the sorted equivalent. The spatially sorted list is included in the cost of stencil generation, but available for reuse elsewhere. Since the first step in RBF-FD applications is to generate stencils, overwriting the input node set can guarantee that the node values throughout the entire life-cycle of an RBF-FD application will benefit from the same spatial locality as stencil generation. This benefit is (almost) free. 
 
@@ -229,33 +229,9 @@ Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matri
 \label{fig:reorder_example}
 \end{figure} 
 
-The $k$-NN query process for the fixed-grid method is found in Algorithm~\ref{alg:fixed_grid_query}.
+\subsection{Fixed-Grid $k$-NN}
 
-
-
-
-%TODO: bandwidth definition
-%TODO: dilation for orderings
-%TODO: maximum number of cells that we can reorder given 64-bit integer. 
-
-The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
-At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
-% While transcription is done in constant time, it does require random access on the point list $P$. Post sort
-
-
-
-The complexity BuildFixedGrid is proportional to $O(N + (h_n)^d)$.
-
-The cell bucket list, $Q$, consumes $O((h_n)^d + N)$ storage. Each bucket of $Q$ is an STL Vector type to allow efficient (constant time on average) appends. 
- 
-
-
-%TODO: at the end of algorithm \hat{P} can be used for queries only OR it can be copied over the input set of nodes so that the ordering persists throughout the code. We assume the latter case. 
-
-%TODO: The choice of spatial hash function certainly impacts memory access patterns. 
-%TODO: \hat{P} is used in place of P. 
-
-\subsection{$k$-NN with Fixed-Grid}
+Querying the $k$-nearest neighbors from the fixed-grid is the subject of Algorithm~\ref{alg:fixed_grid_query}. First, the query node is hashed to identify its cell. Second 
 
 \begin{algorithm} 
 \caption{QueryFixedGrid($\hat{P}$, $Q$, $h_n$)}         
@@ -280,6 +256,42 @@ The cell bucket list, $Q$, consumes $O((h_n)^d + N)$ storage. Each bucket of $Q$
     \end{algorithmic}
 \end{algorithm}
 
+%TODO: in case node is near the boundary of its cell all queries must check at least the first valence of cells. 
+
+\subsection{Orderings}
+
+%TODO: bandwidth definition
+%TODO: dilation for orderings
+%TODO: maximum number of cells that we can reorder given 64-bit integer. 
+
+The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
+At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
+% While transcription is done in constant time, it does require random access on the point list $P$. Post sort
+
+
+%TODO: at the end of algorithm \hat{P} can be used for queries only OR it can be copied over the input set of nodes so that the ordering persists throughout the code. We assume the latter case. 
+
+%TODO: The choice of spatial hash function certainly impacts memory access patterns. 
+%TODO: \hat{P} is used in place of P. 
+
+\subsection{$k$-NN with Fixed-Grid}
+
+Start at the center cell and add the 8 cells immediately surrounding it. Add to this the 16 cells in the second halo for a total of 25 cells. 
+
+So while a $k$-NN stencil of size $n=8$ in Figure~\ref{fig:nearest_neighbor_example} would contain the black node in the right-most column of the grid. The $k$-ANN generated a stencil of size $n=8$ would opt for the black node to the top right because it is in the second halo and accepted as ``closer" because the stencil can be satisfied without querying the extra 24 cells on the outermost halo. 
+
+
+Therefore, it is not essential that stencils contain only nearest neighbors. Instead, one can acquire the \emph{approximate nearest neighbors}. Figure~\ref{fig:ann_example} demonstrates a case where a does not contain all nearest neighbors. As illustrated in the Figure, the ANN stencil and true nearest neighbor stencil differ by one node. THis is not dire
+
+
+The query is approximate because nodes such as the white node in Figure~\ref{fig:nearest_neighbor_example} could be included in the stencil before 
+
+\begin{figure}
+\centering
+\includegraphics[width=8.5cm]{rbffd_methods_content/neighbors/neighbor_incorrect.png}
+\caption{A stencil generated with $k$-ANN satisfies the required stencil size, but is not guaranteed to choose the true nearest neighbors.}
+\label{fig:approximate_nearest_neighbors}
+\end{figure}
 
 
 \subsection{Performance} 
@@ -315,109 +327,23 @@ The algorithm chosen for this work is provided in Algorithm~\ref{alg:hash_build}
 
 These tests assume $dx = dy = dz$ to ensure spherical stencils. 
 
-With regularly spacing it is possible to directly access the $(i,j,k)$-th cell in the domain with the formula $cell = ((h_n * i) + j) * h_n + k$.
-
- Each cell of the overlay  queries are popular in particle-based methods like Smoothed Particle Hydrodynamics \cite{Krog2010,Krog2010b}, where neighbors are determined based on spatial proximity in lower dimensions (i.e., 2-D or 3-D). Since RBF-FD stencils are also based on spatial proximity it is possible to 
-
- The low cost of both construction and query phases allow methods with moving nodes to perform updated nearest neighbor queries at each iteration without significant overhead. 
-
-
-
-Figure~\ref{fig:hash_highlevel} clarifies this algorithm presents the variant of the fixed-grid method used in this work from a high-level perspective. Starting with an input set of points, steps 1 through 3 are 
-
-
-\cite{Brown2010} introduce a minimal $k$-D Tree for the GPU which 
-
-Fixed grid method from a high level. 
-Works great for quasi-regular nodes. 
-Avoids construction with overlaid grid of known cell indices. 
-
-
-
-The fixed-grid method 
-
-
-An implementation of the method used in \cite{Wendland2002}, discussed in \cite{WendlandBook} and 
-
-
-For moving nodes, such as in Lagrangian schemes, this cost is prohibitively high. In an attempt to reduce the cost, lagrangian schemes introduced approximate nearest neighbor queries based on 
-
-
-
-The algorithm introduced here is the same as the Fixed-Grid Method in \cite{WendlandBook}.     
-
-\subsection{ANN}
-Our benchmarks and testing focus on the more challenging problem of $k$-NN
-
-As part of the preprocessing stage for RBF-FD, the scattered point cloud must
-be analyzed to generate stencils. To generate a stencil, any collection of
-nodes can be selected. However, by choosing nodes close to the stencil center
-and well balanced around it, we stand to get the best possible approximations
-to derivatives. 
-
-Why? well, the approximations are based on differences. Similar to classic FD,
-draw a secant connecting two nodes of a stencil. The slope of the secant
-determines the gradient at either point or a point in between. In the limit as
-the points are moved closer to the same spot, the approximation to the
-derivative at that point becomes exact. 
-
-So ideally every RBF-FD stencil will operate on nearest neighbors. 
-
-
-
- can be described as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering} as classified by \cite{Samet2005}. 
 
 The implementation runs entirely on the CPU (\cite{Krog2010} runs on the GPU). 
 
+
 The $k$-D tree implementation compared in this work is the \emph{$kd$-Tree Matlab} library from Tagliasacchi \cite{TagliasacchiMFE,TagliasacchiGC}. Originally posted to the Matlab FileExchange and now maintained as a Google Code project. Until the addition of $KNNsearcher$ in Matlab 
+
+garnered attention due to its MEX compiled interface that allowed use as both a C++ and MATLAB library. 
+The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
 
 Tagliasacchi \cite{TagliasacchiGC} uses the standard split by median in each dimension, with alternating chosen by incrementing the dimension by one, modulo the number of dimensions (e.g., in 2D the order is $X, Y, X, Y, ...$). Wendland \cite{WendlandBook} suggests a number of more advanced median cuts such as 
 
 \cite{TagliasacchiMFE}. 
 \cite{MatlabKDTreeSearcher}
 
-Hashing, shown in Figure~\ref{fig:hashing_example} overlays a regular grid. This is equivalent to an axis aligned bounding box AABB, with refinement. In other words, we form a quad-tree in 2D, an octree in 3D. The neighbor query starts with the cell in which $x_c$ resides. Since we use an axis aligned bounding box, this cell index is easily calculated given the coordinate and number of subdivisions in each dimension. Once the cell index is resolved, the stencil is populated by taking the $n$ nearest neighbors from within the current cell. If the cell does not contain sufficient number of nodes to fill the stencil, the search for neighbors expands to include the cells immediately adjoining the center cell, taking only the nearest nodes in the provided cells. The search continues to expand outward in a rasterized circle/sphere until $n$ is satisifed. This search is considered approximate because it can happen that a true nearest neighbor would lie in a cell that is is not included in the rasterized circle, and other nodes are substituted from the far reaches of the discretized grid.
 
 
 
-%TODO: cite lagrangian sph knn
-The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
-
-
-
-In the benchmarks below, a $k$-D Tree implementation by Tagliasacchi \cite{TagliasacchiGC,TagliasacchiMFE}. The implementation follows the construction process and 
-
-it was a popular package offered on the MATLAB FileExchange and garnered attention due to its MEX compiled interface that allowed use as both a C++ and MATLAB library. 
-
-  Most of the RBF community leverages the $k$-D tree, due to its low computational complexity for querying neighbors and its wide availability as standalone software in the public domain (e.g., matlab central has a few implementations for download, and the MATLAB Statistics Toolbox includes an efficient k-D Tree). 
-
-The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
-
-
-\subsection{$k$-NN vs $k$-ANN} 
-
-Start at the center cell and add the 8 cells immediately surrounding it. Add to this the 16 cells in the second halo for a total of 25 cells. 
-
-So while a $k$-NN stencil of size $n=8$ in Figure~\ref{fig:nearest_neighbor_example} would contain the black node in the right-most column of the grid. The $k$-ANN generated a stencil of size $n=8$ would opt for the black node to the top right because it is in the second halo and accepted as ``closer" because the stencil can be satisfied without querying the extra 24 cells on the outermost halo. 
-
-
-Therefore, it is not essential that stencils contain only nearest neighbors. Instead, one can acquire the \emph{approximate nearest neighbors}. Figure~\ref{fig:ann_example} demonstrates a case where a does not contain all nearest neighbors. As illustrated in the Figure, the ANN stencil and true nearest neighbor stencil differ by one node. THis is not dire
-
-
-The query is approximate because nodes such as the white node in Figure~\ref{fig:nearest_neighbor_example} could be included in the stencil before 
-
-
-RBF-FD operates on general node distributions. Historically, stencils are uniform in size ($n$) and generated by selecting the $(n-1)$ true nearest neighbors to a node $x_c$. This is a $k$-NN query. 
-
-Alternative queries are possible: ball query and approximate nearest neighbor. The approximate is of particular interest because nodes closest to the stencil will always be selected, whereas the nodes further away have minimal influence so swapping out cant hurt. The justification in altering the selection is for reduced complexity in neighbor queries.  
-
-
-\begin{figure}
-\centering
-\includegraphics[width=8.5cm]{rbffd_methods_content/neighbors/neighbor_incorrect.png}
-\caption{A stencil generated with $k$-ANN satisfies the required stencil size, but is not guaranteed to choose the true nearest neighbors.}
-\label{fig:approximate_nearest_neighbors}
-\end{figure}
 
 
 
@@ -477,6 +403,20 @@ Until the new release of KDTree, our algorithm was a major improvement to the pe
 
 Our work in \cite{BolligFlyerErlebacher2012} leveraged an alternative to $k$-D tree, based loosely on space-filling curve orderings common in Lagrangian schemes like Smoothed Particle Hydrodynamics (e.g., \cite{IanThesis}, \cite{Kelager}). %TODO: I have used Locality Sensitive Hashing \cite{Indyk} in the past. According to Samet \cite{Samet2005} LSH uses a set of random hashes to assign indices for each node. Our case uses space-filling curve, so we use . 
 
+
+\subsection{Future Work}
+\cite{Brown2010} introduce a minimal $k$-D Tree for the GPU which 
+
+
+
+%TODO: cite lagrangian sph knn
+The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
+
+
+
+RBF-FD operates on general node distributions. Historically, stencils are uniform in size ($n$) and generated by selecting the $(n-1)$ true nearest neighbors to a node $x_c$. This is a $k$-NN query. 
+
+Alternative queries are possible: ball query and approximate nearest neighbor. The approximate is of particular interest because nodes closest to the stencil will always be selected, whereas the nodes further away have minimal influence so swapping out cant hurt. The justification in altering the selection is for reduced complexity in neighbor queries.  
 
 
 
