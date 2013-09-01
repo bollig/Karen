@@ -242,6 +242,7 @@ Querying the $k$-nearest neighbors from the fixed-grid is the subject of Algorit
     \State     
     \State $valence := 1$
     \State $c := \text{CellCoords}(X_q)$ 
+    \State Append $Q[c]$ onto $pq$
     \While{$pq$.size $< n$ OR $valence < 2$}
         \State $cells := \text{NeighboringCellCoords}(c, valence)$
         \State $inds := \text{SpatialHash}(cells)$
@@ -254,7 +255,7 @@ Querying the $k$-nearest neighbors from the fixed-grid is the subject of Algorit
     \EndWhile
     \State $dists := \text{ComputeDistances}(pq)$
     \State Sort $pq$ by $dists$
-    \State \Return $pq$.first($n$)
+    \State \Return the first $n$ nodes in $pq$
     \end{algorithmic}
 \end{algorithm}
 
