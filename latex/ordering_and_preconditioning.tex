@@ -231,7 +231,11 @@ Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matri
 
 \subsection{Fixed-Grid $k$-NN}
 
-Querying the $k$-nearest neighbors from the fixed-grid is the subject of Algorithm~\ref{alg:fixed_grid_query}. First, the query node is hashed to identify its cell. Second 
+Querying the $k$-nearest neighbors for a single query node $X_q$ is the subject of Algorithm~\ref{alg:fixed_grid_query}. The process begins by finding the containing cell, $c$, for $X_q$. The hash value of $c$ is used to identify (in $Q$) the list of nodes contained within that cell, all of which are appended to a vector of neighbor candidates, $pq$. 
+
+It is possible for the number nodes in $c$ to exceed $n$. However, the algorithm conservatively assumes that it is necessary to search at least one valence of cells around $c$. This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will balanced. Cells surrounding $c$ are treated the same as $c$: all nodes associated with the cell are appended onto $pq$. 
+
+Depending on the resolution of the grid, a single valence may not be sufficient to satisfy the stencil requirements. To address this the algorithm iterates by stepping to the next valence  
 
 \begin{algorithm} 
 \caption{QueryFixedGrid($X_q$, $n$, $P$, $Q$ )}         
@@ -242,7 +246,8 @@ Querying the $k$-nearest neighbors from the fixed-grid is the subject of Algorit
     \State     
     \State $valence := 1$
     \State $c := \text{CellCoords}(X_q)$ 
-    \State Append $Q[c]$ onto $pq$
+    \State $ind := \text{SpatialHash}(cells)$
+    \State Append $P[Q[ind]]$ onto $pq$
     \While{$pq$.size $< n$ OR $valence < 2$}
         \State $cells := \text{NeighboringCellCoords}(c, valence)$
         \State $inds := \text{SpatialHash}(cells)$
@@ -251,7 +256,7 @@ Querying the $k$-nearest neighbors from the fixed-grid is the subject of Algorit
             \State Append node list $P[q]$ onto $pq$
             \EndIf
         \EndFor
-        \State $valence := valence + 1$
+        \State increment $valence$
     \EndWhile
     \State $dists := \text{ComputeDistances}(pq)$
     \State Sort $pq$ by $dists$
