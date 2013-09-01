@@ -229,14 +229,13 @@ Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matri
 \label{fig:reorder_example}
 \end{figure} 
 
-\subsection{Fixed-Grid $k$-NN}
+\subsection{Fixed-Grid Neighbor Query}
 
-Querying the $k$-nearest neighbors for a single query node $X_q$ is the subject of Algorithm~\ref{alg:fixed_grid_query}. The process begins by finding the containing cell, $c$, for $X_q$. The hash value of $c$ is used to identify (in $Q$) the list of nodes contained within that cell, all of which are appended to a vector of neighbor candidates, $pq$. 
+Querying the $k$-nearest neighbors for a single query node, $X_q$, is the subject of Algorithm~\ref{alg:fixed_grid_query}. The process begins by finding $X_q$'s containing cell, $c$. The hash value of $c$ is used to identify (in $Q$) the list of nodes contained within that cell, all of which are appended to a vector of neighbor candidates, $pq$. 
 
-It is possible for the number nodes in $c$ to exceed $n$. However, the algorithm conservatively assumes that it is necessary to search at least one valence of cells around $c$. This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will balanced. Cells surrounding $c$ are treated the same as $c$: all nodes associated with the cell are appended onto $pq$. 
+It is possible for the number nodes in $c$ to exceed $n$. However, the algorithm conservatively assumes that it is necessary to search at least one valence of cells around $c$. This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will balanced. For certain fixed-grid resolutions, a single valence may not satisfy the stencil size requirements, so the algorithm iterates outward into valences. As cells are checked, their nodes are appended onto $pq$. 
 
-Depending on the resolution of the grid, a single valence may not be sufficient to satisfy the stencil requirements. To address this the algorithm iterates by stepping to the next valence  
-
+The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance from all candidate nodes to $X_q$, and uses that metric to sort $pq$ in ascending order. The first $n$ nodes in $pq$ are returned as the stencil.
 \begin{algorithm} 
 \caption{QueryFixedGrid($X_q$, $n$, $P$, $Q$ )}         
 \label{alg:fixed_grid_query}  
@@ -264,26 +263,21 @@ Depending on the resolution of the grid, a single valence may not be sufficient 
     \end{algorithmic}
 \end{algorithm}
 
-%TODO: in case node is near the boundary of its cell all queries must check at least the first valence of cells. 
+
+The complexity of Algorithm~\ref{alg:fixed_grid_query} can vary depending on whether nodes are distributed quasi-regular. If quasi-regular, a ball query can be completed in constant time \cite{Wendland2002}. For a sufficiently refined grid the $k$-ANN is dominated by the cost of the \emph{while-loop} and behaves as $O(\log h_n)$. If $h_n$ is small, the cost of sorting nodes dominates with a worst case of $O(N \log N)$ (for a C++ stl::sort). %TODO: verify with Gordon.  
 
 
+The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the green center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternative black node is selected even though it is more distant. This is true because the more distant black node occupies the second valence of cells around the stencil center, whereas the true near neighbor is in the third valence. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second valence by satisfying the requirement on $n$. 
 
-Start at the center cell and add the 8 cells immediately surrounding it. Add to this the 16 cells in the second halo for a total of 25 cells. 
-
-So while a $k$-NN stencil of size $n=8$ in Figure~\ref{fig:nearest_neighbor_example} would contain the black node in the right-most column of the grid. The $k$-ANN generated a stencil of size $n=8$ would opt for the black node to the top right because it is in the second halo and accepted as ``closer" because the stencil can be satisfied without querying the extra 24 cells on the outermost halo. 
-
-
-Therefore, it is not essential that stencils contain only nearest neighbors. Instead, one can acquire the \emph{approximate nearest neighbors}. Figure~\ref{fig:ann_example} demonstrates a case where a does not contain all nearest neighbors. As illustrated in the Figure, the ANN stencil and true nearest neighbor stencil differ by one node. THis is not dire
+The difference between a true $k$-NN and $k$-ANN is insignificant for RBF-FD. The method compensates automatically for differences in node locations when weights are calculated. On top of this, the difference between $k$-NN and $k$-ANN is limited to nodes in the outermost reaches of the stencil (i.e., nodes with minimal impact on the stencil center).
 
 
-The query is approximate because nodes such as the white node in Figure~\ref{fig:nearest_neighbor_example} could be included in the stencil before 
-
-\begin{figure}
-\centering
-\includegraphics[width=8.5cm]{rbffd_methods_content/neighbors/neighbor_incorrect.png}
-\caption{A stencil generated with $k$-ANN satisfies the required stencil size, but is not guaranteed to choose the true nearest neighbors.}
-\label{fig:approximate_nearest_neighbors}
-\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=8.5cm]{rbffd_methods_content/neighbors/neighbor_incorrect.png}
+%\caption{A stencil generated with $k$-ANN satisfies the required stencil size, but is not guaranteed to choose the true nearest neighbors.}
+%\label{fig:approximate_nearest_neighbors}
+%\end{figure}
 
 
 
