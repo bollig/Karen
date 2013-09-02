@@ -296,6 +296,20 @@ Figure~\ref{fig:stencil_query_old_and_new} compares the performance of the $k$-D
 
  performance gap between the C++ fixed-grid implementation and the $k$-D Tree.  Prior to the 2012 improvements the C++ implementation was over 130x faster in stencil generation (build and query). However, with the more reasonable 
 
+\begin{figure}
+\centering
+\begin{subfigure}{0.52\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
+\end{subfigure}
+\begin{subfigure}{0.46\textwidth}
+\centering
+%\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
+\includegraphics[width=\textwidth]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png}
+\end{subfigure}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the gains achieved by the fixed-grid neighbor query method.}
+\label{fig:stencil_query_old_and_new}
+\end{figure}
 
 Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $N$ stencils of size $n=50$ with three methods: \cite{Tagliasacchi2008}, our hash-based neighbor query, and the improved KDTree from \cite{Tagliasacchi2012}. 
 Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
@@ -303,18 +317,6 @@ Until the new release of KDTree, our algorithm was a major improvement to the pe
 
 The difficulty in choosing $h_n$ should not deter the use of fixed-grids for RBF-FD. Since stencil generation is a one time cost, so long as the fixed-grid method is on the same order of complexity as $k$-D Tree, the true cost is insignificant. The long-run payoff on SpMV performance is where the fixed-grid method wins the argument over choice in method. 
 
-\begin{figure}
-\centering
-\begin{subfigure}{0.45\textwidth}
-\includegraphics[width=\textwidth]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
-\end{subfigure}
-\begin{subfigure}{0.425\textwidth}
-%\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
-\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png}
-\end{subfigure}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
 
 
 
