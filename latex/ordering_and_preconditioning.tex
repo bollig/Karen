@@ -442,15 +442,28 @@ RCM is effective and used with KDTree.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid-eps-converted-to.pdf}
+\begin{subfigure}{0.425\textwidth}
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid.eps}
+\caption{Original Node Distribution}
+\end{subfigure}
+\begin{subfigure}{0.425\textwidth}
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf}
+\caption{Fixed-grid cells}
+\end{subfigure}
+\begin{subfigure}{0.425\textwidth}
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
+\caption{Example Stencil $n=31$}
+\end{subfigure}
 \caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{REGENERATE FIGURES WITH RANDOM/HALTON NODES}}
 \label{fig:orderings}
 \end{figure}
 
+In Figure~\ref{fig:orderings} typical stencils in RBF-FD easily span multiple cells. Shown is $n=31$ which spans 7 cells. The use of $Z$-ordering (e.g., \cite{Goswami2010}) is often associated with improved memory access patterns. However, 
+
 \begin{figure}
 \centering
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf} \includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
+\caption{A simple example illustrates the use of a fixed-grid with $h_n = 6$ for $N=18^3$ regular nodes.  d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
 \label{fig:orderings}
 \end{figure}
 
@@ -478,11 +491,11 @@ Due to the limited significance of stencil generation under RBF-FD, the overhead
 
 \subsection{Future Work}
 
-The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
+While more efficient implementations are possible, the savings demonstrated by Figure~\ref{sten_methods_compare} the savings are significant with the right choice of $h_n$. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
 
 Open item from to this section include: 
 \begin{itemize} 
-\item An efficient GPU $k$-NN implementation for the investigation of RBF-FD in a moving nodes or adaptive mesh refinement situation. Examples include \cite{Pan2011, Goswami2010, Connor2009, Brown2010}
+\item An efficient GPU $k$-NN implementation for the investigation of RBF-FD in a moving nodes or adaptive mesh refinement situation. Examples include \cite{Pan2011, Goswami2010, Connor2009}
 \item Space filling curves are limited to a MATLAB prototype at the moment. These can be implemented in C++ for integers, with a potential investigation into floating point dilation and orderings \cite{Connor2009}.
 \item 
 \end{itemize}
@@ -490,14 +503,30 @@ Open item from to this section include:
 \cite{Saad2003} mentions the impact of ordering on conditioning.
 
 
-
-
 %TODO: add RCM and fix order
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_orderings-eps-converted-to.pdf} \\
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/spy_regulargrid-eps-converted-to.pdf} 
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right.}  }
+\includegraphics[width=0.5\textwidth]{rbffd_methods_content/hashing/node_orderings.eps} \\
+\includegraphics[width=0.5\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.eps} \\
+\includegraphics[width=0.5\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d2_n31_hn6.eps} 
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right.}  3) Spy impact on MD node set $N=4096$, stencil size $n=31$, $h_n = 6$ }
+\label{fig:orderings}
+\end{figure}
+
+
+The RCM algorithm is a breadth first search over stencils to order them based on the minimum degree (number of connections per stencil). The zig-zag ordering shown in Figure~\ref{fig:orderings} is an ideal case where all nodes are connected to two neighbors (i.e., $n=3$). In practice the curve trends diagonally across the domain due to the BFS property, but the ordering often appears to connect nodes randomly 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.eps} 
+\caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
+\label{fig:orderings}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10-eps-converted-to.pdf} 
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right.}  3) Spy impact on MD node set $N=4096$, stencil size $n=31$, $h_n = 6$ }
 \label{fig:orderings}
 \end{figure}
 
