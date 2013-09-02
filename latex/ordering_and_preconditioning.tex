@@ -163,11 +163,11 @@ At a high level, fixed-grid methods have the following construction steps \cite{
 Particular details of how nodes are sorted, the choice of hashing function, the number of nodes allowed per cell, etc. determine the specific class of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}. 
 
 \subsection{Fixed-grid Construction}
-The algorithm in this work is inspired by fixed-grid approaches for GPU particle simulations (\cite{Krog2010,Green2010,Johnson2011}). Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to seek out the most efficient solutions possible. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a spatial hash reside closer in memory to nearby neighbors than in the case of unsorted nodes. The spatial locality results in a higher likelihood that data will be cached when required. Note that reordering by cell hash sorts nodes across cells but not within them---that is, nodes contained by the same cell are contiguous in memory, but remain arbitrarily ordered with respect one another. Fortunately, with contiguous groups of nodes, nearest neighbor queries can directly access all nodes per cell. 
+The algorithm in this work is inspired by fixed-grid approaches for GPU particle simulations (\cite{Krog2010,Green2010,Johnson2011}). Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to seek out the most efficient solutions possible \cite{Goswami2010}. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a spatial hash reside closer in memory to nearby neighbors than in the case of unsorted nodes. The spatial locality results in a higher likelihood that data will be cached when required. Note that reordering by cell hash sorts nodes across cells but not within them---that is, nodes contained by the same cell are contiguous in memory, but remain arbitrarily ordered with respect one another. Fortunately, with contiguous groups of nodes, nearest neighbor queries can directly access all nodes per cell. 
 
 
-The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one valence of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. %TODO: is it constant time here?
- As a point of difference in implementations, the authors of \cite{Green2010, Krog2010} leverage a fast radix sort algorithm to order nodes based on hash index, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforce a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained that stores the indices of all contained nodes per cell. %, which implies random memory access when operating on the nodes of a cell.    
+The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one valence of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. A similar approach is taken by \cite{Goswami2010}, but the authors opt for a $Z$-ordering of cells. 
+ As a point of difference in implementations, the authors of \cite{Green2010, Krog2010, Goswami2010} leverage a fast radix sort algorithm to order nodes based on hash index, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforce a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained that stores the indices of all contained nodes per cell. %, which implies random memory access when operating on the nodes of a cell.    
 
 
 The implementation presented here is a hybrid of the related algorithms. For example, cells are sorted based on raster-ordering, but without the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed radius, or number of cell valences. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new valence of cells at each iteration. This multi-pass ball-query was demonstrated in Figure~\ref{fig:nearest_neighbor_example}. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.
@@ -280,37 +280,7 @@ The difference between a true $k$-NN and $k$-ANN is insignificant from the persp
 %\label{fig:approximate_nearest_neighbors}
 %\end{figure}
 
-
-
-\subsection{Alternative Orderings}
-
-%TODO: bandwidth definition
-%TODO: dilation for orderings
-%TODO: maximum number of cells that we can reorder given 64-bit integer. 
-
-As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices. Those patterns in turn correlate to differenct memory access patterns
-
- Examples include $Z$- or \emph{Morton} ordering, $U$- or \emph{Greycode}-ordering, $X$-ordering, etc. Hilbert curves have been demonstrated to be the most efficient \cite{INREFS}. 
-
-
-
-The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
-At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
-
-
-
-\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
-
-
-
-\subsubsection{Reverse Cuthill-McKee} 
-
-
-
-
-
-
-\subsection{Performance} 
+\subsection{Performance Comparison}
 
 This implementation is CPU only. Porting the one time stencil generation to the GPU was seen as 
 
@@ -341,65 +311,6 @@ Until the new release of KDTree, our algorithm was a major improvement to the pe
 
 
 
-\subsection{Impact of Orderings}
-
-
-impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on condition considered in future chapter. 
-
-
-
-
-\section{Conclusion and Future Work}
-
-
-
-%TODO: move down
-Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes
-
-Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging the fixed-grid method on the GPU is difficult to justify. The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. The added complexity in reproducing the efficient fixed-grid method on the GPU could be the subject of future work for moving nodes. 
-
-\cite{Connor2009} could benefit the algorithm by sorting nodes completely based on floating point $Z$-ordering.
-
-
-
-
-\subsection{Future Work}
-
-Matlab script to do reorderings can be ported to C. 
-
-Future work may consider efficient parallel $k$-NN queries such as those found in \cite{Pan2011, Goswami2010, Connor2009}
-
-\cite{Brown2010} introduce a minimal $k$-D Tree for the GPU which 
-
-The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
-
-
-Figure~\ref{fig
-\begin{figure}
-\centering
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid-eps-converted-to.pdf}
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{REGENERATE FIGURES WITH RANDOM/HALTON NODES}}
-\label{fig:orderings}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf} \includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
-\label{fig:orderings}
-\end{figure}
-
-The KDTree implementation used in this work is from 
-
-Original data showed our algorithm as wildly successful against a version  
-
-The Cuthill McKee algorithms can be equated to a breadth-first search. The algorithm queues nodes in order of degree at each level of the search and traverses the lowest degree priority. The Reverse variant of Cuthill-McKee inverts the node order so that the lowest degree and top level node are at the end of the matrix rather than the beginning. Aside from ordering, the Reverse and Standard Cuthill McKee algorithms are identical processes. RCM is the more popular of the variants though, due to storage savings and reduced fill-in for some decompositions \cite{LiuSherman1976}.	. 
-
-%TODO: \cite{Indyk "Algorithms for Nearest Neighbor Search"} for reference on quad vs kd vs lsh
-%TODO: \cite{ChenChang "Neighbor-Finding Based on Space-Filling Curves"} 
-%TODO: \cite{Stocco and Schrack "On Spatial Orders and Location Codes"}
-
-Obviously, the ideal case for bandwidth is when all rows contain the $\frac{n}{2}$ nodes corresponding to solution value to either side of $u_j$. In 1-D this corresponds to every node containing the $\frac{n}{2}$ nodes to the left and right of $x_j$. In 2-D this is only possible if the nodes in the domain are properly indexed such that stencils contain the proper set of neighbors---a stringent requirement that will 
 
 
 \begin{figure}
@@ -465,23 +376,105 @@ Q: the sphere I understand: its localizing the search to small patches on the sp
 
 For every $N$ there is an optimal $hnx$. This is depicted for $N=500000$ CVT and $hnx=100$. 
 
-\section{On Space Filling Curves and Other Orderings} 
 
 
-\subsection{Integer Dilation}
+
+
+
+
+
+
+\subsection{Alternative Orderings}
+
+%TODO: bandwidth definition
+%TODO: dilation for orderings
+%TODO: maximum number of cells that we can reorder given 64-bit integer. 
+
+As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices. Those patterns in turn correlate to differenct memory access patterns
+
+ Examples include $Z$- or \emph{Morton} ordering, $U$- or \emph{Greycode}-ordering, $X$-ordering, etc. Hilbert curves have been demonstrated to be the most efficient \cite{INREFS}. 
+
+The authors of \cite{Goswami2010} utilize $Z$-ordering in their 
+
+
+The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
+At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
+
+
+
+\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
+
+
+
+\subsubsection{Cuthill-McKee} 
+
+
+The Cuthill McKee algorithms can be equated to a breadth-first search. The algorithm queues nodes in order of degree at each level of the search and traverses the lowest degree priority. The Reverse variant of Cuthill-McKee inverts the node order so that the lowest degree and top level node are at the end of the matrix rather than the beginning. Aside from ordering, the Reverse and Standard Cuthill McKee algorithms are identical processes. RCM is the more popular of the variants though, due to storage savings and reduced fill-in for some decompositions \cite{LiuSherman1976}.
+
+
+
+
+
+
+\subsection{Impact of Orderings}
+
+
+Rather than complete a full analysis of the impact from space filling curves, we only consider the ideal cases from CVT and RG (because they are used in the thesis). The integer dilation is costly and does not appear to significantly improve the performance of the best cases.
+
+RCM is effective and used with KDTree. 
+
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid-eps-converted-to.pdf}
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{REGENERATE FIGURES WITH RANDOM/HALTON NODES}}
+\label{fig:orderings}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf} \includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
+\label{fig:orderings}
+\end{figure}
+
+Obviously, the ideal case for bandwidth is when all rows contain the $\frac{n}{2}$ nodes corresponding to solution value to either side of $u_j$. In 1-D this corresponds to every node containing the $\frac{n}{2}$ nodes to the left and right of $x_j$. In 2-D this is only possible if the nodes in the domain are properly indexed such that stencils contain the proper set of neighbors---a stringent requirement that will 
+
+impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on condition considered in future chapter. 
+
 One frequently hears that ordering via space filling curves like Morton Ordering and/or gray codes can benefit memory access patterns. 
 
 (Related? \url{http://publish.uwo.ca/~shaque4/presentationSONAD.pdf} \url{http://www.cs.duke.edu/~alvy/papers/sc98/} \url{http://www.cs.indiana.edu/~dswise/Arcee/Papers/medea06.pdf} \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.118.7720&rep=rep1&type=pdf} \url{http://stackoverflow.com/questions/4260002/benefits-of-nearest-neighbor-search-with-morton-order})
 
+\section{Conclusion and Future Work}
+
+
+
+%TODO: move down
+Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes
+
+Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging the fixed-grid method on the GPU is difficult to justify. The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. The added complexity in reproducing the efficient fixed-grid method on the GPU could be the subject of future work for moving nodes. 
+
+\cite{Connor2009} could benefit the algorithm by sorting nodes completely based on floating point $Z$-ordering.
+
+
+
+
+\subsection{Future Work}
+
+The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
+
+Open item from to this section include: 
+\begin{itemize} 
+\item An efficient GPU $k$-NN implementation for the investigation of RBF-FD in a moving nodes or adaptive mesh refinement situation. Examples include \cite{Pan2011, Goswami2010, Connor2009, Brown2010}
+\item Space filling curves are limited to a MATLAB prototype at the moment. These can be implemented in C++ for integers, with a potential investigation into floating point dilation and orderings \cite{Connor2009}.
+\item 
+\end{itemize}
+
 \cite{Saad2003} mentions the impact of ordering on conditioning.
 
-Algorithms like Reverse Cuthill McKee and Approximate Minimum Degree ordering allow general restructuring of matrices. 
 
-\authnote{NEed to compare conditioning of LSH and other algorithms in Matlab}
-
-Q: what is an ideal ordering?
-Q: what is the best conditioning from ordering?
-Q: what is the relative cost of ordering?
 
 
 %TODO: add RCM and fix order
