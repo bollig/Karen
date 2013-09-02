@@ -280,15 +280,30 @@ The difference between a true $k$-NN and $k$-ANN is insignificant from the persp
 %\label{fig:approximate_nearest_neighbors}
 %\end{figure}
 
+
 \subsection{Performance Comparison}
 
-This implementation is CPU only. Porting the one time stencil generation to the GPU was seen as 
+TODO: 
+\begin{itemize} 
+\item Performance of $k$-D Tree vs fixed-grid on regular and sphere grids. 
+\begin{itemize}
+\item conclude that the fixed-grid method is worth its weight but needs the proper choice of $h_n$.
+\item add data to show what $h_n(N)$ should be.  
+\item state that benchmarks were performed on Itasca and what the hardware specs are. 
+\end{itemize} 
+\item Node orderings based on integer dilation
+\begin{itemize} 
+\item Dilation and interleave process (include description of groups by dimension)
+\item Give formulas for interleaving
+\item RCM algorithm high level (?)
+\item bandwidth implications on memory access (lower bandwidth is usually better)
+\item table showing the impact of orderings on bandwidths
+\end{itemize} 
+\end{itemize}
 
 
-The $k$-D tree implementation compared in this work is the \emph{$kd$-Tree Matlab} library from Tagliasacchi \cite{TagliasacchiMFE,TagliasacchiGC}. Originally posted to the Matlab FileExchange and now maintained as a Google Code project. Until the addition of $KNNsearcher$ in Matlab 
+The $k$-D tree implementation compared in this work is the \emph{$kd$-Tree Matlab} library originally posted to the Matlab FileExchange \cite{TagliasacchiMFE} and now maintained as an independent Google Code project \cite{TagliasacchiGC}. The implementation is written in C++, but includes a MEX compiled interface, allowing for a consistent and efficient API in both languages. 
 
-garnered attention due to its MEX compiled interface that allowed use as both a C++ and MATLAB library. 
-The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
 
 Tagliasacchi \cite{TagliasacchiGC} follows the algorithms preneted above and uses the standard split by median in each dimension, with alternating chosen by incrementing the dimension by one, modulo the number of dimensions (e.g., in 2D the order is $X, Y, X, Y, ...$). Wendland \cite{WendlandBook} suggests a number of more advanced median cuts such as 
 
