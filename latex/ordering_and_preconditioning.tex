@@ -304,12 +304,32 @@ TODO:
 
 The implementation of $k$-D tree compared in this work, the \emph{$kd$-Tree Matlab} library, was originally posted to the Matlab FileExchange in 2008 \cite{TagliasacchiMFE} and now maintained as an independent Google Code project \cite{TagliasacchiGC}. The implementation is written in C++, but includes a MEX compiled interface, allowing for a consistent and efficient $k$-D Tree API in both languages. 
 
-The original release of $kd$-Tree Matlab (pre-2012) was in widespread use throughout the RBF community at the onset of this work. Queries with the pre-2012 implementation followed the $O(N \log N)$ expected complexity, the cost to build the tree was prohibitively high for large $N$, behaving as $O(N^2)$. This issue ultimately led to a MATLAB prototype of the fixed-grid method (\cite{BolligRBFFixedGrid}) to test the concept of neighbor queries with low build cost. The fixed-grid implementation, written in pure MATLAB script, outperformed the ``efficient" MEX-compiled $k$-D Tree for problem sizes greater than $N=20000$, and lead to the development of a faster C++ implementation tested here. 
+The original release of $kd$-Tree Matlab (pre-2012) was in widespread use throughout the RBF community at the onset of this work. Queries with the pre-2012 implementation followed the $O(N \log N)$ expected complexity, the cost to build the tree was found to be prohibitively high for large $N$, behaving as $O(N^2)$. This issue ultimately led to work on a MATLAB prototype of the fixed-grid method (\cite{BolligRBFFixedGrid}) to test the concept of neighbor queries with low build costs. The fixed-grid implementation, originally written in pure MATLAB script, outperformed the ``efficient" MEX-compiled $k$-D Tree for problem sizes greater than $N=20000$, and lead to the development of a faster C++ implementation tested here. However, with the 2012 release of $kd$-Tree Matlab on Google Code (\cite{TagliasacchiGC}), the author has significantly improved the performance of the build process to achieve the $O(N \log N)$ behavior expected for a Point $k$-D Tree with cyclic splitting. 
 
-Recently, with the release of $kd$-Tree Matlab on Google Code (\cite{TagliasacchiGC}), the author significantly improved the performance of the build process to achieve the $O(N \log N)$ behavior expected for a Point $k$-D Tree with cyclic splitting at median nodes. 
+All benchmarks in this section were performed on the Itasca cluster at the Minnesota Supercomputing Institute. Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors sharing at least 24GB of RAM \cite{MSIItasca}.
+
+Figure~\ref{fig:stencil_query_old_and_new} compares the performance of the $k$-D Tree and the fixed-grid method for increasing regular grid resolutions. Both the current $k$-D Tree implementation (2012) and the original implementation (pre-2012) are shown on the left. For comparison, the fixed-grid method is shown with two overlay resolutions: $h_n = 50$ and $h_n=100$. Associated speedups are shown in The log-log plot reveals that the
+
+ performance gap between the C++ fixed-grid implementation and the $k$-D Tree.  Prior to the 2012 improvements the C++ implementation was over 130x faster in stencil generation (build and query). However, with the more reasonable 
+
 
 Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $N$ stencils of size $n=50$ with three methods: \cite{Tagliasacchi2008}, our hash-based neighbor query, and the improved KDTree from \cite{Tagliasacchi2012}. 
 Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
+
+
+
+\begin{figure}
+\centering
+\begin{subfigure}{0.45\textwidth}
+\includegraphics[width=\textwidth]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
+\end{subfigure}
+\begin{subfigure}{0.425\textwidth}
+%\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
+\includegraphics[width=\textwidth]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
+\end{subfigure}
+\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+\label{fig:hash_results}
+\end{figure}
 
 
 
@@ -323,17 +343,6 @@ what is best overlay resolution? based on time to generate. choose resolution as
 
 
 
-
-
-
-\begin{figure}
-\centering
-\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
-%\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
-\includegraphics[width=9.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
 
 
 The early implementation of $k$-D tree had an $O(n^2)$ growth in complexity. This algorithm was developed to alleviate that cost. It took a few hours to implement but has had some surprising impacts. Note that the complexity of $k$-D tree was reduced to $O(N \log^2 N)$ in 2012. On a regular grid (generated with raster/IJK ordering), the cost of $k$-D tree grows at the same rate as the hashing method. 
@@ -441,19 +450,21 @@ RCM is effective and used with KDTree.
 \begin{figure}
 \centering
 \begin{subfigure}{0.425\textwidth}
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid.eps}
+\centering
+\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid.eps}
 \caption{Original Node Distribution}
 \end{subfigure}
 \begin{subfigure}{0.425\textwidth}
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf}
-\caption{Fixed-grid cells}
+\centering
+\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf}
+\caption{Fixed-grid cells sorted by $Z$-order}
 \end{subfigure}
 \begin{subfigure}{0.425\textwidth}
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
+\centering
+\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
 \caption{Example Stencil $n=31$}
 \end{subfigure}
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{REGENERATE FIGURES WITH RANDOM/HALTON NODES}}
-\label{fig:orderings}
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
 \end{figure}
 
 In Figure~\ref{fig:orderings} typical stencils in RBF-FD easily span multiple cells. Shown is $n=31$ which spans 7 cells. The use of $Z$-ordering (e.g., \cite{Goswami2010}) is often associated with improved memory access patterns. However, 
@@ -500,15 +511,21 @@ Open item from to this section include:
 
 \cite{Saad2003} mentions the impact of ordering on conditioning.
 
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_orderings.png} 
+\caption{Example space filling curves used to reorder nodes. The Raster, Z, X, U and 4-nodes per Edge are space filling curves applied to reorder cells of the fixed-grid stencil queries. Reverse Cuthill-McKee (RCM) reorders nodes based on the output stencils. RCM shown here is a special case: each node has 3 neighbors.}
+\label{fig:orderings}
+\end{figure}
+
 
 %TODO: add RCM and fix order
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_orderings.png} \\
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} \\
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d2_n31_hn6.png} 
+\includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d2_n31_hn6.png} \\
+\includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
 \caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right.}  3) Spy impact on MD node set $N=4096$, stencil size $n=31$, $h_n = 6$ }
-\label{fig:orderings}
+\label{fig:ordering_impact_rg}
 \end{figure}
 
 
@@ -524,7 +541,7 @@ The RCM algorithm is a breadth first search over stencils to order them based on
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10.png} 
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right.}  3) Spy impact on MD node set $N=4096$, stencil size $n=31$, $h_n = 6$ }
+\caption{ The impact of reordering on sparsity patterns for $N=4096$ MD nodes on the sphere. Stencil size $n=31$, fixed-grid resolution per dimension $h_n=10$. }
 \label{fig:orderings}
 \end{figure}
 
