@@ -292,7 +292,10 @@ The fixed-grid implementation, originally a pure MATLAB script, outperformed the
 
 All benchmarks in this section were performed on the Itasca cluster at the Minnesota Supercomputing Institute. Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors sharing at least 24GB of RAM \cite{MSIItasca}.
 
-Figure~\ref{fig:stencil_query_old_and_new} compares the performance of the $k$-D Tree and the fixed-grid method for increasing regular grid resolutions. Both the current $k$-D Tree implementation (2012) and the original implementation (pre-2012) are shown on the left. For comparison, the fixed-grid method is shown with two overlay resolutions: $h_n = 50$ and $h_n=100$. Associated speedups are shown in The log-log plot reveals that the
+Figure~\ref{fig:stencil_query_old_and_new} considers the performance of the $k$-D Tree and the fixed-grid method on increasing regular grid resolutions up to four million nodes. Both the current $k$-D Tree implementation (2012) and the original implementation (pre-2012) are shown on the left to demonstrate the significant improvement in the latest release. For comparison, the fixed-grid method is shown with two fixed-grid resolutions: $h_n = 50$ and $h_n=100$. On the right, Figure~\ref{fig:stencil_query_old_and_new} shows the associated speedups achieved by the fixed-grid method over the 2012 release of $kd$-Tree Matlab.
+
+
+
 
  performance gap between the C++ fixed-grid implementation and the $k$-D Tree.  Prior to the 2012 improvements the C++ implementation was over 130x faster in stencil generation (build and query). However, with the more reasonable 
 
