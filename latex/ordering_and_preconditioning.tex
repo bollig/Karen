@@ -167,10 +167,10 @@ The algorithm in this work is inspired by fixed-grid approaches for GPU particle
 
 
 The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one valence of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. %TODO: is it constant time here?
- As a point of difference in implementations, the authors of \cite{Green2010, Krog2010} leverage a fast radix sort algorithm based on hash index to order nodes, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforce a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained for each cell that has the indices of all contained nodes, which implies random memory access when operating on the nodes of a cell.    
+ As a point of difference in implementations, the authors of \cite{Green2010, Krog2010} leverage a fast radix sort algorithm to order nodes based on hash index, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforce a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained that stores the indices of all contained nodes per cell. %, which implies random memory access when operating on the nodes of a cell.    
 
 
-The implementation presented here is a hybrid of the related algorithms. For example, cells are sorted based on raster-ordering, but without the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed number of cell valences. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new valence of cells at each iteration. This multi-pass ball-query was demonstrated in Figure~\ref{fig:nearest_neighbor_example}. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.
+The implementation presented here is a hybrid of the related algorithms. For example, cells are sorted based on raster-ordering, but without the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed radius, or number of cell valences. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new valence of cells at each iteration. This multi-pass ball-query was demonstrated in Figure~\ref{fig:nearest_neighbor_example}. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.
 %TODO: Figure~\ref{fig:hash_highlevel} demonstrates the algorithm 
 %\begin{figure}
 %\centering
@@ -209,7 +209,9 @@ The entire build process complexity is proportional to $O(N)$, and requires $O((
 
 A special note: the final step of Algorithm~\ref{alg:fixed_grid_build} overwrites the original list of nodes with the sorted equivalent. The spatially sorted list is included in the cost of stencil generation, but available for reuse elsewhere. Since the first step in RBF-FD applications is to generate stencils, overwriting the input node set can guarantee that the node values throughout the entire life-cycle of an RBF-FD application will benefit from the same spatial locality as stencil generation. This benefit is (almost) free. 
 
-Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matrices generated based on the same $N=6400$ MD-node set (unit sphere), with each row representing RBF-FD stencils of $n=50$ non-zeros. The left matrix in Figure~\ref{fig:reorder_example} is generated with stencils queried by a $k$-D Tree. The $k$-D Tree maintains the original ordering on $P$. The matrix on the right of Figure~\ref{fig:reorder_example} is a permuted equivalent of the left matrix with stencils connecting the exact same nodes. In this case, the fixed-grid cells have a raster-based ordering with $h_n = 10$. Looking at Figure~\ref{fig:reorder_example} it should be obvious that reordering the nodes can improve memory access patterns for SpMV. If each row is applied as a sparse dot-product with a dense vector, the more condensed non-zeros are in the row, the more likely values from the dense vector will be resident in cache when needed. Later in this chapter, the impact of spatial orderings are compared to determine how RBF-FD can benefit the most. 
+Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matrices generated based on the same $N=6400$ MD-node set (unit sphere), with each row representing an RBF-FD stencil of $n=50$ non-zeros. The left matrix in Figure~\ref{fig:reorder_example} is generated with stencils queried by a $k$-D Tree. The $k$-D Tree maintains the original ordering on $P$. The matrix on the right of Figure~\ref{fig:reorder_example} is a permuted equivalent of the left matrix with fixed-grid cells sorted based on a raster-ordering for $h_n = 10$. 
+
+Looking at Figure~\ref{fig:reorder_example} it should be obvious that reordering the nodes can improve memory access patterns for SpMV. If each row is applied as a sparse dot-product with a dense vector, the more condensed non-zeros are in the row, the more likely values from the dense vector will be resident in cache when needed. Likewise, non-zeros that appear on consecutive rows can benefit from cache reuse. Later in this chapter, the impact of spatial orderings are compared to determine how RBF-FD can benefit the most. 
 
 \begin{figure}
 \centering
@@ -221,7 +223,7 @@ Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matri
 \includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/lsh_N6400_n50-eps-converted-to.png}
 \caption{Fixed-Grid}
 \end{subfigure}
-\caption{Example effects of node reordering for MD node set $N=6400$ with $n=50$. The differentiation matrices are permuted equivalents and roughly $0.78\%$ full. a) Stencils generated based on $k$-D Tree maintain the original node ordering. b) The reordered node set generated using an $h_n=10$ fixed-grid condenses non-zeros for improved cache effects.}
+\caption{Example effects of node reordering for MD node set $N=6400$ with $n=50$. The differentiation matrices are permuted equivalents and roughly $0.78\%$ full. a) Stencils generated based on $k$-D Tree maintain the original node ordering. b) The reordered node set generated using an $h_n=10$ fixed-grid condenses non-zeros for improved memory access patterns (i.e., cache reuse).}
 \label{fig:reorder_example}
 \end{figure} 
 
@@ -229,7 +231,7 @@ Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matri
 
 Querying the $k$-nearest neighbors for a single query node, $X_q$, is the subject of Algorithm~\ref{alg:fixed_grid_query}. The process begins by finding $X_q$'s containing cell, $c$. The hash value of $c$ is used to identify (in $Q$) the list of nodes contained within that cell, all of which are appended to a vector of neighbor candidates, $pq$. 
 
-It is possible for the number nodes in $c$ to exceed $n$. However, the algorithm conservatively assumes that it is necessary to search at least one valence of cells around $c$. This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will balanced. For certain fixed-grid resolutions, a single valence may not satisfy the stencil size requirements, so the algorithm iterates outward into valences. As cells are checked, their nodes are appended onto $pq$. 
+It is possible for the number nodes in $c$ to exceed $n$; however, the algorithm conservatively assumes that it is necessary to search at least one valence of cells around it.  This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will balanced. For certain fixed-grid resolutions, a single valence may not satisfy the stencil size requirements, so the algorithm iterates outward onto new valences. As cells are checked, their nodes are appended onto $pq$. 
 
 The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance from all candidate nodes to $X_q$, and uses that metric to sort $pq$ in ascending order. The first $n$ nodes in $pq$ are returned as the stencil. 
 \begin{algorithm} 
@@ -260,15 +262,15 @@ The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance 
 \end{algorithm}
 
 
-Complexity of Algorithm~\ref{alg:fixed_grid_query} can vary based on the choice of $h_n$. For a sufficiently refined fixed-grid the $k$-ANN is dominated by the cost of the \emph{while-loop} and behaves as $O(\log h_n)$. In the worst case, when $h_n$ is small, the cost of sorting $pq$ dominates proportional to $O(N \log N)$ (using a C++ STL Sort). %TODO: verify with Gordon.  
-Results below demonstrate that it is fairly simple to choose $h_n$ appropriately to maintain logarithmic complexity similar to the $k$-D Tree query. 
+Complexity of Algorithm~\ref{alg:fixed_grid_query} can vary based on the choice of $h_n$. For a sufficiently refined fixed-grid the $k$-ANN is dominated by the cost of the \emph{while-loop} and behaves as $O(\log h_n)$ per stencil. In the worst case, when $h_n$ is small, the cost of sorting $pq$ dominates, and is proportional to $O(N \log N)$ (using a C++ STL Sort) in the worst case. %TODO: verify with Gordon.  
+Results below demonstrate that proper choice of $h_n$ can maintain logarithmic complexity similar to the $k$-D Tree query. 
 
 
 The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the green center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternative black node is selected even though it is more distant. This is true because the more distant black node occupies the second valence of cells around the stencil center, whereas the true near neighbor is in the third valence. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second valence by satisfying the requirement on $n$. 
 
-Similarly, if cells were rectangular in shape, the ball-query would end up an ellipsoid and stencils would be biased with more nodes in one direction. To combat this, this work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$) to ensure spherical stencils. 
+Similarly, if cells were rectangular in shape, the ball-query would end up an ellipsoid and stencils would be biased with more nodes in one direction. To combat this, and ensure spherical stencils, this work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$). 
 
-The difference between a true $k$-NN and $k$-ANN is insignificant from the perspective of RBF-FD. The method compensates automatically for differences in node locations when weights are calculated. On top of this, the difference between $k$-NN and $k$-ANN is limited to nodes in the outermost reaches of the stencil (i.e., nodes with minimal impact on the stencil center).
+The difference between a true $k$-NN and $k$-ANN is insignificant from the perspective of RBF-FD. The method compensates automatically for differences in node locations when weights are calculated. On top of this, the only differences in stencils generated by $k$-NN versus $k$-ANN occur at nodes on the outermost reaches of the stencil (i.e., nodes with the least impact on the stencil center).
 
 
 %\begin{figure}
@@ -286,7 +288,7 @@ The difference between a true $k$-NN and $k$-ANN is insignificant from the persp
 %TODO: dilation for orderings
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
-As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices. Those patterns in turn correlate to memory access patterns
+As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices. Those patterns in turn correlate to differenct memory access patterns
 
  Examples include $Z$- or \emph{Morton} ordering, $U$- or \emph{Greycode}-ordering, $X$-ordering, etc. Hilbert curves have been demonstrated to be the most efficient \cite{INREFS}. 
 
@@ -295,7 +297,15 @@ As mentioned, the choice of space filling curve can impact the sparsity pattern 
 The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
 At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
 
+
+
+\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
+
+
+
 \subsubsection{Reverse Cuthill-McKee} 
+
+
 
 
 
@@ -305,89 +315,21 @@ At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\
 This implementation is CPU only. Porting the one time stencil generation to the GPU was seen as 
 
 
-
-%TODO: move down
-Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes
-
-Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging the fixed-grid method on the GPU is difficult to justify. The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. The added complexity in reproducing the efficient fixed-grid method on the GPU could be the subject of future work for moving nodes. 
-
-%TODO: low cost of build and easy to query ball
-use of fixed-grid methods originated due to low overhead before performing queries.
-Although all three related works focus on offloading simulations to the GPU, the method is also popular for CPU implementations 
-
-In \cite{Wendland2002} and later \cite{WendlandBook}, Wendland presents the fixed-grid method as a low-cost alternative for RBF methods based on Partition of Unity. %TODO: state what wendland did or did not do
-
-\cite{Connor2009} could benefit the algorithm by sorting nodes completely based on floating point $Z$-ordering.
-
-The algorithm chosen for this work is provided in Algorithm~\ref{alg:hash_build}. The algorithm starts by creating a list of lists representing the $(h_n)^d$ cells. As nodes are matched with cell indices, the node index is appended to the 
-
-
-
-The implementation runs entirely on the CPU (\cite{Krog2010} runs on the GPU). 
-
-
 The $k$-D tree implementation compared in this work is the \emph{$kd$-Tree Matlab} library from Tagliasacchi \cite{TagliasacchiMFE,TagliasacchiGC}. Originally posted to the Matlab FileExchange and now maintained as a Google Code project. Until the addition of $KNNsearcher$ in Matlab 
 
 garnered attention due to its MEX compiled interface that allowed use as both a C++ and MATLAB library. 
 The Matlab central $k$-D Tree is MEX compiled and efficient. We integrated the standalone C++ code into our library.  
 
-Tagliasacchi \cite{TagliasacchiGC} uses the standard split by median in each dimension, with alternating chosen by incrementing the dimension by one, modulo the number of dimensions (e.g., in 2D the order is $X, Y, X, Y, ...$). Wendland \cite{WendlandBook} suggests a number of more advanced median cuts such as 
+Tagliasacchi \cite{TagliasacchiGC} follows the algorithms preneted above and uses the standard split by median in each dimension, with alternating chosen by incrementing the dimension by one, modulo the number of dimensions (e.g., in 2D the order is $X, Y, X, Y, ...$). Wendland \cite{WendlandBook} suggests a number of more advanced median cuts such as 
 
 \cite{TagliasacchiMFE}. 
 \cite{MatlabKDTreeSearcher}
 
 
 
-
-
-
-
-
-\subsection{Integer Dilation and Node Reordering}
-
-\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
-
-
-
-\cite{Samet2005} labels this type of algorithm as a \emph{fixed grid bucket algorithm} with the twist that it also has \emph{one dimensional ordering}
-
-
-
-
-
-\section{Performance Comparison}
-
-
-At the start of this dissertation, the most widely used $k$-D Tree implementation in the RBF community was \cite{TagliasacchiMFE}. As a MEX-compiled 
-
-
-
-\begin{itemize}
-\item Performance improvement
-\item SpMV impact
-\item impact from space filling curves
-\end{itemize}
-
-
-
-
-
-Many algorithms exist to query the $k$-nearest neighbors (equivalently all nodes in the minimum/smallest enclosing circle). Some algorithms overlay a grid similar to Locality Sensitive Hashing and query such as... \cite{HarPeledMazumdar2003}.
-
-
-For the purpose of generating RBF-FD stencils the $k$D-Tree is built and all queries are made once. There is no reuse of the tree so the build and query times are combined into one. 
-
-impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on condition considered in future chapter. 
-
 what is best overlay resolution? based on time to generate. choose resolution as n/2, n/9? etc? 
 
-perform neighbor queries on raster order because its easiest to jump cells. then each cell can be reordered according to z,x,u, etc. for better memory locality. Matlab script to do this (can be ported to C)
 
-\url{http://www.vincentgarcia.org/data/Garcia_2010_ICIP.pdf}
-
-GPU version of Locality Sensitive Hashing could reduce complexity further \cite{Pan2011}
-
-This can be done efficiently using neighbor query algorithms or spatial partitioning data-structures such as Locality Sensitive Hashing (LSH) and $k$D-Tree. Different query algorithms often have a profound impact on the DM structure and memory access patterns. We choose a Raster ($ijk$) ordering LSH algorithm \cite{Bollig2011} leading to the matrix structure in Figures~\ref{fig:oneThreadPerStencil} and \ref{fig:oneWarpPerStencil}. While querying neighbors for each stencil is an embarrassingly parallel operation, the node sets used here are stationary and require stencil generation only once. Efficiency and parallelism for this task has little impact on the overall run-time of tests, which is dominated by the time-stepping. We preprocess node sets and generate stencils serially, then load stencils and nodes from disk at run-time. In contrast to the RBF-FD view of a static grid, Lagrangian/particle based PDE algorithms promote efficient parallel variants of LSH in order to accelerate querying neighbors at each time-step \cite{Pan2011, Goswami2010}. 
 
 
 At the onset of our work on RBF-FD, the most commonly used KDTree implmentation used by the RBF community was \cite{Tagliasacchi2008}. Recently, improvements were made to the KDTree algorithm to reduce the cost of building the KDTree to $O(N log^2 N)$. 
@@ -396,50 +338,43 @@ Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $
 Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
 
 
-Our work in \cite{BolligFlyerErlebacher2012} leveraged an alternative to $k$-D tree, based loosely on space-filling curve orderings common in Lagrangian schemes like Smoothed Particle Hydrodynamics (e.g., \cite{IanThesis}, \cite{Kelager}). %TODO: I have used Locality Sensitive Hashing \cite{Indyk} in the past. According to Samet \cite{Samet2005} LSH uses a set of random hashes to assign indices for each node. Our case uses space-filling curve, so we use . 
+
+
+
+\subsection{Impact of Orderings}
+
+
+impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on condition considered in future chapter. 
+
+
+
+
+\section{Conclusion and Future Work}
+
+
+
+%TODO: move down
+Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes
+
+Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging the fixed-grid method on the GPU is difficult to justify. The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. The added complexity in reproducing the efficient fixed-grid method on the GPU could be the subject of future work for moving nodes. 
+
+\cite{Connor2009} could benefit the algorithm by sorting nodes completely based on floating point $Z$-ordering.
+
+
 
 
 \subsection{Future Work}
+
+Matlab script to do reorderings can be ported to C. 
+
+Future work may consider efficient parallel $k$-NN queries such as those found in \cite{Pan2011, Goswami2010, Connor2009}
+
 \cite{Brown2010} introduce a minimal $k$-D Tree for the GPU which 
 
-
-
-%TODO: cite lagrangian sph knn
 The complexity of the method is still higher than the more efficient implementations used by Lagrangian methods, but as demonstrated in Figure~\ref{sten_methods_compare} the savings are significant. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
 
 
-
-RBF-FD operates on general node distributions. Historically, stencils are uniform in size ($n$) and generated by selecting the $(n-1)$ true nearest neighbors to a node $x_c$. This is a $k$-NN query. 
-
-Alternative queries are possible: ball query and approximate nearest neighbor. The approximate is of particular interest because nodes closest to the stencil will always be selected, whereas the nodes further away have minimal influence so swapping out cant hurt. The justification in altering the selection is for reduced complexity in neighbor queries.  
-
-
-
-
-\subsection{Hashing}
-
-\cite{Connor2009} provide a fast parallel 
-
-\cite{Henke2012} is working on parallel generation. \cite{IanJohnsonThesis} has OpenCL neighbor queries
-
-We started with a CPU implementation to test appropriateness. 
-
-Approximate nearest neighbors will be nearly balanced. 
-We observe that RBF-FD functions as well on stencils of true nearest neighbors as it does on approximate nearest neighbors.
-
-To demonstrate the savings in choice of stencil generation method, we provide Figure~\ref{fig:sten_methods_compare}. 
- 
-
-The impact of our neighbor query also extends influence on the structure of the RBF-FD DMs.
-has is to To quantify the sparsity of a Differentiation Matrix we consider the ratio of non-zeros ($N*n$) to total elements in the matrix ($N^2$). For example, a problem of size $N = 10,000$ with stencil size $n=31$ has a ratio of $0.0031$ and is $99.69\%$ empty. 
-
-Querying neighbors requires searching at least the immediate cell one layer of neighbors. by including one extra layer we ensure that small stencils near the border of the immediate cell can pick up neighbors in adjacent cells.
-
-
-
-A prototype implementation of this method allowed for a variety of space filling curves to reorder the cells. The curves are created through integer dilation \cite{IntegerD} 
-
-
+Figure~\ref{fig
 \begin{figure}
 \centering
 \includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid-eps-converted-to.pdf}
