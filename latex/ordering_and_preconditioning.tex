@@ -302,25 +302,25 @@ TODO:
 \end{itemize}
 
 
-The $k$-D tree implementation compared in this work is the \emph{$kd$-Tree Matlab} library originally posted to the Matlab FileExchange \cite{TagliasacchiMFE} and now maintained as an independent Google Code project \cite{TagliasacchiGC}. The implementation is written in C++, but includes a MEX compiled interface, allowing for a consistent and efficient API in both languages. 
+The implementation of $k$-D tree compared in this work, the \emph{$kd$-Tree Matlab} library, was originally posted to the Matlab FileExchange in 2008 \cite{TagliasacchiMFE} and now maintained as an independent Google Code project \cite{TagliasacchiGC}. The implementation is written in C++, but includes a MEX compiled interface, allowing for a consistent and efficient $k$-D Tree API in both languages. 
+
+The original release of $kd$-Tree Matlab (pre-2012) was in widespread use throughout the RBF community at the onset of this work. Queries with the pre-2012 implementation followed the $O(N \log N)$ expected complexity, the cost to build the tree was prohibitively high for large $N$, behaving as $O(N^2)$. This issue ultimately led to a MATLAB prototype of the fixed-grid method (\cite{BolligRBFFixedGrid}) to test the concept of neighbor queries with low build cost. The fixed-grid implementation, written in pure MATLAB script, outperformed the ``efficient" MEX-compiled $k$-D Tree for problem sizes greater than $N=20000$, and lead to the development of a faster C++ implementation tested here. 
+
+Recently, with the release of $kd$-Tree Matlab on Google Code (\cite{TagliasacchiGC}), the author significantly improved the performance of the build process to achieve the $O(N \log N)$ behavior expected for a Point $k$-D Tree with cyclic splitting at median nodes. 
+
+Figure~\ref{fig:
+
+Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $N$ stencils of size $n=50$ with three methods: \cite{Tagliasacchi2008}, our hash-based neighbor query, and the improved KDTree from \cite{Tagliasacchi2012}. 
+Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
 
 
-Tagliasacchi \cite{TagliasacchiGC} follows the algorithms preneted above and uses the standard split by median in each dimension, with alternating chosen by incrementing the dimension by one, modulo the number of dimensions (e.g., in 2D the order is $X, Y, X, Y, ...$). Wendland \cite{WendlandBook} suggests a number of more advanced median cuts such as 
 
-\cite{TagliasacchiMFE}. 
 \cite{MatlabKDTreeSearcher}
 
 
 
 what is best overlay resolution? based on time to generate. choose resolution as n/2, n/9? etc? 
 
-
-
-
-At the onset of our work on RBF-FD, the most commonly used KDTree implmentation used by the RBF community was \cite{Tagliasacchi2008}. Recently, improvements were made to the KDTree algorithm to reduce the cost of building the KDTree to $O(N log^2 N)$. 
-
-Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $N$ stencils of size $n=50$ with three methods: \cite{Tagliasacchi2008}, our hash-based neighbor query, and the improved KDTree from \cite{Tagliasacchi2012}. 
-Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
 
 
 
