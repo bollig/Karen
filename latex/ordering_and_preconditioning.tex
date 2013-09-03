@@ -35,7 +35,7 @@ A na\"{i}ve approach for neighbor queries would be a brute-force search that che
 For the most part, investigations in RBF communities that delve into efficient neighbor queries are limited to ball queries. For example, the Partition of Unity method for approximation (e.g., \cite{Wendland2002,WendlandBook}), and particle methods like the Fast Multipole Method (e.g., \cite{Ying2006, Gumerov2003}) or Smoothed Particle Hydrodynamics (e.g., \cite{Krog2010}). Examples of fast algorithms employed in these fields include the fixed-grid method \cite{WendlandBook,Krog2010}, $k$-D Trees \cite{WendlandBook}, Range Trees \cite{Wendland2002,WendlandBook}, and $2^d$-Trees (i.e., Quad- and Octrees) \cite{Gumerov2003, Ying2006}. Surprisingly, while other communities continue the quest for fast neighbor queries, RBF collocation and RBF-FD communities have been slow on the uptake. For many years, the standard in the community has been to use $k$-D Trees (see e.g., \cite{Fasshauer2007, FlyerLehto11,FornbergLehto11}). 
 
 
-This chapter considers the use of an alternative neighbor query algorithm to generate RBF-FD stencils. It is based loosely on the fixed-grid method from \cite{Krog2010,Green2010,Johnson2011}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. The fixed-grid method loosens the requirements for finding the $k$-nearest neighbors ($k$-NN) stencils to accept $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the fixed-grid method is compared to an efficient implementation of $k$-D Tree available for use in C++ and MATLAB (\cite{TagliasacchiMFE}). Benchmarks demonstrate that, with the proper choice of parameters for the fixed-grid, the method is up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV performance due to the impact of spatial reordering that occurs during stencil generation. 
+This chapter considers the use of an alternative neighbor query algorithm to generate RBF-FD stencils. It is based loosely on the fixed-grid method from \cite{Krog2010,Green2010,Johnson2011}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. The fixed-grid method loosens the requirements for finding the $k$-nearest neighbors ($k$-NN) stencils to accept $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the fixed-grid method is compared to an efficient implementation of $k$-D Tree available for use in C++ and MATLAB (\cite{TagliasacchiMFE}). Benchmarks demonstrate that, with the proper choice of parameters for the fixed-grid, the method can be up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV performance due to the impact of spatial reordering that occurs during stencil generation. 
 
 
 \section{$k$-D Tree}
@@ -370,7 +370,7 @@ The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:s
 
 Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but rather, it ekes out a small victory with the right choice of $h_n$ for fewer than 8 nodes per cell. The reality is that since stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes another longer lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the major overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV for random node distributions. 
 
-Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is is to be expected as they are not generated based on random node distributions. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown, so a case can be made for use of the fixed-grid query as a general safety net to precondition the system when properties of the input grid are unknown. 
+Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is is to be expected as they are previously spatially sorted node distributions. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown, so a case can be made for use of the fixed-grid query as a general safety net to precondition the system when properties of the input grid are unknown. 
 
 \begin{figure}
 \centering
@@ -425,7 +425,40 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 %TODO: dilation for orderings
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
-As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates memory access patterns.
+As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to memory access patterns. 
+
+Many space filling curves can be constructed using integer dilation and bit interleaving. Integer dilation is the process of 
+
+%TODO: omnigraffle dilation figure.
+%TODO: list giving the curves for each 
+%TODO: high level algorithm for RCM. 
+
+
+Figure~\ref{fig:orderings} presents a variety of curves possible for a 2D node set. Options are endless, but the curves presented in Figure~\ref{fig:orderings} include: 
+
+\begin{itemize} 
+\item Raster (IJK) -- 
+\item U order
+\end{itemize}
+
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/node_orderings.png} 
+\caption{Example space filling curves used to reorder cells/nodes. The Raster, Z, X, U and 4-nodes per Edge are space filling curves applied to reorder cells of the fixed-grid stencil queries. Reverse Cuthill-McKee (RCM) operates on the output stencils to the associated adjacency graph. The RCM shown here is a special case with 3 neighbors per node.}
+\label{fig:orderings}
+\end{figure}
+
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.png} 
+\caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
+\label{fig:orderings}
+\end{figure}
+
 
  Examples include $Z$- or \emph{Morton} ordering, $U$- or \emph{Greycode}-ordering, $X$-ordering, etc. Hilbert curves have been demonstrated to be the most efficient \cite{INREFS}. 
 
@@ -441,7 +474,7 @@ At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\
 
 
 
-\subsubsection{Cuthill-McKee} 
+\subsection{Cuthill-McKee} 
 
 
 The Cuthill McKee algorithms can be equated to a breadth-first search. The algorithm queues nodes in order of degree at each level of the search and traverses the lowest degree priority. The Reverse variant of Cuthill-McKee inverts the node order so that the lowest degree and top level node are at the end of the matrix rather than the beginning. Aside from ordering, the Reverse and Standard Cuthill McKee algorithms are identical processes. RCM is the more popular of the variants though, due to storage savings and reduced fill-in for some decompositions \cite{LiuSherman1976}.
@@ -451,60 +484,51 @@ The Cuthill McKee algorithms can be equated to a breadth-first search. The algor
 
 
 
-\subsection{Impact of Orderings}
-
 
 Rather than complete a full analysis of the impact from space filling curves, we only consider the ideal cases from CVT and RG (because they are used in the thesis). The integer dilation is costly and does not appear to significantly improve the performance of the best cases.
 
-RCM is effective and used with KDTree. 
+RCM is effective and can be used as post-processing once stencils are generated and/or DMs have been assembled. 
 
 
-
-\begin{figure}
-\centering
-\begin{subfigure}{0.425\textwidth}
-\centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid.eps}
-\caption{Original Node Distribution}
-\end{subfigure}
-\begin{subfigure}{0.425\textwidth}
-\centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf}
-\caption{Fixed-grid cells sorted by $Z$-order}
-\end{subfigure}
-\begin{subfigure}{0.425\textwidth}
-\centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
-\caption{Example Stencil $n=31$}
-\end{subfigure}
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
-\end{figure}
+%
+%\begin{figure}
+%\centering
+%\begin{subfigure}{0.45\textwidth}
+%\centering
+%\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid.eps}
+%\caption{Original Node Distribution}
+%\end{subfigure}
+%\begin{subfigure}{0.45\textwidth}
+%\centering
+%\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf}
+%\caption{Fixed-grid cells sorted by $Z$-order}
+%\end{subfigure}
+%\begin{subfigure}{0.45\textwidth}
+%\centering
+%\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
+%\caption{Example Stencil $n=31$}
+%\end{subfigure}
+%\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
+%\end{figure}
 
 In Figure~\ref{fig:orderings} typical stencils in RBF-FD easily span multiple cells. Shown is $n=31$ which spans 7 cells. The use of $Z$-ordering (e.g., \cite{Goswami2010}) is often associated with improved memory access patterns. However, 
 
-\begin{figure}
-\centering
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
-\caption{A simple example illustrates the use of a fixed-grid with $h_n = 6$ for $N=18^3$ regular nodes.  d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
-\label{fig:orderings}
-\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
+%\caption{A simple example illustrates the use of a fixed-grid with $h_n = 6$ for $N=18^3$ regular nodes.  d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
+%\label{fig:orderings}
+%\end{figure}
 
 
 
-
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_orderings.png} 
-\caption{Example space filling curves used to reorder nodes. The Raster, Z, X, U and 4-nodes per Edge are space filling curves applied to reorder cells of the fixed-grid stencil queries. Reverse Cuthill-McKee (RCM) reorders nodes based on the output stencils. RCM shown here is a special case: each node has 3 neighbors.}
-\label{fig:orderings}
-\end{figure}
 
 
 %TODO: add RCM and fix order
 \begin{figure}
 \centering
-\includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d2_n31_hn6.png} \\
-\includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
+\includegraphics[width=0.85\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d2_n31_hn6.png} \\
+\includegraphics[width=0.85\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
 \caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right.}  3) Spy impact on MD node set $N=4096$, stencil size $n=31$, $h_n = 6$ }
 \label{fig:ordering_impact_rg}
 \end{figure}
@@ -514,19 +538,10 @@ The RCM algorithm is a breadth first search over stencils to order them based on
 
 \begin{figure}
 \centering
-\includegraphics[width=0.4\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.png} 
-\caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
-\label{fig:orderings}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10.png} 
+\includegraphics[width=0.85\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10.png} 
 \caption{ The impact of reordering on sparsity patterns for $N=4096$ MD nodes on the sphere. Stencil size $n=31$, fixed-grid resolution per dimension $h_n=10$. }
 \label{fig:orderings}
 \end{figure}
-
-
 
 
 
@@ -537,7 +552,7 @@ impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on c
 
 One frequently hears that ordering via space filling curves like Morton Ordering and/or gray codes can benefit memory access patterns. 
 
-(Related? \url{http://publish.uwo.ca/~shaque4/presentationSONAD.pdf} \url{http://www.cs.duke.edu/~alvy/papers/sc98/} \url{http://www.cs.indiana.edu/~dswise/Arcee/Papers/medea06.pdf} \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.118.7720&rep=rep1&type=pdf} \url{http://stackoverflow.com/questions/4260002/benefits-of-nearest-neighbor-search-with-morton-order})
+%TODO: Related? \url{http://publish.uwo.ca/~shaque4/presentationSONAD.pdf} \url{http://www.cs.duke.edu/~alvy/papers/sc98/} \url{http://www.cs.indiana.edu/~dswise/Arcee/Papers/medea06.pdf} \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.118.7720&rep=rep1&type=pdf} \url{http://stackoverflow.com/questions/4260002/benefits-of-nearest-neighbor-search-with-morton-order})
 
 \section{Conclusion and Future Work}
 
