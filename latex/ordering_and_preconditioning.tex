@@ -223,7 +223,7 @@ Looking at Figure~\ref{fig:reorder_example} it should be obvious that reordering
 \includegraphics[width=1.0\textwidth]{../figures/chapter2/hashing_example/lsh_N6400_n50-eps-converted-to.png}
 \caption{Fixed-Grid}
 \end{subfigure}
-\caption{Example effects of node reordering for MD node set $N=6400$ with $n=50$. The differentiation matrices are permuted equivalents and roughly $0.78\%$ full. a) Stencils generated based on $k$-D Tree maintain the original node ordering. b) The reordered node set generated using an $h_n=10$ fixed-grid condenses non-zeros for improved memory access patterns (i.e., cache reuse).}
+\caption{Example effects of node reordering for MD node set $N=6400$ with $n=50$. The differentiation matrices are permuted equivalents and roughly $0.78\%$ full. Stencils generated based on $k$-D Tree maintain the original node ordering, while a fixed-grid with $h_n=10$ condenses non-zeros for improved memory access patterns (i.e., cache reuse).}
 \label{fig:reorder_example}
 \end{figure} 
 
@@ -281,7 +281,7 @@ The difference between a true $k$-NN and $k$-ANN is insignificant from the persp
 %\end{figure}
 
 
-\subsection{Performance Comparison}
+\section{Performance Comparison}
 
 The implementation of $k$-D tree compared in this work, the \emph{$kd$-Tree Matlab} library, was originally posted to the Matlab FileExchange in 2008 \cite{TagliasacchiMFE} and now maintained as an independent Google Code project \cite{TagliasacchiGC}. The implementation is written in C++, but includes a MEX compiled interface, allowing for a consistent and efficient $k$-D Tree API in both languages. 
 The original release of $kd$-Tree Matlab (pre-2012) was in use throughout the RBF community at the onset of this work. The dual language API was appealing for rapid-prototyping with MATLAB, and then porting applications to C++. 
@@ -290,105 +290,139 @@ The pre-2012 implementation followed the $O(N \log N)$ expected complexity for n
 
 The fixed-grid implementation, originally a pure MATLAB script, outperformed the ``efficient" MEX-compiled $k$-D Tree for problem sizes $N > 20000$, and lead to the development of a faster C++ implementation tested here. However, with the 2012 release of $kd$-Tree Matlab on Google Code (\cite{TagliasacchiGC}), the author has significantly improved the performance of the build process to achieve the $O(N \log N)$ behavior expected for a Point $k$-D Tree with cyclic splitting. 
 
-All benchmarks in this section were performed on the Itasca cluster at the Minnesota Supercomputing Institute. Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors sharing at least 24GB of RAM \cite{MSIItasca}.
+All benchmarks in this section were performed on the Itasca cluster at the Minnesota Supercomputing Institute. Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors sharing at least 24GB of RAM \cite{MSIItasca}. Both the $k$-D Tree and fixed-grid implementations are compiled with the Intel compiler toolchain (v13) and with the ``-O3" optimizations for auto-vectorization, loop unrolling, etc. 
 
-Figure~\ref{fig:stencil_query_old_and_new} considers the performance of the $k$-D Tree and the fixed-grid method on increasing regular grid resolutions up to four million nodes. Both the current $k$-D Tree implementation (2012) and the original implementation (pre-2012) are shown on the left to demonstrate the significant improvement in the latest release. For comparison, the fixed-grid method is shown with two fixed-grid resolutions: $h_n = 50$ and $h_n=100$. On the right, Figure~\ref{fig:stencil_query_old_and_new} shows the associated speedups achieved by the fixed-grid method over the 2012 release of $kd$-Tree Matlab.
-
-
+Figure~\ref{fig:stencil_query_old_and_new} demonstrates the performance of the $k$-D Tree and the fixed-grid method on increasing 3-D regular grid resolutions up to four million nodes. Both the current $k$-D Tree implementation (2012) and the original implementation (pre-2012) are shown on top to demonstrate the significant improvement in the latest release. For comparison, the C++ fixed-grid method is shown with two resolutions: $h_n = 50$ and $h_n=100$. On the bottom, Figure~\ref{fig:stencil_query_old_and_new} shows the associated speedups---defined as the ratio of time to compute $k$-D Tree stencils over the time for the same work in fixed-grid---achieved by the fixed-grid method over the 2012 release of $kd$-Tree Matlab. These timings cover the total time to build the data-structure and query all stencils. Also, the original node ordering is in raster-order, as is the fixed-grid. 
 
 
- performance gap between the C++ fixed-grid implementation and the $k$-D Tree.  Prior to the 2012 improvements the C++ implementation was over 130x faster in stencil generation (build and query). However, with the more reasonable 
+Prior to the 2012 improvements, the C++ implementation was over 130x faster for four million nodes. With the newer and more reasonable $k$-D Tree benchmarks, the fixed-grid method is only 2x faster in the best case shown here. Although 2x is not as impressive, it is a notable improvement. One issue in Figure~\ref{fig:stencil_query_old_and_new} is that the fixed-grid with $h_n=50$ is consistently more than twice as slow as the $k$-D Tree. This is due to under-resolved cells with 32 nodes per cell; $h_n=100$ has only 4 nodes per cell. For small $N$ the $k$-D Tree is faster than both resolutions of fixed grid due to over-resolution. As $N$ increases beyond one million nodes the $h_n=100$ fixed-grid loses ground on the $k$-D Tree due to under-resolution. 
+
 
 \begin{figure}
 \centering
-\begin{subfigure}{0.52\textwidth}
+\begin{subfigure}{11cm}
 \centering
 \includegraphics[width=\textwidth]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
+\caption{3-D Regular Grid with stencil size $n=50$}
 \end{subfigure}
-\begin{subfigure}{0.46\textwidth}
+\begin{subfigure}{9.5cm}
 \centering
 %\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_stencil_gen_time.png}
 \includegraphics[width=\textwidth]{../figures/stencils/reg_subsets_4m_stencil_gen_speedup.png}
+\caption{Speedup of fixed-grid method versus $k$-D Tree}
 \end{subfigure}
+%TODO: regenerate with true RG generated at specified resolutions
 \caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the gains achieved by the fixed-grid neighbor query method.}
 \label{fig:stencil_query_old_and_new}
 \end{figure}
 
-Figure~\ref{fig:stencil_query_old_and_new} compares the total time to generate $N$ stencils of size $n=50$ with three methods: \cite{Tagliasacchi2008}, our hash-based neighbor query, and the improved KDTree from \cite{Tagliasacchi2012}. 
-Until the new release of KDTree, our algorithm was a major improvement to the performance of stencil generation. The hash-based approach achieved greater than 
+
+Similar behavior is seen in Figure~\ref{fig:speedup_sphere} where the fixed-grid and $k$-D Tree are compared for various discretizations of the unit sphere. Each of the node sets described in Figure~\ref{fig:speedup_sphere} are discussed in Chapter~\ref{chap:rbffd_method} and available for download (\cite{BolligSphereGrids}). A range of resolutions are covered from a few hundred up to one million with some overlap. Each distribution (MD, Icosahedral, CVT) are generated differently and the nodes are naturally spatially sorted (icosahedral) or random (MD, CVT). Due to sorting in the fixed-grid method, node sets that are originally random exhibit more gain over $k$-D Tree. This is most evident in Figure~\ref{fig:speedup_sphere}, where different slopes appear for the segment corresponding to MD nodes and similar resolutions of Icosahedral nodes. The speedup curves for $h_n=50$ and $h_n=100$ demonstrate the dependence of fixed-grid method's success on the proper choice of $h_n$. When over-resolved (i.e., for $N < 10000$) the $k$-D Tree performs best. Under-resolution degrades performance rapidly starting at $N=100000$ for $h_n=50$, and $N=500000$ for $h_n=100$. 
 
 
-The difficulty in choosing $h_n$ should not deter the use of fixed-grids for RBF-FD. Since stencil generation is a one time cost, so long as the fixed-grid method is on the same order of complexity as $k$-D Tree, the true cost is insignificant. The long-run payoff on SpMV performance is where the fixed-grid method wins the argument over choice in method. 
-
-
-
-
-\cite{MatlabKDTreeSearcher}
-
-
-
-what is best overlay resolution? based on time to generate. choose resolution as n/2, n/9? etc? 
-
-
-
-
-
-
-
-The early implementation of $k$-D tree had an $O(n^2)$ growth in complexity. This algorithm was developed to alleviate that cost. It took a few hours to implement but has had some surprising impacts. Note that the complexity of $k$-D tree was reduced to $O(N \log^2 N)$ in 2012. On a regular grid (generated with raster/IJK ordering), the cost of $k$-D tree grows at the same rate as the hashing method. 
-
-At $N=32000$ the cost of hashing drops below $k$-D Tree due to the decreasing number of empty hash cells. Likewise, at $N=1000000$ and beyond, the gap between hashing and $k$-D Tree begins to close as cells contain more than one 
-
-
-Q: why does the curve drop for $hnx=100$? 
-Q: the complexity of the algorithm? 
-Q: the sphere I understand: its localizing the search to small patches on the sphere, and 
-
-
-%TODO: if we overrefine the fixed-grid then the query complexity $\log h_n > \log N$, so the fixed-grid method again starts to lose ground on the $k$-D Tree.
-
-
-\begin{figure}
-\centering
-\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
-\includegraphics[width=\textwidth]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
-\begin{figure}
-\centering
-\includegraphics[width=9.5cm]{../figures/stencils/reg_subsets_4m_spmv_speedup.png}
-\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-\label{fig:hash_results}
-\end{figure}
-\begin{figure}
-\centering
-\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
-\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
-\caption{Generating stencils for increasing subsets of the $N=1e6$ CVT nodes mesh.}
-\label{fig:hash_results}
-\end{figure}
 \begin{figure}
 \centering
 \includegraphics[width=10.5cm]{../figures/stencils/sphere_stencil_gen_speedup.png}
-\includegraphics[width=10.5cm]{../figures/stencils/sphere_spmv_speedup.png} 
-\caption{Based on the proper choice of overlay resolution, the hash stencil query can accelerate stencil generation, but the sophistication of the algorithm is low enough that negative impact is more likely. On the other hand, the impact on SpMV performance is always positive with the routine accelerated up to 4.9x faster.}
-\label{fig:hash_results}
+\caption{Fixed-grid speedup versus $k$-D Tree with stencil size $n=50$.}
+\label{fig:speedup_sphere}
 \end{figure}
 
+
+The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:speedup_sphere} hint at a maximum value $h_n$ for which the fixed-grid will outperform its competitor, and with that value: a maximum speedup possible. In Figure~\ref{fig:cvt_hn_speedup}, the $N=1e6$ resolution CVT is used to generate stencils of $n=50$, with range of values for $h_n$. The maximum of this curve shows that the fixed-grid can achieve up to 2.4x better than the $k$-D Tree for $h_n=160$. In this case the number of cells, $(h_n)^3$, sufficiently resolves the domain for most cells intersecting the sphere to have one or two nodes. At $h_n=70$ the fixed-grid is on par with $k$-D Tree; most cells have less than 8 nodes, which is consistent with the resolution sought by \cite{Krog2010,Goswami2010,Green2010}.
+
+% NOTE: for 160^3 fixed grid for a CVT with 1-million nodes we have the following distribution: 
+%  Count | Nodes Per Cell
+%========================
+% 3560709 0
+% 409034 1
+%  44542 2
+%  13669 3
+%  11480 4
+%  11780 5
+%  11422 6
+%  10341 7
+%   8518 8
+%   6077 9
+%   4037 10
+%   2271 11
+%   1190 12
+%    552 13
+%    243 14
+%     86 15
+%     38 16
+%      9 17
+%      1 19
+%      1 20
+%%%%%
+%% Mean :               160            140        180         120            70
+% exclude (0, 1, 2)	6.14186            % exclude (0,1)	    4.68066          % exclude (0)	        1.86814        2.02195     1.74984     2.24683        4.24401% All	0.244141
+
+
+\begin{figure}
+\centering
+\includegraphics[width=9.5cm]{../figures/stencils/cvt1m_stencil_gen_speedup.png}
+\caption{Fixed-grid speedup versus $k$-D Tree on a one-million node CVT (unit sphere), with stencil size $n=50$.}
+\label{fig:cvt_hn_speedup}
+\end{figure}
+
+%TODO: repeat cvt_hn_speedup but get the number of nodes per cell.
+\subsection{Impact on SpMV}
+
+Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but rather, it ekes out a small victory with the right choice of $h_n$ for fewer than 8 nodes per cell. The reality is that since stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes a long lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the bulk of overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV. 
+
+Although the majority of test cases in Figure~\ref{fig:spmv_impact_rg} do not benefit as much as the CVT, but every none are impacted negatively either. For the almost equivalent cost to 
+
+\begin{figure}
+\centering
+\begin{subfigure}{9.5cm}
+\includegraphics[width=\textwidth]{../figures/stencils/reg_subsets_4m_spmv_speedup.png}
+\caption{3-D Regular Grid}
+\end{subfigure}
+\begin{subfigure}{10.5cm}
+\includegraphics[width=\textwidth]{../figures/stencils/sphere_spmv_speedup.png} 
+\caption{Unit Sphere}
+\end{subfigure}
+\caption{Fixed-grid impact on SpMV for stencil size $n=50$.}
+\label{fig:spmv_impact_rg}
+\end{figure}
+
+
+Figure~\ref{fig:spmv_vs_hn}
+The fixed-grid reordering improves SpMV performance.
 
 %TODO: add function for N=1e5, 1e4 to see as a function of N and hnx. 
 \begin{figure}
 \centering
-\includegraphics[width=7.5cm]{../figures/stencils/cvt1m_stencil_gen_speedup.png}
 \includegraphics[width=7.5cm]{../figures/stencils/cvt1m_spmv_speedup.png} 
-\caption{As the coarse grid resolution increases the hashing algorithm achieves both 2x faster than KDTree in stencil generation, with greater than 4x gain in SpMV performance (for free).}
-\label{fig:hash_results}
+\caption{Impact on SpMV performance due to choice of $h_n$.}
+\label{fig:spmv_vs_hn}
 \end{figure}
 
-For every $N$ there is an optimal $hnx$. This is depicted for $N=500000$ CVT and $hnx=100$. 
 
 
+
+The difficulty in choosing $h_n$ should not deter the use of fixed-grids for RBF-FD. Since stencil generation is a one time cost, so long as the fixed-grid method is on the same order of complexity as $k$-D Tree, the true cost is insignificant. The long-run payoff on SpMV performance is where the fixed-grid method wins the argument over choice in method. 
+%TODO: The current implementation of the fixed-grid stores a list with buckets for each cell, and at $h_n=160$ the memory consumption is a concern, but this could be avoided by following the optimizations in \cite{Krog2010,Goswami2010}. 
+
+
+%TODO: \cite{MatlabKDTreeSearcher}
+
+%
+%\begin{figure}
+%\centering
+%\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
+%\includegraphics[width=\textwidth]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
+%\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
+%\label{fig:hash_results}
+%\end{figure}
+%
+%\begin{figure}
+%\centering
+%\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
+%\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
+%\caption{Generating stencils for increasing subsets of the $N=1e6$ CVT nodes mesh.}
+%\label{fig:hash_results}
+%\end{figure}
 
 
 
@@ -554,12 +588,6 @@ There is an ideal $h_n$. %TODO: what is is as a function of N?
 
 TODO: 
 \begin{itemize} 
-\item Performance of $k$-D Tree vs fixed-grid on regular and sphere grids. 
-\begin{itemize}
-\item conclude that the fixed-grid method is worth its weight but needs the proper choice of $h_n$.
-\item add data to show what $h_n(N)$ should be.  
-\item state that benchmarks were performed on Itasca and what the hardware specs are. 
-\end{itemize} 
 \item Node orderings based on integer dilation
 \begin{itemize} 
 \item Dilation and interleave process (include description of groups by dimension)
