@@ -427,8 +427,24 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 
 As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to different memory access patterns. The thought of using $Z$-ordering in a fixed-grid method for optimized memory access is not unknown (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). 
 
-Morton, or $Z$-ordering curves can be constructed using integer dilation and bit interleaving \cite{Mokbel2002}. The process 
+Morton, or $Z$-ordering curves can be constructed using integer dilation and bit-interleaving (see e.g., \cite{Mokbel2002}). The process 
 
+Integer dilation operates at the bit-level on integers. For a $d$-dimensional domain, dilation expands the original bits of integer to populate $d$ times the number of bits. For example, a 16-bit integer dilated in 2-D becomes 32-bits. The process begins by inserting $d-1$ zeros between each of the original bits of the original coordinates
+
+As an example in 2-D: 
+\begin{align}
+(c_x,c_y) & = (13, 17) = (001101_2, 010001_2) \\
+(d_x,d_y) & =  ({\color{red}0}0{\color{red}0}0{\color{red}0}1{\color{red}0}1{\color{red}0}0{\color{red}0}1_2, {\color{red}0}0{\color{red}0}1{\color{red}0}0{\color{red}0}0{\color{red}0}0{\color{red}0}1_2) \\
+Zorder(c_x,c_y) & = d_x | (d_y << 1) = ( 001001010011_2 ) = 595
+\end{align}
+%  000001010001
+% 0001000000010
+% 0001001010011 = 595
+
+
+Traversal along dimensions are represented by cyclic bits \cite{Stocco1995}
+
+The interleaved decimal values are not contiguous and may exceed the number of cells. However, sorting these values does result in the proper traversal of the domain. 
 
 
 Similar techniques can be used for other curves as well. For example: 
@@ -440,10 +456,20 @@ Similar techniques can be used for other curves as well. For example:
 
 Figure~\ref{fig:orderings} presents a variety of curves possible for a 2D node set. Options are endless, but the curves presented in Figure~\ref{fig:orderings} include: 
 
-\begin{itemize} 
-\item Raster (IJK) -- 
-\item U order
-\end{itemize}
+\begin{table}
+\centering
+\caption{Integer Dilation Interleaving Operators}
+\begin{tabular}{ l | c | c }
+  Ordering & 2-D & 3-D \\
+  \hline                        
+  IJK & $(c_x * h_n) + c_y$ & $((c_x * h_n) + c_y)*h_n + c_z$ \\
+  Z & $d_x | (d_y << 1)$ & $d_x | ((d_y << 2 | (d_z << 1))$ \\
+  U & $(d_x \oplus d_y) | (d_y << 1)$ & $(d_z \oplus d_x) | ((d_y << 2) | (d_z << 1))$ \\
+  X & $d_y | ((d_x \oplus d_y) << 1)$ & $d_x | (((d_x \oplus d_y) << 2 | (d_z << 1))$ \\
+  4-Node Z (*) & $d_x | (d_y << 1)$ & $d_x | ((d_y << 2 | (d_z << 1))$ \\
+  \hline  
+\end{tabular}
+\end{table}
 
 
 
