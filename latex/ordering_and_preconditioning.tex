@@ -20,12 +20,12 @@ Like all RBF methods, RBF-FD is designed to handle irregular node distributions,
 
 In comparison to the RBF-FD method, global RBF methods with infinite support connect all nodes to all other nodes, so there is no need for neighbor queries. On the other hand, compact RBF methods require all nodes---with no limit on the count---that lie within the support/radius of the RBF centered at each node. This type of neighbor query is referred to as a \emph{ball query} (a.k.a. range query \cite{WendlandBook}) due to the closed ball created by the radius of support for a compact RBF (see Equation~\ref{eqn:csrbf}). 
 
-The $k$-NN and ball query share many similarities, but the former can be harder to solve. Consider, for example, the scenario in Figure~\ref{fig:nearest_neighbor_example}. Two ball queries around a green stencil center are represented as dashed and dash-dot circles. The inner query returns four neighbors, and the outer returns six. If a stencil of size $n=6$ is desired, then the outer query can be truncated to give the five required neighbors shown in blue. In this example the red node and the farthest blue node are equidistant from the center, and ties are broken arbitrarily. Although $k$-NN is simply a truncated ball query, the real challenge lies in finding the proper search radius to enclose at least the $n$ desired neighbors. To find the radius in practice depends on the choice of data structure used to access node locations. 
+The $k$-NN and ball query share many similarities, but the former can be harder to solve. Consider, for example, the scenario in Figure~\ref{fig:nearest_neighbor_example}. Two ball queries around a blue stencil center are represented as dashed and dash-dot circles. The inner query returns four neighbors, and the outer returns six. If a stencil of size $n=6$ is desired, then the outer query can be truncated to give the five required neighbors shown in blue. In this example the red node and the farthest blue node are equidistant from the center, and ties are broken arbitrarily. Although $k$-NN is simply a truncated ball query, the real challenge lies in finding the proper search radius to enclose at least the $n$ desired neighbors. To find the radius in practice depends on the choice of data structure used to access node locations. 
 
 \begin{figure}
 \centering
 \includegraphics[width=5.5cm]{rbffd_methods_content/neighbors/ball_query_vs_kNN.png}
-\caption{A stencil center in green finds neighboring stencil nodes in blue. Two ball queries are shown as dashed and dash-dot circles to demonstrate the added difficulty of finding the right query radius to obtain the $k$-nearest neighbors.}
+\caption{A stencil center in blue finds neighboring stencil nodes in blue. Two ball queries are shown as dashed and dash-dot circles to demonstrate the added difficulty of finding the right query radius to obtain the $k$-nearest neighbors.}
 \label{fig:nearest_neighbor_example}
 \end{figure}
 
@@ -62,7 +62,7 @@ This work considers \emph{Point $k$-D Trees} \cite{Samet2005}, which partition a
 \end{algorithmic}
 \end{algorithm}
 
-The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of eight nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension, then back to the $x$-dimension. This approach is referred to as \emph{cyclic splitting}, as consecutive cuts are applied by iterating dimensions in a round-robin fashion \cite{Samet2005}. The first cut, $L1$, shown in green, splits the nodes into two sets on either side of $A$. The corresponding tree in the center of Figure~\ref{fig:kdtree_example} shows $L1$ as the tree root with all nodes having $x$-coordinates less than or equal to $A$ to the left, and all nodes having $x$-coordinates greater than $A$ to the right. The second level of the tree, $L2$ and $L3$ (in blue), splits the half-planes on either side of $A$ at nodes $B$ and $C$. The axis parallel splits for each half-plane intercept $L1$ independently to partition half-planes along the $y$-dimension; once again, nodes with coordinates less than or equal (i.e., below) to the splitting value branch left in the tree, and $y$-coordinates greater than  (i.e., above) the value branch right. The third level (red) returns to splitting half-planes in the $x$-dimension. Nodes $D$ and $H$ are not intersected by a splitting plane; their half-planes contain only one node so they immediately become leaves of the tree. This process to build a Point $k$-D Tree has a complexity of $O(N \log N)$ with $O(N)$ storage required \cite{Berg2008,Samet2005}.
+The $k$-D Tree in Figure~\ref{fig:kdtree_example} is an example of a Point $k$-D Tree. Given a set of eight nodes in two dimensions, the tree is constructed by applying one-dimensional cuts along the $x$-dimension, then the $y$-dimension, then back to the $x$-dimension. This approach is referred to as \emph{cyclic splitting}, as consecutive cuts are applied by iterating dimensions in a round-robin fashion \cite{Samet2005}. The first cut, $L1$, shown in blue, splits the nodes into two sets on either side of $A$. The corresponding tree in the center of Figure~\ref{fig:kdtree_example} shows $L1$ as the tree root with all nodes having $x$-coordinates less than or equal to $A$ to the left, and all nodes having $x$-coordinates greater than $A$ to the right. The second level of the tree, $L2$ and $L3$ (in blue), splits the half-planes on either side of $A$ at nodes $B$ and $C$. The axis parallel splits for each half-plane intercept $L1$ independently to partition half-planes along the $y$-dimension; once again, nodes with coordinates less than or equal (i.e., below) to the splitting value branch left in the tree, and $y$-coordinates greater than  (i.e., above) the value branch right. The third level (red) returns to splitting half-planes in the $x$-dimension. Nodes $D$ and $H$ are not intersected by a splitting plane; their half-planes contain only one node so they immediately become leaves of the tree. This process to build a Point $k$-D Tree has a complexity of $O(N \log N)$ with $O(N)$ storage required \cite{Berg2008,Samet2005}.
 
 \begin{figure}
 \centering
@@ -266,7 +266,7 @@ Complexity of Algorithm~\ref{alg:fixed_grid_query} can vary based on the choice 
 Results below demonstrate that proper choice of $h_n$ can maintain logarithmic complexity similar to the $k$-D Tree query. 
 
 
-The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the green center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternative black node is selected even though it is more distant. This is true because the more distant black node occupies the second valence of cells around the stencil center, whereas the true near neighbor is in the third valence. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second valence by satisfying the requirement on $n$. 
+The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the blue center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternative black node is selected even though it is more distant. This is true because the more distant black node occupies the second valence of cells around the stencil center, whereas the true near neighbor is in the third valence. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second valence by satisfying the requirement on $n$. 
 
 Similarly, if cells are rectangular in shape, the ball-query under fixed-grid functions as an ellipsoid. In this case, stencils are biased with more nodes in one direction. To combat this, and ensure spherical stencils, this work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$). 
 
@@ -331,7 +331,7 @@ Similar behavior is seen in Figure~\ref{fig:speedup_sphere} where the fixed-grid
 The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:speedup_sphere} hint at a maximum value $h_n$ for which the fixed-grid will outperform its competitor, and with that value: a maximum speedup possible. In Figure~\ref{fig:cvt_hn_speedup}, the $N=10^6$ resolution CVT is used to generate stencils of $n=50$, with range of values for $h_n$. The maximum of this curve shows that the fixed-grid can achieve up to 2.4x better than the $k$-D Tree for $h_n=160$. In this case the number of cells, $(h_n)^3$, sufficiently resolves the domain for most cells intersecting the sphere to have one or two nodes. At $h_n=70$ the fixed-grid is on par with $k$-D Tree; most cells have less than 8 nodes, which is consistent with the resolution sought by \cite{Krog2010,Goswami2010,Green2010}.
 
 % NOTE: for 160^3 fixed grid for a CVT with 1-million nodes we have the following distribution: 
-%  Count | Nodes Per Cell
+%  Count \mid Nodes Per Cell
 %========================
 % 3560709 0
 % 409034 1
@@ -425,24 +425,36 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 %TODO: dilation for orderings
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
-As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to different memory access patterns. The thought of using $Z$-ordering in a fixed-grid method for optimized memory access is not unknown (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). 
+As previously mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to new memory access patterns. The use of $Z$-ordering in fixed-grid methods for optimized memory access is not unknown (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). While investigating the fixed-grid method attempts were made to reorder cells following $Z$-ordering and other space filling curves. 
 
-Morton, or $Z$-ordering curves can be constructed using integer dilation and bit-interleaving (see e.g., \cite{Mokbel2002}). The process 
+Examples of the tested curves are presented in Figure~\ref{fig:orderings}, where each node corresponds to a cell. Each tile gets its name based on the curve drawn as it starts at $(0,0)$ and traverses all nodes. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly applied to reorder the cells of the fixed-grid. The Reverse Cuthill-McKee ordering is a special case of ordering discussed later in this section. 
+
+Each of the orderings in Figure~\ref{fig:orderings} are 
+
+The Morton- or $Z$-ordering curves can be constructed using integer dilation and bit-interleaving (see e.g., \cite{Mokbel2002}). The process begins 
 
 Integer dilation operates at the bit-level on integers. For a $d$-dimensional domain, dilation expands the original bits of integer to populate $d$ times the number of bits. For example, a 16-bit integer dilated in 2-D becomes 32-bits. The process begins by inserting $d-1$ zeros between each of the original bits of the original coordinates
+
+See \cite{Stocco1995} for a discussion on how 
 
 As an example in 2-D: 
 \begin{align}
 (c_x,c_y) & = (13, 17) = (001101_2, 010001_2) \\
-(d_x,d_y) & =  ({\color{red}0}0{\color{red}0}0{\color{red}0}1{\color{red}0}1{\color{red}0}0{\color{red}0}1_2, {\color{red}0}0{\color{red}0}1{\color{red}0}0{\color{red}0}0{\color{red}0}0{\color{red}0}1_2) \\
-Zorder(c_x,c_y) & = d_x | (d_y << 1) = ( 001001010011_2 ) = 595
+dilate((c_x,c_y), 2) & = (d_x,d_y) =  ({\color{red}0}0{\color{red}0}0{\color{red}0}1{\color{red}0}1{\color{red}0}0{\color{red}0}1_2, {\color{red}0}0{\color{red}0}1{\color{red}0}0{\color{red}0}0{\color{red}0}0{\color{red}0}1_2) \\
+Zorder(c_x, c_y) & = d_x \mid (d_y \ll 1) = ( 001001010011_2 ) = 595
 \end{align}
 %  000001010001
 % 0001000000010
-% 0001001010011 = 595
+% 0001001010011 = 595 
 
 
-Traversal along dimensions are represented by cyclic bits \cite{Stocco1995}
+%Traversal along dimensions are indicated by individual bits of the interleaved value. The directions of traversal are : 
+%\begin{align} 
+%interleave_2(I,J) = (I \ll 1) \mid J \\
+%interleave_3(I,J,K) = ((I \ll 2) \mid (J \ll 1)) \mid K \\
+%\end{align}
+%where each group of two bits $\{x,y\}$ indicates the direction of traversal for one step of traversal. 
+
 
 The interleaved decimal values are not contiguous and may exceed the number of cells. However, sorting these values does result in the proper traversal of the domain. 
 
@@ -456,20 +468,6 @@ Similar techniques can be used for other curves as well. For example:
 
 Figure~\ref{fig:orderings} presents a variety of curves possible for a 2D node set. Options are endless, but the curves presented in Figure~\ref{fig:orderings} include: 
 
-\begin{table}
-\centering
-\caption{Integer Dilation Interleaving Operators}
-\begin{tabular}{ l | c | c }
-  Ordering & 2-D & 3-D \\
-  \hline                        
-  IJK & $(c_x * h_n) + c_y$ & $((c_x * h_n) + c_y)*h_n + c_z$ \\
-  Z & $d_x | (d_y << 1)$ & $d_x | ((d_y << 2 | (d_z << 1))$ \\
-  U & $(d_x \oplus d_y) | (d_y << 1)$ & $(d_z \oplus d_x) | ((d_y << 2) | (d_z << 1))$ \\
-  X & $d_y | ((d_x \oplus d_y) << 1)$ & $d_x | (((d_x \oplus d_y) << 2 | (d_z << 1))$ \\
-  4-Node Z (*) & $d_x | (d_y << 1)$ & $d_x | ((d_y << 2 | (d_z << 1))$ \\
-  \hline  
-\end{tabular}
-\end{table}
 
 
 
@@ -479,6 +477,26 @@ Figure~\ref{fig:orderings} presents a variety of curves possible for a 2D node s
 \caption{Example space filling curves used to reorder cells/nodes. The Raster, Z, X, U and 4-nodes per Edge are space filling curves applied to reorder cells of the fixed-grid stencil queries. Reverse Cuthill-McKee (RCM) operates on the output stencils to the associated adjacency graph. The RCM shown here is a special case with 3 neighbors per node.}
 \label{fig:orderings}
 \end{figure}
+
+
+
+Table~\ref{tbl:orderings} presents the 2-D and 3-D operators used to order cells. The $\ll$ is a left bit-shift operator, $|$ indicates an ``OR" operation, and $\oplus$ indicates ``XOR". 
+
+\begin{table}
+\centering
+\caption{Integer Dilation Interleaving Operators}
+\label{tbl:orderings}
+\begin{tabular}{ c | c | c }
+  Ordering & 2-D & 3-D \\
+  \hline                        
+  IJK & $(c_x * h_n) + c_y$ & $((c_x * h_n) + c_y)*h_n + c_z$ \\
+  Z & $(d_x \ll 1) \mid d_y$ & $((d_x \ll 2) \mid (d_z \ll 1)) \mid d_y$ \\
+  U & $(d_x \ll 1) \mid (d_x \oplus d_y)$ & $((d_x \ll 2) \mid (d_z \ll 1)) \mid (d_z \oplus d_y)$ \\
+  X & $((d_x \oplus d_y) \ll 1) \mid d_x$ & $(((d_x \oplus d_y) \ll 2) \mid (d_z \ll 1)) \mid d_y$ \\
+  4-Node Z (*) & $(d_x \ll 2^{d-1}) \mid d_y$ & $((d_x \ll 2^{d-1}) \mid (d_y \ll 2^{d-2})) \mid d_z$ \\
+  \hline  
+\end{tabular}
+\end{table}
 
 
 
@@ -510,22 +528,17 @@ Another option for reordering nodes is to focus on ordering the differentiation 
 
 The RCM algorithm first finds the row with fewest non-zeros corresponding to the node in the graph with the lowest degree of connectivity.  traverses the adjacency graph 
  
-
-Another option for reordering nodes arises after stencils have been generated. The stencils
-
-A variety 
-
 The Cuthill McKee algorithms can be equated to a breadth-first search over the adjacency graph. The algorithm starts by 
-
-Step 0: Prepare an empty queue Q and an empty result array R.
-Step 1: Select the node in G(n) with the lowest degree (ties are broken arbitrarily) that hasn't previously been inserted in the result array. Let us name it P (for Parent).
-Step 2: Add P in the first free position of R.
-Step 3: Add to the queue all the nodes adjacent with P in the increasing order of their degree.
-Step 4.1: Extract the first node from the queue and examine it. Let us name it C (for Child).
-Step 4.2: If C hasn't previously been inserted in R, add it in the first free position and add to Q all the neighbours of C that are not in R in the increasing order of their degree.
-Step 5: If Q is not empty repeat from Step 4.1 .
-Step 6: If there are unexplored nodes (the graph is not connected) repeat from Step 1 .
-Step 7: Reverse the order of the elements in R. Element R[i] is swaped with element R[n+1-i].
+% 
+%Step 0: Prepare an empty queue Q and an empty result array R.
+%Step 1: Select the node in G(n) with the lowest degree (ties are broken arbitrarily) that hasn't previously been inserted in the result array. Let us name it P (for Parent).
+%Step 2: Add P in the first free position of R.
+%Step 3: Add to the queue all the nodes adjacent with P in the increasing order of their degree.
+%Step 4.1: Extract the first node from the queue and examine it. Let us name it C (for Child).
+%Step 4.2: If C hasn't previously been inserted in R, add it in the first free position and add to Q all the neighbours of C that are not in R in the increasing order of their degree.
+%Step 5: If Q is not empty repeat from Step 4.1 .
+%Step 6: If there are unexplored nodes (the graph is not connected) repeat from Step 1 .
+%Step 7: Reverse the order of the elements in R. Element R[i] is swaped with element R[n+1-i].
 
 The result array will be interpreted like this: R[L] = i means that the new label of node i (the one that had the initial label of i) will be L.
 
