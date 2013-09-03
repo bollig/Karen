@@ -328,7 +328,7 @@ Similar behavior is seen in Figure~\ref{fig:speedup_sphere} where the fixed-grid
 \end{figure}
 
 
-The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:speedup_sphere} hint at a maximum value $h_n$ for which the fixed-grid will outperform its competitor, and with that value: a maximum speedup possible. In Figure~\ref{fig:cvt_hn_speedup}, the $N=1e6$ resolution CVT is used to generate stencils of $n=50$, with range of values for $h_n$. The maximum of this curve shows that the fixed-grid can achieve up to 2.4x better than the $k$-D Tree for $h_n=160$. In this case the number of cells, $(h_n)^3$, sufficiently resolves the domain for most cells intersecting the sphere to have one or two nodes. At $h_n=70$ the fixed-grid is on par with $k$-D Tree; most cells have less than 8 nodes, which is consistent with the resolution sought by \cite{Krog2010,Goswami2010,Green2010}.
+The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:speedup_sphere} hint at a maximum value $h_n$ for which the fixed-grid will outperform its competitor, and with that value: a maximum speedup possible. In Figure~\ref{fig:cvt_hn_speedup}, the $N=10^6$ resolution CVT is used to generate stencils of $n=50$, with range of values for $h_n$. The maximum of this curve shows that the fixed-grid can achieve up to 2.4x better than the $k$-D Tree for $h_n=160$. In this case the number of cells, $(h_n)^3$, sufficiently resolves the domain for most cells intersecting the sphere to have one or two nodes. At $h_n=70$ the fixed-grid is on par with $k$-D Tree; most cells have less than 8 nodes, which is consistent with the resolution sought by \cite{Krog2010,Goswami2010,Green2010}.
 
 % NOTE: for 160^3 fixed grid for a CVT with 1-million nodes we have the following distribution: 
 %  Count | Nodes Per Cell
@@ -368,9 +368,9 @@ The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:s
 %TODO: repeat cvt_hn_speedup but get the number of nodes per cell.
 \subsection{Impact on SpMV}
 
-Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but rather, it ekes out a small victory with the right choice of $h_n$ for fewer than 8 nodes per cell. The reality is that since stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes a long lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the bulk of overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV. 
+Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but rather, it ekes out a small victory with the right choice of $h_n$ for fewer than 8 nodes per cell. The reality is that since stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes another longer lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the major overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV for random node distributions. 
 
-Although the majority of test cases in Figure~\ref{fig:spmv_impact_rg} do not benefit as much as the CVT, but every none are impacted negatively either. For the almost equivalent cost to 
+Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is is to be expected as they are not generated based on random node distributions. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown, so a case can be made for use of the fixed-grid query as a general safety net to precondition the system when properties of the input grid are unknown. 
 
 \begin{figure}
 \centering
@@ -387,25 +387,14 @@ Although the majority of test cases in Figure~\ref{fig:spmv_impact_rg} do not be
 \end{figure}
 
 
-Figure~\ref{fig:spmv_vs_hn}
-The fixed-grid reordering improves SpMV performance.
-
 %TODO: add function for N=1e5, 1e4 to see as a function of N and hnx. 
-\begin{figure}
-\centering
-\includegraphics[width=7.5cm]{../figures/stencils/cvt1m_spmv_speedup.png} 
-\caption{Impact on SpMV performance due to choice of $h_n$.}
-\label{fig:spmv_vs_hn}
-\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=7.5cm]{../figures/stencils/cvt1m_spmv_speedup.png} 
+%\caption{Impact on SpMV performance due to choice of $h_n$. \authnote{TODO: add RCM impact here}}
+%\label{fig:spmv_vs_hn}
+%\end{figure}
 
-
-
-
-The difficulty in choosing $h_n$ should not deter the use of fixed-grids for RBF-FD. Since stencil generation is a one time cost, so long as the fixed-grid method is on the same order of complexity as $k$-D Tree, the true cost is insignificant. The long-run payoff on SpMV performance is where the fixed-grid method wins the argument over choice in method. 
-%TODO: The current implementation of the fixed-grid stores a list with buckets for each cell, and at $h_n=160$ the memory consumption is a concern, but this could be avoided by following the optimizations in \cite{Krog2010,Goswami2010}. 
-
-
-%TODO: \cite{MatlabKDTreeSearcher}
 
 %
 %\begin{figure}
@@ -420,7 +409,7 @@ The difficulty in choosing $h_n$ should not deter the use of fixed-grids for RBF
 %\centering
 %\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
 %\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
-%\caption{Generating stencils for increasing subsets of the $N=1e6$ CVT nodes mesh.}
+%\caption{Generating stencils for increasing subsets of the $N=10^6$ CVT nodes mesh.}
 %\label{fig:hash_results}
 %\end{figure}
 
@@ -430,7 +419,7 @@ The difficulty in choosing $h_n$ should not deter the use of fixed-grids for RBF
 
 
 
-\subsection{Alternative Orderings}
+\section{Alternative Orderings}
 
 %TODO: bandwidth definition
 %TODO: dilation for orderings
