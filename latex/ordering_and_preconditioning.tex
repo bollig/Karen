@@ -425,9 +425,13 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 %TODO: dilation for orderings
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
-As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to memory access patterns. 
+As mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to different memory access patterns. The thought of using $Z$-ordering in a fixed-grid method for optimized memory access is not unknown (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). 
 
-Many space filling curves can be constructed using integer dilation and bit interleaving. Integer dilation is the process of 
+Morton, or $Z$-ordering curves can be constructed using integer dilation and bit interleaving \cite{Mokbel2002}. The process 
+
+
+
+Similar techniques can be used for other curves as well. For example: 
 
 %TODO: omnigraffle dilation figure.
 %TODO: list giving the curves for each 
@@ -476,11 +480,34 @@ At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\
 
 \subsection{Cuthill-McKee} 
 
+Another option for reordering nodes is to focus on ordering the differentiation matrix directly to reduce bandwidth. A commonly used algorithm for this is called \emph{Reverse Cuthill-McKee} (RCM) reordering. RCM takes as input a square, symmetric adjacency graph and returns a vector of indices indicating the new order for each row of the matrix. 
 
-The Cuthill McKee algorithms can be equated to a breadth-first search. The algorithm queues nodes in order of degree at each level of the search and traverses the lowest degree priority. The Reverse variant of Cuthill-McKee inverts the node order so that the lowest degree and top level node are at the end of the matrix rather than the beginning. Aside from ordering, the Reverse and Standard Cuthill McKee algorithms are identical processes. RCM is the more popular of the variants though, due to storage savings and reduced fill-in for some decompositions \cite{LiuSherman1976}.
+The RCM algorithm first finds the row with fewest non-zeros corresponding to the node in the graph with the lowest degree of connectivity.  traverses the adjacency graph 
+ 
+
+Another option for reordering nodes arises after stencils have been generated. The stencils
+
+A variety 
+
+The Cuthill McKee algorithms can be equated to a breadth-first search over the adjacency graph. The algorithm starts by 
+
+Step 0: Prepare an empty queue Q and an empty result array R.
+Step 1: Select the node in G(n) with the lowest degree (ties are broken arbitrarily) that hasn't previously been inserted in the result array. Let us name it P (for Parent).
+Step 2: Add P in the first free position of R.
+Step 3: Add to the queue all the nodes adjacent with P in the increasing order of their degree.
+Step 4.1: Extract the first node from the queue and examine it. Let us name it C (for Child).
+Step 4.2: If C hasn't previously been inserted in R, add it in the first free position and add to Q all the neighbours of C that are not in R in the increasing order of their degree.
+Step 5: If Q is not empty repeat from Step 4.1 .
+Step 6: If there are unexplored nodes (the graph is not connected) repeat from Step 1 .
+Step 7: Reverse the order of the elements in R. Element R[i] is swaped with element R[n+1-i].
+
+The result array will be interpreted like this: R[L] = i means that the new label of node i (the one that had the initial label of i) will be L.
 
 
+The algorithm queues nodes in order of degree at each level of the search and traverses the lowest degree priority. The Reverse variant of Cuthill-McKee inverts the node order so that the lowest degree and top level node are at the end of the matrix rather than the beginning. Aside from ordering, the Reverse and Standard Cuthill McKee algorithms are identical processes. However, RCM is the more popular of the variants due to reduced fill-in that occurs when some matrix decompositions are applied to the reordered matrix (\cite{LiuSherman1976}).
 
+
+Cuthill McKee implementations assume the algorithm operates on square, symmetric adjacency graphs. 
 
 
 
@@ -529,7 +556,7 @@ In Figure~\ref{fig:orderings} typical stencils in RBF-FD easily span multiple ce
 \centering
 \includegraphics[width=0.85\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d2_n31_hn6.png} \\
 \includegraphics[width=0.85\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
-\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. \authnote{TODO: Raster on top left. Add RCM ordering to top right.}  3) Spy impact on MD node set $N=4096$, stencil size $n=31$, $h_n = 6$ }
+\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings.  3) Spy impact on MD node set $N=4096$, stencil size $n=31$, $h_n = 6$ }
 \label{fig:ordering_impact_rg}
 \end{figure}
 
