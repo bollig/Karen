@@ -422,18 +422,26 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 \section{Alternative Orderings}
 
 %TODO: bandwidth definition
-%TODO: dilation for orderings
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
-As previously mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to new memory access patterns. The use of $Z$-ordering in fixed-grid methods for optimized memory access is not unknown (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). While investigating the fixed-grid method attempts were made to reorder cells following $Z$-ordering and other space filling curves. 
+As previously mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to new memory access patterns. The use of $Z$-ordering for optimized memory access is common in fixed-grid methods (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). While prototyping the fixed-grid method, a few attempts were made to reorder cells following $Z$-ordering and other space filling curves. 
 
-Examples of the tested curves are presented in Figure~\ref{fig:orderings}, where each node corresponds to a cell. Each tile gets its name based on the curve drawn as it starts at $(0,0)$ and traverses all nodes. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly applied to reorder the cells of the fixed-grid. The Reverse Cuthill-McKee ordering is a special case of ordering discussed later in this section. 
+Examples of those curves are presented in Figure~\ref{fig:orderings}. Here each node would represent a cell, and the orderings start at $(0,0)$. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly applied to reorder the cells of the fixed-grid. Each of those tiles in Figure~\ref{fig:orderings} get their name based on how the curve connects nodes. The sixth ordering shown in Figure~\ref{fig:orderings}, Reverse Cuthill-McKee, is a special case of space filling curve saved for discussed later in this section. 
 
-Each of the orderings in Figure~\ref{fig:orderings} are 
+\begin{figure}
+\centering
+\includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/node_orderings.png} 
+\caption{Example space filling curves used to reorder cells/nodes. The Raster, Z, X, U and 4-nodes per Edge are space filling curves applied to reorder cells of the fixed-grid stencil queries. Reverse Cuthill-McKee (RCM) operates on the output stencils to the associated adjacency graph. The RCM shown here is a special case with 3 neighbors per node.}
+\label{fig:orderings}
+\end{figure}
 
-The Morton- or $Z$-ordering curves can be constructed using integer dilation and bit-interleaving (see e.g., \cite{Mokbel2002}). The process begins 
 
-Integer dilation operates at the bit-level on integers. For a $d$-dimensional domain, dilation expands the original bits of integer to populate $d$ times the number of bits. For example, a 16-bit integer dilated in 2-D becomes 32-bits. The process begins by inserting $d-1$ zeros between each of the original bits of the original coordinates
+Excluding RCM, the remaining orderings in Figure~\ref{fig:orderings} are constructed a function of node coordinates, $(c_x,c_y)$. Raster-ordering, discussed above, follows $ (c_x * h_n) + c_y$. To produce the remaining curves, one turns to a process of integer dilation and bit-interleaving (see e.g., \cite{Mokbel2002,Stocco1995}). 
+
+Integer dilation takes an integer value as input, and outputs the original input bits spaced by new zeros. For example, $1010101_2$ is a dilated form of $1111_2$. The degree of 
+
+
+For a $d$-dimensional domain, dilation expands the original bits of integer to populate $d$ times the number of bits with the original bits separated by $d-1$ zeros. As a simple example, dilating $1111_2$ converts the four bit integer to $1010101_2$ in 2-D and $1001001001_2$ in 3-D. 
 
 See \cite{Stocco1995} for a discussion on how 
 
@@ -469,14 +477,6 @@ Similar techniques can be used for other curves as well. For example:
 Figure~\ref{fig:orderings} presents a variety of curves possible for a 2D node set. Options are endless, but the curves presented in Figure~\ref{fig:orderings} include: 
 
 
-
-
-\begin{figure}
-\centering
-\includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/node_orderings.png} 
-\caption{Example space filling curves used to reorder cells/nodes. The Raster, Z, X, U and 4-nodes per Edge are space filling curves applied to reorder cells of the fixed-grid stencil queries. Reverse Cuthill-McKee (RCM) operates on the output stencils to the associated adjacency graph. The RCM shown here is a special case with 3 neighbors per node.}
-\label{fig:orderings}
-\end{figure}
 
 
 
