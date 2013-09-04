@@ -209,7 +209,7 @@ The entire build process complexity is proportional to $O(N)$, and requires $O((
 
 A special note: the final step of Algorithm~\ref{alg:fixed_grid_build} overwrites the original list of nodes with the sorted equivalent. The spatially sorted list is included in the cost of stencil generation, but available for reuse elsewhere. Since the first step in RBF-FD applications is to generate stencils, overwriting the input node set can guarantee that the node values throughout the entire life-cycle of an RBF-FD application will benefit from the same spatial locality as stencil generation. This benefit is (almost) free. 
 
-Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matrices generated based on the same $N=6400$ MD-node set (unit sphere), with each row representing an RBF-FD stencil of $n=50$ non-zeros. The left matrix in Figure~\ref{fig:reorder_example} is generated with stencils queried by a $k$-D Tree. The $k$-D Tree maintains the original ordering on $P$. The matrix on the right of Figure~\ref{fig:reorder_example} is a permuted equivalent of the left matrix with fixed-grid cells sorted based on a raster-ordering for $h_n = 10$. 
+Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matrices generated based on the same $N=6400$ MD-node set (unit sphere), with each row representing an RBF-FD stencil of $n=50$ non-zeros. The left matrix in Figure~\ref{fig:reorder_example} is generated with stencils queried by a $k$-D Tree. The $k$-D Tree maintains the original ordering on $P$. The matrix on the right of Figure~\ref{fig:reorder_example} is a permuted equivalent of the left, but results from a fixed-grid sorted by raster-ordering with $h_n = 10$. 
 
 Looking at Figure~\ref{fig:reorder_example} it should be obvious that reordering the nodes can improve memory access patterns for SpMV. If each row is applied as a sparse dot-product with a dense vector, the more condensed non-zeros are in the row, the more likely values from the dense vector will be resident in cache when needed. Likewise, non-zeros that appear on consecutive rows can benefit from cache reuse. Later in this chapter, the impact of spatial orderings are compared to determine how RBF-FD can benefit the most. 
 
@@ -561,7 +561,12 @@ Often, interleaved cell coordinates near the boundaries of the domain do not pro
 
 \subsection{Cuthill-McKee} 
 
-The set of orderings considered up to this point have focused on spatially sorting cells during the stencil generation phase. Another approach to reordering nodes is to operate on the adjacency matrix available \emph{after} stencils are generated. %TODO: give examples CM, RCM, AMD, GPS \cite{Gibbs1975}
+The Cuthill-McKee approach to reordering nodes waits until \emph{after} stencils are generated to operate on the adjacency matrix (see subsection~\ref{subsec:adjacency} for definition). %TODO: give examples CM, RCM, AMD, GPS \cite{Gibbs1975}
+Cuthill-McKee performs a breadth-first search
+
+%TODO: define degree (with adjacency matrix)
+%TODO: define bandwidth 
+
 
 The Cuthill-McKee family of algorithms changes that focus to reorder nodes \emph{after} stencils are generated. 
 

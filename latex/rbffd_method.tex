@@ -743,11 +743,7 @@ The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical 
 Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. Note that with DMs stored as sparse representations, the matrix-vector multiply operation is distinguished as a \emph{sparse matrix-vector multiply} (SpMV). SpMVs avoid unnecessary operations by only multiplying the nonzero elements of the matrix matched to corresponding values in the vector. The actual algorithm for SpMV depends on the choice of sparse storage. Chapter~\ref{chap:gpu_rbffd} demonstrates the pivotal role that sparse formats play in the performance of SpMV, and thus RBF-FD. 
 
 \subsection{Adjacency Matrix}
-
-%TODO: finish adjacency matrix is equivalent to DM. 
-%TODO: Unsymmetric
-%TODO: Symmetry achieved by (A + A^T)
-%TODO: 
+\label{subsec:adjacency}
 \begin{figure}[ht!]
 \begin{center}
 \begin{subfigure}[b]{0.425\textwidth}
@@ -765,9 +761,11 @@ Best practices dictate that the DMs be stored in some type of compressed sparse 
 \end{center}
 \end{figure}
 
-In Chapters~\ref{chap:stencils} and \ref{chap:distributed_rbffd} the concept of an \emph{adjacency matrix} is required. Adjacency matrices have the same structure as a DM, except all nonzeros elements are replaced by a 1. The nonzero elements indicate connectivity between nodes (i.e., stencil connections). For example, in Figure~\ref{fig:directed_graph} the nodes $A$, $B$, $C$, and D are connected via directional arrows indicating that B depends on $A$, $C$, and $D$, while $C$ depends on $B$, and $D$ depends only on $A$. $A$ has no dependencies. The graph on the left is directed and the associated adjacency matrix is unsymmetric. Figure~\ref{fig:undirected_graph} demonstrates the case where edges connecting nodes are undirected, corresponding to a symmetric matrix. 
+In Chapters~\ref{chap:stencils} and \ref{chap:distributed_rbffd} the concept of an \emph{adjacency matrix} is required. Adjacency matrices have the same structure as a DM, except all non-zeros elements are masked by the value 1. Non-zero elements indicate node connectivity an adjacency graph. The \emph{degree} of a node is measured as the number of off-diagonal non-zeros in the adjacency matrix, or equivalently the number of connections to other nodes in the adjacency graph. For example, Figure~\ref{fig:directed_graph} shows four nodes connected via directional arrows. Both the graph and matrix indicate that $B$ depends on $A$, $C$ and $D$, while $C$ depends on $B$, and $D$ depends on $A$. $A$ has no dependencies. The degree for each node is given as zero for $A$, three for $B$, one for $C$ and one for $D$. The graph in Figure~\ref{fig:directed_graph} is directed with an associated unsymmetric adjacency matrix. Figure~\ref{fig:undirected_graph} demonstrates the case where edges are bijective resulting in an undirected graph and symmetric adjacency matrix. 
 
-Some operations like matrix decomposition and reordering are easier to apply to symmetric adjacency matrices. It is often possible to apply those operations to RBF-FD by symmetrizing the matrix. If the adjacency matrix, $A$, is unsymmetric, then $A + A^T$ results in the symmetric adjacency matrix. 
+Some operations like matrix decomposition and matrix reordering are easier applied to symmetric adjacency matrices. RBF-FD can benefit from some operations by symmetrizing the matrix $A$ with $A+A^T$. 
+
+
 
 
 \section{Weight Operators}
@@ -1009,13 +1007,14 @@ The algorithm starts by loading/generating a grid. RBF-FD requires only node coo
 Once in the Application phase, the constructed DMs are applied to solve a PDE either explicitly (e.g., Equation~\ref{eq:explicit_dm}) or implicitly (e.g., Equation~\ref{eq:implicit_dm}). In the case of time-dependent PDEs, RBF-FD is applied the same as any classical FD method with a time-stepping scheme (represented by UpdateSolution). Examples of valid time-schemes include Runge-Kutta, Adams-Bashforth, and Crank Nicholson methods among many others. Based on the choice of time-scheme, one frequently needs multiple iterations through SolvePDE to assemble intermediate solutions that are weighted and combined in the the UpdateSolution step.
 
 %TODO: add refs for RBF-FD uses of these schemes. 
+%TODO: add CFL ref
 
 Generally the performance of RBF-FD hinges on the cost of SolvePDE. This is especially true for time-dependent PDEs where an increase in grid resolution results in proportional increase in the number time-steps to satisfy the CFL condition \cite{CFL}. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact performance SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, smaller required grid size, and faster convergence.
 
 \section{Grids} 
 
 
-RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can impact accuracy of the method. This functional portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for other methods. 
+RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can impact accuracy of the method. The only restriction from the method is that coincident nodes should not be connected. This functional portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for other methods. 
 %\begin{itemize} 
 %\item scattered nodes
 %
@@ -1029,14 +1028,9 @@ RBF-FD has no requirement for structured grids, or need for a well-refined mesh/
 
 %Typically, the only constraint placed on the grid is that nodes should not coincide. If two nodes do coincide it is possible for a stencil to include both, and 
 
-%TODO: cubed, ying-yang
-% For example classic Finite Difference and many Finite Volume methods operate on regular/Cartesian grids. When operating on the sphere, it is common to encounter Cubed-spheres \cite{TODO:NairJablonowski08} and/or Ying-Yang grids in attempts to bypass the need for small time-steps and to alleviate troubling pole singularities common to Latitude/Longitude grids \cite{TODO}. Generalizations to unstructured meshes 
-% TODO: Discontinuous Galerkin? How deep do I want to go?
-%are possible for many methods (e.g., Finite Volume on multi-resolution \cite{RinglerJuGunzberger2008}) and Finite Element methods \cite{TODO}, but such methods still have a strong dependence on a Delaunay Triangulation or other mesh to determine the connectivity between nodes. 
-
 %The choice of grid is only relevant to the extent that it impacts the connectivity between nodes in stencils. Connectivity translates to non-zeros in rows of the DMs, so the various grid distributions result in a number of sparsity patterns. For all other intents and purposes, the choice of grid is only pertinent to ensure consistency with the PDEs to solve. 
 
-This work verifies and benchmarks RBF-FD on the following grids, which are available for public download (see \cite{BolligSphereGrids}).
+This work verifies and benchmarks RBF-FD on the following grids, which are available for public download (see \cite{BolligSphereGrids}):
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 
@@ -1098,16 +1092,14 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 %
 
 \section{On Choosing the Right $\epsilon$} 
-% TODO: expand missing content
-
 
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
 If solving for RBF-Direct weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system} directly), one must balance the choice of $\epsilon$ to avoid ill-conditioning but achieve a reasonable accuracy for the weights. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). 
-%TODO{see RBF-QR and RBF-GA papers for refs} 
-No fool-proof method exists for RBF-Direct---the ``optimal" (in most cases this reads: ``acceptable") value of $\epsilon$ depends on the node distribution and varies by application. 
+%TODO{Get RBF-QR and RBF-GA papers for refs} 
+No fool-proof method exists for RBF-Direct---the ``optimal" (in most cases this reads: ``most acceptable") value of $\epsilon$ depends on the node distribution and varies by application. 
 
-This work utilizes a moderately reliable method, proposed in \cite{FlyerLehto11}, for choosing $\epsilon$. The method expresses $\epsilon$ as a function of the grid resolution, $N$, and the desired mean condition number for Equation~\ref{eq:rbffd_weight_system}, $\bar{\kappa}_A = \frac{1}{N} \sum_{i=1}^N(\kappa_A)$. Here $\kappa_A$ is the condition number of the interpolation matrix from Equation~\ref{eq:rbffd_weight_system}. 
+This work utilizes a moderately reliable method, proposed in \cite{FlyerLehto11}, for choosing $\epsilon$ as a function of the grid resolution, $N$, and the desired mean condition number for Equation~\ref{eq:rbffd_weight_system}, $\bar{\kappa}_A = \frac{1}{N} \sum_{i=1}^N(\kappa_A)$. %Here $\kappa_A$ is the condition number of the interpolation matrix from Equation~\ref{eq:rbffd_weight_system}. 
 
 The tiles of Figure~\ref{fig:epsilon_contours} illustrate a number of contours generated in MATLAB. Each contour is numbered according to $\log_{10}\bar{\kappa}_A$. Data was generated by uniformly sampling parameter spaces on $\epsilon$ and $\sqrt{N}$ for the MD node-sets. For each $\sqrt{N} = \{40, ..., 100\}$, in steps of 10, the code makes a sweep through $\epsilon = \{1, ..., 10\}$ in steps of 0.5 and assembles $N$ RBF-FD interpolation matrices. A call to MATLAB's ``cond()" routine evaluates $\kappa_A$ for each matrix. The resulting values of $\bar{\kappa}_A$ produce remarkably linear contours, with slopes that fan out from the $\epsilon$ axis. Note that $\kappa_A$ depends on the stencil size, $n$, as evidenced by shifting contour fans for $n=20, 40, 60, 80,$ and $100$. The simultaneous increase in slope and decreasing separation between contours leaves little ``wiggle" room in guessing $\epsilon$ under RBF-Direct. 
 
