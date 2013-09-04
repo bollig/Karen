@@ -424,14 +424,14 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 %TODO: bandwidth definition
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
-As previously mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to new memory access patterns. The use of $Z$-ordering for optimized memory access is common in fixed-grid methods (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). While prototyping the fixed-grid method, a few attempts were made to reorder cells following $Z$-ordering and other space filling curves. 
+As previously mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to new memory access patterns. The use of $Z$-ordering for optimized memory access is common in fixed-grid methods (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). While prototyping the fixed-grid method, a few attempts were made to reorder cells following $Z$-ordering and other space filling curves. Code to test ordering in this section is included in the MATLAB fixed-grid prototype\cite{BolligRBFFixedGrid}.
 
 Examples of those curves are presented in Figure~\ref{fig:orderings}. Here each node would represent a cell, and the orderings start at $(0,0)$. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly applied to reorder the cells of the fixed-grid. Each of the five tiles in Figure~\ref{fig:orderings} get their name based on how the curve connects nodes. The sixth ordering in Figure~\ref{fig:orderings}, Reverse Cuthill-McKee, is a special case of space filling curve saved for later discussion in this section. 
 
 \begin{figure}
 \centering
 \includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/node_orderings.png} 
-\caption{Example space filling curves used to reorder cells/nodes. The Raster, Z, X, U and 4-nodes per Edge are space filling curves applied to reorder cells of the fixed-grid stencil queries. Reverse Cuthill-McKee (RCM) operates on the output stencils to the associated adjacency graph. The RCM shown here is a special case with 3 neighbors per node.}
+\caption{Example space filling curves used to reorder cells/nodes. The Raster, $Z$-, $X$-, $U$- and 4-nodes per Edge $Z$-orderings are space filling curves applied to reorder cells of the fixed-grid stencil queries. Reverse Cuthill-McKee (RCM) operates on output stencils and their associated adjacency graph. The RCM shown here is a special case with only 3 neighbors per node.}
 \label{fig:orderings}
 \end{figure}
 
@@ -526,19 +526,6 @@ Here, the cell coordinates, $(5,3)$, are mapped to the value 39. This $Z$-index 
 
 The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides operators and inputs in 2-D and 3-D for each space filling curve. The $U$ and $X$ orderings depend a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
 
-The 4-node $Z$-curve on the last row of Table~\ref{tbl:orderings} is a special case. It is the same in theory as a standard $Z$-order, but during dilation it requests one extra zero per bit as though the dilation were for the next higher dimension. Then, interleaving the dilated coordinates following the operators provided in Table~\ref{tbl:orderings} gives the following interleave pattern:
-\begin{align}
-interleave_{4node}(X,Y) = \{x_5x_4y_5y_4x_3x_2y_3y_2x_1x_0y_1y_0\}.
-\end{align}
-By reserving two bits together for each dimension the space filling curve is able to traverse twice as many nodes in the $Y$ direction before taking its first step in the $X$ direction.
-
-Often, interleaved cell coordinates near the boundaries of the domain do not produce contiguous hash indices and may balloon to values greater than the number of nodes/cells in the domain. In these situations, missing indices reference coordinates outside the domain that would complete the hierarchical power-of-2 curves before entering the domain again. When sorted and traversed least to greatest, the hashed indices give a proper ordering of the domain, and missing indices are skipped. 
-
-
-
-Recent work by Connor and Kumar \cite{Connor2009} develops functionality for dilated 
-
-Table~\ref{tbl:orderings} presents the 2-D and 3-D operators used to order cells. The $\ll$ is a left bit-shift operator, $|$ indicates an ``OR" operation, and $\oplus$ indicates ``XOR". 
 
 \begin{table}
 \centering
@@ -557,28 +544,23 @@ Table~\ref{tbl:orderings} presents the 2-D and 3-D operators used to order cells
 \end{table}
 
 
+The 4-node $Z$-curve on the last row of Table~\ref{tbl:orderings} is a special case. It is the same in theory as a standard $Z$-order, but during dilation it requests one extra zero per bit as though the dilation were for the next higher dimension. Then, interleaving the dilated coordinates following the operators provided in Table~\ref{tbl:orderings} gives the following interleave pattern:
+\begin{align}
+interleave_{4node}(X,Y) = \{x_5x_4y_5y_4x_3x_2y_3y_2x_1x_0y_1y_0\}.
+\end{align}
+By reserving two bits for each dimension the space filling curve is able to traverse twice as many nodes in the $Y$ direction before taking its first step in the $X$ direction.
+
+%TODO: why was each curve chosen? 
+% Z because of others like Goswami; U because it also widely used (gray-code)
 
 
-\begin{figure}
-\centering
-\includegraphics[width=0.6\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.png} 
-\caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
-\label{fig:orderings}
-\end{figure}
+Often, interleaved cell coordinates near the boundaries of the domain do not produce contiguous hash indices and may balloon to values greater than the number of nodes/cells in the domain. In these situations, missing indices reference coordinates outside the domain that would complete the hierarchical power-of-2 curves before entering the domain again. When sorted and traversed least to greatest, the hashed indices give a proper ordering of the domain, and missing indices are skipped. 
 
-
-\subsection{Impact of Node Orderings}
-
-The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
-At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
-
-
-
-\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
 
 
 
 \subsection{Cuthill-McKee} 
+
 
 Another option for reordering nodes is to focus on ordering the differentiation matrix directly to reduce bandwidth. A commonly used algorithm for this is called \emph{Reverse Cuthill-McKee} (RCM) reordering. RCM takes as input a square, symmetric adjacency graph and returns a vector of indices indicating the new order for each row of the matrix. 
 
@@ -633,14 +615,30 @@ RCM is effective and can be used as post-processing once stencils are generated 
 %\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
 %\end{figure}
 
-In Figure~\ref{fig:orderings} typical stencils in RBF-FD easily span multiple cells. Shown is $n=31$ which spans 7 cells. The use of $Z$-ordering (e.g., \cite{Goswami2010}) is often associated with improved memory access patterns. However, 
-
 %\begin{figure}
 %\centering
 %\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
 %\caption{A simple example illustrates the use of a fixed-grid with $h_n = 6$ for $N=18^3$ regular nodes.  d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
 %\label{fig:orderings}
 %\end{figure}
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.png} 
+\caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
+\label{fig:orderings}
+\end{figure}
+
+
+\subsection{Impact of Node Orderings}
+
+The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
+At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
+
+
+
+\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
 
 
 
@@ -687,6 +685,7 @@ Due to the limited significance of stencil generation under RBF-FD, the overhead
 
 \cite{Connor2009} could benefit the algorithm by sorting nodes completely based on floating point $Z$-ordering.
 
+It is worth noting that recent work by Connor and Kumar \cite{Connor2009} has developed operators capable of producing $Z$-orderings based on floating point coordinates. 
 
 
 
