@@ -426,7 +426,7 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 
 As previously mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to new memory access patterns. The use of $Z$-ordering for optimized memory access is common in fixed-grid methods (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). While prototyping the fixed-grid method, a few attempts were made to reorder cells following $Z$-ordering and other space filling curves. 
 
-Examples of those curves are presented in Figure~\ref{fig:orderings}. Here each node would represent a cell, and the orderings start at $(0,0)$. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly applied to reorder the cells of the fixed-grid. Each of those tiles in Figure~\ref{fig:orderings} get their name based on how the curve connects nodes. The sixth ordering shown in Figure~\ref{fig:orderings}, Reverse Cuthill-McKee, is a special case of space filling curve saved for discussed later in this section. 
+Examples of those curves are presented in Figure~\ref{fig:orderings}. Here each node would represent a cell, and the orderings start at $(0,0)$. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly applied to reorder the cells of the fixed-grid. Each of the five tiles in Figure~\ref{fig:orderings} get their name based on how the curve connects nodes. The sixth ordering in Figure~\ref{fig:orderings}, Reverse Cuthill-McKee, is a special case of space filling curve saved for later discussion in this section. 
 
 \begin{figure}
 \centering
@@ -436,49 +436,107 @@ Examples of those curves are presented in Figure~\ref{fig:orderings}. Here each 
 \end{figure}
 
 
-Excluding RCM, the remaining orderings in Figure~\ref{fig:orderings} are constructed a function of node coordinates, $(c_x,c_y)$. Raster-ordering, discussed above, follows $ (c_x * h_n) + c_y$. To produce the remaining curves, one turns to a process of integer dilation and bit-interleaving (see e.g., \cite{Mokbel2002,Stocco1995}). 
+Excluding RCM, the remaining orderings in Figure~\ref{fig:orderings} are constructed as a function of node coordinates, $(c_x,c_y)$. Raster-ordering, discussed above, follows $ (c_x * h_n) + c_y$. To produce the remaining curves, one turns to \emph{bit-interleaving} (see e.g., \cite{Stocco2009}). 
 
-Integer dilation takes an integer value as input, and outputs the original input bits spaced by new zeros. For example, $1010101_2$ is a dilated form of $1111_2$. The degree of 
+\subsection{Bit-Interleaved Orderings}
 
-
-For a $d$-dimensional domain, dilation expands the original bits of integer to populate $d$ times the number of bits with the original bits separated by $d-1$ zeros. As a simple example, dilating $1111_2$ converts the four bit integer to $1010101_2$ in 2-D and $1001001001_2$ in 3-D. 
-
-See \cite{Stocco1995} for a discussion on how 
-
-As an example in 2-D: 
+Bit-interleaving zips bits from two or more integers into one. For example, given two integers, $X$, and $Y$ the bits are interleaved as:
 \begin{align}
-(c_x,c_y) & = (13, 17) = (001101_2, 010001_2) \\
-dilate((c_x,c_y), 2) & = (d_x,d_y) =  ({\color{red}0}0{\color{red}0}0{\color{red}0}1{\color{red}0}1{\color{red}0}0{\color{red}0}1_2, {\color{red}0}0{\color{red}0}1{\color{red}0}0{\color{red}0}0{\color{red}0}0{\color{red}0}1_2) \\
-Zorder(c_x, c_y) & = d_x \mid (d_y \ll 1) = ( 001001010011_2 ) = 595
+X &= \{x_3x_2x_1x_0\} \nonumber \\
+Y &= \{y_3y_2y_1y_0\} ,\nonumber \\
+interleave(X,Y) & = \{x_3y_3x_2y_2x_1y_1x_0y_0\}.
 \end{align}
-%  000001010001
-% 0001000000010
-% 0001001010011 = 595 
+Including a third value, $Z$, results in the following: 
+\begin{align*}
+interleave(X,Y,Z) & = \{x_3y_3z_3x_2y_2z_3x_1y_1z_3x_0y_0z_3\}.
+\end{align*}
+
+Interleaving requires \emph{integer dilation} modify an input integer value, so the output value is the original input bits spaced by new zeros. On a $d$-dimensional domain, bit-interleaving requires $d-1$ zeros between each bit. For example, dilating $1111_2$ converts the four bit integer to ${\color{red}0}1{\color{red}0}1{\color{red}0}1{\color{red}0}1_2$ in 2-D, and ${\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1_2$ in 3-D. 
 
 
-%Traversal along dimensions are indicated by individual bits of the interleaved value. The directions of traversal are : 
-%\begin{align} 
-%interleave_2(I,J) = (I \ll 1) \mid J \\
-%interleave_3(I,J,K) = ((I \ll 2) \mid (J \ll 1)) \mid K \\
-%\end{align}
-%where each group of two bits $\{x,y\}$ indicates the direction of traversal for one step of traversal. 
+Dilating integers requires multiple bit-mask operations to spread the digits appropriately. 
+For any $b$-bit integer, $X_0$, the dilation is given by the following iteration:
+\begin{align}
+X_{i+1} = ((X_i \ll S_i) \mid X_i)\ \&\ M_i \ \ \ \ \ \text{for }i=0,...,\log_2(b)
+\label{eq:dilate}
+\end{align}
+where operators $\ll$, $\mid$, and $\&$ indicate left-shift, bit-wise OR, and bit-wise AND operators respectively. In general, a $b$-bit integer requires $\log_2(b)$ iterations through the dilation kernel. The necessary masks ($M_i$) and shifts ($S_i$) necessary to dilate a 32-bit integer are provided in Table~\ref{tbl:bitmasks2D} for 2-D, and Table~\ref{tbl:bitmasks3D} for 3-D. Both binary and hexadecimal representations are provided for $M_i$. Observe that the shifts and bit-masks applied during each iteration depend on the size of the integer and the dimension (refer to \cite{Stocco2009} for more details). 
 
 
-The interleaved decimal values are not contiguous and may exceed the number of cells. However, sorting these values does result in the proper traversal of the domain. 
+\begin{table}
+\centering
+\caption{2-D Integer Dilation Masks for 32-Bit Integers}
+\label{tbl:bitmasks2D}
+\begin{tabular}{ c | c | c | c }
+Level ($i$) & \multicolumn{2}{ c | }{Mask ($M_i$)} & $S_i$ \\ 
+\hline
+0 & $00000000000000001111111111111111_2$  & $0\text{x}0000ffff$  & 32 \\
+1 & $11111111000000000000000011111111_2$  & $0\text{x}ff0000ff$  & 16 \\
+2 & $00001111000000001111000000001111_2$  & $0\text{x}0f00f00f$  & 8 \\
+3 & $11000011000011000011000011000011_2$  & $0\text{x}c30c30c3$  & 4 \\
+4 & $01001001001001001001001001001001_2$  & $0\text{x}49249249$  & 2 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}
+\centering
+\caption{3-D Integer Dilation Masks for 32-Bit Integers}
+\label{tbl:bitmasks3D}
+\begin{tabular}{ c | c | c | c }
+Level ($i$) & \multicolumn{2}{ c | }{Mask ($M_i$)} & Shift ($S_i$) \\ 
+\hline
+0 & $00000000000000001111111111111111_2$  & $0\text{x}0000ffff$  & 48 \\
+1 & $00000000000000000000000011111111_2$  & $0\text{x}000000ff$  & 24 \\
+2 & $00000000000011110000000000001111_2$  & $0\text{x}000f000f$  & 12 \\
+3 & $00000011000000110000001100000011_2$  & $0\text{x}03030303$  & 6 \\
+4 & $00010001000100010001000100010001_2$  & $0\text{x}11111111$  & 3 \\
+\hline
+\end{tabular}
+\end{table}
 
 
-Similar techniques can be used for other curves as well. For example: 
+%At the end of Equation~\ref{eq:dilate}, the completely dilated integer is stored in $X_5$ with only one caveat: d
+It is possible to lose bits in translation when dilating values that require greater than $^b/_d$ bits. In the case of 32-bits, input Equation~\ref{eq:dilate} must be representable in 16-bits or less (i.e., $ \leq 65535 $) for 2-D, and 10-bits or less (i.e., $ \leq 1023$) for 3-D. Note that these limits then become the maximum resolution possible for $h_n$ in the fixed-grid method. 
 
-%TODO: omnigraffle dilation figure.
-%TODO: list giving the curves for each 
-%TODO: high level algorithm for RCM. 
+With dilation available, the process for 2-D bit-interleaving reduces to:
+\begin{align}
+(d_x, d_y) = (dilate(X), dilate(Y)) \nonumber \\
+interleave(X,Y) = (d_x \ll 1) \mid d_y. 
+\label{eq:interleave2d}
+\end{align}
+Or in 3-D: 
+\begin{align}
+(d_x, d_y, d_z) = (dilate(X), dilate(Y), dilate(Z)) \nonumber \\
+interleave(X,Y,Z) = ((d_x \ll 2) \mid (d_y \ll 1)) \mid d_z.
+\label{eq:interleave3d}
+\end{align}
+Equations~\ref{eq:interleave2d} and \ref{eq:interleave3d} are used as hash functions to produce a vast number of space filling curves (see \cite{Stocco2009}).
+
+By default, Equation~\ref{eq:interleave2d} produces the $Z$-ordering in Figures~\ref{fig:orderings} and \ref{fig:space_filling_curves}. Consider for example:
+\begin{align}
+(c_x,c_y) & = (5, 3) = (0101_2, 0011_2) \nonumber \\
+dilate((c_x,c_y), 2) & = (d_x,d_y) =  ({\color{red}0}0{\color{red}0}1{\color{red}0}0{\color{red}0}1_2, {\color{red}0}0{\color{red}0}0{\color{red}0}1{\color{red}0}1_2) \nonumber \\
+interleave(c_x, c_y) & = ( 00100111_2 ) = 39.
+\end{align}
+% 0000000100010
+%  000000000101
+% 0000000100111 = 32 + 7
+Here, the cell coordinates, $(5,3)$, are mapped to the value 39. This $Z$-index can be verified by counting traversals required to get from $(0,0)$ to $(5,3)$ on the $Z$-order curve in Figure~\ref{fig:orderings}. 
+
+The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides operators and inputs in 2-D and 3-D for each space filling curve. The $U$ and $X$ orderings depend a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
+
+The 4-node $Z$-curve on the last row of Table~\ref{tbl:orderings} is a special case. It is the same in theory as a standard $Z$-order, but during dilation it requests one extra zero per bit as though the dilation were for the next higher dimension. Then, interleaving the dilated coordinates following the operators provided in Table~\ref{tbl:orderings} gives the following interleave pattern:
+\begin{align}
+interleave_{4node}(X,Y) = \{x_5x_4y_5y_4x_3x_2y_3y_2x_1x_0y_1y_0\}.
+\end{align}
+By reserving two bits together for each dimension the space filling curve is able to traverse twice as many nodes in the $Y$ direction before taking its first step in the $X$ direction.
+
+Often, interleaved cell coordinates near the boundaries of the domain do not produce contiguous hash indices and may balloon to values greater than the number of nodes/cells in the domain. In these situations, missing indices reference coordinates outside the domain that would complete the hierarchical power-of-2 curves before entering the domain again. When sorted and traversed least to greatest, the hashed indices give a proper ordering of the domain, and missing indices are skipped. 
 
 
-Figure~\ref{fig:orderings} presents a variety of curves possible for a 2D node set. Options are endless, but the curves presented in Figure~\ref{fig:orderings} include: 
 
-
-
-
+Recent work by Connor and Kumar \cite{Connor2009} develops functionality for dilated 
 
 Table~\ref{tbl:orderings} presents the 2-D and 3-D operators used to order cells. The $\ll$ is a left bit-shift operator, $|$ indicates an ``OR" operation, and $\oplus$ indicates ``XOR". 
 
@@ -489,14 +547,15 @@ Table~\ref{tbl:orderings} presents the 2-D and 3-D operators used to order cells
 \begin{tabular}{ c | c | c }
   Ordering & 2-D & 3-D \\
   \hline                        
-  IJK & $(c_x * h_n) + c_y$ & $((c_x * h_n) + c_y)*h_n + c_z$ \\
-  Z & $(d_x \ll 1) \mid d_y$ & $((d_x \ll 2) \mid (d_z \ll 1)) \mid d_y$ \\
-  U & $(d_x \ll 1) \mid (d_x \oplus d_y)$ & $((d_x \ll 2) \mid (d_z \ll 1)) \mid (d_z \oplus d_y)$ \\
-  X & $((d_x \oplus d_y) \ll 1) \mid d_x$ & $(((d_x \oplus d_y) \ll 2) \mid (d_z \ll 1)) \mid d_y$ \\
-  4-Node Z (*) & $(d_x \ll 2^{d-1}) \mid d_y$ & $((d_x \ll 2^{d-1}) \mid (d_y \ll 2^{d-2})) \mid d_z$ \\
+  IJK & $(X * h_n) + Y$ & $((X * h_n) + Y)*h_n + Z$ \\
+  Z & $interleave(X, Y)$ & $interleave(X, Z, Y)$ \\
+  U & $interleave(X, X \oplus Y)$ & $interleave(X, Z, Z \oplus Y)$ \\
+  X & $interleave(X \oplus Y, X)$ & $interleave(X \oplus Y, Z, Y)$ \\
+  4-Node Z * & $(d_x \ll 2) \mid d_y$ & $((d_x \ll 4) \mid (d_z \ll 2)) \mid d_y$ \\
   \hline  
 \end{tabular}
 \end{table}
+
 
 
 
@@ -508,10 +567,7 @@ Table~\ref{tbl:orderings} presents the 2-D and 3-D operators used to order cells
 \end{figure}
 
 
- Examples include $Z$- or \emph{Morton} ordering, $U$- or \emph{Greycode}-ordering, $X$-ordering, etc. Hilbert curves have been demonstrated to be the most efficient \cite{INREFS}. 
-
-The authors of \cite{Goswami2010} utilize $Z$-ordering in their 
-
+\subsection{Impact of Node Orderings}
 
 The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
 At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
