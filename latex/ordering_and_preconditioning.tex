@@ -561,7 +561,9 @@ Often, interleaved cell coordinates near the boundaries of the domain do not pro
 
 \subsection{Cuthill-McKee} 
 
-The set of orderings considered up to this point have focused on spatially sorting cells during the stencil generation phase. The Cuthill-McKee family of algorithms change that focus to reorder nodes \emph{after} stencils are generated. 
+The set of orderings considered up to this point have focused on spatially sorting cells during the stencil generation phase. Another approach to reordering nodes is to operate on the adjacency matrix available \emph{after} stencils are generated. %TODO: give examples CM, RCM, AMD, GPS \cite{Gibbs1975}
+
+The Cuthill-McKee family of algorithms changes that focus to reorder nodes \emph{after} stencils are generated. 
 
 Once stencils are generated, a directed adjacency graph exists that describes how each node is connected to its neighbors. 
 

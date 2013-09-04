@@ -740,6 +740,10 @@ On top of memory savings, this concept of composing DMs based on lower order ope
 
 The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical for RBF-FD. Consider that a problem size of $N=10,000$ nodes and stencil size $n=31$ is only $0.31\%$ full (i.e., $99.79\%$ of the matrix elements are zeros), and the percentage continues to decrease as $N$ increases. Contrary to initial appearance, RBF-FD DMs like Figure~\ref{fig:example_DM_rows} are not symmetric. This is true for two reasons: a) a stencil is generated based on $n-1$ nearest neighbors to a center with no guarantee that any of the stencil nodes will include the center in their stencils; and  b) even if the stencil connectivity were symmetric, each row of the DM contains a distinct set of weights that are a function of independent stencils. The only way to guarantee a symmetric system is to ensure all stencils are shaped the same, with the same number of nodes and node distribution relative to the center, plus all stencil nodes must have a bijective relationship (i.e., if $A$ is connected to $B$, then $B$ connects to $A$). 
 
+
+In Chapters~\ref{chap:stencils} and \ref{chap:distributed_rbffd} the concept of an \emph{adjacency matrix} is required. Adjacency matrices connectivity of stencils produces
+
+
 Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. Note that with DMs stored as sparse representations, the matrix-vector multiply operation is distinguished as a \emph{sparse matrix-vector multiply} (SpMV). SpMVs avoid unnecessary operations by only multiplying the nonzero elements of the matrix matched to corresponding values in the vector. The actual algorithm for SpMV depends on the choice of sparse storage. Chapter~\ref{chap:gpu_rbffd} demonstrates the pivotal role that sparse formats play in the performance of SpMV, and thus RBF-FD. 
 
 
@@ -759,7 +763,7 @@ Best practices dictate that the DMs be stored in some type of compressed sparse 
 \caption{Undirected (Symmetric)}
 \label{fig:undirected_graph}
 \end{subfigure}
-\caption{A simple adjacency graph and corresponding matrices. Edges connecting nodes of RBF-FD stencils produce (a) a directed adjacency matrix. To partition RBF-FD stencils, METIS requires conversion to (b) an undirected graph/matrix.}
+\caption{Simple adjacency graphs and their corresponding matrices. Edges connecting nodes of RBF-FD stencils produce a directed adjacency matrix, (a).}
 \label{fig:adjacency_matrix}
 \end{center}
 \end{figure}
@@ -1006,24 +1010,23 @@ Once in the Application phase, the constructed DMs are applied to solve a PDE ei
 
 %TODO: add refs for RBF-FD uses of these schemes. 
 
-In general the performance of RBF-FD hinges on the cost of SolvePDE. This is especially true for time-dependent PDEs where an increase in grid resolution results in proportional increase in the number time-steps to satisfy the CFL condition \cite{CFL}. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact performance SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, smaller required grid size, and faster convergence.
+Generally the performance of RBF-FD hinges on the cost of SolvePDE. This is especially true for time-dependent PDEs where an increase in grid resolution results in proportional increase in the number time-steps to satisfy the CFL condition \cite{CFL}. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact performance SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, smaller required grid size, and faster convergence.
 
 \section{Grids} 
 
 
 RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can impact accuracy of the method. This functional portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for other methods. 
-\begin{itemize} 
-\item scattered nodes
+%\begin{itemize} 
+%\item scattered nodes
+%
+%\begin{itemize}
+%\item place samples where they are necessary, not where the grid requires
+%\item maximize the representation of nodes and minimize interpolation error
+%\item higher order accuracy than standard 
+%\end{itemize}
+%
+%\end{itemize}
 
-\begin{itemize}
-\item place samples where they are necessary, not where the grid requires
-\item maximize the representation of nodes and minimize interpolation error
-\item higher order accuracy than standard 
-\end{itemize}
-
-\end{itemize}
-
-%TODO: Note, however, that the choice of grid impacts the accuracy of RBF-FD as it would in other methods. 
 %Typically, the only constraint placed on the grid is that nodes should not coincide. If two nodes do coincide it is possible for a stencil to include both, and 
 
 %TODO: cubed, ying-yang
@@ -1033,7 +1036,7 @@ RBF-FD has no requirement for structured grids, or need for a well-refined mesh/
 
 %The choice of grid is only relevant to the extent that it impacts the connectivity between nodes in stencils. Connectivity translates to non-zeros in rows of the DMs, so the various grid distributions result in a number of sparsity patterns. For all other intents and purposes, the choice of grid is only pertinent to ensure consistency with the PDEs to solve. 
 
-The RBF-FD implementation presented in this work is verified and benchmarked on a number of grids. The following grids are chosen for two reasons: a) to easily construct refinements in 2D/3D for consistent benchmarking and convergence studies, and b) to verify solutions against existing methods. All grids mentioned here are available for public download (see \cite{BolligSphereGrids}).
+This work verifies and benchmarks RBF-FD on the following grids, which are available for public download (see \cite{BolligSphereGrids}).
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 
