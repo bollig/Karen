@@ -765,9 +765,9 @@ Best practices dictate that the DMs be stored in some type of compressed sparse 
 \end{center}
 \end{figure}
 
-In Chapters~\ref{chap:stencils} and \ref{chap:distributed_rbffd} the concept of an \emph{adjacency matrix} is required. Adjacency matrices have the same structure as a DM, except all nonzeros elements are replaced with a 1. The nonzero elements indicate connectivity between nodes (i.e., stencil connections). For example, in Figure~\ref{fig:directed_graph} the nodes $A$, $B$, $C$, and D are connected via directional arrows indicating that B depends on $A$, $C$, and $D$, while $C$ depends on $B$, and $D$ depends only on $A$. $A$ has no dependencies. The graph on the left is directed and the associated adjacency matrix is unsymmetric. Figure~\ref{fig:undirected_graph} demonstrates the case where edges connecting nodes are undirected, corresponding to a symmetric matrix. 
+In Chapters~\ref{chap:stencils} and \ref{chap:distributed_rbffd} the concept of an \emph{adjacency matrix} is required. Adjacency matrices have the same structure as a DM, except all nonzeros elements are replaced by a 1. The nonzero elements indicate connectivity between nodes (i.e., stencil connections). For example, in Figure~\ref{fig:directed_graph} the nodes $A$, $B$, $C$, and D are connected via directional arrows indicating that B depends on $A$, $C$, and $D$, while $C$ depends on $B$, and $D$ depends only on $A$. $A$ has no dependencies. The graph on the left is directed and the associated adjacency matrix is unsymmetric. Figure~\ref{fig:undirected_graph} demonstrates the case where edges connecting nodes are undirected, corresponding to a symmetric matrix. 
 
-Some operations like matrix decomposition and reordering are easier to apply to symmetric adjacency matrices. It is often possible to apply those operations to RBF-FD by symmetrizing the matrix. If $A$ is the unsymmetric RBF-FD adjacency matrix, then $A + A^T$ produces a symmetric adjacency matrix.
+Some operations like matrix decomposition and reordering are easier to apply to symmetric adjacency matrices. It is often possible to apply those operations to RBF-FD by symmetrizing the matrix. If the adjacency matrix, $A$, is unsymmetric, then $A + A^T$ results in the symmetric adjacency matrix. 
 
 
 \section{Weight Operators}
