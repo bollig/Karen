@@ -743,6 +743,28 @@ The sparsity exhibited by the DM in Figure~\ref{fig:example_DM_rows} is typical 
 Best practices dictate that the DMs be stored in some type of compressed sparse storage that retains only non-zeros and their corresponding indices in memory. Note that with DMs stored as sparse representations, the matrix-vector multiply operation is distinguished as a \emph{sparse matrix-vector multiply} (SpMV). SpMVs avoid unnecessary operations by only multiplying the nonzero elements of the matrix matched to corresponding values in the vector. The actual algorithm for SpMV depends on the choice of sparse storage. Chapter~\ref{chap:gpu_rbffd} demonstrates the pivotal role that sparse formats play in the performance of SpMV, and thus RBF-FD. 
 
 
+%TODO: finish adjacency matrix is equivalent to DM. 
+%TODO: Unsymmetric
+%TODO: Symmetry achieved by (A + A^T)
+%TODO: 
+\begin{figure}[ht!]
+\begin{center}
+\begin{subfigure}[b]{0.425\textwidth}
+\includegraphics[width=2.5in]{../figures/omnigraffle/DirectedAdjacencyGraph.png}
+\caption{Directed (Unsymmetric)}
+\label{fig:directed_graph}
+\end{subfigure}
+\begin{subfigure}[b]{0.425\textwidth}
+\includegraphics[width=2.5in]{../figures/omnigraffle/UndirectedAdjacencyGraph.png}
+\caption{Undirected (Symmetric)}
+\label{fig:undirected_graph}
+\end{subfigure}
+\caption{A simple adjacency graph and corresponding matrices. Edges connecting nodes of RBF-FD stencils produce (a) a directed adjacency matrix. To partition RBF-FD stencils, METIS requires conversion to (b) an undirected graph/matrix.}
+\label{fig:adjacency_matrix}
+\end{center}
+\end{figure}
+
+
 
 \section{Weight Operators}
 \label{sec:weight_operators}
