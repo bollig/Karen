@@ -524,7 +524,7 @@ interleave(c_x, c_y) & = ( 00100111_2 ) = 39.
 % 0000000100111 = 32 + 7
 Here, the cell coordinates, $(5,3)$, are mapped to the value 39. This $Z$-index can be verified by counting traversals required to get from $(0,0)$ to $(5,3)$ on the $Z$-order curve in Figure~\ref{fig:orderings}. 
 
-The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides operators and inputs in 2-D and 3-D for each space filling curve. The $U$ and $X$ orderings depend a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
+The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides operators and inputs in 2-D and 3-D for each space filling curve. The $U$ and $X$ orderings depend on a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
 
 
 \begin{table}
