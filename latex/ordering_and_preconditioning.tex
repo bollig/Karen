@@ -517,12 +517,12 @@ By default, Equation~\ref{eq:interleave2d} produces the $Z$-ordering in Figures~
 \begin{align}
 (c_x,c_y) & = (5, 3) = (0101_2, 0011_2) \nonumber \\
 dilate((c_x,c_y), 2) & = (d_x,d_y) =  ({\color{red}0}0{\color{red}0}1{\color{red}0}0{\color{red}0}1_2, {\color{red}0}0{\color{red}0}0{\color{red}0}1{\color{red}0}1_2) \nonumber \\
-interleave(c_x, c_y) & = ( 00100111_2 ) = 39.
+interleave(c_x, c_y) & = ( 00100111_2 ) = 39. \nonumber
 \end{align}
 % 0000000100010
 %  000000000101
 % 0000000100111 = 32 + 7
-Here, the cell coordinates, $(5,3)$, are mapped to the value 39. This $Z$-index can be verified by counting traversals required to get from $(0,0)$ to $(5,3)$ on the $Z$-order curve in Figure~\ref{fig:orderings}. 
+Here, the cell coordinates, $(5,3)$, are mapped to the value 39. This $Z$-index can be verified by counting the number of steps from  $(0,0)$ to $(5,3)$ on the $Z$-order curve in Figure~\ref{fig:orderings}. 
 
 The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides operators and inputs in 2-D and 3-D for each space filling curve. The $U$ and $X$ orderings depend on a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
 
@@ -548,7 +548,7 @@ The 4-node $Z$-curve on the last row of Table~\ref{tbl:orderings} is a special c
 \begin{align}
 interleave_{4node}(X,Y) = \{x_5x_4y_5y_4x_3x_2y_3y_2x_1x_0y_1y_0\}.
 \end{align}
-By reserving two bits for each dimension the space filling curve is able to traverse twice as many nodes in the $Y$ direction before taking its first step in the $X$ direction.
+By reserving two bits for each dimension, the space filling curve is able to traverse twice as many nodes in the $Y$ direction before taking its first step in the $X$ direction.
 
 %TODO: why was each curve chosen? 
 % Z because of others like Goswami; U because it also widely used (gray-code)
@@ -561,7 +561,7 @@ Often, interleaved cell coordinates near the boundaries of the domain do not pro
 
 \subsection{Cuthill-McKee} 
 
-The Cuthill-McKee approach to reordering nodes waits until \emph{after} stencils are generated to operate on the adjacency matrix (see subsection~\ref{subsec:adjacency} for definition). %TODO: give examples CM, RCM, AMD, GPS \cite{Gibbs1975}
+The Cuthill-McKee approach to reordering nodes waits until \emph{after} stencils are generated to reorder the adjacency matrix (see subsection~\ref{subsec:adjacency} for definition). %TODO: give examples CM, RCM, AMD, GPS \cite{Gibbs1975}
 Cuthill-McKee performs a breadth-first search
 
 %TODO: define degree (with adjacency matrix)

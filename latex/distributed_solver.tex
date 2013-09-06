@@ -15,7 +15,22 @@
 \chapter{GPU SpMV}
 \label{chap:gpu_rbffd}
 
-As $N$ grows larger, it behooves us to work on parallel architectures, be it CPUs or GPUs. 
+As $N$ grows larger, it behooves us to work on parallel architectures, be it CPUs or GPUs. GPUs 
+
+%TODO: gpus benefit from faster memory bandwidth, parallel compute units and sharing across threads.
+%TODO: GPU hardware
+%TODO: GPU software (OpenCL vs CUDA)
+%TODO: targeting the GPU for SpMV (how to write a kernel as forloop without the for)
+%TODO: 
+
+ 
+%TODO: list all known work on SpMV for GPU
+%TODO: emphasize that the GPU SpMV has been studied since before 2006.
+%TODO: SpMV condenses sparse matrix to dense form. 
+%TODO: each of the dense forms are unique (describe each)
+%TODO: newer forms are available
+
+The focus of this chapter is on GPU. 
 
 
 In the last few years, GPUs transitioned from hardware dedicated to the embarrassingly parallel tasks involved in graphics rendering (e.g., 
