@@ -15,8 +15,7 @@
 \chapter{GPU SpMV}
 \label{chap:gpu_rbffd}
 
-As $N$ grows larger, it behooves us to work on parallel architectures, be it CPUs or GPUs. GPUs 
-
+As $N$ grows larger, it behooves us to work on parallel architectures, be it CPUs or GPUs. GPUs \authnote{finish intro: gpus provide high flop-to-watt yield, etc etc} 
 %TODO: gpus benefit from faster memory bandwidth, parallel compute units and sharing across threads.
 %TODO: GPU hardware
 %TODO: GPU software (OpenCL vs CUDA)
@@ -30,16 +29,14 @@ As $N$ grows larger, it behooves us to work on parallel architectures, be it CPU
 %TODO: each of the dense forms are unique (describe each)
 %TODO: newer forms are available
 
-The focus of this chapter is on GPU. 
+
 
 
 In the last few years, GPUs transitioned from hardware dedicated to the embarrassingly parallel tasks involved in graphics rendering (e.g., 
-rasterization) into multi-core co-processors for high performance scientific computing.  Thanks to the highly profitable and always demanding gaming industry, what began as a static rendering pipeline, was molded to allow fully dynamic execution with a SIMD-like programming model (Single Instruction Multiple Threads or SIMT). Changes in hardware were 
-followed closely by evolving programming languages. Today, GPUs can be manipulated via high level 
-languages 
-similar to C/C++ and require no knowledge of computer graphics. 
-In Chapters~\ref{chap:languages} and \ref{chap:hardware} we will discuss 
-how GPU hardware and languages evolved to exceptionally higher compute capability than traditional CPUs, and became a popular platform for high performance computing.
+rasterization) into multi-core co-processors for high performance scientific computing.  Thanks to the highly profitable and always demanding gaming industry, what began as a static rendering pipeline, was molded to allow fully dynamic execution with a SIMD-like programming model (Single Instruction Multiple Threads or SIMT). Changes in hardware have been 
+followed closely by evolving programming languages. Today, GPUs can be targeted from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, and (to our knowledge) encompasses all languages applicable to scientific computation. 
+
+%TODO: we will discuss how GPU hardware and languages evolved to exceptionally higher compute capability than traditional CPUs, and became a popular platform for high performance computing.
 
 
 
@@ -54,7 +51,8 @@ parallel programming lanugage referred to as the Open Compute Language (OpenCL) 
 This \textit{functional portability} is the cornerstone of the OpenCL language. However, functional portability does not imply performance portability. That is, OpenCL allows developers to write kernels capable of running on all types of target hardware, but optimizing kernels for one type of target (e.g., GPU) does not guarantee the kernel will run efficiently on another target (e.g., CPU).
 % Already, today, CPUs are tending toward many core architectures. Simultaneously, the once specialized many-core GPUs now offer general purpose functionality. New architectures like the AMD Fusion \cite{AMDFusion} join CPU and GPU on the same chip proving that 
 %, and It is easy to see that soon the CPU and GPU will meet somewhere in the middle as general purpose many-core architectures. OpenCL is an attempt to standardize programming before this intersection occurs. 
-With CPUs tending toward many cores, and the once special purpose, many-core GPUs offering general purpose functionality, it is easy to see that soon the CPU and GPU will meet somewhere in the middle as general purpose many-core architectures. Already, ATI has introduced the Fusion APU (Accelerated Processing Unit) which couples an AMD CPU and ATI GPU within a single die. OpenCL is an attempt to standardize programming ahead of this intersection. 
+%TODO: clean. ATI, INTEL, NVIDIA all have units. 
+With CPUs tending toward many cores, and the once special purpose, many-core GPUs offering general purpose functionality, it is already possible to see the CPU and GPU converging into general purpose many-core architectures. Already, ATI has introduced the Fusion APU (Accelerated Processing Unit) which couples an AMD CPU and ATI GPU within a single die. OpenCL is an attempt to standardize programming ahead of this intersection. 
 
 %Home computers, smart-phones and other devices containing many- or multi-core compute units internally have driven the generalization of the accelerator language to provide a unified approach to targeting any available hardware. 
 
@@ -62,8 +60,9 @@ Petascale computing centers around the world are leveraging GPU accelerators to 
 
 Such throughput oriented architectures require developers to decompose problems into thousands of independent parallel tasks in order to fully harness the capabilities of the hardware. To this end, a plethora of research has been dedicated to researching algorithms in all fields of computational science. Of interest to us are methods for atmospheric- and geo-sciences. 
 
-\section{Related Work}
-\cite{Bell2009} \cite{Kreuzer2012}
+%TODO: ALL SPMV related work.
+\cite{Bell2009} 
+%TODO: \cite{Kreuzer2012} in distributed GPU. 
 \cite{Vuduc2005} etc. 
 
 \section{GPGPU}
@@ -120,7 +119,9 @@ Our assumption with RBF-FD in this manuscript is that all stencils will have equ
 
 
 
-We are investigating optimizations that target both GPUs and Phi cards for a class of numerical methods based on Radial Basis Functions (RBFs) to solve Partial Differential Equations. RBF methods are increasingly popular across disciplines due to their low complexity, natural ability to function in higher dimension with minimal requirements for an underlying mesh, and high-order---in many cases, spectral---accuracy. RBF methods can be viewed as generalizations of many traditional methods such as Finite Difference and Finite Element to allow for truly unstructured grids. This generalization allows one to reuse many of the same techniques (e.g., sparse matrices, iterative solvers, domain decompositions, etc.) to efficiently obtain solutions. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
+As part of future work into accelerating RBF methods, investigations are underway into the new Intel Phi architecture. 
+
+ investigating optimizations that target both GPUs and Phi cards for a class of numerical methods based on Radial Basis Functions (RBFs) to solve Partial Differential Equations. RBF methods are increasingly popular across disciplines due to their low complexity, natural ability to function in higher dimension with minimal requirements for an underlying mesh, and high-order---in many cases, spectral---accuracy. RBF methods can be viewed as generalizations of many traditional methods such as Finite Difference and Finite Element to allow for truly unstructured grids. This generalization allows one to reuse many of the same techniques (e.g., sparse matrices, iterative solvers, domain decompositions, etc.) to efficiently obtain solutions. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
 
 
 

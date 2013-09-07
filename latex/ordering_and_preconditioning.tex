@@ -370,7 +370,7 @@ The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:s
 
 Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but rather, it ekes out a small victory with the right choice of $h_n$ for fewer than 8 nodes per cell. The reality is that since stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes another longer lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the major overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV for random node distributions. 
 
-Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is is to be expected as they are previously spatially sorted node distributions. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown, so a case can be made for use of the fixed-grid query as a general safety net to precondition the system when properties of the input grid are unknown. 
+Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is is to be expected as they are previously spatially sorted node distributions. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown. In fact, based on Figure~\ref{fig:spmv_vs_hn}, which shows the impact on SpMV for the $N=10^6$ CVT test case as a function of $h_n$, only a small amount of reordering ($h_n \ge 40$) is necessary to get the spatial locality in memory that results in 5x faster SpMV. The combined results of 2x faster stencils and 5x faster SpMV make a case for the use of a fixed-grid query as a general safety net to precondition RBF-FD when properties of the input grid are unknown. 
 
 \begin{figure}
 \centering
@@ -388,12 +388,12 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 
 
 %TODO: add function for N=1e5, 1e4 to see as a function of N and hnx. 
-%\begin{figure}
-%\centering
-%\includegraphics[width=7.5cm]{../figures/stencils/cvt1m_spmv_speedup.png} 
-%\caption{Impact on SpMV performance due to choice of $h_n$. \authnote{TODO: add RCM impact here}}
-%\label{fig:spmv_vs_hn}
-%\end{figure}
+\begin{figure}
+\centering
+\includegraphics[width=7.5cm]{../figures/stencils/cvt1m_spmv_speedup.png} 
+\caption{Impact on SpMV performance for $N=10^6$ CVT of the unit sphere due to choice of $h_n$.}
+\label{fig:spmv_vs_hn}
+\end{figure}
 
 
 %
@@ -460,7 +460,7 @@ For any $b$-bit integer, $X_0$, the dilation is given by the following iteration
 X_{i+1} = ((X_i \ll S_i) \mid X_i)\ \&\ M_i \ \ \ \ \ \text{for }i=0,...,\log_2(b)
 \label{eq:dilate}
 \end{align}
-where operators $\ll$, $\mid$, and $\&$ indicate left-shift, bit-wise OR, and bit-wise AND operators respectively. In general, a $b$-bit integer requires $\log_2(b)$ iterations through the dilation kernel. The necessary masks ($M_i$) and shifts ($S_i$) necessary to dilate a 32-bit integer are provided in Table~\ref{tbl:bitmasks2D} for 2-D, and Table~\ref{tbl:bitmasks3D} for 3-D. Both binary and hexadecimal representations are provided for $M_i$. Observe that the shifts and bit-masks applied during each iteration depend on the size of the integer and the dimension (refer to \cite{Stocco2009} for more details). 
+where operators $\ll$, $\mid$, and $\&$ indicate left-shift, bit-wise OR, and bit-wise AND operators respectively. In general, a $b$-bit integer requires $\log_2(b)$ iterations through the dilation kernel. The masks ($M_i$) and shifts ($S_i$) necessary to dilate a 32-bit integer are provided in Table~\ref{tbl:bitmasks2D} for 2-D, and Table~\ref{tbl:bitmasks3D} for 3-D. Both binary and hexadecimal representations are provided for $M_i$. Observe that the shifts and bit-masks applied during each iteration depend on the size of the integer and the dimension (refer to \cite{Stocco2009} for more details). 
 
 
 \begin{table}
