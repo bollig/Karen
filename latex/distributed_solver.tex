@@ -163,6 +163,17 @@ To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sp
 We compare the performance of our custom kernel to ViennaCL kernels (ELL, CSR, COO, HYB, DIAG), UBlas (COO, CSR) and Eigen (COO, CSR, ELL)
 
 
+ViennaCL allows control of the number of work-items for each kernel. 
+
+The library can tune itself to find the optimal number of work-items based on the device. 
+
+%TODO: what is profile for each GPU type
+%TODO: What is the significance of tuning on our problem $n=17, 31, 50, 101,$ etc. 
+%TODO: experiment: SpMV on N=10^6, n = variable (5->105)
+%TODO: idealized experiment: SpMV on N=10^6 regular grid with n=variable.
+
+
+
 
 %TODO: finish fill-in
 When matrix is sparse, a direct LU decomposition causes fill-in on factorization. In some cases the fill-in can be minimal, but in general one must assume that fill in can turn the sparse matrix into a dense matrix. To invert and solve Equation~\ref{eq:implicit_eq}, use an iterative solver like GMRES. The GMRES algorithm (described further in Chapter~\ref{chap:applications} applies successive SpMVs along with other vector operations to converge on a solution. Due to the dominance of SpMV in GMRES, the performance of RBF-FD reduces once again to SpMV.

@@ -166,11 +166,11 @@ Particular details of how nodes are sorted, the choice of hashing function, the 
 The algorithm in this work is inspired by fixed-grid approaches for GPU particle simulations (\cite{Krog2010,Green2010,Johnson2011}). Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to seek out the most efficient solutions possible \cite{Goswami2010}. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a spatial hash reside closer in memory to nearby neighbors than in the case of unsorted nodes. The spatial locality results in a higher likelihood that data will be cached when required. Note that reordering by cell hash sorts nodes across cells but not within them---that is, nodes contained by the same cell are contiguous in memory, but remain arbitrarily ordered with respect one another. Fortunately, with contiguous groups of nodes, nearest neighbor queries can directly access all nodes per cell. 
 
 
-The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one valence of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. A similar approach is taken by \cite{Goswami2010}, but the authors opt for a $Z$-ordering of cells. 
+The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one halo of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. A similar approach is taken by \cite{Goswami2010}, but the authors opt for a $Z$-ordering of cells. 
  As a point of difference in implementations, the authors of \cite{Green2010, Krog2010, Goswami2010} leverage a fast radix sort algorithm to order nodes based on hash index, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforce a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained that stores the indices of all contained nodes per cell. %, which implies random memory access when operating on the nodes of a cell.    
 
 
-The implementation presented here is a hybrid of the related algorithms. For example, cells are sorted based on raster-ordering, but without the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed radius, or number of cell valences. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new valence of cells at each iteration. This multi-pass ball-query was demonstrated in Figure~\ref{fig:nearest_neighbor_example}. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.
+The implementation presented here is a hybrid of the related algorithms. For example, cells are sorted based on raster-ordering, but without the restriction on max number of nodes per cell. Rather than a radix- or bitonic sort to reorder nodes, the list of node indices for each cell (\cite{Wendland2002,WendlandBook}) is constructed as part of a single-pass bucket sort. Finally, in stark contrast to  \cite{Krog2010,Green2010,Johnson2011,Wendland2002,WendlandBook}, querying neighbors is not restricted to a fixed radius, or number of cell halos. To satisfy the $k$-NN query, this implementation iteratively increases the query radius to include a new halo of cells at each iteration. This multi-pass ball-query was demonstrated in Figure~\ref{fig:nearest_neighbor_example}. The iteration terminates when the desired count of neighboring nodes is satisfied or exceeded.
 %TODO: Figure~\ref{fig:hash_highlevel} demonstrates the algorithm 
 %\begin{figure}
 %\centering
@@ -203,13 +203,13 @@ The implementation presented here is a hybrid of the related algorithms. For exa
     \end{algorithmic}
 \end{algorithm}
 
-Algorithm~\ref{alg:fixed_grid_build} presents the fixed-grid build process. The routine starts with the allocation an array of empty buckets, $Q$. Next $Q$ is populated based on the spatially hashed cell coordinates. The second for-loop in Algorithm~\ref{alg:fixed_grid_build} iterates through $Q$, looking for non-empty buckets. When one is found, nodes referenced by that bucket are transcribed/appended onto the ``sorted" list of nodes $\hat{P}$. This way the nodes in each cell are contiguous, but maintain the original ordering with respect to one another. Additionally, node indices in $\hat{P}$ replace the old indices within $Q$.
+Algorithm~\ref{alg:fixed_grid_build} presents the fixed-grid build process. The routine starts by allocating an array of empty buckets, $Q$, which is populated based on the spatially hashed cell coordinates. The second for-loop in Algorithm~\ref{alg:fixed_grid_build} iterates through $Q$, looking for non-empty buckets. When one is found, nodes referenced by that bucket are transcribed/appended onto the ``sorted" list of nodes $\hat{P}$. This way the nodes in each cell are contiguous, but maintain the original ordering with respect to one another. Additionally, node indices in $\hat{P}$ replace the old indices within $Q$.
 
 The entire build process complexity is proportional to $O(N)$, and requires $O((h_n)^d + N)$ storage. Samet \cite{Samet2005} would classify this approach as a \emph{fixed-grid bucket method with one-dimensional ordering}. The term \emph{bucket} refers to the allowance for each cell to contain an arbitrary number of nodes. \emph{One-dimensional ordering} is indicative of attempts later in the chapter to employ alternative space-filling curves in place of raster-ordering. 
 
 A special note: the final step of Algorithm~\ref{alg:fixed_grid_build} overwrites the original list of nodes with the sorted equivalent. The spatially sorted list is included in the cost of stencil generation, but available for reuse elsewhere. Since the first step in RBF-FD applications is to generate stencils, overwriting the input node set can guarantee that the node values throughout the entire life-cycle of an RBF-FD application will benefit from the same spatial locality as stencil generation. This benefit is (almost) free. 
 
-Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matrices generated based on the same $N=6400$ MD-node set (unit sphere), with each row representing an RBF-FD stencil of $n=50$ non-zeros. The left matrix in Figure~\ref{fig:reorder_example} is generated with stencils queried by a $k$-D Tree. The $k$-D Tree maintains the original ordering on $P$. The matrix on the right of Figure~\ref{fig:reorder_example} is a permuted equivalent of the left, but results from a fixed-grid sorted by raster-ordering with $h_n = 10$. 
+Consider Figure~\ref{fig:reorder_example}, which shows two differentiation matrices generated based on the same $N=6400$ MD-node set (unit sphere), with each row representing an RBF-FD stencil of $n=50$ non-zeros (blue dots). The left matrix in Figure~\ref{fig:reorder_example} is generated with stencils queried by a $k$-D Tree. The $k$-D Tree maintains the original ordering on $P$. The matrix on the right of Figure~\ref{fig:reorder_example} is a permuted equivalent of the left, but results from a fixed-grid sorted by raster-ordering with $h_n = 10$. 
 
 Looking at Figure~\ref{fig:reorder_example} it should be obvious that reordering the nodes can improve memory access patterns for SpMV. If each row is applied as a sparse dot-product with a dense vector, the more condensed non-zeros are in the row, the more likely values from the dense vector will be resident in cache when needed. Likewise, non-zeros that appear on consecutive rows can benefit from cache reuse. Later in this chapter, the impact of spatial orderings are compared to determine how RBF-FD can benefit the most. 
 
@@ -229,9 +229,9 @@ Looking at Figure~\ref{fig:reorder_example} it should be obvious that reordering
 
 \subsection{Fixed-Grid Neighbor Query}
 
-Querying the $k$-nearest neighbors for a single query node, $X_q$, is the subject of Algorithm~\ref{alg:fixed_grid_query}. The process begins by finding $X_q$'s containing cell, $c$. The hash value of $c$ is used to identify (in $Q$) the list of nodes contained within that cell, all of which are appended to a vector of neighbor candidates, $pq$. 
+Querying the $k$-nearest neighbors for a node, $X_q$, is the subject of Algorithm~\ref{alg:fixed_grid_query}. The process begins by finding $X_q$'s containing cell, $c$. The hash value of $c$ is used to identify (in $Q$) the list of nodes contained within that cell, all of which are appended to a vector of neighbor candidates, $pq$. 
 
-It is possible for the number nodes in $c$ to exceed $n$; however, the algorithm conservatively assumes that it is necessary to search at least one valence of cells around it.  This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will balanced. For certain fixed-grid resolutions, a single valence may not satisfy the stencil size requirements, so the algorithm iterates outward onto new valences. As cells are checked, their nodes are appended onto $pq$. 
+It is possible for the number nodes in $c$ to exceed $n$; however, the algorithm conservatively assumes that it is necessary to search at least one halo of cells around it.  This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will be balanced. Also, for certain fixed-grid resolutions, a single halo may not satisfy the stencil size requirements, so the algorithm iterates outward. As cells are checked, their nodes are appended onto $pq$. 
 
 The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance from all candidate nodes to $X_q$, and uses that metric to sort $pq$ in ascending order. The first $n$ nodes in $pq$ are returned as the stencil. 
 \begin{algorithm} 
@@ -241,19 +241,19 @@ The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance 
     \State \textbf{Input:} A query point, $X_q$; the desired number of neighbors, $n$; a set of $d$-dimensional points $P$; and the matching cell bucket list, $Q$.
     \State \textbf{Output:} The $n$-nearest neighbors list $pq$.
     \State     
-    \State $valence := 1$
+    \State $halo := 1$
     \State $c := \text{CellCoords}(X_q)$ 
     \State $ind := \text{SpatialHash}(cells)$
     \State Append $P[Q[ind]]$ onto $pq$
-    \While{$pq$.size $< n$ OR $valence < 2$}
-        \State $cells := \text{NeighboringCellCoords}(c, valence)$
+    \While{$pq$.size $< n$ OR $halo < 2$}
+        \State $cells := \text{NeighboringCellCoords}(c, halo)$
         \State $inds := \text{SpatialHash}(cells)$
         \For{each $q$ in $Q[inds]$}
             \If{$q$ is not empty} 
             \State Append node list $P[q]$ onto $pq$
             \EndIf
         \EndFor
-        \State increment $valence$
+        \State increment $halo$
     \EndWhile
     \State $dists := \text{ComputeDistances}(pq)$
     \State Sort $pq$ by $dists$
@@ -266,11 +266,11 @@ Complexity of Algorithm~\ref{alg:fixed_grid_query} can vary based on the choice 
 Results below demonstrate that proper choice of $h_n$ can maintain logarithmic complexity similar to the $k$-D Tree query. 
 
 
-The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the blue center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternative black node is selected even though it is more distant. This is true because the more distant black node occupies the second valence of cells around the stencil center, whereas the true near neighbor is in the third valence. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second valence by satisfying the requirement on $n$. 
+The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the blue center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternate black node is selected even though it is more distant. This happens because the more distant black node occupies the second halo of cells around the stencil center, whereas the true near neighbor is in the third. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second iteration by satisfying the requirement on $n$. 
 
 Similarly, if cells are rectangular in shape, the ball-query under fixed-grid functions as an ellipsoid. In this case, stencils are biased with more nodes in one direction. To combat this, and ensure spherical stencils, this work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$). 
 
-The difference between a true $k$-NN and $k$-ANN is insignificant from the perspective of RBF-FD. The method compensates automatically for differences in node locations when weights are calculated. On top of this, the only differences in stencils generated by $k$-NN versus $k$-ANN occur at nodes on the outermost reaches of the stencil (i.e., nodes with the least impact on the stencil center).
+The difference between a true $k$-NN and $k$-ANN is insignificant from the perspective of RBF-FD. The method compensates automatically for differences in node locations when weights are calculated. Additionally, the only differences in stencils generated by $k$-NN versus $k$-ANN occur at nodes on the outermost reaches of the stencil (i.e., nodes with the least impact on the stencil center).
 
 
 %\begin{figure}
@@ -284,15 +284,15 @@ The difference between a true $k$-NN and $k$-ANN is insignificant from the persp
 \section{Performance Comparison}
 
 The implementation of $k$-D tree compared in this work, the \emph{$kd$-Tree Matlab} library, was originally posted to the Matlab FileExchange in 2008 \cite{TagliasacchiMFE} and now maintained as an independent Google Code project \cite{TagliasacchiGC}. The implementation is written in C++, but includes a MEX compiled interface, allowing for a consistent and efficient $k$-D Tree API in both languages. 
-The original release of $kd$-Tree Matlab (pre-2012) was in use throughout the RBF community at the onset of this work. The dual language API was appealing for rapid-prototyping with MATLAB, and then porting applications to C++. 
+The original release of $kd$-Tree Matlab (pre-2012) was in use throughout the RBF community at the onset of this work. The dual language API is appealing for rapid-prototyping with MATLAB, and then porting applications to C++. 
 
-The pre-2012 implementation followed the $O(N \log N)$ expected complexity for neighbor queries, but the cost to build the tree was another story. Build times for small and medium sized grids (i.e., less than $N=50000$ nodes) were small enough to be inconspicuous. However, large grid sizes were found to be prohibitively high, with the implementation behaving as $O(N^2)$. This issue ultimately led to work on a MATLAB prototype of the fixed-grid method (\cite{BolligRBFFixedGrid}) to test the concept of neighbor queries with low build costs. 
+The pre-2012 implementation of $kd$-Tree Matlab followed the $O(N \log N)$ expected complexity for neighbor queries, but cost significantly more to build the tree. While build times for small and medium sized grids (i.e., less than $N=50000$ nodes) were small enough to be inconspicuous, the implementation scaled as $O(N^2)$ making it prohibitively expensive for large problems. 
 
-The fixed-grid implementation, originally a pure MATLAB script, outperformed the ``efficient" MEX-compiled $k$-D Tree for problem sizes $N > 20000$, and lead to the development of a faster C++ implementation tested here. However, with the 2012 release of $kd$-Tree Matlab on Google Code (\cite{TagliasacchiGC}), the author has significantly improved the performance of the build process to achieve the $O(N \log N)$ behavior expected for a Point $k$-D Tree with cyclic splitting. 
+The high cost ultimately led to work on a fixed-grid method to test the concept of neighbor queries with low build costs. The original prototype developed in pure MATLAB (\cite{BolligRBFFixedGrid}), outperformed the ``efficient" MEX-compiled $k$-D Tree for problem sizes $N > 20000$, and lead to the development of a C++ implementation tested here. In the 2012 release of $kd$-Tree Matlab (\cite{TagliasacchiGC}), the author has significantly improved the performance of the build process to achieve the $O(N \log N)$ behavior expected for a Point $k$-D Tree with cyclic splitting as presented above. 
 
-All benchmarks in this section were performed on the Itasca cluster at the Minnesota Supercomputing Institute. Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors sharing at least 24GB of RAM \cite{MSIItasca}. Both the $k$-D Tree and fixed-grid implementations are compiled with the Intel compiler toolchain (v13) and with the ``-O3" optimizations for auto-vectorization, loop unrolling, etc. 
+All benchmarks in this section were performed on the Itasca HPC cluster at the Minnesota Supercomputing Institute. Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors sharing at least 24GB of RAM \cite{MSIItasca}. Both $k$-D Tree and fixed-grid implementations are compiled with the Intel compiler toolchain (v13), and the ``-O3" optimizations for auto-vectorization, loop unrolling, etc.. 
 
-Figure~\ref{fig:stencil_query_old_and_new} demonstrates the performance of the $k$-D Tree and the fixed-grid method on increasing 3-D regular grid resolutions up to four million nodes. Both the current $k$-D Tree implementation (2012) and the original implementation (pre-2012) are shown on top to demonstrate the significant improvement in the latest release. For comparison, the C++ fixed-grid method is shown with two resolutions: $h_n = 50$ and $h_n=100$. On the bottom, Figure~\ref{fig:stencil_query_old_and_new} shows the associated speedups---defined as the ratio of time to compute $k$-D Tree stencils over the time for the same work in fixed-grid---achieved by the fixed-grid method over the 2012 release of $kd$-Tree Matlab. These timings cover the total time to build the data-structure and query all stencils. Also, the original node ordering is in raster-order, as is the fixed-grid. 
+Figure~\ref{fig:stencil_query_old_and_new} demonstrates the performance of the $k$-D Tree and the fixed-grid method on increasing 3-D regular grid resolutions up to four million nodes. Both the current $k$-D Tree implementation (2012) and the original implementation (pre-2012) are shown in Figure~\ref{fig:sten_query_a} as evidence of the significant improvement in the latest release. For comparison, the C++ fixed-grid method is shown with two resolutions: $h_n = 50$ and $h_n=100$. On the bottom, Figure~\ref{fig:stencil_query_old_and_new} shows the associated speedups---defined as the ratio of time to compute $k$-D Tree stencils, over the time for the same stencil generation with a fixed-grid---achieved over the more efficient release of $kd$-Tree Matlab. These results cover the total time to build the data-structure and query all stencils. The test grid is generated in raster-order, as is the fixed-grid. 
 
 
 Prior to the 2012 improvements, the C++ implementation was over 130x faster for four million nodes. With the newer and more reasonable $k$-D Tree benchmarks, the fixed-grid method is only 2x faster in the best case shown here. Although 2x is not as impressive, it is a notable improvement. One issue in Figure~\ref{fig:stencil_query_old_and_new} is that the fixed-grid with $h_n=50$ is consistently more than twice as slow as the $k$-D Tree. This is due to under-resolved cells with 32 nodes per cell; $h_n=100$ has only 4 nodes per cell. For small $N$ the $k$-D Tree is faster than both resolutions of fixed grid due to over-resolution. As $N$ increases beyond one million nodes the $h_n=100$ fixed-grid loses ground on the $k$-D Tree due to under-resolution. 
@@ -304,6 +304,7 @@ Prior to the 2012 improvements, the C++ implementation was over 130x faster for 
 \centering
 \includegraphics[width=\textwidth]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
 \caption{3-D Regular Grid with stencil size $n=50$}
+\label{fig:sten_query_a}
 \end{subfigure}
 \begin{subfigure}{9.5cm}
 \centering
@@ -368,9 +369,9 @@ The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:s
 %TODO: repeat cvt_hn_speedup but get the number of nodes per cell.
 \subsection{Impact on SpMV}
 
-Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but rather, it ekes out a small victory with the right choice of $h_n$ for fewer than 8 nodes per cell. The reality is that since stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes another longer lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the major overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV for random node distributions. 
+Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but rather, it ekes out a small victory with the right choice of $h_n$. The reality is that stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes another longer lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the major overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV for random node distributions. 
 
-Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is is to be expected as they are previously spatially sorted node distributions. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown. In fact, based on Figure~\ref{fig:spmv_vs_hn}, which shows the impact on SpMV for the $N=10^6$ CVT test case as a function of $h_n$, only a small amount of reordering ($h_n \ge 40$) is necessary to get the spatial locality in memory that results in 5x faster SpMV. The combined results of 2x faster stencils and 5x faster SpMV make a case for the use of a fixed-grid query as a general safety net to precondition RBF-FD when properties of the input grid are unknown. 
+Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is is to be expected as their nodes are previously sorted. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown. Figure~\ref{fig:spmv_vs_hn} demonstrates the impact on SpMV as a function of $h_n$ for the $N=10^6$ CVT test case. The results show that even a very coarse fixed-grid ($h_n \ge 40$) is capable of achieving the spatial locality of data that results in 5x faster SpMV. The combined results of 2x faster stencils and 5x faster SpMV make a case for the use of a fixed-grid query as a general safety net to precondition RBF-FD when properties of the input grid are unknown. 
 
 \begin{figure}
 \centering
@@ -424,9 +425,11 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 %TODO: bandwidth definition
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
-As previously mentioned, the choice of space filling curve can impact the sparsity pattern of differentiation matrices, which in turn correlates to new memory access patterns. The use of $Z$-ordering for optimized memory access is common in fixed-grid methods (e.g., see the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). While prototyping the fixed-grid method, a few attempts were made to reorder cells following $Z$-ordering and other space filling curves. Code to test ordering in this section is included in the MATLAB fixed-grid prototype\cite{BolligRBFFixedGrid}.
+As previously mentioned, the choice of space filling curve influences the sparsity pattern of differentiation matrices, which in turn impacts cache effects. The use of $Z$-ordering (Figure~\ref{fig:space_filling_curves}) for potential benefits on memory access is a common recommendation in fixed-grid methods (see e.g., the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). Under raster-ordering, cells are traversed with priority on one dimension. The resulting layout only has adjacent cells along that one dimension consecutive in memory. Other approaches, like $Z$-ordering, traverse cells by alternating dimensions/directions and increase locality of data in multiple dimensions. 
 
-Examples of those curves are presented in Figure~\ref{fig:orderings}. Here each node would represent a cell, and the orderings start at $(0,0)$. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly applied to reorder the cells of the fixed-grid. Each of the five tiles in Figure~\ref{fig:orderings} get their name based on how the curve connects nodes. The sixth ordering in Figure~\ref{fig:orderings}, Reverse Cuthill-McKee, is a special case of space filling curve saved for later discussion in this section. 
+This section investigates the potential benefits of $Z$-ordering and various other space filling curves implemented as part of the original MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}). Examples of the tested curves are presented in Figure~\ref{fig:orderings}. Here each node correlates to a fixed-grid cell, and curves start at coordinates $(0,0)$. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly produced via a hash function based on cell coordinates. Those same five tiles are named according to the behavior of the curve as it connects nodes. Manufacturing the X, Z, U and 4-node Z curves is possible through \emph{bit-interleaving} cell coordinates. 
+
+The sixth ordering in Figure~\ref{fig:orderings} is Reverse Cuthill-McKee (RCM). Although the curve qualifies as a space filling curve, the algorithm to produce it is distinct from the others. RCM does not hash cell coordinates to reorder nodes. Rather, it traverses nodes based the adjacency graph produced by stencils. The RCM curve in Figure~\ref{fig:orderings} is a special case that results when all nodes have stencils of size $n=3$, but it nicely illustrates the RCM as a breadth-first traversal through the grid. More discussion on RCM occurs later in this section. %A discussion of RCM occurs later in this section. 
 
 \begin{figure}
 \centering
@@ -436,7 +439,11 @@ Examples of those curves are presented in Figure~\ref{fig:orderings}. Here each 
 \end{figure}
 
 
-Excluding RCM, the remaining orderings in Figure~\ref{fig:orderings} are constructed as a function of node coordinates, $(c_x,c_y)$. Raster-ordering, discussed above, follows $ (c_x * h_n) + c_y$. To produce the remaining curves, one turns to \emph{bit-interleaving} (see e.g., \cite{Stocco2009}). 
+%Excluding RCM, the remaining orderings from Figure~\ref{fig:orderings} are constructed as a function of node coordinates, $(c_x,c_y)$. Raster-ordering, discussed above, follows $ (c_x * h_n) + c_y$. To produce the remaining curves, one turns to \emph{bit-interleaving} (see e.g., \cite{Stocco2009}). 
+
+%TODO: ordering occurs when nodes are hashed to cell. Hash node with IJK, convert ijk to ordering, hash neighbors with IJK, convert ijk to ordering. Its a prototype, so performance of the conversion is not paramount. 
+%TODO: why x, u, z, 4-node z? Originally it was Z, but the 
+
 
 \subsection{Bit-Interleaved Orderings}
 
@@ -451,10 +458,10 @@ Including a third value, $Z$, results in the following:
 interleave(X,Y,Z) & = \{x_3y_3z_3x_2y_2z_3x_1y_1z_3x_0y_0z_3\}.
 \end{align*}
 
-Interleaving requires \emph{integer dilation} modify an input integer value, so the output value is the original input bits spaced by new zeros. On a $d$-dimensional domain, bit-interleaving requires $d-1$ zeros between each bit. For example, dilating $1111_2$ converts the four bit integer to ${\color{red}0}1{\color{red}0}1{\color{red}0}1{\color{red}0}1_2$ in 2-D, and ${\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1_2$ in 3-D. 
+Interleaving depends on \emph{integer dilation} to modify an input integer value, so the output value has the original input bits spaced by new zeros. On a $d$-dimensional domain, bit-interleaving requires $d-1$ zeros between each bit. For example, dilating $1111_2$ expands the four bit integer to ${\color{red}0}1{\color{red}0}1{\color{red}0}1{\color{red}0}1_2$ in 2-D, and ${\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1{\color{red}0}{\color{red}0}1_2$ in 3-D. 
 
 
-Dilating integers requires multiple bit-mask operations to spread the digits appropriately. 
+The process to dilate integers applies multiple bit-mask operations to spread the digits appropriately. 
 For any $b$-bit integer, $X_0$, the dilation is given by the following iteration:
 \begin{align}
 X_{i+1} = ((X_i \ll S_i) \mid X_i)\ \&\ M_i \ \ \ \ \ \text{for }i=0,...,\log_2(b)
@@ -497,7 +504,7 @@ Level ($i$) & \multicolumn{2}{ c | }{Mask ($M_i$)} & Shift ($S_i$) \\
 
 
 %At the end of Equation~\ref{eq:dilate}, the completely dilated integer is stored in $X_5$ with only one caveat: d
-It is possible to lose bits in translation when dilating values that require greater than $^b/_d$ bits. In the case of 32-bits, input Equation~\ref{eq:dilate} must be representable in 16-bits or less (i.e., $ \leq 65535 $) for 2-D, and 10-bits or less (i.e., $ \leq 1023$) for 3-D. Note that these limits then become the maximum resolution possible for $h_n$ in the fixed-grid method. 
+It is possible to lose bits in translation when dilating values that require greater than $^b/_d$ bits. In the case of 32-bits, any input to Equation~\ref{eq:dilate} must be representable in 16-bits or less (i.e., $X_0 \leq 65535 $) for 2-D, and 10-bits or less (i.e., $X_0 \leq 1023$) for 3-D. Note that these limits then become the maximum resolution possible for $h_n$ in the fixed-grid method. 
 
 With dilation available, the process for 2-D bit-interleaving reduces to:
 \begin{align}
@@ -505,26 +512,26 @@ With dilation available, the process for 2-D bit-interleaving reduces to:
 interleave(X,Y) = (d_x \ll 1) \mid d_y. 
 \label{eq:interleave2d}
 \end{align}
-Or in 3-D: 
+And in 3-D: 
 \begin{align}
 (d_x, d_y, d_z) = (dilate(X), dilate(Y), dilate(Z)) \nonumber \\
 interleave(X,Y,Z) = ((d_x \ll 2) \mid (d_y \ll 1)) \mid d_z.
 \label{eq:interleave3d}
 \end{align}
-Equations~\ref{eq:interleave2d} and \ref{eq:interleave3d} are used as hash functions to produce a vast number of space filling curves (see \cite{Stocco2009}).
+Equations~\ref{eq:interleave2d} and \ref{eq:interleave3d} can be used as hash functions to produce a vast number of space filling curves (see \cite{Stocco2009}).
 
-By default, Equation~\ref{eq:interleave2d} produces the $Z$-ordering in Figures~\ref{fig:orderings} and \ref{fig:space_filling_curves}. Consider for example:
+By default, Equation~\ref{eq:interleave2d} results in the $Z$-ordering in Figures~\ref{fig:space_filling_curves} and \ref{fig:orderings}. Consider for example:
 \begin{align}
 (c_x,c_y) & = (5, 3) = (0101_2, 0011_2) \nonumber \\
-dilate((c_x,c_y), 2) & = (d_x,d_y) =  ({\color{red}0}0{\color{red}0}1{\color{red}0}0{\color{red}0}1_2, {\color{red}0}0{\color{red}0}0{\color{red}0}1{\color{red}0}1_2) \nonumber \\
+(d_x,d_y) & =  ({\color{red}0}0{\color{red}0}1{\color{red}0}0{\color{red}0}1_2, {\color{red}0}0{\color{red}0}0{\color{red}0}1{\color{red}0}1_2) \nonumber \\
 interleave(c_x, c_y) & = ( 00100111_2 ) = 39. \nonumber
 \end{align}
 % 0000000100010
 %  000000000101
 % 0000000100111 = 32 + 7
-Here, the cell coordinates, $(5,3)$, are mapped to the value 39. This $Z$-index can be verified by counting the number of steps from  $(0,0)$ to $(5,3)$ on the $Z$-order curve in Figure~\ref{fig:orderings}. 
+The mapped $Z$-index of 39 can be verified by counting the number of steps from  $(0,0)$ to $(5,3)$ on the $Z$-order curve in Figure~\ref{fig:orderings}. 
 
-The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides operators and inputs in 2-D and 3-D for each space filling curve. The $U$ and $X$ orderings depend on a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
+The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides a comparison of orderings and the operators/inputs in 2-D and 3-D that produce them. The $U$ and $X$ orderings depend on a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
 
 
 \begin{table}
@@ -544,11 +551,11 @@ The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Eq
 \end{table}
 
 
-The 4-node $Z$-curve on the last row of Table~\ref{tbl:orderings} is a special case. It is the same in theory as a standard $Z$-order, but during dilation it requests one extra zero per bit as though the dilation were for the next higher dimension. Then, interleaving the dilated coordinates following the operators provided in Table~\ref{tbl:orderings} gives the following interleave pattern:
+The last row of Table~\ref{tbl:orderings}, the 4-node $Z$-curve, is a special case of bit interleaving. The 4-node Z is similar in theory to a standard $Z$-order, except when coordinates are dilated an extra extra zero per bit is requested, as though the dilation were operating in the next higher dimension. Then, using the operators provided in Table~\ref{tbl:orderings} to interleave bits results in the following pattern:
 \begin{align}
 interleave_{4node}(X,Y) = \{x_5x_4y_5y_4x_3x_2y_3y_2x_1x_0y_1y_0\}.
 \end{align}
-By reserving two bits for each dimension, the space filling curve is able to traverse twice as many nodes in the $Y$ direction before taking its first step in the $X$ direction.
+By reserving two bits for each dimension, the 4-node $Z$-curve is able to traverse up to four nodes in the $Y$ direction before taking its first step in the $X$ direction. 
 
 %TODO: why was each curve chosen? 
 % Z because of others like Goswami; U because it also widely used (gray-code)
@@ -556,21 +563,69 @@ By reserving two bits for each dimension, the space filling curve is able to tra
 
 Often, interleaved cell coordinates near the boundaries of the domain do not produce contiguous hash indices and may balloon to values greater than the number of nodes/cells in the domain. In these situations, missing indices reference coordinates outside the domain that would complete the hierarchical power-of-2 curves before entering the domain again. When sorted and traversed least to greatest, the hashed indices give a proper ordering of the domain, and missing indices are skipped. 
 
+%TODO: how are reorderings applied
 
 
+\subsection{Reverse Cuthill-McKee and Bandwidth Reduction} 
+%TODO: the goal of ordering is to reduce bandwidth
+%TODO: need to review the RCM related work and complete this section. 
+The Reverse Cuthill-McKee curve in Figure~\ref{fig:space_filling_curves} is not really a space filling curve. It is officially known as a bandwidth reduction algorithm. It does not reorder cells but rather waits until stencil generation is complete to operate on the adjacency graph/matrix produced by stencils. 
 
-\subsection{Cuthill-McKee} 
+The term \emph{bandwidth} refers to the maximum spread of non-zeros within a matrix such that
+\begin{align}
+\max | i - j | 
+\end{align}
 
-The Cuthill-McKee approach to reordering nodes waits until \emph{after} stencils are generated to reorder the adjacency matrix (see subsection~\ref{subsec:adjacency} for definition). %TODO: give examples CM, RCM, AMD, GPS \cite{Gibbs1975}
+The purpose of reordering cells is to improve memory access patterns. If this is achieved by condensing non-zeros then the ideal case is a line with all non-zeros consecutive in memory. In higher dimensions this is not possible and non-zeros spread further throughout the matrix. 
+
+As a measure of how condensed the matrix is we turn the matrix \emph{bandwidth}. The bandwidth is defined as...
+
+While bit-interleaved curves may succeed in reducing the bandwidth, 
+
+The idea behind bandwidth minimization schemes is that the bandwidth is cross-cutting and condensing nonzeros along it will provide both the minimum memory loads to load a row, and also the maximum amount of cache reuse when stepping from one row to the next.     
+
+
+%TODO: RCM
+%TODO: Domain Decomp (linear, metis). Need to justify this in some way. 
+%TODO: Local node ordering (almost done)
+%TODO: Overlap (have data to justify this)
+%TODO: Application: explicit is done. just run test cases with new overlap and demonstrate improvements. implicit requires solution on square, description of gmres, start formulation of the stokes problem, how interleaving is used to decompose the domain and keep values close together. 
+% I only have until friday night. That means I need complete chapters each day. That means i need to get my shit together and prioritize in favor of 
+
+Figure~\ref{fig:reorder_example} demonstrated the impact of a raster-ordering on fixed-grid cells. 
+
+Bandwidth of the matrix is defined as the distance between the left-most 
+
+
+ saw impact on matrix using the raster order. The result was nonzeros condensed together and near to the main diagonal. 
+
+the purpose of reordering is to condense the bandwidth. The impact can be quantified by monitoring the bandwidth
+on matrix structure/sparsity with bandwidth
+ideal bandwidth 
+A more realistic scaling on bandwidth is $O(N^{d-1})$. 
+
+
+While the aforementioned space filling curves attempt to reorder nodes during stencil generation, other algorithms like Reverse Cuthill-McKee (RCM) approach the problem \emph{after} stencils are generated and an adjacency graph (see subsection~\ref{subsec:adjacency} for definition) is available. At a high level, the RCM algorithm seeks to reduce the bandwidth of the matrix
+
+
+%TODO: designed to reduce bandwidth
+%TODO: goal is to boost performance by condensing along diagonal
+%TODO: refs on RCM and ordering and performance (mokbel?)
+%TODO: optimal case is on the line with all adjacent
+%TODO: optimal not possible so it scales as $N^{d-1}$ 
+%TODO: 
+
+
+  to reorder the adjacency matrix . %TODO: give examples CM, RCM, AMD, GPS \cite{Gibbs1975}
 Cuthill-McKee performs a breadth-first search
 
 %TODO: define degree (with adjacency matrix)
 %TODO: define bandwidth 
 
 
-The Cuthill-McKee family of algorithms changes that focus to reorder nodes \emph{after} stencils are generated. 
+The Cuthill-McKee family of algorithms changes that focus to reorder nodes \emph{after} stencils are generated. Cuthill-McKee 
 
-Once stencils are generated, a directed adjacency graph exists that describes how each node is connected to its neighbors. 
+The directed adjacency graph resulting from stencil connections that describes how each node is connected to its neighbors. 
 
 The purpose of Cuthill-McKee algorithms is specifically to reduce the bandwidth of sparse matrices. Reducing the bandwidth can offer two benefits: a) better conditioning of the matrix for reduced fill-in during decompositions, and b) better cache reuse in memory. %TODO: find ref to backup this statement 
 
@@ -647,6 +702,13 @@ RCM is effective and can be used as post-processing once stencils are generated 
 
 \subsection{Impact of Node Orderings}
 
+
+To test the significance and impact of orderings
+
+during the fixed-grid query, as nodes are hashed to cell coordinates, the coordinates are dilated and interleaved to produce the proper hash index. 
+
+Querying the neighbor amounts to constructing a list of un-hashed cell coordinates and indexing the cell bucket list in IJK order.  and only enough neighbor counts have been found
+
 The ideal differentiation matrix, corresponding to discretization of a line, would have all non-zeros on the first $\frac{n-1}{2}$ to each side of the diagonal. For 2- or 3-D domains the ideal case is not possible to achieve, but the nodes can be reordered with the goal to condense
 At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\hat{P}$. While nothing requires that $\hat{P}$ replace the usage of $P$ 
 
@@ -661,7 +723,7 @@ At the end of BuildFixedGrid the original set of nodes, $P$ is overwritten by $\
 %TODO: add RCM and fix order
 \begin{figure}
 \centering
-\includegraphics[width=0.85\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d2_n31_hn6.png} \\
+%\includegraphics[width=0.85\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d2_n31_hn6.png} \\
 \includegraphics[width=0.85\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
 \caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings.  3) Spy impact on MD node set $N=4096$, stencil size $n=31$, $h_n = 6$ }
 \label{fig:ordering_impact_rg}
@@ -685,6 +747,22 @@ Obviously, the ideal case for bandwidth is when all rows contain the $\frac{n}{2
 impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on condition considered in future chapter. 
 
 One frequently hears that ordering via space filling curves like Morton Ordering and/or gray codes can benefit memory access patterns. 
+
+%TODO: impact relative to Raster order. because we're trying to justify the use of another ordering. 
+\begin{table}[h]\footnotesize
+  \centering
+  \caption{Ordering Comparison for $N=10^6$ CVT unit sphere. Stencil size $n=50$, fixed-grid resolution, $h_n=160$}
+  \begin{tabular}{ c | c | c | c | c | c | c }
+               & IJK & RCM & Z & X & U & 4-node Z \\
+               \hline
+   Bandwidth   &     &     &   &   &   &          \\
+   \hline
+   SpMV Speedup vs IJK & 1 &  & & & \\
+  \end{tabular}
+\end{table}
+
+
+
 
 %TODO: Related? \url{http://publish.uwo.ca/~shaque4/presentationSONAD.pdf} \url{http://www.cs.duke.edu/~alvy/papers/sc98/} \url{http://www.cs.indiana.edu/~dswise/Arcee/Papers/medea06.pdf} \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.118.7720&rep=rep1&type=pdf} \url{http://stackoverflow.com/questions/4260002/benefits-of-nearest-neighbor-search-with-morton-order})
 
