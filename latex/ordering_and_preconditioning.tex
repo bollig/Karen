@@ -621,13 +621,31 @@ Most CM and RCM implementations assume the algorithms operate on square, symmetr
 
 \subsection{Impact of Orderings}
 
-To compare the impact of orderings in Figure~\ref{fig:orderings}, the MATLAB implementation of fixed-grid (\cite{BolligRBFFixedGrid}) generates stencils and writes the sorted nodes and stencils to disk. The nodes and stencils are accepted as input for the C++ code which benchmarks the SpMV. 
-Bit interleaving occurs in a MATLAB script that leverages the \emph{bitand}, \emph{bitor}, and \emph{bitxor} routines. Bitwise operators in MATLAB provide limited support for integers are restricted to 32-bits, but these are sufficient for testing purposes. The MATLAB provided \emph{symrcm} routine performs the Reverse Cuthill-McKee. 
+To compare the impact of orderings in Figure~\ref{fig:orderings}, the MATLAB implementation of fixed-grid (\cite{BolligRBFFixedGrid}) generates stencils and writes the sorted nodes and stencils to disk. The nodes and stencils are accepted as input for the C++ SpMV benchmark used to compare 
+the $k$-D Tree and fixed-grid stencils. 
+Bit interleaving is managed by a MATLAB script that leverages the internal \emph{bitshift}, \emph{bitand}, \emph{bitor}, and \emph{bitxor} routines for bitwise operations. Bitwise operators in MATLAB are restricted to 32-bits, but the maximum number of cells per dimension allows by 32-bits is more than sufficient. The MATLAB internal \emph{symrcm} routine computes the Reverse Cuthill-McKee reordering. Visualization and bandwidth calculation for all cases occur in MATLAB. 
+
+Figure~\ref{fig:ordering_impact_rg} shows an example of the six orderings resulting from $N=18^3$ regular grid nodes, each with stencil size $n=31$. The fixed-grid resolution in each dimension $h_n = 6$. The bandwidth, $bw$, is included in the bottom label for each case. The first 
+
+The most obvious observation is that raster-ordering and RCM result in the smallest bandwidths. 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.90\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
+\caption{Impact of node orderings on an $N=18^3$ regular grid in 3-D. Stencil size $n=31$, fixed-grid resolution $(h_n)^d=6^3$. }
+\label{fig:ordering_impact_rg}
+\end{figure}
+
+Figure~\ref{fig:ordering_impact_cvt} considers the six orderings for $N=4096$ MD-nodes on the unit sphere. Once again, each row has $n=31$ non-zeros, but in this case the fixed-grid resolution in each dimension is $h_n = 10$. 
+
+
+In nearly all cases tested, RCM resulted in the smallest bandwidth, 
 
 The first point for consideration in choosing the right ordering is the resulting bandwidth of the matrix. Given that 
 
 The second point is the SpMV time. 
 
+%TODO: moving forward, assume raster-order to reorder nodes initially and rely on boost implementation of rcm. Save the cost of interleaving bits
 
 With RBF-FD generating the same number of non-zeros per row, it is possible for RCM to select different starting nodes depending on the input node orderings. This allows for some variance in the resulting bandwidth. Results shown here apply RCM the results of a raster-ordered fixed-grid. 
 
@@ -642,16 +660,9 @@ RCM is effective and can be used as post-processing once stencils are generated 
 
 \begin{figure}
 \centering
-\includegraphics[width=0.90\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
-\caption{Impact of node orderings on an $N=18^3$ regular grid in 3-D. Stencil size $n=31$, fixed-grid resolution $(h_n)^d=6^3$. }
-\label{fig:ordering_impact_rg}
-\end{figure}
-
-\begin{figure}
-\centering
 \includegraphics[width=0.90\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10.png} 
 \caption{ The impact of reordering on sparsity patterns for $N=4096$ MD nodes on the sphere. Stencil size $n=31$, fixed-grid resolution per dimension $h_n=10$. }
-\label{fig:orderings}
+\label{fig:ordering_impact_cvt}
 \end{figure}
 
 
