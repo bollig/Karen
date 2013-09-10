@@ -425,7 +425,7 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 %TODO: bandwidth definition
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
-As previously mentioned, the choice of space filling curve influences the sparsity pattern of differentiation matrices, which in turn impacts cache effects. The use of $Z$-ordering (Figure~\ref{fig:space_filling_curves}) for potential benefits on memory access is a common recommendation in fixed-grid methods (see e.g., the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). Under raster-ordering, cells are traversed with priority on one dimension. The resulting layout only has adjacent cells along that one dimension consecutive in memory. Other approaches, like $Z$-ordering, traverse cells by alternating dimensions/directions and increase locality of data in multiple dimensions. 
+As previously mentioned, the choice of space filling curve influences the sparsity pattern of differentiation matrices, which in turn impacts cache effects. The use of $Z$-ordering (Figure~\ref{fig:space_filling_curves}) for potential benefits on memory access is a common recommendation in fixed-grid methods (see e.g., the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementations in \cite{Goswami2010, MellorCrummey2001}). Under raster-ordering, cells are traversed with priority on one dimension. The resulting layout only has adjacent cells along that one dimension consecutive in memory. Other approaches, like $Z$-ordering, traverse cells by alternating dimensions/directions and increase locality of data in multiple dimensions. 
 
 This section investigates the potential benefits of $Z$-ordering and various other space filling curves implemented as part of the original MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}). Examples of the tested curves are presented in Figure~\ref{fig:orderings}. Here each node correlates to a fixed-grid cell, and curves start at coordinates $(0,0)$. 
 
@@ -569,81 +569,32 @@ Often, interleaved cell coordinates near the boundaries of the domain do not pro
 
 \subsection{Bandwidth Reduction and Reverse Cuthill-McKee} 
 
-The purpose of reordering cells is to improve memory access patterns. If condensing non-zeros within rows of the differentiation matrix achieves this, then the ideal case arises when $n$ non-zeros occupy the first $n$ diagonals of the matrix (including the main diagonal) for all rows of the matrix. In terms of stencils connecting nodes of a grid, the ideal case corresponds to nodes on a line connected 
+The purpose of reordering nodes/cells is to improve memory access patterns. If condensing non-zeros of a sparse matrix achieves this, then the ideal case arises when $n$ non-zeros occupy the first $n$ diagonals of the matrix (including the main diagonal) for all rows. In terms of stencils on a grid, this ideal case corresponds to all nodes on a 1-D line connected to their left and right nearest neighbors. In higher dimensions, reproducing the ideal structure requires one to neglect spatially nearest neighbors, except in cases of very low resolution or small stencil sizes, and select neighbors by following a space filling curve left and right. Stencils in 2-D or 3-D constructed through $k$-NN (or $k$-ANN) queries result in a sparsity pattern with gaps between non-zeros. The worst case matrix structures have non-zeros in each row spaced as far apart as possible while maintaining the appropriate connectedness of the adjacency graph. 
 
-Reverse Cuthill-McKee seeks a permutation of the matrix $A$ such that
+%TODO: The change in dimension appears as a gap in the matrix. If 1-D line is contiguous zeros, then 2-D grid has contiguous zeros for until the curve steps through to another dimension.
+
+As a measure of how well condensed non-zeros are, the \emph{bandwidth} of a matrix, $A$, is defined as (\cite{Cuthill1969, LiuSherman1976}): 
+\begin{align}
+bw(A) = \max\{|i - j| + 1 : A_{i,j} \neq 0\}.
+\end{align}
+The bandwidth simply counts the number of super- and sub-diagonals---i.e., diagonals above and below the main diagonal---that contain at least one non-zero. Incrementing by one accounts for a non-zero main diagonal. The lower the bandwidth, the better. 
+
+For any matrix, $A$, a permutation, $P$, can be constructed such that 
 \begin{align}
 P A P^T
 \end{align}
-results in a 
+reorders the matrix and reduces the bandwidth of $A$. A variety of \emph{bandwidth reduction} algorithms exist with unique approaches for the construction of $P$ (see e.g., \cite{Gibbs1976, LiuSherman1976, MellorCrummey2001}).  In contrast to the space filling curves discussed above, bandwidth minimization algorithms are applied \emph{after} stencils are generated in order to operate on the differentiation matrix and corresponding adjacency graph. The effect pre- and post-multiplying $A$ by $P$ is equivalent to reindexing nodes and and updating all stencil connections to the new numbering. In practice, rather than construct a full permutation matrix $P$, which has exactly one 1 per row and per column, it is common to represent $P$ as a vector where each entry indicates the column location of the 1. In that case the value of vector elements reference the original node ordering, and the vector indices provide the new ordering. 
 
-is achieved by condensing non-zeros then the ideal case is a line with all non-zeros consecutive in memory. In higher dimensions this is not possible and non-zeros spread further throughout the matrix. 
+The most popular methods for bandwidth reduction are in the Cuthill-McKee (CM) class of methods \cite{Cuthill1969, LiuSherman1976}. In particular this work is concerned with the \emph{Reverse Cuthill-McKee} (RCM) variant. 
 
-%TODO: the goal of ordering is to reduce bandwidth
-%TODO: need to review the RCM related work and complete this section. 
-The Reverse Cuthill-McKee curve in Figure~\ref{fig:space_filling_curves} is not really a space filling curve. It is officially known as a bandwidth reduction algorithm. It does not reorder cells but rather waits until stencil generation is complete to operate on the adjacency graph/matrix produced by stencils. 
+At a high level, CM algorithms start by selecting a node in the adjacency graph with the lowest degree (i.e., fewest non-zeros per row in the matrix). From that node, a breadth-first traversal begins, passing through all connected neighbors in order from least to greatest degree. As nodes are visited, their original index is pushed onto a queue, $r$. Another queue is maintained to catalogue previously traversed nodes and prevent the process from doubling back on itself. In the event that the adjacency graph has multiple disconnected sub-graphs, the algorithm exhausts the first sub-graph before beginning the next; as always, beginning with the lowest degree node available. 
 
-The term \emph{bandwidth} refers to the maximum spread of non-zeros within a matrix such that
-\begin{align}
-\max | i - j | 
-\end{align}
+CM methods construct $r$ as the vector representation of $P$. The RCM variant differs at this point by reversing the order of $r$ so that rows corresponding to the last traversed nodes in the graph appear first in $PAP^T$. The authors of \cite{LiuSherman1976} show that the RCM algorithm can offer two benefits over regular CM: a) better conditioning of the matrix for reduced fill-in during decompositions, and b) better cache reuse in memory. 
 
 
 
-As a measure of how condensed the matrix is we turn the matrix \emph{bandwidth}. The bandwidth is defined as...
+RCM takes as input a square, symmetric adjacency graph and returns a vector of indices indicating the new order for each row of the matrix. Rectangular matrices can be reordered by reordering the 
 
-While bit-interleaved curves may succeed in reducing the bandwidth, 
-
-The idea behind bandwidth minimization schemes is that the bandwidth is cross-cutting and condensing nonzeros along it will provide both the minimum memory loads to load a row, and also the maximum amount of cache reuse when stepping from one row to the next.     
-
-
-%TODO: RCM
-%TODO: Domain Decomp (linear, metis). Need to justify this in some way. 
-%TODO: Local node ordering (almost done)
-%TODO: Overlap (have data to justify this)
-%TODO: Application: explicit is done. just run test cases with new overlap and demonstrate improvements. implicit requires solution on square, description of gmres, start formulation of the stokes problem, how interleaving is used to decompose the domain and keep values close together. 
-% I only have until friday night. That means I need complete chapters each day. That means i need to get my shit together and prioritize in favor of 
-
-Figure~\ref{fig:reorder_example} demonstrated the impact of a raster-ordering on fixed-grid cells. 
-
-Bandwidth of the matrix is defined as the distance between the left-most 
-
-
- saw impact on matrix using the raster order. The result was nonzeros condensed together and near to the main diagonal. 
-
-the purpose of reordering is to condense the bandwidth. The impact can be quantified by monitoring the bandwidth
-on matrix structure/sparsity with bandwidth
-ideal bandwidth 
-A more realistic scaling on bandwidth is $O(N^{d-1})$. 
-
-
-While the aforementioned space filling curves attempt to reorder nodes during stencil generation, other algorithms like Reverse Cuthill-McKee (RCM) approach the problem \emph{after} stencils are generated and an adjacency graph (see subsection~\ref{subsec:adjacency} for definition) is available. At a high level, the RCM algorithm seeks to reduce the bandwidth of the matrix
-
-
-%TODO: designed to reduce bandwidth
-%TODO: goal is to boost performance by condensing along diagonal
-%TODO: refs on RCM and ordering and performance (mokbel?)
-%TODO: optimal case is on the line with all adjacent
-%TODO: optimal not possible so it scales as $N^{d-1}$ 
-%TODO: 
-
-
-  to reorder the adjacency matrix . %TODO: give examples CM, RCM, AMD, GPS \cite{Gibbs1975}
-Cuthill-McKee performs a breadth-first search
-
-%TODO: define degree (with adjacency matrix)
-%TODO: define bandwidth 
-
-
-The Cuthill-McKee family of algorithms changes that focus to reorder nodes \emph{after} stencils are generated. Cuthill-McKee 
-
-The directed adjacency graph resulting from stencil connections that describes how each node is connected to its neighbors. 
-
-The purpose of Cuthill-McKee algorithms is specifically to reduce the bandwidth of sparse matrices. Reducing the bandwidth can offer two benefits: a) better conditioning of the matrix for reduced fill-in during decompositions, and b) better cache reuse in memory. %TODO: find ref to backup this statement 
-
-%TODO: move adjacency graph description to previous chapter so I can ref it from here and the METIS description. 
-
-directly to reduce bandwidth. A commonly used algorithm for this is called \emph{Reverse Cuthill-McKee} (RCM) reordering. RCM takes as input a square, symmetric adjacency graph and returns a vector of indices indicating the new order for each row of the matrix. 
 
 The RCM algorithm first finds the row with fewest non-zeros corresponding to the node in the graph with the lowest degree of connectivity.  traverses the adjacency graph 
  
@@ -668,7 +619,8 @@ The algorithm queues nodes in order of degree at each level of the search and tr
 Cuthill McKee implementations assume the algorithm operates on square, symmetric adjacency graphs. 
 
 
-
+%TODO: metric; mean speedup in SpMV for range of orderings based on optimal h_n per grid resolution. 
+%TODO: metric; ideal h_n per grid resolution; sphere. 
 
 Rather than complete a full analysis of the impact from space filling curves, we only consider the ideal cases from CVT and RG (because they are used in the thesis). The integer dilation is costly and does not appear to significantly improve the performance of the best cases.
 
