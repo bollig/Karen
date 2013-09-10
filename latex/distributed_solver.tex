@@ -281,22 +281,22 @@ The undirected graph is used only for partitioning and subsequently discarded.
 METIS divides stencils into contiguous partitions of nearly equivalent size. 
 %TODO: Need to flesh detail on METIS
 
-\begin{figure}[ht!]
-\begin{center}
-\begin{subfigure}[b]{0.425\textwidth}
-\includegraphics[width=2.5in]{../figures/omnigraffle/DirectedAdjacencyGraph.png}
-\caption{Directed (Unsymmetric)}
-\label{fig:directed_graph}
-\end{subfigure}
-\begin{subfigure}[b]{0.425\textwidth}
-\includegraphics[width=2.5in]{../figures/omnigraffle/UndirectedAdjacencyGraph.png}
-\caption{Undirected (Symmetric)}
-\label{fig:undirected_graph}
-\end{subfigure}
-\caption{A simple adjacency graph and corresponding matrices. Edges connecting nodes of RBF-FD stencils produce (a) a directed adjacency matrix. To partition RBF-FD stencils, METIS requires conversion to (b) an undirected graph/matrix.}
-\label{fig:adjacency_matrix}
-\end{center}
-\end{figure}
+%\begin{figure}[ht!]
+%\begin{center}
+%\begin{subfigure}[b]{0.425\textwidth}
+%\includegraphics[width=2.5in]{../figures/omnigraffle/DirectedAdjacencyGraph.png}
+%\caption{Directed (Unsymmetric)}
+%\label{fig:directed_graph}
+%\end{subfigure}
+%\begin{subfigure}[b]{0.425\textwidth}
+%\includegraphics[width=2.5in]{../figures/omnigraffle/UndirectedAdjacencyGraph.png}
+%\caption{Undirected (Symmetric)}
+%\label{fig:undirected_graph}
+%\end{subfigure}
+%\caption{A simple adjacency graph and corresponding matrices. Edges connecting nodes of RBF-FD stencils produce (a) a directed adjacency matrix. To partition RBF-FD stencils, METIS requires conversion to (b) an undirected graph/matrix.}
+%\label{fig:adjacency_matrix}
+%\end{center}
+%\end{figure}
 
 In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symmetry. Since the goal is to partition the physical domain, this added connectivity is harmless to RBF-FD. However, with respect to load balancing, this may not be ideal. For every new nonzero introduced to a row, METIS assumes an additional node utilized by the partition. When the node is a false connection, it is one fewer centers that METIS will assign to the partition in an attempt to keep all partitions balanced. \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
 
@@ -320,7 +320,7 @@ In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symm
 \section{Index Mappings and Local Node Ordering}
 
 
-\begin{figure}[ht!]
+\begin{figure}
 \begin{center}
 \includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/MatrixDecompositionSets_RBF-FD_Bowed.pdf} 
 \caption{Decomposition for one processor selects a subset of rows from the DM. Blocks corresponding to node sets $\setCenters \backslash \setBoundary$, $\setProvide$, and $\setDepend$ are labeled for clarity. The subdomain for the processor is outlined by dashed lines.}
