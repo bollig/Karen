@@ -505,7 +505,7 @@ Level ($i$) & \multicolumn{2}{ c | }{Mask ($M_i$)} & Shift ($S_i$) \\
 
 
 %At the end of Equation~\ref{eq:dilate}, the completely dilated integer is stored in $X_5$ with only one caveat: d
-It is possible to lose bits in translation when dilating values that require greater than $^b/_d$ bits. In the case of 32-bits, any input to Equation~\ref{eq:dilate} must be representable in 16-bits or less (i.e., $X_0 \leq 65535 $) for 2-D, and 10-bits or less (i.e., $X_0 \leq 1023$) for 3-D. Note that these limits then become the maximum resolution possible for $h_n$ in the fixed-grid method. 
+It is possible to lose bits in translation when dilating values that require greater than $\left\lfloor ^b/_d \right\rfloor$ bits. That means, in the case of 32-bits, any input to Equation~\ref{eq:dilate} must be representable in 16-bits or less (i.e., $X_0 \leq 65535 $) for 2-D, and 10-bits or less (i.e., $X_0 \leq 1023$) for 3-D. Note that these limits then become the maximum resolution possible for $h_n$ in the fixed-grid method. 
 
 With dilation available, the process for 2-D bit-interleaving reduces to:
 \begin{align}
@@ -533,7 +533,7 @@ interleave(c_x, c_y) & = ( 00100111_2 ) = 39. \nonumber
 The mapped $Z$-index of 39 can be verified by counting the number of steps from  $(0,0)$ to $(5,3)$ on the $Z$-order curve in Figure~\ref{fig:orderings}. 
 
 The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides a comparison of orderings and the operators/inputs in 2-D and 3-D that produce them. The $U$ and $X$ orderings depend on a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
-
+%TODO: describe impact of xor on traversal
 
 \begin{table}
 \centering
@@ -569,7 +569,13 @@ Often, interleaved cell coordinates near the boundaries of the domain do not pro
 
 \subsection{Bandwidth Reduction and Reverse Cuthill-McKee} 
 
-The purpose of reordering cells is to improve memory access patterns. If this is achieved by condensing non-zeros in the differentiation matrix, then the ideal case arises when $n$ non-zeros occupy the first $n$ diagonals of the matrix (including the main diagonal) for all rows of the matrix. In terms of stencils connecting nodes of a grid
+The purpose of reordering cells is to improve memory access patterns. If condensing non-zeros within rows of the differentiation matrix achieves this, then the ideal case arises when $n$ non-zeros occupy the first $n$ diagonals of the matrix (including the main diagonal) for all rows of the matrix. In terms of stencils connecting nodes of a grid, the ideal case corresponds to nodes on a line connected 
+
+Reverse Cuthill-McKee seeks a permutation of the matrix $A$ such that
+\begin{align}
+P A P^T
+\end{align}
+results in a 
 
 is achieved by condensing non-zeros then the ideal case is a line with all non-zeros consecutive in memory. In higher dimensions this is not possible and non-zeros spread further throughout the matrix. 
 
@@ -758,6 +764,20 @@ impact from ordering on matrix sparsity. Bandwidth impact. Bandwidth impact on c
 
 One frequently hears that ordering via space filling curves like Morton Ordering and/or gray codes can benefit memory access patterns. 
 
+
+%\begin{table}[h]\footnotesize
+%  \centering
+%  \caption{Ordering Comparison for $N=10^5$ CVT unit sphere. Stencil size $n=50$, fixed-grid resolution, $h_n=100$}
+%  \begin{tabular}{ c | c | c | c | c | c | c }
+%               & IJK & RCM & Z & X & U & 4-node Z \\
+%               \hline
+%   Bandwidth   &  8209	& 12973	 & 70545	& 87983 & 73699 & 70573   \\
+%   \hline
+%   SpMV Speedup vs IJK & 1 &	1.005 & 1.004 & 0.98 & 1.01 & 1.01 \\
+%  \end{tabular}
+%\end{table}
+
+
 %TODO: impact relative to Raster order. because we're trying to justify the use of another ordering. 
 \begin{table}[h]\footnotesize
   \centering
@@ -765,9 +785,9 @@ One frequently hears that ordering via space filling curves like Morton Ordering
   \begin{tabular}{ c | c | c | c | c | c | c }
                & IJK & RCM & Z & X & U & 4-node Z \\
                \hline
-   Bandwidth   &     &     &   &   &   &          \\
+   Bandwidth   &  7885	& 6566	& 575606 &	819312 & 611513 & 513579   \\
    \hline
-   SpMV Speedup vs IJK & 1 &  & & & \\
+   SpMV Speedup vs IJK & 1 &	1.09 & 1.06 & 1.06 & 1.04 & 0.94 \\
   \end{tabular}
 \end{table}
 
