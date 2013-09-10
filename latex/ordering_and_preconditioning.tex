@@ -589,29 +589,30 @@ The most popular methods for bandwidth reduction are Cuthill-McKee (CM) algorith
 
 At a high level, CM methods start by selecting a node in the adjacency graph with the lowest degree (i.e., fewest non-zeros per row in the matrix). From that node, a breadth-first traversal begins, passing through all connected neighbors in order from least to greatest degree. If nodes have the same degree, as is the situation for RBF-FD with stencil size, $n$, then ties are broken arbitrarily. The original indices for visited nodes are pushed onto a queue, $r$. Another queue is maintained to catalogue previously traversed nodes and prevent the process from doubling back on itself. In the event that the adjacency graph has multiple disconnected sub-graphs, the algorithm exhausts the first sub-graph before beginning the next; as always, beginning with the lowest degree node available. 
 
-Figure~\ref{fig:rcm_example} provides an example of RCM bandwidth reduction for the adjacency graph produced by $N=8^2$ nodes, each with a stencil of size $n=5$ (320 non-zeros). The grid of nodes is originally sorted in  In Figure~\ref{fig:rcm_dm_before_after} the sparsity pattern of the matrix before and after RCM reordering is demonstrated with the bandwidth, $bw$, labelled. 
+CM methods produce $r$ as the vector representation of $P$. The RCM variant differs from CM by reversing the order of $r$ so that rows corresponding to the last traversed nodes are at the top of $PAP^T$. 
 
-CM methods construct $r$ as the vector representation of $P$. The RCM variant differs from CM by reversing the order of $r$ so that rows corresponding to the last traversed nodes appear first in $PAP^T$. 
+Most CM and RCM implementations assume the algorithms operate on square, symmetric adjacency matrices. In the case of RBF-FD the adjacency matrices are symmetrized with $A+A^T$. For rectangular matrices with dimensions $N \times M$ (as are encountered in Chapter~\ref{chap:distributed_rbffd}), RCM is applied only to the $N\times N$ square block with symmetry similarly constructed. 
 
-Most CM and RCM implementations assume the algorithms operate on square, symmetric adjacency matrices. In the case of RBF-FD the adjacency matrices are symmetrized with $A+A^T$. In the case of rectangular matrices with dimensions $N \times M$ (as are encountered in Chapter~\ref{chap:distributed_rbffd}), RCM is applied only to the $N\times N$ square block. In this way, reordering 
 
-\begin{figure}
-\centering
-\begin{subfigure}{12.5cm}
-\centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/rcm_example_dm.eps} 
-\label{fig:rcm_dm_before_after}
-\caption{DM before and after}
-\end{subfigure}
-\begin{subfigure}{12.5cm}
-\centering
-\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.eps} 
-\caption{The RCM Ordering Curve}
-\label{fig:rcm_curve}
-\end{subfigure}
-\caption{An RCM reordering of $N=64$ nodes with stencil size $n=5$.}
-\label{fig:rcm_example}
-\end{figure}
+%Figure~\ref{fig:rcm_example} provides an example of RCM bandwidth reduction for the adjacency graph produced by $N=8^2$ nodes, each with a stencil of size $n=5$ (320 non-zeros). The grid of nodes is originally raster-ordered. In Figure~\ref{fig:rcm_dm_before_after} the matrix before and after RCM is shown with the bandwidth, $bw$, included in the $x$-label. 
+%
+%\begin{figure}
+%\centering
+%\begin{subfigure}{12.5cm}
+%\centering
+%\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/rcm_example_dm.eps} 
+%\label{fig:rcm_dm_before_after}
+%\caption{DM before and after}
+%\end{subfigure}
+%\begin{subfigure}{12.5cm}
+%\centering
+%\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.eps} 
+%\caption{The RCM Ordering Curve}
+%\label{fig:rcm_curve}
+%\end{subfigure}
+%\caption{An RCM reordering of $N=64$ nodes with stencil size $n=5$.}
+%\label{fig:rcm_example}
+%\end{figure}
 
 
 
@@ -620,7 +621,7 @@ Most CM and RCM implementations assume the algorithms operate on square, symmetr
 
 \subsection{Impact of Orderings}
 
-To test the impact of the alternative node orderings we turn to the best case found above. RCM operates at the node level, so results will be more or less consistent. With $n$ non-zeros per row it is possible for different starting points to be chosen, which allows for some variance in the resulting bandwidth. 
+To compare the impact of the orderings in Figure~\ref{fig:orderings} we turn to the best case found above. RCM operates at the node level, so results will be more or less consistent. With $n$ non-zeros per row it is possible for different starting points to be chosen, which allows for some variance in the resulting bandwidth. 
 
 Rather than complete a full analysis of the impact from space filling curves, we only consider the ideal cases from CVT and RG (because they are used in the thesis). The integer dilation is costly and does not appear to significantly improve the performance of the best cases.
 
