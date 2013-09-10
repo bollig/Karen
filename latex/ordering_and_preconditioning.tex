@@ -431,7 +431,7 @@ This section investigates the potential benefits of $Z$-ordering and various oth
 
 Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) are directly produced via \emph{bit-interleaving} hash functions. Those same tiles are named based on the hierarchical pattern of connected nodes and groups of nodes. 
 
-The sixth ordering in Figure~\ref{fig:orderings} results from Reverse Cuthill-McKee (RCM). The RCM method is distinct from the other orderings in that it is a \emph{bandwidth reduction} algorithm that focuses on condensing the sparsity pattern of differentiation matrices around the diagonal rather than the spatially sorting nodes. The curve is a special case that results when all nodes have stencils of size $n=3$. It nicely illustrates that the RCM as a breadth-first traversal through the grid. More discussion on RCM occurs later in this section. 
+The sixth tile in Figure~\ref{fig:orderings} shows a Reverse Cuthill-McKee (RCM) ordering. The RCM method is distinct from the other orderings in that it is a \emph{bandwidth reduction} algorithm that focuses on condensing the sparsity pattern of differentiation matrices around the diagonal rather than spatially sorting nodes. Figure~\ref{fig:orderings} shows a special case that results when all nodes have stencils of size $n=3$. It nicely illustrates the RCM as a breadth-first traversal through the grid. More discussion on RCM occurs later in this section. 
 \begin{figure}
 \centering
 \includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/node_orderings.png} 
