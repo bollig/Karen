@@ -427,10 +427,11 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 
 As previously mentioned, the choice of space filling curve influences the sparsity pattern of differentiation matrices, which in turn impacts cache effects. The use of $Z$-ordering (Figure~\ref{fig:space_filling_curves}) for potential benefits on memory access is a common recommendation in fixed-grid methods (see e.g., the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementation in \cite{Goswami2010}). Under raster-ordering, cells are traversed with priority on one dimension. The resulting layout only has adjacent cells along that one dimension consecutive in memory. Other approaches, like $Z$-ordering, traverse cells by alternating dimensions/directions and increase locality of data in multiple dimensions. 
 
-This section investigates the potential benefits of $Z$-ordering and various other space filling curves implemented as part of the original MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}). Examples of the tested curves are presented in Figure~\ref{fig:orderings}. Here each node correlates to a fixed-grid cell, and curves start at coordinates $(0,0)$. Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) can be directly produced via a hash function based on cell coordinates. Those same five tiles are named according to the behavior of the curve as it connects nodes. Manufacturing the X, Z, U and 4-node Z curves is possible through \emph{bit-interleaving} cell coordinates. 
+This section investigates the potential benefits of $Z$-ordering and various other space filling curves implemented as part of the original MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}). Examples of the tested curves are presented in Figure~\ref{fig:orderings}. Here each node correlates to a fixed-grid cell, and curves start at coordinates $(0,0)$. 
 
-The sixth ordering in Figure~\ref{fig:orderings} is Reverse Cuthill-McKee (RCM). Although the curve qualifies as a space filling curve, the algorithm to produce it is distinct from the others. RCM does not hash cell coordinates to reorder nodes. Rather, it traverses nodes based the adjacency graph produced by stencils. The RCM curve in Figure~\ref{fig:orderings} is a special case that results when all nodes have stencils of size $n=3$, but it nicely illustrates the RCM as a breadth-first traversal through the grid. More discussion on RCM occurs later in this section. %A discussion of RCM occurs later in this section. 
+Of the six cases shown in Figure~\ref{fig:orderings}, five of them (Raster, X, Z, U, 4-node Z) are directly produced via \emph{bit-interleaving} hash functions. Those same tiles are named based on the hierarchical pattern of connected nodes and groups of nodes. 
 
+The sixth ordering in Figure~\ref{fig:orderings} results from Reverse Cuthill-McKee (RCM). The RCM method is distinct from the other orderings in that it is a \emph{bandwidth reduction} algorithm that focuses on condensing the sparsity pattern of differentiation matrices around the diagonal rather than the spatially sorting nodes. The curve is a special case that results when all nodes have stencils of size $n=3$. It nicely illustrates that the RCM as a breadth-first traversal through the grid. More discussion on RCM occurs later in this section. 
 \begin{figure}
 \centering
 \includegraphics[width=0.9\textwidth]{rbffd_methods_content/hashing/node_orderings.png} 
@@ -703,6 +704,10 @@ RCM is effective and can be used as post-processing once stencils are generated 
 \caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
 \label{fig:orderings}
 \end{figure}
+
+
+
+
 
 
 \subsection{Impact of Node Orderings}
