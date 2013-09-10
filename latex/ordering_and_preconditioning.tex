@@ -422,7 +422,6 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 
 \section{Alternative Orderings}
 
-%TODO: bandwidth definition
 %TODO: maximum number of cells that we can reorder given 64-bit integer. 
 
 As previously mentioned, the choice of space filling curve influences the sparsity pattern of differentiation matrices, which in turn impacts cache effects. The use of $Z$-ordering (Figure~\ref{fig:space_filling_curves}) for potential benefits on memory access is a common recommendation in fixed-grid methods (see e.g., the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementations in \cite{Goswami2010, MellorCrummey2001}). Under raster-ordering, cells are traversed with priority on one dimension. The resulting layout only has adjacent cells along that one dimension consecutive in memory. Other approaches, like $Z$-ordering, traverse cells by alternating dimensions/directions and increase locality of data in multiple dimensions. 
@@ -439,8 +438,7 @@ The sixth tile in Figure~\ref{fig:orderings} shows a Reverse Cuthill-McKee (RCM)
 \label{fig:orderings}
 \end{figure}
 
-
-%Excluding RCM, the remaining orderings from Figure~\ref{fig:orderings} are constructed as a function of node coordinates, $(c_x,c_y)$. Raster-ordering, discussed above, follows $ (c_x * h_n) + c_y$. To produce the remaining curves, one turns to \emph{bit-interleaving} (see e.g., \cite{Stocco2009}). 
+%TODO Investigations such as \cite{MellorCrummey2001} consider the impact of orderings on multiple levels of memory hierarchy
 
 %TODO: ordering occurs when nodes are hashed to cell. Hash node with IJK, convert ijk to ordering, hash neighbors with IJK, convert ijk to ordering. Its a prototype, so performance of the conversion is not paramount. 
 %TODO: why x, u, z, 4-node z? Originally it was Z, but the 
@@ -583,23 +581,36 @@ For any matrix, $A$, a permutation, $P$, can be constructed such that
 \begin{align}
 P A P^T
 \end{align}
-reorders the matrix and reduces the bandwidth of $A$. A variety of \emph{bandwidth reduction} algorithms exist with unique approaches for the construction of $P$ (see e.g., \cite{Gibbs1976, LiuSherman1976, MellorCrummey2001}).  In contrast to the space filling curves discussed above, bandwidth minimization algorithms are applied \emph{after} stencils are generated in order to operate on the differentiation matrix and corresponding adjacency graph. The effect pre- and post-multiplying $A$ by $P$ is equivalent to reindexing nodes and and updating all stencil connections to the new numbering. In practice, rather than construct a full permutation matrix $P$, which has exactly one 1 per row and per column, it is common to represent $P$ as a vector where each entry indicates the column location of the 1. In that case the value of vector elements reference the original node ordering, and the vector indices provide the new ordering. 
+reorders the matrix and reduces the bandwidth of $A$. A variety of \emph{bandwidth reduction} algorithms exist with unique approaches for the construction of $P$ (see e.g., \cite{Gibbs1976, LiuSherman1976, MellorCrummey2001}).  In contrast to the space filling curves discussed above, bandwidth reduction algorithms are applied \emph{after} stencils are generated in order to operate on the differentiation matrix and corresponding adjacency graph. 
 
-The most popular methods for bandwidth reduction are in the Cuthill-McKee (CM) class of methods \cite{Cuthill1969, LiuSherman1976}. In particular this work is concerned with the \emph{Reverse Cuthill-McKee} (RCM) variant. The authors of \cite{LiuSherman1976} show that, in comparison to regular CM, the RCM algorithm offers better conditioning of $PAP^T$ for reduced fill-in and reduced computation during matrix decompositions. While fill-in is not a concern in this work, the RCM variant is attained at no extra cost. 
+The effect pre- and post-multiplying $A$ by $P$ is equivalent to reindexing nodes and and updating all stencil connections to the new numbering. In practice, rather than construct a full permutation matrix $P$, which has exactly one 1 per row and per column, it is common to represent $P$ as a vector where each entry indicates the column location of the 1. In that case the value of vector elements reference the original node ordering, and the vector indices provide the new ordering. 
 
-At a high level, CM algorithms start by selecting a node in the adjacency graph with the lowest degree (i.e., fewest non-zeros per row in the matrix). From that node, a breadth-first traversal begins, passing through all connected neighbors in order from least to greatest degree. As nodes are visited, their original index is pushed onto a queue, $r$. Another queue is maintained to catalogue previously traversed nodes and prevent the process from doubling back on itself. In the event that the adjacency graph has multiple disconnected sub-graphs, the algorithm exhausts the first sub-graph before beginning the next; as always, beginning with the lowest degree node available. 
+The most popular methods for bandwidth reduction are Cuthill-McKee (CM) algorithms \cite{Cuthill1969, LiuSherman1976}. In particular this work is concerned with the \emph{Reverse Cuthill-McKee} (RCM) variant. The authors of \cite{LiuSherman1976} show that, in comparison to regular CM, the RCM algorithm offers better conditioning of $PAP^T$ for reduced fill-in and reduced computation during matrix decompositions. Although fill-in is not a concern in this work, the RCM variant is attained at no extra cost.
 
-CM methods construct $r$ as the vector representation of $P$. The RCM variant differs at this point by reversing the order of $r$ so that rows corresponding to the last traversed nodes in the graph appear first in $PAP^T$. 
+At a high level, CM methods start by selecting a node in the adjacency graph with the lowest degree (i.e., fewest non-zeros per row in the matrix). From that node, a breadth-first traversal begins, passing through all connected neighbors in order from least to greatest degree. If nodes have the same degree, as is the situation for RBF-FD with stencil size, $n$, then ties are broken arbitrarily. The original indices for visited nodes are pushed onto a queue, $r$. Another queue is maintained to catalogue previously traversed nodes and prevent the process from doubling back on itself. In the event that the adjacency graph has multiple disconnected sub-graphs, the algorithm exhausts the first sub-graph before beginning the next; as always, beginning with the lowest degree node available. 
 
+Figure~\ref{fig:rcm_example} provides an example of RCM bandwidth reduction for the adjacency graph produced by $N=8^2$ nodes, each with a stencil of size $n=5$ (320 non-zeros). The grid of nodes is originally sorted in  In Figure~\ref{fig:rcm_dm_before_after} the sparsity pattern of the matrix before and after RCM reordering is demonstrated with the bandwidth, $bw$, labelled. 
 
-Cuthill McKee implementations assume the algorithm operates on square, symmetric adjacency graphs. Rectangular matrices can be reordered by
+CM methods construct $r$ as the vector representation of $P$. The RCM variant differs from CM by reversing the order of $r$ so that rows corresponding to the last traversed nodes appear first in $PAP^T$. 
 
+Most CM and RCM implementations assume the algorithms operate on square, symmetric adjacency matrices. In the case of RBF-FD the adjacency matrices are symmetrized with $A+A^T$. In the case of rectangular matrices with dimensions $N \times M$ (as are encountered in Chapter~\ref{chap:distributed_rbffd}), RCM is applied only to the $N\times N$ square block. In this way, reordering 
 
 \begin{figure}
 \centering
-\includegraphics[width=0.6\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.png} 
-\caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
-\label{fig:orderings}
+\begin{subfigure}{12.5cm}
+\centering
+\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/rcm_example_dm.eps} 
+\label{fig:rcm_dm_before_after}
+\caption{DM before and after}
+\end{subfigure}
+\begin{subfigure}{12.5cm}
+\centering
+\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.eps} 
+\caption{The RCM Ordering Curve}
+\label{fig:rcm_curve}
+\end{subfigure}
+\caption{An RCM reordering of $N=64$ nodes with stencil size $n=5$.}
+\label{fig:rcm_example}
 \end{figure}
 
 
