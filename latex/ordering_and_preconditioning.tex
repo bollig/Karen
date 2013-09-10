@@ -585,42 +585,31 @@ P A P^T
 \end{align}
 reorders the matrix and reduces the bandwidth of $A$. A variety of \emph{bandwidth reduction} algorithms exist with unique approaches for the construction of $P$ (see e.g., \cite{Gibbs1976, LiuSherman1976, MellorCrummey2001}).  In contrast to the space filling curves discussed above, bandwidth minimization algorithms are applied \emph{after} stencils are generated in order to operate on the differentiation matrix and corresponding adjacency graph. The effect pre- and post-multiplying $A$ by $P$ is equivalent to reindexing nodes and and updating all stencil connections to the new numbering. In practice, rather than construct a full permutation matrix $P$, which has exactly one 1 per row and per column, it is common to represent $P$ as a vector where each entry indicates the column location of the 1. In that case the value of vector elements reference the original node ordering, and the vector indices provide the new ordering. 
 
-The most popular methods for bandwidth reduction are in the Cuthill-McKee (CM) class of methods \cite{Cuthill1969, LiuSherman1976}. In particular this work is concerned with the \emph{Reverse Cuthill-McKee} (RCM) variant. 
+The most popular methods for bandwidth reduction are in the Cuthill-McKee (CM) class of methods \cite{Cuthill1969, LiuSherman1976}. In particular this work is concerned with the \emph{Reverse Cuthill-McKee} (RCM) variant. The authors of \cite{LiuSherman1976} show that, in comparison to regular CM, the RCM algorithm offers better conditioning of $PAP^T$ for reduced fill-in and reduced computation during matrix decompositions. While fill-in is not a concern in this work, the RCM variant is attained at no extra cost. 
 
 At a high level, CM algorithms start by selecting a node in the adjacency graph with the lowest degree (i.e., fewest non-zeros per row in the matrix). From that node, a breadth-first traversal begins, passing through all connected neighbors in order from least to greatest degree. As nodes are visited, their original index is pushed onto a queue, $r$. Another queue is maintained to catalogue previously traversed nodes and prevent the process from doubling back on itself. In the event that the adjacency graph has multiple disconnected sub-graphs, the algorithm exhausts the first sub-graph before beginning the next; as always, beginning with the lowest degree node available. 
 
-CM methods construct $r$ as the vector representation of $P$. The RCM variant differs at this point by reversing the order of $r$ so that rows corresponding to the last traversed nodes in the graph appear first in $PAP^T$. The authors of \cite{LiuSherman1976} show that the RCM algorithm can offer two benefits over regular CM: a) better conditioning of the matrix for reduced fill-in during decompositions, and b) better cache reuse in memory. 
+CM methods construct $r$ as the vector representation of $P$. The RCM variant differs at this point by reversing the order of $r$ so that rows corresponding to the last traversed nodes in the graph appear first in $PAP^T$. 
 
 
-
-RCM takes as input a square, symmetric adjacency graph and returns a vector of indices indicating the new order for each row of the matrix. Rectangular matrices can be reordered by reordering the 
-
-
-The RCM algorithm first finds the row with fewest non-zeros corresponding to the node in the graph with the lowest degree of connectivity.  traverses the adjacency graph 
- 
-The Cuthill McKee algorithms can be equated to a breadth-first search over the adjacency graph. The algorithm starts by 
-% 
-%Step 0: Prepare an empty queue Q and an empty result array R.
-%Step 1: Select the node in G(n) with the lowest degree (ties are broken arbitrarily) that hasn't previously been inserted in the result array. Let us name it P (for Parent).
-%Step 2: Add P in the first free position of R.
-%Step 3: Add to the queue all the nodes adjacent with P in the increasing order of their degree.
-%Step 4.1: Extract the first node from the queue and examine it. Let us name it C (for Child).
-%Step 4.2: If C hasn't previously been inserted in R, add it in the first free position and add to Q all the neighbours of C that are not in R in the increasing order of their degree.
-%Step 5: If Q is not empty repeat from Step 4.1 .
-%Step 6: If there are unexplored nodes (the graph is not connected) repeat from Step 1 .
-%Step 7: Reverse the order of the elements in R. Element R[i] is swaped with element R[n+1-i].
-
-The result array will be interpreted like this: R[L] = i means that the new label of node i (the one that had the initial label of i) will be L.
+Cuthill McKee implementations assume the algorithm operates on square, symmetric adjacency graphs. Rectangular matrices can be reordered by
 
 
-The algorithm queues nodes in order of degree at each level of the search and traverses the lowest degree priority. The Reverse variant of Cuthill-McKee inverts the node order so that the lowest degree and top level node are at the end of the matrix rather than the beginning. Aside from ordering, the Reverse and Standard Cuthill McKee algorithms are identical processes. However, RCM is the more popular of the variants due to reduced fill-in that occurs when some matrix decompositions are applied to the reordered matrix (\cite{LiuSherman1976}).
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.png} 
+\caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
+\label{fig:orderings}
+\end{figure}
 
-
-Cuthill McKee implementations assume the algorithm operates on square, symmetric adjacency graphs. 
 
 
 %TODO: metric; mean speedup in SpMV for range of orderings based on optimal h_n per grid resolution. 
 %TODO: metric; ideal h_n per grid resolution; sphere. 
+
+\subsection{Impact of Orderings}
+
+To test the impact of the alternative node orderings we turn to the best case found above. RCM operates at the node level, so results will be more or less consistent. With $n$ non-zeros per row it is possible for different starting points to be chosen, which allows for some variance in the resulting bandwidth. 
 
 Rather than complete a full analysis of the impact from space filling curves, we only consider the ideal cases from CVT and RG (because they are used in the thesis). The integer dilation is costly and does not appear to significantly improve the performance of the best cases.
 
@@ -655,20 +644,6 @@ RCM is effective and can be used as post-processing once stencils are generated 
 %\label{fig:orderings}
 %\end{figure}
 
-
-\begin{figure}
-\centering
-\includegraphics[width=0.6\textwidth]{rbffd_methods_content/hashing/node_ordering_rcm_n5.png} 
-\caption{An RCM reordering of nodes based on stencils $n=5$ nearest neighbors per node.}
-\label{fig:orderings}
-\end{figure}
-
-
-
-
-
-
-\subsection{Impact of Node Orderings}
 
 
 To test the significance and impact of orderings
