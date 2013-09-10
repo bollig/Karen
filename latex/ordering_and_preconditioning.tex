@@ -566,7 +566,12 @@ Often, interleaved cell coordinates near the boundaries of the domain do not pro
 %TODO: how are reorderings applied
 
 
-\subsection{Reverse Cuthill-McKee and Bandwidth Reduction} 
+\subsection{Bandwidth Reduction and Reverse Cuthill-McKee} 
+
+The purpose of reordering cells is to improve memory access patterns. If this is achieved by condensing non-zeros in the differentiation matrix, then the ideal case arises when $n$ non-zeros occupy the first $n$ diagonals of the matrix (including the main diagonal) for all rows of the matrix. In terms of stencils connecting nodes of a grid
+
+is achieved by condensing non-zeros then the ideal case is a line with all non-zeros consecutive in memory. In higher dimensions this is not possible and non-zeros spread further throughout the matrix. 
+
 %TODO: the goal of ordering is to reduce bandwidth
 %TODO: need to review the RCM related work and complete this section. 
 The Reverse Cuthill-McKee curve in Figure~\ref{fig:space_filling_curves} is not really a space filling curve. It is officially known as a bandwidth reduction algorithm. It does not reorder cells but rather waits until stencil generation is complete to operate on the adjacency graph/matrix produced by stencils. 
@@ -576,7 +581,7 @@ The term \emph{bandwidth} refers to the maximum spread of non-zeros within a mat
 \max | i - j | 
 \end{align}
 
-The purpose of reordering cells is to improve memory access patterns. If this is achieved by condensing non-zeros then the ideal case is a line with all non-zeros consecutive in memory. In higher dimensions this is not possible and non-zeros spread further throughout the matrix. 
+
 
 As a measure of how condensed the matrix is we turn the matrix \emph{bandwidth}. The bandwidth is defined as...
 
