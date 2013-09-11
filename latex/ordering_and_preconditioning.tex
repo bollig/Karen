@@ -422,8 +422,6 @@ Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact
 
 \section{Alternative Orderings}
 
-%TODO: maximum number of cells that we can reorder given 64-bit integer. 
-
 As previously mentioned, the choice of space filling curve influences the sparsity pattern of differentiation matrices, which in turn impacts cache effects. The use of $Z$-ordering (Figure~\ref{fig:space_filling_curves}) for potential benefits on memory access is a common recommendation in fixed-grid methods (see e.g., the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementations in \cite{Goswami2010, MellorCrummey2001}). Under raster-ordering, cells are traversed with priority on one dimension. The resulting layout only has adjacent cells along that one dimension consecutive in memory. Other approaches, like $Z$-ordering, traverse cells by alternating dimensions/directions and increase locality of data in multiple dimensions. 
 
 This section investigates the potential benefits of $Z$-ordering and various other space filling curves implemented as part of the original MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}). Examples of the tested curves are presented in Figure~\ref{fig:orderings}. Here each node correlates to a fixed-grid cell, and curves start at coordinates $(0,0)$. 
@@ -531,7 +529,6 @@ interleave(c_x, c_y) & = ( 00100111_2 ) = 39. \nonumber
 The mapped $Z$-index of 39 can be verified by counting the number of steps from  $(0,0)$ to $(5,3)$ on the $Z$-order curve in Figure~\ref{fig:orderings}. 
 
 The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Equation~\ref{eq:interleave2d} with only slight modifications to the input. Table~\ref{tbl:orderings} provides a comparison of orderings and the operators/inputs in 2-D and 3-D that produce them. The $U$ and $X$ orderings depend on a bit-wise XOR operator, $\oplus$, to combine coordinates before interleaving. 
-%TODO: describe impact of xor on traversal
 
 \begin{table}
 \centering
@@ -569,7 +566,6 @@ Often, interleaved cell coordinates near the boundaries of the domain do not pro
 
 The purpose of reordering nodes/cells is to improve memory access patterns. If condensing non-zeros of a sparse matrix achieves this, then the ideal case arises when $n$ non-zeros occupy the first $n$ diagonals of the matrix (including the main diagonal) for all rows. In terms of stencils on a grid, this ideal case corresponds to all nodes on a 1-D line connected to their left and right nearest neighbors. In higher dimensions, reproducing the ideal structure requires one to neglect spatially nearest neighbors, except in cases of very low resolution or small stencil sizes, and select neighbors by following a space filling curve left and right. Stencils in 2-D or 3-D constructed through $k$-NN (or $k$-ANN) queries result in a sparsity pattern with gaps between non-zeros. The worst case matrix structures have non-zeros in each row spaced as far apart as possible while maintaining the appropriate connectedness of the adjacency graph. 
 
-%TODO: The change in dimension appears as a gap in the matrix. If 1-D line is contiguous zeros, then 2-D grid has contiguous zeros for until the curve steps through to another dimension.
 
 As a measure of how well condensed non-zeros are, the \emph{bandwidth} of a matrix, $A$, is defined as (\cite{Cuthill1969, LiuSherman1976}): 
 \begin{align}
@@ -622,49 +618,46 @@ Most CM and RCM implementations assume the algorithms operate on square, symmetr
 \subsection{Impact of Orderings}
 
 To compare the impact of orderings in Figure~\ref{fig:orderings}, the MATLAB implementation of fixed-grid (\cite{BolligRBFFixedGrid}) generates stencils and writes the sorted nodes and stencils to disk. The nodes and stencils are accepted as input for the C++ SpMV benchmark used to compare 
-the $k$-D Tree and fixed-grid stencils. 
-Bit interleaving is managed by a MATLAB script that leverages the internal \emph{bitshift}, \emph{bitand}, \emph{bitor}, and \emph{bitxor} routines for bitwise operations. Bitwise operators in MATLAB are restricted to 32-bits, but the maximum number of cells per dimension allows by 32-bits is more than sufficient. The MATLAB internal \emph{symrcm} routine computes the Reverse Cuthill-McKee reordering. Visualization and bandwidth calculation for all cases occur in MATLAB. 
+the $k$-D Tree and fixed-grid stencils. Visualization and bandwidth calculation are both managed in MATLAB. 
+Bit interleaving occurs in a MATLAB script that leverages the internal \emph{bitshift}, \emph{bitand}, \emph{bitor}, and \emph{bitxor} routines for bitwise operations. Bitwise operators in MATLAB are restricted to 32-bits, but the maximum number of cells per dimension allowed by 32-bits ($\leq 1023$ in $3$-D) is more than sufficient. The MATLAB internal \emph{symrcm} routine computes the Reverse Cuthill-McKee reordering based on the output from the raster-order (IJK) stencil generation. With RBF-FD generating the same number of non-zeros per row, RCM selects starting nodes depending on the how input nodes are ordered; this allows for some variance in the resulting bandwidth. Results shown here apply RCM to the output of a raster-ordered fixed-grid query. 
 
-Figure~\ref{fig:ordering_impact_rg} shows an example of the six orderings resulting from $N=18^3$ regular grid nodes, each with stencil size $n=31$. The fixed-grid resolution in each dimension $h_n = 6$. The bandwidth, $bw$, is included in the bottom label for each case. The first 
+Figure~\ref{fig:ordering_impact_rg} illustrates six sparsity patterns resulting from orderings in Figure~\ref{fig:orderings}. Here $N=18^3$ regular grid nodes, each with stencil size $n=31$, are reordered. From left to right, the top row shows raster-ordering, Reverse Cuthill-McKee, and the 4-node Z order. The second row shows $X$-, $Z$-, and $U$-orders produced by bit-interleaving. The fixed-grid resolution in each dimension is $h_n = 6$. Bandwidth, $bw$, is included in the bottom label for each matrix, as well as the number of non-zeros, $nz$. Of all the orderings in Figure~\ref{fig:ordering_impact_rg}, RCM is by far the smallest bandwidth ($bw=858$). The runner up, with a 30\% wider bandwidth, is raster-ordering.  The four remaining options are aesthetically pleasing, but their non-zero distributions have significantly less structure. 
 
-The most obvious observation is that raster-ordering and RCM result in the smallest bandwidths. 
+In similar fashion, Figure~\ref{fig:ordering_impact_cvt} provides the six orderings for $N=4096$ MD-nodes on the unit sphere. Each row has $n=31$ non-zeros, but in this case the fixed-grid resolution in each dimension is $h_n = 10$. Once again the top two orderings by bandwidth are RCM and raster-ordering. 
+
+While bandwidth is significant, the end-goal of reordering is to improve the benchmark for SpMV. Consider Table~\ref{tbl:ordering_impact}, which lists ordering impact on $N=10^6$ CVT nodes on the unit sphere with $n=50$ and $h_n=160$ (i.e., the optimal $h_n$ found in Figure~\ref{fig:cvt_hn_speedup}). 
+%Bandwidths on the first row reveal the raster-/IJK-order is again second only to RCM for bandwidth. 
+The first row of Table~\ref{tbl:ordering_impact} lists bandwidths by order, and the second shows the speedup gained in the SpMV versus the benchmark for raster-ordering. In this case, the RCM has both the lowest bandwidth and highest yield in the benchmark with a 9\% improvement (5.06x faster than $k$-D Tree). Surprisingly the $Z$- and $X$-orderings are not far behind RCM even with 80--120x wider bandwidths.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.90\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
+\includegraphics[width=0.95\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
 \caption{Impact of node orderings on an $N=18^3$ regular grid in 3-D. Stencil size $n=31$, fixed-grid resolution $(h_n)^d=6^3$. }
 \label{fig:ordering_impact_rg}
 \end{figure}
 
-Figure~\ref{fig:ordering_impact_cvt} considers the six orderings for $N=4096$ MD-nodes on the unit sphere. Once again, each row has $n=31$ non-zeros, but in this case the fixed-grid resolution in each dimension is $h_n = 10$. 
-
-
-In nearly all cases tested, RCM resulted in the smallest bandwidth, 
-
-The first point for consideration in choosing the right ordering is the resulting bandwidth of the matrix. Given that 
-
-The second point is the SpMV time. 
-
-%TODO: moving forward, assume raster-order to reorder nodes initially and rely on boost implementation of rcm. Save the cost of interleaving bits
-
-With RBF-FD generating the same number of non-zeros per row, it is possible for RCM to select different starting nodes depending on the input node orderings. This allows for some variance in the resulting bandwidth. Results shown here apply RCM the results of a raster-ordered fixed-grid. 
-
-
-we turn to the best case found above. RCM operates at the node level, so results will be more or less consistent. With $n$ non-zeros per row it is possible for different starting points to be chosen, which allows for some variance in the resulting bandwidth. 
-
-Rather than complete a full analysis of the impact from space filling curves, we only consider the ideal cases from CVT and RG (because they are used in the thesis). The integer dilation is costly and does not appear to significantly improve the performance of the best cases.
-
-RCM is effective and can be used as post-processing once stencils are generated and/or DMs have been assembled. 
-
-\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
-
 \begin{figure}
 \centering
-\includegraphics[width=0.90\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10.png} 
+\includegraphics[width=0.95\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10.png} 
 \caption{ The impact of reordering on sparsity patterns for $N=4096$ MD nodes on the sphere. Stencil size $n=31$, fixed-grid resolution per dimension $h_n=10$. }
 \label{fig:ordering_impact_cvt}
 \end{figure}
 
+
+
+%TODO: impact relative to Raster order. because we're trying to justify the use of another ordering. 
+\begin{table}[h]\footnotesize
+  \centering
+  \caption{Ordering Comparison for $N=10^6$ CVT unit sphere. Stencil size $n=50$, fixed-grid resolution, $h_n=160$}
+  \label{tbl:ordering_impact}
+  \begin{tabular}{ c | c | c | c | c | c | c }
+               & IJK & RCM & Z & X & U & 4-node Z \\
+               \hline
+   Bandwidth   &  7885	& 6566	& 575606 &	819312 & 611513 & 513579   \\
+   \hline
+   SpMV Speedup & 1 &	1.09 & 1.06 & 1.06 & 1.04 & 0.94 \\
+  \end{tabular}
+\end{table}
 
 
 %\begin{table}[h]\footnotesize
@@ -680,30 +673,25 @@ RCM is effective and can be used as post-processing once stencils are generated 
 %\end{table}
 
 
-%TODO: impact relative to Raster order. because we're trying to justify the use of another ordering. 
-\begin{table}[h]\footnotesize
-  \centering
-  \caption{Ordering Comparison for $N=10^6$ CVT unit sphere. Stencil size $n=50$, fixed-grid resolution, $h_n=160$}
-  \label{tbl:ordering_impact}
-  \begin{tabular}{ c | c | c | c | c | c | c }
-               & IJK & RCM & Z & X & U & 4-node Z \\
-               \hline
-   Bandwidth   &  7885	& 6566	& 575606 &	819312 & 611513 & 513579   \\
-   \hline
-   SpMV Speedup vs IJK & 1 &	1.09 & 1.06 & 1.06 & 1.04 & 0.94 \\
-  \end{tabular}
-\end{table}
-
-
-The SpMV results in Table~\ref{tbl:ordering_impact} may show a larger divide 
+%TODO: The SpMV results in Table~\ref{tbl:ordering_impact} may show a larger divide 
 %TODO: 4-node Z might be more appropriate for large stencils as it bundles larger groups
 
 
 \section{Conclusion and Future Work}
 
+This chapter introduced 
+Based on Table~\ref{tbl:ordering_impact} and Figures~\ref{fig:ordering_imapct_rg,fig:ordering_impact_cvt} 
+
+%TODO: moving forward, assume raster-order to reorder nodes initially and rely on boost implementation of rcm. Save the cost of interleaving bits
+
+RCM is effective and can be used as post-processing once stencils are generated and/or DMs have been assembled. 
+
+\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
 
 
-%TODO: move down
+%TODO: possibility that majority of non-zeros are clustered near diagonal and outliers are deceiving the bandwidth metric. 
+
+
 Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes
 
 Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging the fixed-grid method on the GPU is difficult to justify. The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. The added complexity in reproducing the efficient fixed-grid method on the GPU could be the subject of future work for moving nodes. 
@@ -713,10 +701,6 @@ Due to the limited significance of stencil generation under RBF-FD, the overhead
 It is worth noting that recent work by Connor and Kumar \cite{Connor2009} has developed operators capable of producing $Z$-orderings based on floating point coordinates. 
 
 For quasi-regular distributions and small to medium sized grids the $k$-D Tree performs well enough in comparison to the fixed-grid method. However, the difference in 
-%TODO: what value? 
-
-There is an ideal $h_n$. %TODO: what is is as a function of N?
-
 
 
 
