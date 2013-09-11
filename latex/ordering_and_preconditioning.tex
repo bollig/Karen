@@ -682,13 +682,15 @@ The first row of Table~\ref{tbl:ordering_impact} lists bandwidths by order, and 
 
 \section{Conclusion and Future Work}
 
-This chapter introduced a fixed-grid method to generate RBF-FD stencils. With the help of bit-interleaving 
+This chapter introduced a fixed-grid method to generate RBF-FD stencils. Compared to an efficient implementation of $k$-D Tree, the alternative stencil generation method demonstrated itself capable of generating stencils twice as fast as $k$-D Tree.  
+Reordering nodes during stencil generation improves later performance of some RBF-FD solutions by a factor of five, and with the help of bit-interleaving that performance can be boosted slightly more.
 
 
 RCM demonstrated itself and can be used as post-processing once stencils are generated and/or DMs have been assembled. 
 
 
-\cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
+\cite{MellorCrummey2001} found that reordering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
+
 
 
 Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes.
