@@ -14,7 +14,8 @@
 \chapter{GPU SpMV}
 \label{chap:gpu_rbffd}
 
-As $N$ grows larger, it behooves us to work on parallel architectures, be it CPUs or GPUs. GPUs \authnote{finish intro: gpus provide high flop-to-watt yield, etc etc} 
+General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs, and with over 1 TFLOP/s \cite{KeplerRef} peak throughput possible on a single GPU, a strong argument is made for the latter. 
+
 %TODO: gpus benefit from faster memory bandwidth, parallel compute units and sharing across threads.
 %TODO: GPU hardware
 %TODO: GPU software (OpenCL vs CUDA)
@@ -29,20 +30,21 @@ As $N$ grows larger, it behooves us to work on parallel architectures, be it CPU
 %TODO: newer forms are available
 
 
+GPUs originated as dedicated hardware for video games and graphics rendering (e.g., for rasterization). Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully dynamic execution platform with a SIMD-like programming model. 
 
 
-In the last few years, GPUs transitioned from hardware dedicated to the embarrassingly parallel tasks involved in graphics rendering (e.g., 
-rasterization) into multi-core co-processors for high performance scientific computing.  Thanks to the highly profitable and always demanding gaming industry, what began as a static rendering pipeline, was molded to allow fully dynamic execution with a SIMD-like programming model (Single Instruction Multiple Threads or SIMT). Changes in hardware have been 
-followed closely by evolving programming languages. Today, GPUs can be targeted from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, and (to our knowledge) encompasses all languages applicable to scientific computation. 
-
-%TODO: we will discuss how GPU hardware and languages evolved to exceptionally higher compute capability than traditional CPUs, and became a popular platform for high performance computing.
-
-
-
-General Purpose GPU (GPGPU) computing is one of today's hottest trends within scientific computing. 
 The release of NVidia's CUDA at the end of 2006 marked both a 
 redesign of GPU architecture, plus the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
 OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2011}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
+
+
+Modern GPUs boast thousands of compute cores. 
+
+
+This transition was 
+followed closely by evolving programming languages. Today, GPUs can be leveraged from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, with new developments appearing every day. 
+
+ into multi-core co-processors for high performance scientific computing.
 
 In early 2009, the Khronos Group--the group responsible for maintaining OpenGL--announced a new specification for a general 
 parallel programming lanugage referred to as the Open Compute Language (OpenCL) \cite{OpenCL2009}. Similar in design to the CUDA language---in many ways it is a simple refactoring of the predecessor---the goal of OpenCL is to provide a mid-to-low level API and language to control any multi- or many-core processor in a uniform fashion. Today, OpenCL drivers exist for a variety of hardware including NVidia GPUs, AMD/ATI CPUs and GPUs, and Intel CPUs. 
