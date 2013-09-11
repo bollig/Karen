@@ -14,16 +14,22 @@
 \chapter{GPU SpMV}
 \label{chap:gpu_rbffd}
 
-General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs, and with over 1 TFLOP/s \cite{KeplerRef} peak throughput possible on a single GPU, a strong argument is made for the latter. 
+General Purpose Graphics Processing Unit (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs, and with over 1 TFLOP/s \cite{KeplerRef} peak throughput possible on a single GPU, a strong argument is made for the latter. 
 
 %TODO: gpus benefit from faster memory bandwidth, parallel compute units and sharing across threads.
 
-While CPU designers have 
+GPUs originated as dedicated hardware for video games and computations in computer graphics (e.g., for rasterization). Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like programming model. Current generations of GPU hardware walk a line where they provide fast computer 
 
+high throughput
+embarrassingly parallel 
 
-GPUs originated as dedicated hardware for video games and computer graphics (e.g., for rasterization). Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like programming model. 
 
 For many years leading up to 2006, researchers were able---with significant effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process. The release of NVidia's CUDA architecture and software stack at the end of 2006, made those tricks obsolete as developers could suddenly target the GPU with the same ease of writing a C-program. GPUs were finally accessible for use by the general public, not limited to game designers and. 
+
+
+In recent years the 
+
+CPU benefits versus GPU benefits. CPUs are designed for complex branching and advanced logic. GPUs are designed for high throughput. GPU cores are much simpler 
 
 
 %TODO: GPU hardware
