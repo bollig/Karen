@@ -17,6 +17,15 @@
 General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs, and with over 1 TFLOP/s \cite{KeplerRef} peak throughput possible on a single GPU, a strong argument is made for the latter. 
 
 %TODO: gpus benefit from faster memory bandwidth, parallel compute units and sharing across threads.
+
+While CPU designers have 
+
+
+GPUs originated as dedicated hardware for video games and computer graphics (e.g., for rasterization). Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like programming model. 
+
+For many years leading up to 2006, researchers were able---with significant effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process. The release of NVidia's CUDA architecture and software stack at the end of 2006, made those tricks obsolete as developers could suddenly target the GPU with the same ease of writing a C-program. GPUs were finally accessible for use by the general public, not limited to game designers and. 
+
+
 %TODO: GPU hardware
 %TODO: GPU software (OpenCL vs CUDA)
 %TODO: targeting the GPU for SpMV (how to write a kernel as forloop without the for)
@@ -29,12 +38,13 @@ General Purpose GPU (GPGPU) computing is one of today's hottest trends in scient
 %TODO: each of the dense forms are unique (describe each)
 %TODO: newer forms are available
 
+marked both a 
+new generation of GPU architecture and a programming model 
 
-GPUs originated as dedicated hardware for video games and graphics rendering (e.g., for rasterization). Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully dynamic execution platform with a SIMD-like programming model. 
+accessible 
 
 
-The release of NVidia's CUDA at the end of 2006 marked both a 
-redesign of GPU architecture, plus the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
+the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
 OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2011}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
 
 
