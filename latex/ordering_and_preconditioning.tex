@@ -35,7 +35,7 @@ A na\"{i}ve approach for neighbor queries would be a brute-force search that che
 For the most part, investigations in RBF communities that delve into efficient neighbor queries are limited to ball queries. For example, the Partition of Unity method for approximation (e.g., \cite{Wendland2002,WendlandBook}), and particle methods like the Fast Multipole Method (e.g., \cite{Ying2006, Gumerov2003}) or Smoothed Particle Hydrodynamics (e.g., \cite{Krog2010}). Examples of fast algorithms employed in these fields include the fixed-grid method \cite{WendlandBook,Krog2010}, $k$-D Trees \cite{WendlandBook}, Range Trees \cite{Wendland2002,WendlandBook}, and $2^d$-Trees (i.e., Quad- and Octrees) \cite{Gumerov2003, Ying2006}. Surprisingly, while other communities continue the quest for fast neighbor queries, RBF collocation and RBF-FD communities have been slow on the uptake. For many years, the standard in the community has been to use $k$-D Trees (see e.g., \cite{Fasshauer2007, FlyerLehto11,FornbergLehto11}). 
 
 
-This chapter considers the use of an alternative neighbor query algorithm to generate RBF-FD stencils. It is based loosely on the fixed-grid method from \cite{Krog2010,Green2010,Johnson2011}. \cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. The fixed-grid method loosens the requirements for finding the $k$-nearest neighbors ($k$-NN) stencils to accept $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the fixed-grid method is compared to an efficient implementation of $k$-D Tree available for use in C++ and MATLAB (\cite{TagliasacchiMFE}). Benchmarks demonstrate that, with the proper choice of parameters for the fixed-grid, the method can be up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV performance due to the impact of spatial reordering that occurs during stencil generation. 
+This chapter considers the use of an alternative neighbor query algorithm to generate RBF-FD stencils. It is based loosely on the fixed-grid method from \cite{Krog2010,Green2010,Johnson2011}. Samet\cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. The fixed-grid method loosens the requirements for finding the $k$-nearest neighbors ($k$-NN) stencils to accept $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the fixed-grid method is compared to an efficient implementation of $k$-D Tree available for use in C++ and MATLAB (\cite{TagliasacchiMFE}). Benchmarks demonstrate that, with the proper choice of parameters for the fixed-grid, the method can be up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV performance due to the impact of spatial reordering that occurs during stencil generation. 
 
 
 \section{$k$-D Tree}
@@ -627,7 +627,8 @@ In similar fashion, Figure~\ref{fig:ordering_impact_cvt} provides the six orderi
 
 While bandwidth is significant, the end-goal of reordering is to improve the benchmark for SpMV. Consider Table~\ref{tbl:ordering_impact}, which lists ordering impact on $N=10^6$ CVT nodes on the unit sphere with $n=50$ and $h_n=160$ (i.e., the optimal $h_n$ found in Figure~\ref{fig:cvt_hn_speedup}). 
 %Bandwidths on the first row reveal the raster-/IJK-order is again second only to RCM for bandwidth. 
-The first row of Table~\ref{tbl:ordering_impact} lists bandwidths by order, and the second shows the speedup gained in the SpMV versus the benchmark for raster-ordering. In this case, the RCM has both the lowest bandwidth and highest yield in the benchmark with a 9\% improvement (5.06x faster than $k$-D Tree). Surprisingly the $Z$- and $X$-orderings are not far behind RCM even with 80--120x wider bandwidths.
+The first row of Table~\ref{tbl:ordering_impact} lists bandwidths by order, and the second shows the speedup gained in the SpMV versus the benchmark for raster-ordering. In this case, the RCM has both the lowest bandwidth and highest yield in the benchmark with a 9\% improvement (5.06x faster than $k$-D Tree). Surprisingly the $Z$- and $X$-orderings are not far behind RCM even with 80--120x wider bandwidths. 
+%TODO: more? 
 
 \begin{figure}
 \centering
@@ -676,56 +677,30 @@ The first row of Table~\ref{tbl:ordering_impact} lists bandwidths by order, and 
 %TODO: The SpMV results in Table~\ref{tbl:ordering_impact} may show a larger divide 
 %TODO: 4-node Z might be more appropriate for large stencils as it bundles larger groups
 
+%TODO: possibility that majority of non-zeros are clustered near diagonal and outliers are deceiving the bandwidth metric. 
+
 
 \section{Conclusion and Future Work}
 
-This chapter introduced 
-Based on Table~\ref{tbl:ordering_impact} and Figures~\ref{fig:ordering_imapct_rg,fig:ordering_impact_cvt} 
+This chapter introduced a fixed-grid method to generate RBF-FD stencils. With the help of bit-interleaving 
 
-%TODO: moving forward, assume raster-order to reorder nodes initially and rely on boost implementation of rcm. Save the cost of interleaving bits
 
-RCM is effective and can be used as post-processing once stencils are generated and/or DMs have been assembled. 
+RCM demonstrated itself and can be used as post-processing once stencils are generated and/or DMs have been assembled. 
+
 
 \cite{MellorCrummey2001} found that reodering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
 
 
-%TODO: possibility that majority of non-zeros are clustered near diagonal and outliers are deceiving the bandwidth metric. 
+Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes.
 
 
-Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes
+The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. Reproducing the efficient fixed-grid implementations in \cite{Krog2010,Green2010,Johnson2011, Goswami2010} could be the subject of future work for moving nodes. 
 
-Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging the fixed-grid method on the GPU is difficult to justify. The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. The added complexity in reproducing the efficient fixed-grid method on the GPU could be the subject of future work for moving nodes. 
-
-\cite{Connor2009} could benefit the algorithm by sorting nodes completely based on floating point $Z$-ordering.
-
-It is worth noting that recent work by Connor and Kumar \cite{Connor2009} has developed operators capable of producing $Z$-orderings based on floating point coordinates. 
-
-For quasi-regular distributions and small to medium sized grids the $k$-D Tree performs well enough in comparison to the fixed-grid method. However, the difference in 
+For now the Reverse Cuthill-McKee is our preferred method for ordering nodes. In the event of 
 
 
+Space filling curves are limited to a MATLAB prototype at the moment. It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} has developed operators capable of producing $Z$-orderings based on floating point coordinates. Rather than order fixed-grid cells one can directly hash node coordinates to $Z$-indices.
 
-While more efficient implementations are possible, the savings demonstrated by Figure~\ref{sten_methods_compare} the savings are significant with the right choice of $h_n$. Generating stencils for RBF-FD is a preprocessing cost, so we do not dedicate an excessive amount of attention to this algorithm. However, a few ideas that would improve: hilbert ordering, choose AABB resolution based on $N$ not user parameters, faster sorting, GPU implementation
-
-Open item from to this section include: 
-\begin{itemize} 
-\item An efficient GPU $k$-NN implementation for the investigation of RBF-FD in a moving nodes or adaptive mesh refinement situation. Examples include \cite{Pan2011, Goswami2010, Connor2009}
-\item Space filling curves are limited to a MATLAB prototype at the moment. These can be implemented in C++ for integers, with a potential investigation into floating point dilation and orderings \cite{Connor2009}.
-\item 
-\end{itemize}
-
-\cite{Saad2003} mentions the impact of ordering on conditioning.
-
-
-TODO: 
-\begin{itemize} 
-\item Node orderings based on integer dilation
-\begin{itemize} 
-\item RCM algorithm high level (?)
-\item Define bandwidth metric
-\item bandwidth implications on memory access (lower bandwidth is usually better)
-\item table showing the impact of orderings on bandwidths (already shown in figure, for N=4096). 
-\end{itemize} 
-\end{itemize}
 
 
 
