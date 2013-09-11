@@ -682,30 +682,25 @@ The first row of Table~\ref{tbl:ordering_impact} lists bandwidths by order, and 
 
 \section{Conclusion and Future Work}
 
-This chapter introduced a fixed-grid method to generate RBF-FD stencils. Compared to an efficient implementation of $k$-D Tree, the alternative stencil generation method demonstrated itself capable of generating stencils twice as fast as $k$-D Tree.  
-Reordering nodes during stencil generation improves later performance of some RBF-FD solutions by a factor of five, and with the help of bit-interleaving that performance can be boosted slightly more.
+This chapter introduced a fixed-grid method for RBF-FD stencil generation, and compared it to an efficient implementation of $k$-D Tree. The method proves itself capable of generating stencils twice as fast as $k$-D Tree.  
+%---previously employed in work on RBF Partition of Unity schemes \cite{WendlandBook,Wendland2002} and 
+%particle-based methods like Smoothed Particle Hydrodynamics \cite{Johnson2011,Green2010,Krog2010}---never 
+%to RBF collocation method or RBF-FD---
+Reordering nodes during stencil generation improves later performance of some RBF-FD solutions by a factor of five, but with the help of bit-interleaving and space filling curves that performance can be boosted slightly more.
+
+In addition to ordering nodes based on space filling curves, a bandwidth reduction algorithm named Reverse Cuthill-McKee was also employed to reorder the differentiation matrix. Reverse Cuthill-McKee results show that not only is the algorithm exceptional at reducing the bandwidth, it also results in the most improvement to SpMV benchmarks. 
+
+The implementation benchmarked above was developed as a pure CPU prototype with minimal attention to optimization. Although RBF-FD only requires neighbor queries once, the fixed-grid method's long lasting positive impact on memory is sufficient to justify its continued use. 
+
+The C++ fixed-grid stencil generator defaults to the Raster-/IJK-order due to its ability to produce consistently small bandwidths. For situations when reordering is necessary for the best performance, the Reverse Cuthill-McKee algorithm is employed. In order to avoid MATLAB, RBF-FD applications in C++ rely on an implementation of the Cuthill-McKee algorithm provided by the BOOST library \cite{BoostSite}. 
 
 
-RCM demonstrated itself and can be used as post-processing once stencils are generated and/or DMs have been assembled. 
+%TODO: Similar conclusions are drawn by the authors of \cite{MellorCrummey2001}, who found that reordering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
 
 
-\cite{MellorCrummey2001} found that reordering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
+Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. Although no known investigations consider RBF-FD on moving nodes, RBF and RBF-FD applications with moving node coordinates and local refinements (e.g., \cite{FlyerLehto10}) should find the fixed-grid method significantly relevant. Future work in this direction would easily justify a GPU implementation following \cite{Krog2010,Green2010,Johnson2011, Goswami2010}. 
 
-
-
-Although RBF-FD only requires neighbor queries once, the results that follow reveal a long lasting positive impact on memory with a fixed-grid method, which is sufficient to justify its use. Investigations into moving node coordinates and/or local refinements for RBF methods (e.g., \cite{FlyerLehto10}) would find the fixed-grid method significantly more beneficial. As of this writing no known applications of RBF-FD consider moving nodes.
-
-
-The implementation tested here was developed as a pure CPU prototype with minimal attention to optimization. Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. Reproducing the efficient fixed-grid implementations in \cite{Krog2010,Green2010,Johnson2011, Goswami2010} could be the subject of future work for moving nodes. 
-
-For now the Reverse Cuthill-McKee is our preferred method for ordering nodes. In the event of 
-
-
-Space filling curves are limited to a MATLAB prototype at the moment. It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} has developed operators capable of producing $Z$-orderings based on floating point coordinates. Rather than order fixed-grid cells one can directly hash node coordinates to $Z$-indices.
-
-
-
-
+It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} developed operators to directly transform floating point coordinates into $Z$-orderings. The MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}) includes a test of those operators, although the investigation is still underway. 
 
 %
 %\begin{figure}
