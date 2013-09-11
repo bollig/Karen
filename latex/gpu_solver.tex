@@ -1,0 +1,199 @@
+\makeatletter
+\@ifundefined{standalonetrue}{\newif\ifstandalone}{}
+\@ifundefined{section}{\standalonetrue}{\standalonefalse}
+\makeatother
+\ifstandalone
+\documentclass{report}
+
+\input{all_usepackages} 
+\usepackage[margin=1.25in]{geometry}
+
+\begin{document}
+\fi
+
+\chapter{GPU SpMV}
+\label{chap:gpu_rbffd}
+
+As $N$ grows larger, it behooves us to work on parallel architectures, be it CPUs or GPUs. GPUs \authnote{finish intro: gpus provide high flop-to-watt yield, etc etc} 
+%TODO: gpus benefit from faster memory bandwidth, parallel compute units and sharing across threads.
+%TODO: GPU hardware
+%TODO: GPU software (OpenCL vs CUDA)
+%TODO: targeting the GPU for SpMV (how to write a kernel as forloop without the for)
+%TODO: 
+
+ 
+%TODO: list all known work on SpMV for GPU
+%TODO: emphasize that the GPU SpMV has been studied since before 2006.
+%TODO: SpMV condenses sparse matrix to dense form. 
+%TODO: each of the dense forms are unique (describe each)
+%TODO: newer forms are available
+
+
+
+
+In the last few years, GPUs transitioned from hardware dedicated to the embarrassingly parallel tasks involved in graphics rendering (e.g., 
+rasterization) into multi-core co-processors for high performance scientific computing.  Thanks to the highly profitable and always demanding gaming industry, what began as a static rendering pipeline, was molded to allow fully dynamic execution with a SIMD-like programming model (Single Instruction Multiple Threads or SIMT). Changes in hardware have been 
+followed closely by evolving programming languages. Today, GPUs can be targeted from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, and (to our knowledge) encompasses all languages applicable to scientific computation. 
+
+%TODO: we will discuss how GPU hardware and languages evolved to exceptionally higher compute capability than traditional CPUs, and became a popular platform for high performance computing.
+
+
+
+General Purpose GPU (GPGPU) computing is one of today's hottest trends within scientific computing. 
+The release of NVidia's CUDA at the end of 2006 marked both a 
+redesign of GPU architecture, plus the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
+OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2011}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
+
+In early 2009, the Khronos Group--the group responsible for maintaining OpenGL--announced a new specification for a general 
+parallel programming lanugage referred to as the Open Compute Language (OpenCL) \cite{OpenCL2009}. Similar in design to the CUDA language---in many ways it is a simple refactoring of the predecessor---the goal of OpenCL is to provide a mid-to-low level API and language to control any multi- or many-core processor in a uniform fashion. Today, OpenCL drivers exist for a variety of hardware including NVidia GPUs, AMD/ATI CPUs and GPUs, and Intel CPUs. 
+
+This \textit{functional portability} is the cornerstone of the OpenCL language. However, functional portability does not imply performance portability. That is, OpenCL allows developers to write kernels capable of running on all types of target hardware, but optimizing kernels for one type of target (e.g., GPU) does not guarantee the kernel will run efficiently on another target (e.g., CPU).
+% Already, today, CPUs are tending toward many core architectures. Simultaneously, the once specialized many-core GPUs now offer general purpose functionality. New architectures like the AMD Fusion \cite{AMDFusion} join CPU and GPU on the same chip proving that 
+%, and It is easy to see that soon the CPU and GPU will meet somewhere in the middle as general purpose many-core architectures. OpenCL is an attempt to standardize programming before this intersection occurs. 
+%TODO: clean. ATI, INTEL, NVIDIA all have units. 
+With CPUs tending toward many cores, and the once special purpose, many-core GPUs offering general purpose functionality, it is already possible to see the CPU and GPU converging into general purpose many-core architectures. Already, ATI has introduced the Fusion APU (Accelerated Processing Unit) which couples an AMD CPU and ATI GPU within a single die. OpenCL is an attempt to standardize programming ahead of this intersection. 
+
+%Home computers, smart-phones and other devices containing many- or multi-core compute units internally have driven the generalization of the accelerator language to provide a unified approach to targeting any available hardware. 
+
+Petascale computing centers around the world are leveraging GPU accelerators to achieve peak performance. In fact, many of today's high performance computing installations boast significantly more GPU accelerators than CPU counterparts. The Keeneland project is one such example, currently with 240 CPUs accompanied by 360 NVidia Fermi class GPUs with at least double that number expected by the end of 2012 \cite{Vetter2011}. 
+
+Such throughput oriented architectures require developers to decompose problems into thousands of independent parallel tasks in order to fully harness the capabilities of the hardware. To this end, a plethora of research has been dedicated to researching algorithms in all fields of computational science. Of interest to us are methods for atmospheric- and geo-sciences. 
+
+%TODO: ALL SPMV related work.
+\cite{Bell2009} 
+%TODO: \cite{Kreuzer2012} in distributed GPU. 
+\cite{Vuduc2005} etc. 
+
+\section{GPGPU}
+GPGPU evolution
+\subsection{OpenCL}
+OpenCL is chosen with the future in mind. Hardware changes rapidly and vendors often leapfrog one another in the performance race. By selecting OpenCL, we hedge our bets on the functional portability
+
+\subsection{Hardware Layout}
+Modern GPUs have a memory hierarchy and hardware layout. 
+
+\section{Performance}
+\subsection{GFLOP Throughput}
+In order to quantify the performance of our implementation, we can measure two
+factors. First, we can check the speedup achieved on the GPU relative to the
+CPU to get an idea of how much return of investment is to be expected by all
+the effort in porting the application to the GPU. Speedup is measured as the
+time to execute on the CPU divided by the time to execute on the GPU. 
+
+The second quantification is to check the throughput of the process. By
+quantifying the GFLOP throughput we have a measure that tells us two things:
+first, a concrete number quantifying the amount of work performed per second by
+either hardware, and second because we can calculate the peak throughput possible on
+each hardware, we also have a measure of how occupied our CPU/GPU units are.
+With the GFLOPs we can also determine the cost per watt for computation and
+conclude on what problem sizes the GPU is cost effective to target and use. 
+
+Now, as we parallelize across multiple GPUs, these same numbers can come into
+play. However we are also interested in the efficiency. Efficiency is the
+speedup divided by the number of processors. With efficiency we have a measure
+of how well-utilized processors are as we scale either the problem size (weak)
+or the number of processors (strong). As the efficiency diminishes we can
+conclude on how many stencils/nodes per processor will keep our processors
+occupied balanced with the shortest compute time possible (i.e., we are
+maximizing return of investment). 
+
+\subsection{Expectations in Performance}
+Many GPU applications claim a 50x or higher speedup. This will never be the case for RBF-FD for the simple reason that the method reduces to an SpMV. The SpMV is a low computational complexity operation with only two operations for every one memory load. 
+
+
+\section{Targeting the GPU}
+
+\subsection{OpenCL}
+\subsection{Naive Kernels}
+\subsection{SpMV Formats/Kernels}
+
+CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
+
+\section{Performance Comparison}
+\subsection{Performance of Cosine CL vs VCL}
+\subsection{VCL Formats Comparison}
+
+Our assumption with RBF-FD in this manuscript is that all stencils will have equal size. Due to this, the ELL format is preferred as the default. 
+ 
+
+
+
+As part of future work into accelerating RBF methods, investigations are underway into the new Intel Phi architecture. 
+
+ investigating optimizations that target both GPUs and Phi cards for a class of numerical methods based on Radial Basis Functions (RBFs) to solve Partial Differential Equations. RBF methods are increasingly popular across disciplines due to their low complexity, natural ability to function in higher dimension with minimal requirements for an underlying mesh, and high-order---in many cases, spectral---accuracy. RBF methods can be viewed as generalizations of many traditional methods such as Finite Difference and Finite Element to allow for truly unstructured grids. This generalization allows one to reuse many of the same techniques (e.g., sparse matrices, iterative solvers, domain decompositions, etc.) to efficiently obtain solutions. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
+
+
+
+With the generalization of RBF-FD derivative computation formulated as a sparse matrix multiplication, we can 
+% TODO: mention CUSP as alternative but concentrate on VCL
+consider the various sparse formats provided by CUSP and ViennaCL. 
+
+%TODO later: \item All stencils with non-uniform size
+%TODO: What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
+
+Compare formats: 
+\begin{itemize}
+\item ELL
+\item COO
+\item CSR
+\item Other formats such as HYB, JAD, DIA are considered on the GPU
+\end{itemize}
+
+How is communication overlap handled with each format? 
+
+
+Conclude: sparse containers allow increased efficiency compared to our custom kernels. The custom kernels compete with CSR and COO. 
+
+
+From the definition of RBF-FD we can formulate the problem computationally in two ways. First, stencil operations are independent. Therefore, we can write kernels with perfect parallelism by dedicating a single thread per stencil or a group of threads per stencil.  
+
+Unfortunately, perfect concurrency does not imply perfect or even ideal concurrency on the GPU. 
+
+We first demonstrate the case where one thread is dedicated to each stencil. This is followed by dedicating a group of thread to the stencil. In each case we are operating under the assumption that each stencil is independent on the GPU. 
+
+To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sparse Matrix-Vector Mulitply (SpMV). When we consider the problem in this light we generate a single Differentiation Matrix that can see two optimizations not possible with our stencil-based view: 
+\begin{itemize} 
+\item First, the sparse containers used in SpMV allow for their own unique optimizations to compress storage and leverage hardware cache.
+\item Evaluation of multiple derivatives can be accumulated by association into one matrix operation. This reduces the total number of floating point operations required per iteration. 
+\end{itemize}
+
+
+
+We compare the performance of our custom kernel to ViennaCL kernels (ELL, CSR, COO, HYB, DIAG), UBlas (COO, CSR) and Eigen (COO, CSR, ELL)
+
+
+ViennaCL allows control of the number of work-items for each kernel. 
+
+The library can tune itself to find the optimal number of work-items based on the device. 
+
+%TODO: what is profile for each GPU type
+%TODO: What is the significance of tuning on our problem $n=17, 31, 50, 101,$ etc. 
+%TODO: experiment: SpMV on N=10^6, n = variable (5->105)
+%TODO: idealized experiment: SpMV on N=10^6 regular grid with n=variable.
+
+
+
+
+%TODO: finish fill-in
+When matrix is sparse, a direct LU decomposition causes fill-in on factorization. In some cases the fill-in can be minimal, but in general one must assume that fill in can turn the sparse matrix into a dense matrix. To invert and solve Equation~\ref{eq:implicit_eq}, use an iterative solver like GMRES. The GMRES algorithm (described further in Chapter~\ref{chap:applications} applies successive SpMVs along with other vector operations to converge on a solution. Due to the dominance of SpMV in GMRES, the performance of RBF-FD reduces once again to SpMV.
+
+
+
+
+
+%
+%
+%Hardware architecture%•	Memory layout%•	Processing cores%•	Trends in hardware since 2006 (additions and benfits)%Optimization%•	SpMV memory layout%•	Scheduling threads%•	Reductions%OpenCL%•	Why? %o	Cross platform support%o	Asynchronous Queuing with Dependencies%•	Implementations details%o	Kernel%o	Work-Item%o	Work-Group%o	NDRange%o	Queue%o	Etc.%•	How does it compare to CUDA? Phi%•	Latest trends%o	Phi: bind against MKL for optimized CPU and MIC%o	CUDA-MPI%o	CUDA Sub-Kernel calls%o	CUDA uptake %•	E.g., Matlab (MEX compiled kernel wrappers)%Conclusions on GPGPU%•	Benefits are good%o	Cheap to purchase < $1K%o	superior performance 1.2 TFLOPs possible in one card%o	was a trending technology (major uptake in supercomputing and national labs)%•	Downsides were varied%•	Overall Impression is that%o	Uptake was wide-spread for research projects%o	Focus was on determining limits of the hardware%•	Many studies focused on optimization of primitives which allow general use in applications such as RBF-FD without recreating the wheel when it comes to optimal algorithms. Allows researchers to concentrate on other investigations into application, preconditioning, data analysis, etc.%Newcomers to the field are interested USING gpgpu applications, rather than writing them  
+
+
+
+
+\ifstandalone
+\bibliographystyle{plain}
+\bibliography{merged_references}
+\end{document}
+\else
+\expandafter\endinput
+\fi
+
+
