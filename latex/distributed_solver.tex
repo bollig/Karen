@@ -422,6 +422,8 @@ Distributing SpMV across multiple GPUs poses a new problem: as previous mentione
 \section{Overlapped Queues}
 
 \section{Avoiding Copy Out}
+We can avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
+
 
 \subsection{Avoiding Copy-Out on CPU}
 
