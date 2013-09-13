@@ -44,7 +44,7 @@ MPI concept of processes as ranks. Each rank is an independent process with its 
 
 For ease of development and parallel debugging, partitioning is initially
 assumed to be linear along the $x$-axis. Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
-$N=10,201$ nodes on the unit sphere for four processes. 
+$N=10,201$ nodes on the unit sphere for four processes. A similar decomposition along one dimension occurs in \cite{Divo2007} where the authors apply a local RBF collocation scheme to model viscous flow and heat transfer on rectangular domains. 
 
 Each partition, illustrated as a unique color, contains many stencil centers. 
 Although stencil centers are contained within a partition, there is no requirement for all stencil nodes to be contained within the same partition. As a result, many stencils require information updates from neighboring partitions for nodes that are referred to as \emph{ghost nodes} \cite{NeEDREF}. %TODO: need ghost node ref.
