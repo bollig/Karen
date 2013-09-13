@@ -27,7 +27,7 @@ solution values, etc. are visible to each process, and then establish index mapp
 
 This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. 
 
-It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI} is used to distribute RBF-FD across an HPC cluster. The choice for 
+It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI} is used to distribute RBF-FD across an HPC cluster. 
 
 
 Parallelizing RBF-FD made possible with the Message Passing Interface (MPI). 
@@ -88,6 +88,8 @@ METIS divides stencils into contiguous partitions of nearly equivalent size.
 
 
 In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symmetry. Since the goal is to partition the physical domain, this added connectivity is harmless to RBF-FD. However, with respect to load balancing, this may not be ideal. For every new nonzero introduced to a row, METIS assumes an additional node utilized by the partition. When the node is a false connection, it is one fewer centers that METIS will assign to the partition in an attempt to keep all partitions balanced. \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
+
+%TODO: how does DD of four procs differ on 
 
 
 

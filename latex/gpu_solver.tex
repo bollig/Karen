@@ -47,9 +47,6 @@ Developers either implemented their own kernels (as we did in \cite{BolligFlyerE
 %TODO: price of GPU was roughly 800 and massively parallel, high performance cards
 
 
-Today a slew of libraries are included in the CUDA SDK including random number generators (cuRAND), full BLAS replacements (MAGMA) , 
-
-
 Today, CPUs are designed for scalar arithmetic and logic. GPUs emphasize vector operations with SIMD-like architecture. 
 Due to limitations on how CPUs 
 
@@ -115,23 +112,13 @@ Such throughput oriented architectures require developers to decompose problems 
 %TODO: \cite{Kreuzer2012} in distributed GPU. 
 \cite{Vuduc2005} etc. 
 
-\section{GPGPU}
-GPGPU evolution
-\subsection{OpenCL}
-OpenCL is chosen with the future in mind. Hardware changes rapidly and vendors often leapfrog one another in the performance race. By selecting OpenCL, we hedged our bets on the functional portability. 
-
-Intel, AMD, NVidia all support OpenCL
-
-One serious limitation exists with the choice of OpenCL. Since the language is intended to function across a slew of platforms, the language itself is limited to a subset of hardware features common to the different vendors. Features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL. 
+\section{Design Decisions}
 
 %TODO verify date of open source
 In 2012 NVidia open sourced CUDA to lower level virtual machine. This opened the possibility of directly compiling other languages like Python (Anaconda) to build kernels directly within the Python language for CUDA. 
 
-\subsection{Hardware Layout}
-Modern GPUs have a memory hierarchy and hardware layout. 
-
 \section{Performance}
-\subsection{GFLOP Throughput}
+\subsection{GFLOP/s}
 In order to quantify the performance of our implementation, we can measure two
 factors. First, we can check the speedup achieved on the GPU relative to the
 CPU to get an idea of how much return of investment is to be expected by all
@@ -159,10 +146,17 @@ maximizing return of investment).
 Many GPU applications claim a 50x or higher speedup. This will never be the case for RBF-FD for the simple reason that the method reduces to an SpMV. The SpMV is a low computational complexity operation with only two operations for every one memory load. 
 
 
+
 \section{Targeting the GPU}
 
 \subsection{OpenCL}
 In our initial implementation, published in \cite{BolligFlyerErlebacher2012}, all bets were hedged in favor of OpenCL as the future of GPU computing. Custom kernels were developed to apply RBF-FD weights in the equivalent of a CSR SpMV. 
+
+OpenCL is chosen with the future in mind. Hardware changes rapidly and vendors often leapfrog one another in the performance race. By selecting OpenCL, we hedged our bets on the functional portability. 
+
+Intel, AMD, NVidia all support OpenCL
+
+One serious limitation exists with the choice of OpenCL. Since the language is intended to function across a slew of platforms, the language itself is limited to a subset of hardware features common to the different vendors. Features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL. 
 
 
 From the definition of RBF-FD we can formulate the problem computationally in two ways. First, stencil operations are independent. Therefore, we can write kernels with perfect parallelism by dedicating a single thread per stencil or a group of threads per stencil.  
