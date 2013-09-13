@@ -19,24 +19,24 @@ General Purpose GPU (GPGPU) computing is one of today's hottest trends in scient
 GPUs originated as dedicated hardware for video games and computer graphics (e.g., for rasterization). Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like programming model. 
 
 
-Due to the inherent task parallelism in computer graphics, GPU designers early on adopted a many-core strategy for the hardware. Since computer graphics traditionally involved simple logic, GPUs were designed with the majority of transistors dedicated to computation in fixed-function vector pipelines. In contrast to this, CPUs have always focused on fast evaluation of serial codes with advanced logic on scalar data. Thus, given the same number of transistors as a GPU, CPUs allocate fewer to computation in order to satisfy the needs for non-computational tasks like branching, caching, etc \cite{Owens2007,CudaGuide2011}. Although individual cores on a GPU have lower clock frequency than a CPU, the sheer number of cores on a GPU results in tremendous throughput in terms of floating point operations per second (FLOPs). Similarly, to supply data to those cores the GPU has evolved high memory bandwidth, which is an order of magnitude or more larger than the leading CPU \cite{CudaGuide2011}. 
+Due to the inherent task parallelism in computer graphics, GPU designers early on adopted a many-core strategy for the hardware. Since computer graphics traditionally involved simple logic, GPUs were designed with the majority of transistors dedicated to computation in fixed-function vector pipelines. In contrast to this, CPUs have always focused on fast evaluation of serial codes with advanced logic on scalar data. Thus, given the same number of transistors as a GPU, CPUs allocate fewer to computation in order to satisfy the needs for non-computational tasks like branching, caching, etc \cite{Owens2007,CudaGuide2013}. Although individual cores on a GPU have lower clock frequency than a CPU, the sheer number of cores on a GPU results in tremendous throughput in terms of floating point operations per second (FLOPs). Similarly, to supply data to those cores the GPU has evolved high memory bandwidth, which is an order of magnitude or more larger than the leading CPU \cite{CudaGuide2013}. 
 
 
 In the last decade, CPU designers have been forced to transition to multi- and many-core chips in order to keep up with demand for continued growth in computational performance. Power constraints make further frequency scaling on CPUs almost impossible, which leaves increased core counts as the only viable solution for designers to continue satisfying Moore's Law \cite{Owens2007}. The GPU, far ahead in the many-core arena, only required a bit of flexibility in control and logic to compete against the CPU. 
 
 Prior to 2006, the GPU had already evolved away from fixed-function pipelines and on to limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with significant effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Harris2005,Owens2007}). 
 
-The release of NVidia's CUDA architecture and software stack at the end of 2006, deprecated those tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program \cite{CudaGuide2011}. The monumental new CUDA hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were another just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to implement custom GPU codes. Developers who wanted to quickly transition existing code bases to the GPU had access to the CUBLAS API since day one, which offers an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPU computing was easily accessible to the general public. 
+The release of NVidia's CUDA architecture and software stack at the end of 2006, deprecated those tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program \cite{CudaGuide2013}. The monumental new CUDA hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were another just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to implement custom GPU codes. Developers who wanted to quickly transition existing code bases to the GPU had access to the CUBLAS API since day one, which offers an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPU computing was easily accessible to the general public. 
 
 
-The performance of modern GPUs \authnote{Can I include the figures from} \cite{CudaGuide2011} and save the effort?
+The performance of modern GPUs \cite{CudaGuide2013} and save the effort?
 
 
 CUDA is not the only solution for GPU computing. 
 
 
 One thing missing from the original release of CUDA was sparse matrix algebra support. 
-This led to investigations like \cite{Bell2009,SuKeutzer2012,} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, developed sparse matrix libraries for the GPU. The APIs of CUSP and ViennaCL are used like 
+This led to investigations like \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, developed sparse matrix libraries for the GPU. The APIs of CUSP and ViennaCL are used like 
 
 Algorithms from \cite{Bell2009} have since been included in the CUDA SDK as the cuSPARSE library. 
 
@@ -81,7 +81,7 @@ accessible
 
 
 the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
-OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2011}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
+OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
 
 
 Modern GPUs boast thousands of compute cores. 
