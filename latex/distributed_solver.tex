@@ -19,15 +19,15 @@
 
 %TODO: Similar Overlapping algorithm: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
 
-Parallelizing RBF-FD in a distributed environment requires three
-design decisions \cite{Saad2003}. First, the problem is partitioned in some fashion to distribute work across multiple processes. Intelligent partitioning
-impacts load balancing of processors and the ratio of computation versus communication; imbalanced computation can result in excessive delay per
-iteration as some processors tackle larger problem sizes with others sitting idle. Second, one must determine whether processes have access to all or a subset of node information,
-solution values, etc. and establish index mappings that translate between a local context and the global problem. Third, the local ordering of indices is established to improve solver efficiency and/or simplify operations. Node
-ordering is also significant in the future discussion of offloading computation to GPUs as it can help to minimize data transfer between CPU and GPU. 
+Parallelizing any applications in a distributed computing environment requires three
+design decisions \cite{Saad2003}. First, the problem must be partitioned in some fashion to distribute work across multiple processes. Intelligent partitioning
+impacts load balancing and the ratio of computation versus communication. Imbalanced computation can result in excessive delay per
+iteration as some processors tackle larger problem sizes with others sitting idle. Second, a decision must be made on what subset of node information,
+solution values, etc. are visible to each process, and then establish index mappings that translate between a local context and the global problem. Third, each process must establish a local ordering of data. Choosing the right local order can improve solver performance and/or simplify data movement. Of particular interest here is how the local ordering can minimize data transfer between CPU and GPU. 
 
-The following sections detail the approach to distributed computing and a few optimizations that allow RBF-FD to scale over a thousand processes. In later chapters these same decisions will tie into the resulting performance of the distributed multi-GPU implementations. 
+This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. The design decisions made here will tie into the resulting performance of the distributed multi-GPU implementations. 
 
+%TODO: related work
 %TODO: why implement independent of PETSc, Deal.II, Trilinos, etc. 
 
 
@@ -36,23 +36,6 @@ The following sections detail the approach to distributed computing and a few op
 %
 %\section{Next}
 %
-%Parallelization of RBF-FD is achieved at two levels. First, the
-%physical domain of the problem is partitioned
-%into overlapping subdomains, each handled by a different MPI process. All CPUs
-%operate independently to compute/load RBF-FD stencil weights, run diagnostic
-%tests and perform other initialization tasks. A CPU computes only weights
-%corresponding to stencils centered in the interior of its partition. After
-%initialization, CPUs continue concurrently to solve the PDE. Communication
-%barriers ensure that the CPUs execute in lockstep to maintain consistent
-%solution values in regions where partitions overlap.  The second level of
-%parallelization offloads time-stepping of the PDE to the GPU.  Evaluation of
-%the right hand side of Equation~(\ref{eq:evaluation_with_hyperviscosity}) is
-%data-parallel: the solution derivative at each stencil center is evaluated
-%independently of the other stencils. This maps well to the GPU, offering decent
-%speedup even in unoptimized kernels. Although the stencil weight calculation is
-%also data-parallel, we assume that in this context that the weights are
-%precomputed and loaded once from disk during the initialization phase. 
-
 %TODO: Need partitioning, global and local index maps, and local ordering for a distributed matrix operation \cite{Saad2003} 
 
 \section{Partitioning}
