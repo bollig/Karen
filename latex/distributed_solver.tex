@@ -23,7 +23,7 @@ Parallelizing applications in a distributed computing environment requires three
 design decisions \cite{Saad2003}. First, the problem must be partitioned in some fashion to distribute work across multiple processes. Intelligent partitioning
 impacts load balancing and the ratio of computation versus communication. Imbalanced computation can result in excessive delay per
 iteration as some processors tackle larger problem sizes with others sitting idle. Second, a decision must be made on what subset of node information,
-solution values, etc. are visible to each process, and then establish index mappings that translate between a local context and the global problem. Third, each process must establish a local ordering of data. Choosing the right local order can improve solver performance and/or simplify data movement. Of particular interest here is how the local ordering can minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
+solution values, etc. are visible to each process, and then establish index mappings that translate between a local context and the global problem. Third, each process must establish a local ordering of data. Choosing the right ordering can improve solver performance and/or simplify data movement. Of particular interest here is how to minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
 
 This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. 
 
