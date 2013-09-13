@@ -19,34 +19,35 @@
 
 %TODO: Similar Overlapping algorithm: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
 
-Parallelizing any applications in a distributed computing environment requires three
+Parallelizing applications in a distributed computing environment requires three
 design decisions \cite{Saad2003}. First, the problem must be partitioned in some fashion to distribute work across multiple processes. Intelligent partitioning
 impacts load balancing and the ratio of computation versus communication. Imbalanced computation can result in excessive delay per
 iteration as some processors tackle larger problem sizes with others sitting idle. Second, a decision must be made on what subset of node information,
-solution values, etc. are visible to each process, and then establish index mappings that translate between a local context and the global problem. Third, each process must establish a local ordering of data. Choosing the right local order can improve solver performance and/or simplify data movement. Of particular interest here is how the local ordering can minimize data transfer between CPU and GPU. 
+solution values, etc. are visible to each process, and then establish index mappings that translate between a local context and the global problem. Third, each process must establish a local ordering of data. Choosing the right local order can improve solver performance and/or simplify data movement. Of particular interest here is how the local ordering can minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
 
-This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. The design decisions made here will tie into the resulting performance of the distributed multi-GPU implementations. 
+This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. 
+
+It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI} is used to distribute RBF-FD across an HPC cluster. The choice for 
+
+
+Parallelizing RBF-FD made possible with the Message Passing Interface (MPI). 
+MPI history as a standard
+MPI supports distributed and shared. 
+MPI utilizes the fastest fabric possible for communication, so processes on different cores of the same chip will use shared memory for fastest transfer whereas processes on different nodes might use sockets in the worst case; in reality processes on independent nodes use the Infiniband QDR. 
+MPI concept of processes as ranks. Each rank is an independent process with its own memory space. 
+
 
 %TODO: related work
 %TODO: why implement independent of PETSc, Deal.II, Trilinos, etc. 
 
-
-%
-%
-%
-%\section{Next}
-%
-%TODO: Need partitioning, global and local index maps, and local ordering for a distributed matrix operation \cite{Saad2003} 
-
 \section{Partitioning}
 
 For ease of development and parallel debugging, partitioning is initially
-assumed to be linear within one physical direction (typically the
-$x$-direction). Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
-$N=10,201$ nodes on the unit sphere onto four CPUs.
+assumed to be linear along the $x$-axis. Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
+$N=10,201$ nodes on the unit sphere for four processes. 
 
-Each partition, illustrated
-as a unique color, contains many \emph{stencil centers}. Although \emph{stencil centers} are contained within a partition, there is no requirement for all \emph{stencil nodes} to be contained within the same partition. As a result, many stencils require information updates from neighboring partitions for nodes that are referred to as \emph{ghost nodes} \cite{NeEDREF}. %TODO: need ghost node ref.
+Each partition, illustrated as a unique color, contains many stencil centers. 
+Although stencil centers are contained within a partition, there is no requirement for all stencil nodes to be contained within the same partition. As a result, many stencils require information updates from neighboring partitions for nodes that are referred to as \emph{ghost nodes} \cite{NeEDREF}. %TODO: need ghost node ref.
 In many cases, \emph{ghost nodes} are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc.. However, values at ghost nodes are modified by another process, so changes must be explicitly synchronized via an MPI collective for dependent processes to maintain consistency. 
 
 In Figure~\ref{fig:decomposed_sphere}, alternating representations between node points and interpolated surfaces illustrates the
@@ -63,6 +64,8 @@ overlap regions relative to total number of nodes on the sphere proportionally i
 \end{center}
 \end{figure}
 
+%TODO: concept of a domain and subdomains with nodes determined by isInside()
+
 The choice for a linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is straightforward. On a high number of processors, there are two issues: 1) increasing the number of processors quickly reduces the width of each partition and can result in stencils dependent on more than one partition in each direction introducing the need for more complex collectives; and 2) with near uniform node distributions the resulting partitions are of unequal size and processors are improperly balanced. Thus, in the case of the sphere, linear partitioning is not ideal. 
 
 
@@ -71,7 +74,6 @@ Many other options for partitioning the sphere exist. In atmospheric and geophys
 
 
 Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
-
 
 
 %TODO: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil
@@ -84,22 +86,6 @@ The undirected graph is used only for partitioning and subsequently discarded.
 METIS divides stencils into contiguous partitions of nearly equivalent size. 
 %TODO: Need to flesh detail on METIS
 
-%\begin{figure}[ht!]
-%\begin{center}
-%\begin{subfigure}[b]{0.425\textwidth}
-%\includegraphics[width=2.5in]{../figures/omnigraffle/DirectedAdjacencyGraph.png}
-%\caption{Directed (Unsymmetric)}
-%\label{fig:directed_graph}
-%\end{subfigure}
-%\begin{subfigure}[b]{0.425\textwidth}
-%\includegraphics[width=2.5in]{../figures/omnigraffle/UndirectedAdjacencyGraph.png}
-%\caption{Undirected (Symmetric)}
-%\label{fig:undirected_graph}
-%\end{subfigure}
-%\caption{A simple adjacency graph and corresponding matrices. Edges connecting nodes of RBF-FD stencils produce (a) a directed adjacency matrix. To partition RBF-FD stencils, METIS requires conversion to (b) an undirected graph/matrix.}
-%\label{fig:adjacency_matrix}
-%\end{center}
-%\end{figure}
 
 In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symmetry. Since the goal is to partition the physical domain, this added connectivity is harmless to RBF-FD. However, with respect to load balancing, this may not be ideal. For every new nonzero introduced to a row, METIS assumes an additional node utilized by the partition. When the node is a false connection, it is one fewer centers that METIS will assign to the partition in an attempt to keep all partitions balanced. \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
 
