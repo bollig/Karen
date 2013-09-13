@@ -369,9 +369,9 @@ The speedup curves in Figures~\ref{fig:stencil_query_old_and_new} and \ref{fig:s
 %TODO: repeat cvt_hn_speedup but get the number of nodes per cell.
 \subsection{Impact on SpMV}
 
-Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but rather, it ekes out a small victory with the right choice of $h_n$. The reality is that stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes another longer lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the major overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV for random node distributions. 
+Based on evidence so far, the fixed-grid method is not a big winner against the $k$-D Tree, but it does eke out a small victory with the right choice of $h_n$. The reality is that stencil generation only occurs once, and the difference between $k$-D Tree and fixed-grid is easily amortized by iterations during the bulk of the RBF-FD application phase. However, as Figure~\ref{fig:spmv_impact_rg} illustrates, the fixed-grid method includes another longer lasting benefit. Namely, the Sparse Matrix-Vector Multiply (SpMV)---the major overhead in RBF-FD applications---benefits positively due to the reordering that occurs during stencil generation. Reordering cells improves locality of nearby nodes and associated values, and leads to up to 5x speedup in the SpMV for random node distributions. 
 
-Note that regular grid and icosahedral test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is is to be expected as their nodes are previously sorted. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown. Figure~\ref{fig:spmv_vs_hn} demonstrates the impact on SpMV as a function of $h_n$ for the $N=10^6$ CVT test case. The results show that even a very coarse fixed-grid ($h_n \ge 40$) is capable of achieving the spatial locality of data that results in 5x faster SpMV. The combined results of 2x faster stencils and 5x faster SpMV make a case for the use of a fixed-grid query as a general safety net to precondition RBF-FD when properties of the input grid are unknown. 
+Regular grid and icosahedral sphere test cases in Figure~\ref{fig:spmv_impact_rg} see no more than 5\% improvement, which is unsurprising as their nodes are previously sorted. CVT and MD node sets, however, see a maximum speedup of 5x and 1.4x respectively. Furthermore, none of the test cases result in SpMV slowdown. Figure~\ref{fig:spmv_vs_hn} demonstrates the impact on SpMV as a function of $h_n$ for the $N=10^6$ CVT test case. The results show that even a coarse fixed-grid ($h_n \ge 40$) is capable of achieving the spatial locality of data that results in 5x faster SpMV. The combined results of 2x faster stencils and 5x faster SpMV make a case for the use of a fixed-grid query as a general safety net to precondition RBF-FD when properties of the input grid are unknown. 
 
 \begin{figure}
 \centering
@@ -645,9 +645,6 @@ The first row of Table~\ref{tbl:ordering_impact} provides bandwidths by order, a
 \label{fig:ordering_impact_cvt}
 \end{figure}
 
-
-
-%TODO: impact relative to Raster order. because we're trying to justify the use of another ordering. 
 \begin{table}[h]\footnotesize
   \centering
   \caption{Ordering Comparison for $N=10^6$ CVT unit sphere. Stencil size $n=50$, fixed-grid resolution, $h_n=160$}
@@ -673,10 +670,6 @@ The first row of Table~\ref{tbl:ordering_impact} provides bandwidths by order, a
 %   SpMV Speedup vs IJK & 1 &	1.005 & 1.004 & 0.98 & 1.01 & 1.01 \\
 %  \end{tabular}
 %\end{table}
-
-
-%TODO: The SpMV results in Table~\ref{tbl:ordering_impact} may show a larger divide 
-%TODO: 4-node Z might be more appropriate for large stencils as it bundles larger groups
 
 %TODO: possibility that majority of non-zeros are clustered near diagonal and outliers are deceiving the bandwidth metric. 
 

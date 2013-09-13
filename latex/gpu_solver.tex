@@ -14,11 +14,11 @@
 \chapter{GPU SpMV}
 \label{chap:gpu_rbffd}
 
-General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs, and with over 1 TFLOP/s peak throughput possible in double precision on a single GPU\cite{KeplerFactSheet}, a strong argument is made for the latter. 
+General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs, and with over 1 TFLOP/s peak throughput possible in double precision on a single GPU \cite{KeplerFactSheet}, a strong argument is made for the latter. 
 
 GPUs originated as dedicated hardware for video games and computer graphics (e.g., for rasterization). Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like programming model. 
 
-For many years leading up to 2006, researchers were able---with significant effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process. The release of NVidia's CUDA architecture and software stack at the end of 2006, deprecated those tricks as developers could suddenly target the GPU with the ease of writing a general C-program. The CUDA hardware and software allowed for non-graphics applications to offload computation. GPUs were finally accessible for use by the general public, not limited to game designers and. 
+For many years leading up to 2006, researchers were able---with significant effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Harris2005,Owens2007}). The release of NVidia's CUDA architecture and software stack at the end of 2006, deprecated those tricks as developers could suddenly target the GPU with the ease of writing a generic C-program. The CUDA hardware and software allowed for non-graphics applications to offload computation. GPUs were finally accessible for use by the general public, not limited to game designers and. 
 
 Today, CPUs are designed for scalar arithmetic and logic. GPUs emphasize vector operations with SIMD-like architecture. 
 Due to limitations on how CPUs 
@@ -88,7 +88,14 @@ Such throughput oriented architectures require developers to decompose problems 
 \section{GPGPU}
 GPGPU evolution
 \subsection{OpenCL}
-OpenCL is chosen with the future in mind. Hardware changes rapidly and vendors often leapfrog one another in the performance race. By selecting OpenCL, we hedge our bets on the functional portability
+OpenCL is chosen with the future in mind. Hardware changes rapidly and vendors often leapfrog one another in the performance race. By selecting OpenCL, we hedged our bets on the functional portability. 
+
+Intel, AMD, NVidia all support OpenCL
+
+One serious limitation exists with the choice of OpenCL. Since the language is intended to function across a slew of platforms, the language itself is limited to a subset of hardware features common to the different vendors. Features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL. 
+
+%TODO verify date of open source
+In 2012 NVidia open sourced CUDA to lower level virtual machine. This opened the possibility of directly compiling other languages like Python (Anaconda) to build kernels directly within the Python language for CUDA. 
 
 \subsection{Hardware Layout}
 Modern GPUs have a memory hierarchy and hardware layout. 
