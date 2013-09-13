@@ -29,8 +29,17 @@ Prior to 2006, the GPU had already evolved away from fixed-function pipelines an
 The release of NVidia's CUDA architecture and software stack at the end of 2006, deprecated those tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program \cite{CudaGuide2011}. The monumental new CUDA hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were another just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to implement custom GPU codes. Developers who wanted to quickly transition existing code bases to the GPU had access to the CUBLAS API since day one, which offers an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPU computing was easily accessible to the general public. 
 
 
+The performance of modern GPUs \authnote{Can I include the figures from} \cite{CudaGuide2011} and save the effort?
+
+
+CUDA is not the only solution for GPU computing. 
+
+
 One thing missing from the original release of CUDA was sparse matrix algebra support. 
 This led to investigations like \cite{Bell2009,SuKeutzer2012,} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, developed sparse matrix libraries for the GPU. The APIs of CUSP and ViennaCL are used like 
+
+Algorithms from \cite{Bell2009} have since been included in the CUDA SDK as the cuSPARSE library. 
+
 %TODO: get date
 NVidia eventually included a library named CUSPARSE as part of the CUDA SDK. Initial releases were 
 Developers either implemented their own kernels (as we did in \cite{BolligFlyerErlebacher2012}) or   
