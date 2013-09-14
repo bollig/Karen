@@ -85,7 +85,7 @@ where $D_\lambda$ is the DM containing the RBF-FD weights that approximate $\pd{
 For stability, hyperviscosity is added to the right hand side of (\ref{eq:vortex_matrix_form}) in the form given in (\ref{eq:evaluation_with_hyperviscosity}). The scaling parameter $\gamma_c$ and the order of hyperviscosity $k$ are given in
 Table~\ref{tbl:vortex_hv_params}. The goal when choosing $k$ is to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. In this process, the eigenvalues will be pushed into the left half of the complex plane. Then, $\gamma_c$ is used to condense the eigenvalues as near to the imaginary axis as possible. Figure \ref{fig:vortex_eigs_hv} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, in (\ref{eq:vortex_matrix_form}). 
 
-In order to scale to large node sets, the RBF shape parameter, $\epsilon$, is chosen such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ increases ($(\kappa_A)_j$ is the condition number of the interpolation matrix in (\ref{syst}), representing the $j^{th}$ stencil). For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
+In order to scale to large node sets, the RBF shape parameter, $\epsilon$, is chosen such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ increases ($(\kappa_A)_j$ is the condition number of the interpolation matrix in (\ref{eq:rbffd_weights}), representing the $j^{th}$ stencil). For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
 
 \begin{table}[t]
 \caption{Values for hyperviscosity and the RBF shape parameter $\epsilon$ for vortex roll-up test.}
@@ -108,17 +108,17 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \begin{center}
 \begin{subfigure}[b]{0.45\textwidth}
 	\centering
-	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/eigs_N4096_n101_noHV.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/eigs_N4096_n101_noHV_color.pdf}
 	\caption{No Hypervsiscosity}
 	\label{fig:vortex_eigs_nohv}
 \end{subfigure}
 \begin{subfigure}[b]{0.45\textwidth}
 	\centering
-	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/eigs_N4096_n101_HV_k4_gamma40.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/eigs_N4096_n101_HV_k4_gamma40_color.pdf}
 	\caption{With Hyperviscosity}
 	\label{fig:vortex_eigs_hv}
 \end{subfigure}
-\caption{Eigenvalues of $\text{diag}(\omega(\theta)) D_\lambda$ for the vortex roll-up test case for $N=4096$ nodes, stencil size $n=101$ and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=4$ and $\gamma_c = 40$.\authnote{color} }
+\caption{Eigenvalues of $\text{diag}(\omega(\theta)) D_\lambda$ for the vortex roll-up test case for $N=4096$ nodes, stencil size $n=101$ and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=4$ and $\gamma_c = 40$. }
 \label{fig:eig_vortex}
 \end{center}
 \end{figure}
@@ -127,19 +127,19 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 %TODO: copy data in: Users/evan/Laptop/efb06/research_2013/dsc_xpo_2013/figures/vortex/
 \begin{figure}[htbp]
 \begin{center}
-\begin{subfigure}[b]{0.45\textwidth}
+\begin{subfigure}[b]{0.49\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/vortexInitialCondition.eps}
 	\caption{Initial Condition}
 	\label{fig:vortex_initial}
 \end{subfigure} 
-\begin{subfigure}[b]{0.45\textwidth}
+\begin{subfigure}[b]{0.49\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/vortexComputedSolution-eps-converted-to.pdf}
 	\caption{Computed Solution}
 	\label{fig:vortex_approx}
 \end{subfigure} 
-\begin{subfigure}[b]{0.45\textwidth}
+\begin{subfigure}[b]{0.49\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/vortexRelativeError-eps-converted-to.pdf}
 	\caption{Relative Absolute Error}
@@ -233,12 +233,12 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \begin{center}
 \begin{subfigure}[b]{0.45\textwidth}
 	\centering
-	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/eigs_N4096_n101_noHV_SCALED.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/eigs_N4096_n101_noHV_SCALED_color.pdf}
 	\caption{No Hyperviscosity}
 	\label{fig:cosine_eigs_nohv}
 \end{subfigure}
 \begin{subfigure}[b]{0.45\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/eigs_HV_N4096_n101_k8_gamma5e_m2_SCALED.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/eigs_HV_N4096_n101_k8_gamma5e_m2_SCALED_color.pdf}
 	\caption{With Hyperviscosity}
 	\label{fig:cosine_eigs_hv}
 \end{subfigure}
@@ -246,6 +246,14 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \label{fig:eig_cosine}
 \end{center}
 \end{figure}
+%
+%\begin{figure}
+%\centering
+%	\includegraphics[width=0.45\textwidth]{../figures/paper1/cosine_bell/eigs_N4096_n101_HV_k8_gamma5e_m1.pdf}
+%	\caption{Example of excessive hyperviscosity with parameters $k=8$ and $\gamma_c = 5*10^{-1}$. Eigenvalues are not divided by $u_0$ to remove scaling effects of velocity.}
+%	\label{fig:cosine_eigs_hv_m1}
+%\end{figure}
+
 
 \begin{figure}[ht!]
 \begin{center}
