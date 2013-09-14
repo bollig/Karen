@@ -123,8 +123,16 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \end{center}
 \end{figure}
 
+
+%TODO: copy data in: Users/evan/Laptop/efb06/research_2013/dsc_xpo_2013/figures/vortex/
 \begin{figure}[htbp]
 \begin{center}
+\begin{subfigure}[b]{0.45\textwidth}
+	\centering
+	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/vortexInitialCondition.eps}
+	\caption{Initial Condition}
+	\label{fig:vortex_initial}
+\end{subfigure} 
 \begin{subfigure}[b]{0.45\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/vortexComputedSolution-eps-converted-to.pdf}
@@ -137,7 +145,7 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 	\caption{Relative Absolute Error}
 	\label{fig:vortex_relerr}
 \end{subfigure}
-\caption{Vortex roll-up solution at time $t=10$ using RBF-FD with $N=10,201$ and $n=50$ point stencil. Normalized $\ell_2$ error of solution at $t=10$ is $1.25(10^{-2})$ \authnote{add initial condition figure} }
+\caption{Vortex roll-up solution at time $t=10$ using RBF-FD with $N=10,201$ and $n=50$ point stencil. Normalized $\ell_2$ error of solution at $t=10$ is $1.25(10^{-2})$ }
 \label{fig:vortex_t10}
 \end{center}
 \end{figure}
@@ -147,14 +155,22 @@ For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ 
 
 \begin{figure}[htbp!]
 \begin{center}
-\includegraphics[width=3in] {../figures/paper1/figures/vortex_rollup/convergence_plot_hv.pdf}
-\caption{Convergence plot for vortex roll-up at $t=3$. \authnote{color}}
+\begin{subfigure}[b]{0.45\textwidth}
+\includegraphics[width=\textwidth] {../figures/vortex/convergence_plot_nohv.pdf}
+\caption{No Hyperviscosity}
+\end{subfigure}
+\begin{subfigure}[b]{0.45\textwidth}
+\includegraphics[width=\textwidth] {../figures/paper1/figures/vortex_rollup/convergence_plot_hv_color.pdf}
+\caption{With Hyperviscosity}
+\end{subfigure}
+\caption{Convergence plot for vortex roll-up at $t=3$.}
 \label{fig:conv_plot_vortex_hv}
 \end{center}
 \end{figure}
 
-% TODO: figures without stabilization
-\authnote{Include older figures of convergence without stabilization. Mention that CVT nodes require independent tuning of HV param. Its useful but not incredibly convenient at the moment.}
+% TODO: note that without stabilization the convergence works in al but one test. If the mat is unstable it is unstable. No fighting it. Use at your own risk. 
+%TODO: Mention that CVT nodes require independent tuning of HV param. 
+%TODO: Its useful but not incredibly convenient at the moment.
 
 \subsection{Solid body rotation}
 
@@ -184,7 +200,7 @@ The discretized form of (\ref{eq:cosine_bell}) is
 \end{equation}
 where DMs $D_\lambda$ and $D_\theta$ contain RBF-FD weights corresponding to all $N$ stencils that approximate $\pd{}{\lambda}$ and $\pd{}{\theta}$ respectively. Rather than merge the differentiation matrices in (\ref{eq:cosine_with_hyperviscosity}) into one operator, our implementation evaluates them as two sparse matrix-vector multiplies. The separate matrix-vector multiplies are motivated by an effort to provide general and reusable GPU kernels. Additionally, they artificially increase the amount of computation compared to the vortex roll-up test case to simulate cases when operators cannot be merged into one DM (e.g., a non-linear PDE).
 
-By splitting the DM, the singularities at the poles ($1 / \cos{\theta} \rightarrow \infty$ as $\theta \rightarrow \pm\frac{\pi}{2}$) in (\ref{eq:cosine_bell}) remain. However, in this case, the approach functions without amplification of errors because the MD node sets have nodes near, but not on, the poles. As noted in \cite{FlyerWright07, FornbergLehto11}, applying the entire spatial operator to the right hand side of Equation~\ref{syst} generates a single DM that analytically removes the singularities at poles. 
+By splitting the DM, the singularities at the poles ($1 / \cos{\theta} \rightarrow \infty$ as $\theta \rightarrow \pm\frac{\pi}{2}$) in (\ref{eq:cosine_bell}) remain. However, in this case, the approach functions without amplification of errors because the MD node sets have nodes near, but not on, the poles. As noted in \cite{FlyerWright07, FornbergLehto11}, applying the entire spatial operator to the right hand side of Equation~\ref{eq:rbffd_weights} generates a single DM that analytically removes the singularities at poles. 
 
 We will advect a $C^1$ cosine bell height-field given by
 \begin{equation*}
@@ -226,30 +242,32 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 	\caption{With Hyperviscosity}
 	\label{fig:cosine_eigs_hv}
 \end{subfigure}
-\caption{Eigenvalues of (\ref{eq:cosine_with_hyperviscosity}) for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=8$ and $\gamma_c = 5*10^{-2}$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.  \authnote{color}
-}
+\caption{Eigenvalues of (\ref{eq:cosine_with_hyperviscosity}) for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=8$ and $\gamma_c = 5*10^{-2}$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.}
 \label{fig:eig_cosine}
 \end{center}
 \end{figure}
 
 \begin{figure}[ht!]
 \begin{center}
-\begin{subfigure}[b]{0.45\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
+\begin{subfigure}[b]{0.48\textwidth}
+	%\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/cosineComputedSolution.pdf}
 	\caption{10 Revolutions}
 	\label{fig:cosine_approx}
 \end{subfigure}
-\begin{subfigure}[b]{0.45\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_Error_CoveredScale2.pdf}
+\begin{subfigure}[b]{0.48\textwidth}
+	%\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_Error_CoveredScale2.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/cosineAbsoluteError-eps-converted-to.pdf}
 	\caption{Absolute Error at $10$ Revolutions}
 	\label{fig:cosine_abserror}
 \end{subfigure}
 \caption{Cosine bell solution after 10 revolutions with $N=10201$ nodes and stencil size $n=101$.
-Hyperviscosity parameters are $k = 8$, $\gamma_c = 5(10^{-2})$. \authnote{Insert color figures}
+Hyperviscosity parameters are $k = 8$, $\gamma_c = 5(10^{-2})$.
 }
  \label{fig:cosine_10revs}
 \end{center}
 \end{figure}
+%TODO: emphasize that the oscillations in cosine bell are not high. The error demonstrates that all oscillations are between 1e-5 and 1.2e-12.
 
 Figure~\ref{fig:eig_cosine} compares eigenvalues of the DM for $N=4096$ nodes and stencil size $n=101$ before and after hyperviscosity is applied. To avoid scaling effects of velocity on the eigenvalues, they have been scaled by $1/u_0$.  The same approach as in the vortex roll-up case is used to determine the parameters for hyperviscosity and $\epsilon$. Our tuned parameters are presented in 
 %\blue{However, note the difference in scale on the real axis compared to the vortex roll-up case; the initial range of the real part of the eigenvalues is approximately four orders of magnitude smaller. In this case, eigenvalues are more sensitive to the hyperviscosity filter. 
@@ -259,7 +277,7 @@ Table~\ref{tbl:cos_hv_params}.
 
 %\clearpage
 
-Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolutions around the sphere. Without hyperviscosity, RBF-FD cannot complete a single revolution of the bell before instability takes over. However, adding hyperviscosity allows computation to extend to dozens or even thousands of revolutions and maintain stability (e.g., see \cite{FornbergLehto11}). After ten revolutions, the cosine bell is still intact. The majority of the absolute error (Figure~\ref{fig:cosine_abserror}) appears at the base of the $C^1$ bell where the discontinuity appears in the derivative. At ten revolutions, Figure~\ref{fig:conv_cosine_bell} illustrates the convergence of the RBF-FD method. All tests in Figure~\ref{fig:conv_cosine_bell} assume 1000 time-steps per revolution (i.e., $\Delta t = 1036.8$ seconds or 17.28 minutes). We find that 1000 time-steps is a conservative estimate that stably advects the bell even up to highest resolution MD node set, $N=27556$ nodes. Compare this to the still conservative 30 minute time-step taken for $N=4096$ nodes in \cite{FlyerWright07}, and note that the authors scaled back the RBF method 30 minutes was half the number necessary for the competing Discontinuous Galerkin implementation and 8x less than necessary for both Spherical Harmonics and Double Fourier methods.
+Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolutions around the sphere. Without hyperviscosity, RBF-FD cannot complete a single revolution of the bell before instability takes over. However, adding hyperviscosity allows computation to extend to dozens or even thousands of revolutions and maintain stability (e.g., see \cite{FornbergLehto11}). After ten revolutions, the cosine bell is still intact. The majority of the absolute error (Figure~\ref{fig:cosine_abserror}) appears at the base of the $C^1$ bell where the discontinuity appears in the derivative. At ten revolutions, Figure~\ref{fig:conv_cosine_bell} illustrates the convergence of the RBF-FD method. All tests in Figure~\ref{fig:conv_cosine_bell} assume 1000 time-steps per revolution (i.e., $\Delta t = 1036.8$ seconds). We find that 1000 time-steps is a conservative estimate to stably advect the bell even up to the highest resolution MD node set, $N=27556$. Our choice of $\Delta t$ is half as large as the 30 minute step taken for $N=4096$ nodes in \cite{FlyerWright07}, but still twice as large as the competing Discontinuous Galerkin implementation and 8x larger than both Spherical Harmonics and Double Fourier methods.
 
 %TODO: It would be good to quantify the appropriate $dt$ that would compare RBF-FD to their $N=4096$ case with global RBFs.
 
