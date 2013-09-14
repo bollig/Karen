@@ -27,7 +27,7 @@ solution values, etc. are visible to each process, and then establish index mapp
 
 This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. 
 
-It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI} is used to distribute RBF-FD across an HPC cluster. 
+It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI1993} is used to distribute RBF-FD across an HPC cluster. 
 
 
 Parallelizing RBF-FD made possible with the Message Passing Interface (MPI). 
@@ -79,17 +79,17 @@ Other interesting partitionings can be generated with software libraries such as
 %TODO: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil
 
 
-In order to partition our nodes, METIS requires an undirected adjacency graph representing the edges that connect nodes. In this case the adjacency graph represents edges connecting nodes in a mesh. For RBF-FD there is no well-defined mesh. Rather, every node is connected to multiple stencil centers.  of connecting stencil nodes to stencil centers. An undirected  To produce this we generate 
+In order to partition our nodes, METIS requires an undirected adjacency graph representing the edges that connect nodes. In this case the adjacency graph for RBF-FD is directed. The undirected version is constructed with. 
 
 The undirected graph is used only for partitioning and subsequently discarded. 
 
 METIS divides stencils into contiguous partitions of nearly equivalent size. 
 %TODO: Need to flesh detail on METIS
+%TODO: give overview of how boost graph library is used to construct a sparse adjacency graph
 
+In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symmetry. Since the goal is to partition the physical domain, this added connectivity is harmless to RBF-FD. However, with respect to load balancing, this may not be ideal. For every new nonzero introduced to a row, METIS assumes an additional node utilized by the partition. When the node is a false connection, it is one fewer centers that METIS will assign to the partition in an attempt to keep all partitions balanced. 
 
-In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symmetry. Since the goal is to partition the physical domain, this added connectivity is harmless to RBF-FD. However, with respect to load balancing, this may not be ideal. For every new nonzero introduced to a row, METIS assumes an additional node utilized by the partition. When the node is a false connection, it is one fewer centers that METIS will assign to the partition in an attempt to keep all partitions balanced. \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
-
-%TODO: how does DD of four procs differ on 
+%TODO: \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
 
 
 
@@ -210,12 +210,10 @@ The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices co
 
  The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap of communication and computation. This will be considered as part of future research on algorithm optimization.  Distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ while waiting on $\mathcal{R}$. 
 
-\authnote{} The local index set is ordered as ${QmB, BmO, O, R}$ 
 
-\authnote{} Domain boundary nodes appear at beginning of the list 
+%TODO: Domain boundary nodes appear at beginning of the list 
 
-Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
-$N=10,201$ nodes on the unit sphere onto four CPUs. Each partition, illustrated
+Returning to Figure~\ref{fig:decomposed_sphere}, each partition, illustrated
 as a unique color, represents set $\setAllNodes$ for a single CPU.  Alternating
 representations between node points and interpolated surfaces illustrates the
 overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes
@@ -236,26 +234,14 @@ The data transfers involved in this process are illustrated at the bottom of Fig
     Each GPU operates on the local indices ordered 
 according to Equation~(\ref{eqn:decompose_g}). The set 
 $\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU then maps local to global indices and transfers $\setProvide$ to other CPUs. CPUs send only the subset of node values from $\setProvide$ that is required by the destination processors, but it is important to note that node information might be sent to several destinations. 
-As the set $\setDepend$ is received, the CPU converts back from global to local indices before copying a contiguous block of memory to the GPU. \authnote{remember distributed case: no decode}
+As the set $\setDepend$ is received, the CPU converts back from global to local indices before copying a contiguous block of memory to the GPU. 
+
+
+%TODO: \authnote{remember distributed case: no decode}
 
         This approach is scalable to a very large number of 
 		processors, since the individual processors do not require the 
-		full mapping between RBF nodes and CPUs. 
-		
-		By scalable here we imply total problem size and processor count. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
-
-
-
-\section{Test Case}
-
-To test and demonstrate scaling of our method, we consider an idealized regular grid in three dimensions. 
-
-verification here is only significant to ensure we are applying all weights. 
-We apply weights to calculate derivatives of a test function in X, Y, Z, and the Laplacian. 
-the grid is regular and 3D.
-We test strong scaling on a $N=160^3$ grid, and weak scaling with $N_p=4000$. This way at $p=1024$ processes we have weak scaling testing the full $N=160^3$ grid. 
-
-
+		full mapping between RBF nodes and CPUs. Here scalable implies the total problem size and processor count can increase . The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
 
 
 
@@ -326,6 +312,14 @@ The first improvement on Alltoallv collectives is to truncate the number of conn
 
 
 \section{CPU Scaling}
+
+To test and demonstrate scaling of our method, we consider an idealized regular grid in three dimensions. 
+
+verification here is only significant to ensure we are applying all weights. 
+We apply weights to calculate derivatives of a test function in X, Y, Z, and the Laplacian. 
+the grid is regular and 3D.
+We test strong scaling on a $N=160^3$ grid, and weak scaling with $N_p=4000$. This way at $p=1024$ processes we have weak scaling testing the full $N=160^3$ grid. 
+
 
 \authnote{Show the strong and weak scaling here}
 

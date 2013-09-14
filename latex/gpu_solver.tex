@@ -154,19 +154,45 @@ In our initial implementation, published in \cite{BolligFlyerErlebacher2012}, al
 
 OpenCL is chosen with the future in mind. Hardware changes rapidly and vendors often leapfrog one another in the performance race. By selecting OpenCL, we hedged our bets on the functional portability. 
 
-Intel, AMD, NVidia all support OpenCL
+Apple, Intel, AMD, NVidia all support OpenCL.  Unfortunately Apple overrides vendor specific drivers and offers its own driver without support for concurrent kernel execution. 
 
 One serious limitation exists with the choice of OpenCL. Since the language is intended to function across a slew of platforms, the language itself is limited to a subset of hardware features common to the different vendors. Features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL. 
 
+\subsection{Custom Kernels}
 
 From the definition of RBF-FD we can formulate the problem computationally in two ways. First, stencil operations are independent. Therefore, we can write kernels with perfect parallelism by dedicating a single thread per stencil or a group of threads per stencil.  
 
 Unfortunately, perfect concurrency does not imply perfect or even ideal concurrency on the GPU. 
 
+
+\subsubsection{One Thread per Stencil}
+
 We first demonstrate the case where one thread is dedicated to each stencil. This is followed by dedicating a group of thread to the stencil. In each case we are operating under the assumption that each stencil is independent on the GPU. 
 
+\subsubsection{One Warp per Stencil}
+
+
+
+
+
+
+\subsection{ViennaCL} 
 
 In the time since the publication of \cite{BolligFlyerErlebacher2012} custom OpenCL kernels have been dropped in favor of a library called ViennaCL. 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\textwidth]{gpu_content/omnigraffle/SparseStorage.pdf}
+\caption{Sparse format example demonstrating a sparse matrix and corresponding storage data structures. ELL format assumes two non-zeros per row. }
+\label{fig:sparse_format}
+\end{figure}
+
+
+Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants, and a number of variants on the ELL format that operate in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. The HYB format stores the bulk of a matrix in an ELL container and the excess non-zeros per row in a CSR format. HYB benefits from reduced storage and memory loads in the ELL, and maintains the generality of a CSR matrix. 
+
+
+
+
 
 To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sparse Matrix-Vector Mulitply (SpMV). When we consider the problem in this light we generate a single Differentiation Matrix that can see two optimizations not possible with our stencil-based view: 
 \begin{itemize} 
@@ -181,18 +207,12 @@ The library includes a variety of sparse matrix formats, solvers, preconditioner
 
 At the onset of work with ViennaCL two things were apparent: 1) the library was incredibly powerful but limited to square matrices; and 2) the library had no support for distributed computing. Our implementation of RBF-FD (\cite{BolligRBFFDGPU}) required rectangular matrices resulting from domain decomposition. The enhancements to the API have since been added to the main branch of ViennaCL. 
 
-\subsection{Naive Kernels}
-\subsection{SpMV Formats/Kernels}
-
 
 CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
 
-\begin{figure}
-\centering
-\includegraphics[width=0.9\textwidth]{gpu_content/omnigraffle/SparseStorage.pdf}
-\caption{Sparse format example demonstrating a sparse matrix and corresponding storage data structures. ELL format assumes two non-zeros per row. }
-\label{fig:sparse_format}
-\end{figure}
+
+
+
 
 %TODO: list example loops for sparse kernels
 
@@ -204,12 +224,11 @@ Our assumption with RBF-FD in this manuscript is that all stencils will have equ
  
 
 
+\subsection{Intel Phi} 
 
-As part of future work into accelerating RBF methods, investigations are underway into the new Intel Phi architecture. 
+As part of future work into accelerating RBF methods, investigations are underway into the new Intel Phi architecture. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
 
- investigating optimizations that target both GPUs and Phi cards for a class of numerical methods based on Radial Basis Functions (RBFs) to solve Partial Differential Equations. RBF methods are increasingly popular across disciplines due to their low complexity, natural ability to function in higher dimension with minimal requirements for an underlying mesh, and high-order---in many cases, spectral---accuracy. RBF methods can be viewed as generalizations of many traditional methods such as Finite Difference and Finite Element to allow for truly unstructured grids. This generalization allows one to reuse many of the same techniques (e.g., sparse matrices, iterative solvers, domain decompositions, etc.) to efficiently obtain solutions. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
-
-
+%TODO: preliminary benchmarks on performance of ViennaCL SpMV. 
 
 With the generalization of RBF-FD derivative computation formulated as a sparse matrix multiplication, we can 
 % TODO: mention CUSP as alternative but concentrate on VCL
@@ -219,9 +238,21 @@ consider the various sparse formats provided by CUSP and ViennaCL.
 %TODO: What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
 
 
-Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants, and a number of variants on the ELL format that operate in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. The HYB format stores the bulk of a matrix in an ELL container and the excess non-zeros per row in a CSR format. HYB benefits from reduced storage and memory loads in the ELL, and maintains the generality of a CSR matrix. 
+
+\section{GPU SpMV Performance}
+
+This section presents benchmarks obtained on a variety of GPU hardware. 
+
+Data from Keeneland
+
+Data from Cascade
+
+Data from 
 
 
+
+
+\section{Conclusions and Future Work}
 
 Conclude: sparse containers allow increased efficiency compared to our custom kernels. The custom kernels compete with CSR and COO. 
 
