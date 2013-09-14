@@ -158,7 +158,17 @@ Apple, Intel, AMD, NVidia all support OpenCL.  Unfortunately Apple overrides ven
 
 One serious limitation exists with the choice of OpenCL. Since the language is intended to function across a slew of platforms, the language itself is limited to a subset of hardware features common to the different vendors. Features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL. 
 
+We leverage the OpenCL language for functional portability. 
 
+Our dedication to OpenCL is a hedged bet that the future architectures will merge in the middle between many and multi-core architectures with co-processors alongside CPUs. By selecting an open standard parallel programming language, we increase the likelihood for future support of our programs. 
+
+\subsection{OpenCL vs CUDA}
+The market is volatile. Companies survive by investing margins in their next great product. If a product fails or the company faces a recall, their survival may come into question. Thus far, NVidia's CUDA has been wildly popular, but for the longest time (until May 2012) it was closed source. The closed source limited the language to NVidia hardware. As such, the OpenCL language gained popularity due to its support for AMD, Intel, mobile devices, web browsers, etc. NVidia's push to provide an open source compiler may be an attempt to regain the market share, but OpenCL appears to be on good footing. One other point: with an open source NVidia compiler, OpenCL can be optimized by the more mature NVidia compiler for their proprietary hardware. OpenCL compilers are also becoming more sophisticated at auto-optimization. 
+
+\subsection{Asynchronous Queuing} 
+Provide details and simple example of how asynchronous queueing can be used. 
+
+Need a figure showing the overlapping comm and comp in a general process with the wait points marked. 
 
 The two level parallelization can even be extended to three level parallelism
 with pThreads or OpenMP \cite{NVidia_multi-gpu_example}. While OpenCL provides

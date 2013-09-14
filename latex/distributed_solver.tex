@@ -356,17 +356,17 @@ We consider a simple idealized problem where derivatives are computed over a reg
 
 \begin{figure}
 \centering
-\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_n17comparison_commOnly.png}
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/strong_scaling_4M_regular_n17comparison_commOnly.png}
 \caption{Scaling comparison of MPI\_Alltoallv and two types of MPI\_Isend/MPI\_Irecv collectives: one with MPI\_Irecv issued after filling the MPI\_Isend send buffer (post-fill), and the other issued before filling the MPI\_Isend buffer (pre-fill).}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv_commOnly.png}
-\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv.png}  
-\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare_commOnly.png} \\
-\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_spmvOnly.png} 
-\includegraphics[width=5cm]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare.png}
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv_commOnly.png}
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv.png}  
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare_commOnly.png} \\
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_spmvOnly.png} 
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare.png}
 \caption{Weak scaling of the SpMV}
 \end{figure}
 
@@ -397,6 +397,13 @@ We scale the SpMV across the GPUs on Cascade.
 
 \subsection{Fermi}
 \subsection{Kepler}
+\subsection{Multiple Kernel Scheduling}
+describe fermi's ability to schedule multiple kernels, what it means for our queues. Do we need multiple queues, or just one that is non-blocking. How do we indicate we are done communicating if there is no queue to add markers to? 
+
+
+\section{HPC Spear Cluster} 
+
+\section{Keeneland}
 
 \subsection{Shared K20s}
 

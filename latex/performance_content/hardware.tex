@@ -16,22 +16,6 @@ E_{p} =\ ^{S_{p}} /_{\# \text{\ of processors}}
 $$
 
 
-\section{OpenCL}
-We leverage the OpenCL language for functional portability. 
-
-Our dedication to OpenCL is a hedged bet that the future architectures will merge in the middle between many and multi-core architectures with co-processors alongside CPUs. By selecting an open standard parallel programming language, we increase the likelihood for future support of our programs. 
-
-\subsection{OpenCL vs CUDA}
-The market is volatile. Companies survive by investing margins in their next great product. If a product fails or the company faces a recall, their survival may come into question. Thus far, NVidia's CUDA has been wildly popular, but for the longest time (until May 2012) it was closed source. The closed source limited the language to NVidia hardware. As such, the OpenCL language gained popularity due to its support for AMD, Intel, mobile devices, web browsers, etc. NVidia's push to provide an open source compiler may be an attempt to regain the market share, but OpenCL appears to be on good footing. One other point: with an open source NVidia compiler, OpenCL can be optimized by the more mature NVidia compiler for their proprietary hardware. OpenCL compilers are also becoming more sophisticated at auto-optimization. 
-
-\subsection{Asynchronous Queuing} 
-Provide details and simple example of how asynchronous queueing can be used. 
-
-Need a figure showing the overlapping comm and comp in a general process with the wait points marked. 
-
-\section{Fermi Architecture}
-
-
 %TODO: describe each generation of hardware 
 %NVidia released an architecture code named "Fermi" in 2010 \cite{Fermi2009}. The hardware supports many features of interest, the most important being 8x faster double precision than the older Tesla C1060 (GT200 architecture). It will also allow for concurrent kernel execution (for up to 16 small kernels) making it easier to keep the GPU saturated with computation. Table~\ref{tbl:fermi_compare} considers some of the more monumental differences between the Fermi and GT200 architectures.
 %\begin{table}[t]
@@ -56,22 +40,9 @@ Need a figure showing the overlapping comm and comp in a general process with th
 
 %While there has been no word yet as to the date of availability (only speculation for Q1 2010), the Fermi architecture is anticipated to cost around \$2,500 to \$4,000 for the Tesla C2050 (3 GB Global Device Memory) and C2070 (6 GB Global Device Memory) units respectively \cite{FermiPrice:2009}.
 
-\subsection{Double Precision}
-Double precision operations take XXX cycles
+%TODO: Double precision operations take XXX cycles
 
 
-\subsection{Local Caching}
-Local caching allows us to bypass the need for 
-
-\subsection{Multiple Kernel Scheduling}
-describe fermi's ability to schedule multiple kernels, what it means for our queues. Do we need multiple queues, or just one that is non-blocking. How do we indicate we are done communicating if there is no queue to add markers to? 
-
-\subsection{Future NVidia Hardware}
-The latest hardware is the Kepler. It supports the following features
-
-\section{HPC Spear Cluster} 
-
-\section{Keeneland}
 
 
 %
@@ -165,8 +136,6 @@ The latest hardware is the Kepler. It supports the following features
 
 %\
 
-
-\section{Future Hardware}
 
 %In this section we survey existing hardware features, and their existence in large clusters.
 %\begin{verbatim}
