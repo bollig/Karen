@@ -113,26 +113,26 @@ Parallel GMRES
 
 This article continues our effort with an implementation of RBF-FD on both single and multiple-GPUs for elliptic PDEs. In the next section we introduce 
 
-\section{Bad Problem} 
-
-Our initial derivation of the Stokes problem was incorrect. What we thought was
-the proper identity reduced the problem to simple scalar velocity laplacians and
-pressure gradients. The correct formulation of Stokes flow in 3D would have a
-curl component connecting each dimension. 
-
-Rather than start over and reformulate our problem, we opted to continue
-development of our GPU-based solver with the recognition that the problem we
-posed is actually a coupled Poisson problem and can be solved using the same
-iterative solver. By implementing and testing the solver and preconditioners for
-one problem, we prepare for the other.  
-
-\subsection{Details}
-Items to test for our solver: GFLOPs throughput (CPU,GPU), Convergence of Solver (in
-iteration residual) vs Preconditioners.
-
-Test problems: Sphere coupled poisson. Annulus. Stokes on annulus? 
-
-
+%\section{Bad Problem} 
+%
+%Our initial derivation of the Stokes problem was incorrect. What we thought was
+%the proper identity reduced the problem to simple scalar velocity laplacians and
+%pressure gradients. The correct formulation of Stokes flow in 3D would have a
+%curl component connecting each dimension. 
+%
+%Rather than start over and reformulate our problem, we opted to continue
+%development of our GPU-based solver with the recognition that the problem we
+%posed is actually a coupled Poisson problem and can be solved using the same
+%iterative solver. By implementing and testing the solver and preconditioners for
+%one problem, we prepare for the other.  
+%
+%\subsection{Details}
+%Items to test for our solver: GFLOPs throughput (CPU,GPU), Convergence of Solver (in
+%iteration residual) vs Preconditioners.
+%
+%Test problems: Sphere coupled poisson. Annulus. Stokes on annulus? 
+%
+%
 
 \section{RBF-FD Weights} 
 

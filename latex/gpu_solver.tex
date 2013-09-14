@@ -171,6 +171,97 @@ We first demonstrate the case where one thread is dedicated to each stencil. Thi
 
 \subsubsection{One Warp per Stencil}
 
+\subsection{Explicit Solvers}
+
+
+Our implementation leverages the GPU for acceleration of the standard fourth order Runge-Kutta (RK4) scheme. Nodes are stationary, so stencil weights are calculated once at the beginning of the simulation, and reused in every iteration. To avoid the cost of calculating stencil weights each time a test case is run, they are written to disk and loaded from file on subsequent runs. There is one set of weights computed for each new grid.  Ignoring code initialization, the cost of the algorithm is simply the explicit time advancement of the solution. 
+
+\begin{figure}[t]
+      \centering
+       \includegraphics[width=5in]{../figures/paper1/figures/omnigraffle/RK4_multi_GPU_flow.pdf}
+      \caption{Workflow for RK4 on multiple GPUs. }
+      \label{fig:multi_GPU_flow}
+\end{figure}
+
+Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for the multi-CPU/GPU implementation. The RK4 steps are: 
+\begin{eqnarray*} 
+\mathbf{k}_1 &=& \Delta t f(t_n, \mathbf{u}_n) \\
+\mathbf{k}_2 &=& \Delta t f(t_n+\frac{1}{2}\Delta t, \mathbf{u}_n + \frac{1}{2}\mathbf{k}_1) \\
+\mathbf{k}_3 &=& \Delta t f(t_n+\frac{1}{2}\Delta t, \mathbf{u}_n + \frac{1}{2}\mathbf{k}_2) \\
+\mathbf{k}_4 &=& \Delta t f(t_n+\Delta t, \mathbf{u}_n + \mathbf{k}_3) \\
+\mathbf{u}_{n+1} &=& \mathbf{u}_{n} + \frac{1}{6}(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 +\mathbf{k}_4),
+\label{eqn:rk4}
+\end{eqnarray*}
+where each equation has a corresponding kernel launch. To handle a variety of Runga-Kutta implementations, steps $\mathbf{k}_{1\rightarrow4}$ correspond to calls to the same kernel with different arguments. The evaluation kernel returns two output vectors: 
+\begin{enumerate} 
+\item $\mathbf{k}_i = \Delta t f(t_n + \alpha_{i} \Delta t, \mathbf{u}_n + \alpha_{i} \mathbf{k}_{i-1})$, for steps $i=1,2,3,4$, and
+\item  $\mathbf{u}_n + \alpha_{i+1} \mathbf{k}_i$
+\end{enumerate} 
+We choose $\alpha_{i}=0, \frac{1}{2}, \frac{1}{2}, 1, 0$ and $\mathbf{k}_{0} = \mathbf{u}_n$. The second output for each $\mathbf{k}_{i=1,2,3}$ serves as input to the next evaluation, $\mathbf{k}_{i+1}$. In an effort to avoid an extra kernel launch---and corresponding memory loads---the SAXPY that produces the second output uses the same evaluation kernel. Both outputs are stored in global device memory. When the computation spans multiple GPUs, steps $\mathbf{k}_{1\rightarrow3}$ are each followed by a communication barrier to synchronize the subsets $\mathcal{O}$ and $\mathcal{R}$ of the second output (this includes copying the subsets between GPU and CPU). An additional synchronization occurs on the updated  solution, $\mathbf{u}_{n+1}$, to ensure that all GPUs share a consistent view of the solution going into the next time-step.
+
+To evaluate $\mathbf{k}_{1\rightarrow4}$, the discretized operators from Equation~(\ref{eq:evaluation_with_hyperviscosity}) are applied using sparse matrix-vector multiplication. If the operator $D$ is composed of multiple derivatives, a differentiation matrix for each derivative is applied independently, including an additional multiplication for the discretized $H$ operator.
+ On the GPU, the kernel parallelizes across rows of the DMs, so all derivatives for stencils are computed in one kernel call.
+
+
+For the GPU, the OpenCL language \cite{OpenCL2009} assumes a lowest common denominator of hardware capabilities to provide functional portability. For example, all target architectures are assumed to support some level of SIMD (Single Instruction Multiple Data) execution for kernels. Multiple \textit{work-items} execute a kernel in parallel. 
+A collection of work-items performing the same task is called a \textit{work-group}. While a user might think of work-groups as executing all work-items simultaneously, the work-items are divided at the hardware level into one or more SIMD \textit{warps}, which are executed by a single multiprocessor. On the family of Fermi GPUs, a warp is 32 work-items \cite{CudaGuide2011}. 
+OpenCL assumes a tiered memory hierarchy that provides fast but small \textit{local memory} space that is shared within a work-group \cite{OpenCL2009}. Local memory on Fermi GPUs is 48 KB per multiprocessor \cite{CudaGuide2011}. The \textit{global device memory} allows sharing between work-groups and is the slowest but most abundant memory. 
+In the GPU computing literature, the terms \textit{thread} and \textit{shared memory} are synonymous to \textit{work-item} and \textit{local memory} respectively, and are preferred below. 
+
+%Although the primary focus of this paper is the implementation 
+%and verification of the RBF-FD method across multiple CPUs and GPUs, 
+%we have nonetheless tested two approaches to the computation of derivatives 
+Our initial implementation of RBF-FD on multiple GPUs (\cite{BolligFlyerErlebacher2012}) tested two approaches to computation of derivatives. 
+%assess the potential for further improvements in performance. 
+In both cases, the stencil weights are stored in CSR format \cite{Bell2009}, 
+a packed one-dimensional array in global memory with all the weights 
+of a single stencil in consecutive memory addresses. Each operator is stored as an independent CSR matrix. The consecutive ordering on the weights implies that the solution vector %structured according to the ordering of set $\mathcal{G}$ 
+is treated as random access. 
+
+All the computation on the GPU is performed in 8-byte double precision. 
+
+
+\subsubsection{Naive Approach: One thread per stencil}
+
+In this first implementation, each thread computes 
+the derivative at one stencil center  (Figure~\ref{fig:oneThreadPerStencil}). 
+The advantage of this approach is trivial concurrency.  Since each stencil has the same number of neighbors, each derivative has an identical number of computations. As long as the number of stencils is a multiple of the warp size, there are no idle threads. Should the total number of stencils be less than a multiple of the warp size, the final warp would contain idle threads, but the impact on efficiency would be minimal assuming the stencil size is sufficiently large. 
+
+Perfect concurrency from a logical point of view does not 
+imply perfect efficiency in practice. 
+Unfortunately, the naive approach 
+is memory bound. When threads access weights in global memory, 
+a full warp accesses a 128-byte segment in a single memory operation \cite{CudaGuide2011}.
+Since each thread handles a single stencil, the various threads in a warp access data in very disparate areas of global memory, rather than the same segment. This leads to very large slowdowns as extra memory operations are added for each 128-byte segment that the threads of a warp must access.
+However, with stencils sharing many common nodes, and the Fermi hardware providing caching, some weights in the unused portions of the segments might remain in cache long enough to hide the cost of so many additional memory loads. 
+
+
+
+\begin{figure}[htbp]
+      \centering
+       \includegraphics[width=3in]{../figures/paper1/figures/omnigraffle/oneThreadPerStencil.pdf}
+      \caption{Naive approach to sparse matrix-vector multiply. Each thread is responsible for the sparse vector dot product of weights and solution values for derivatives at a single stencil.  }
+      \label{fig:oneThreadPerStencil}
+\end{figure}
+
+
+\subsubsection{Alternate Approach: One warp per stencil} 
+
+\begin{figure}[htbp]
+      \centering
+       \includegraphics[width=3in]{../figures/paper1/figures/omnigraffle/oneWarpPerStencil.pdf}
+      \caption{Alternative approach. A full warp (32 threads) collaborate to apply weights  and compute the derivative at a stencil center. }
+      \label{fig:oneWarpPerStencil}
+\end{figure}
+
+
+An alternate approach, illustrated in Figure~\ref{fig:oneWarpPerStencil}, dedicates a full warp of threads to a single stencil. Here, 32 threads load the weights of a stencil and the corresponding elements of the solution vector. As the 32 threads each perform a subset of the dot product, their intermediate sums are accumulated in 32 elements of shared memory (one per thread).
+Should  a stencil be larger than the warp size, the warp iterates over the stencil in increments of the warp size until the full dot product is complete. Finally, the first thread of the warp performs a sum reduction across the 32 (warp size)  intermediate sums stored in shared memory and writes the derivative value to global memory. 
+
+By operating on a warp by warp basis, weights for a single stencil are loaded with a reduced number of memory accesses. Memory loads for the solution vector remain random access but see some benefit when solution values for a stencil are in a small neighborhood in the memory space. Proximity in memory can be controlled by node indexing (see e.g., \cite{Bollig2011} and \cite{Connor2009}). 
+
+For stencil sizes smaller than 32, some threads in the warp always remain idle. Idle threads do not slow down the computation within a warp, but under-utilization of the GPU is not desirable. For small stencil sizes, caching on the Fermi can hide some of the cost of memory loads for the naive approach, with no idle threads, making it more efficient. The real strength of one warp per stencil is seen for large stencil sizes. 
+As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. 
 
 
 
