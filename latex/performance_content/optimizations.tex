@@ -11,13 +11,7 @@ Change send/recv to alltoallv. Track wait time. Show limitation on scalability w
 
 Communication between processors requires each processor to iterate through their neighboring processors and share information. This can be seen as a simple for loop allowing every processor to touch its neighbors in round-robin fashion. The benchmarks seen in \authnote{figures from paper1} show the strong scaling of our implementation with a for loop and send/recv. 
 
-In Figs~\ref{figs:alltoall_scaling} we show the strong scaling of the cosine bell after 
 
-Alternatively
-
-an all to all collective. That is, all processors share some information with potentially every other processor. 
-
-\authnote{cleanup:} 
 These results were run on Keeneland. The changes to MPI communication are the result of changing from blocking communication (MPI\_send/MPI\_recv) to non-blocking communication (MPI\_alltoall).
 
 \begin{figure}[htbp]
@@ -78,29 +72,11 @@ I am generating another set of figures that demonstrate the scaling when we over
     - larger problem sizes will still be necessary (I have benchmarks for 100K, 500K and 1M on the sphere).
     
 
+%TODO: Work-Group Size and Number of Stencils
+%What if a work-group is larger than a warp? What if the group was occupied by multiple stencils. What improvements to speedup do we see?
+%
+%How many stencils can each group handle (assuming values stay in shared memory? 
+%Shared memory bank conflicts? How do we sort the values? 
+%What is the occupancy of the GPU?
+%
 
-\authnote{Need to test weak scaling (problem size stays fixed per processor). This will require a modified code, but we can fill the weight matrices with anything and run the kernels.}
-\authnote{Need to compare one warp of threads to a full block of size $n$}
-
-\section{Asynchronous OpenCL}
-
-What are the limitations if using just async and not the queues?
-
-\section{Multi-Queue OpenCL}
-How does performance improve if we use two queues (one for Q and one for R)? 
-
-\section{GPU Kernel Optimizations}
-
-\subsection{Work-Group Size and Number of Stencils}
-What if a work-group is larger than a warp? What if the group was occupied by multiple stencils. What improvements to speedup do we see?
-
-How many stencils can each group handle (assuming values stay in shared memory? 
-Shared memory bank conflicts? How do we sort the values? 
-What is the occupancy of the GPU?
-
-\subsection{Parallel Reduction in Shared Memory}
-What significant gain do we see from adding a segmented scan to the shared memory? 
-
-What other improvements can we think of? 
-
-\subsection{Comparison: custom SpMV for explicit schemes vs ViennaCL}

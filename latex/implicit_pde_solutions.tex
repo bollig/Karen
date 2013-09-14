@@ -5,8 +5,10 @@
 \section{Introduction}
 
 We consider herein the solution to steady-state viscous Stokes flow on the surface of a sphere, governed by: 
-	\authnote{Where did we go wrong? Our vector laplacian does not have a
-  curl component included. How do we derive that from here?} 
+%TODO: 	\authnote{Where did we go wrong? Our vector laplacian does not have a curl component included. How do we derive that from here?} 
+% We actually went wrong because $u$ is a vector. That means that the $\grad$ operator is actually a Jacobian matrix.
+% We also f-d up \div ( n F) = \grad n dot F + n \div F. (i.e., the term cannot be moved out easily). Really unless we rederive
+% from scratch this whole section amounts to: a mock system of coupled scalar PDEs. 
   \begin{align}
 \div{[\eta(\grad{\vu} + (\grad{\vu})^T)]} + Ra T \hat{r} & = \grad{p} \label{eq:stokes_momentum} \\
 %\pd{T}{t} + (\vu \cdot \grad) T & = \Laplacian T \ \ \ \ \ \ \ \ \textsl{(Energy)}\label{eq:stokes_energy}
@@ -14,66 +16,42 @@ We consider herein the solution to steady-state viscous Stokes flow on the surfa
 \end{align}
 where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar pressure-field respectively, $\eta$ is the viscosity tensor, $Ra$ is the non-dimensional Rayleigh number, and $T$ is an initial temperature profile. Many practical applications in sciences such as geophysics, climate modeling, and computational fluid dynamics must solve variations of the Navier-Stokes equations. The focus of this paper is on the implicit solve component for viscous (Stokes) flow, which amounts to the steady-state problem described by Equations~\ref{eq:stokes_momentum} and \ref{eq:stokes_continuity}. 
 
+
+\begin{align}
+\div{[\eta(\grad{\vu} + (\grad{\vu})^T)]} + Ra T \hat{r} & = \grad{p} \label{eq:stokes_momentum} \\
+\div{\eta(\grad{\vu}} + \div{(\grad{\vu})^T)} + Ra T \hat{r} & = \grad{p} \\
+\grad{\eta} \cdot \grad{\vu} + \eta \div{\grad{\vu}} + \div{(\grad{\vu})^T)} + Ra T \hat{r} & = \grad{p} \\
+\grad{\eta} \cdot \begin{pmatrix} \pd{u}{x} & \pd{u}{y} & \pd{u}{z} \\ \pd{v}{x} & \pd{v}{y} & \pd{v}{z} \\ \pd{w}{x} & \pd{w}{y} & \pd{w}{z} \end{pmatrix} + \eta \div{\begin{pmatrix} \pd{u}{x} & \pd{u}{y} & \pd{u}{z} \\ \pd{v}{x} & \pd{v}{y} & \pd{v}{z} \\ \pd{w}{x} & \pd{w}{y} & \pd{w}{z} \end{pmatrix}} + \div{\begin{pmatrix} \pd{u}{x} & \pd{v}{y} & \pd{w}{z} \\ \pd{u}{x} & \pd{v}{y} & \pd{w}{z} \\ \pd{u}{x} & \pd{v}{y} & \pd{w}{z} \end{pmatrix}} + Ra T \hat{r} & = \grad{p} \\
+\begin{pmatrix} \pd{\eta}{x} \pd{u}{x} & \pd{\eta}{x} \pd{u}{y} & \pd{\eta}{x} \pd{u}{z} \\ \pd{\eta}{y} \pd{v}{x} & \pd{\eta}{y} \pd{v}{y} & \pd{\eta}{y} \pd{v}{z} \\ \pd{\eta}{z} \pd{w}{x} & \pd{\eta}{z} \pd{w}{y} & \pd{\eta}{z} \pd{w}{z} \end{pmatrix} + \eta \begin{pmatrix} \pdd{u}{x} & \pd{u}{y \partial x} & \pd{u}{z \partial x} \\ \pd{v}{x \partial y} & \pdd{v}{y} & \pd{v}{z \partial y} \\ \pd{w}{x \partial z} & \pd{w}{y \partial z} & \pdd{w}{z} \end{pmatrix} + \div{\begin{pmatrix} \div{\vu} \\ \div{\vu} \\ \div{\vu} \end{pmatrix}} + Ra T \hat{r} & = \grad{p} \\
+\begin{pmatrix} \pd{\eta}{x} \pd{u}{x} & \pd{\eta}{x} \pd{u}{y} & \pd{\eta}{x} \pd{u}{z} \\ \pd{\eta}{y} \pd{v}{x} & \pd{\eta}{y} \pd{v}{y} & \pd{\eta}{y} \pd{v}{z} \\ \pd{\eta}{z} \pd{w}{x} & \pd{\eta}{z} \pd{w}{y} & \pd{\eta}{z} \pd{w}{z} \end{pmatrix} + \eta \begin{pmatrix} \pdd{u}{x} & \pd{u}{y \partial x} & \pd{u}{z \partial x} \\ \pd{v}{x \partial y} & \pdd{v}{y} & \pd{v}{z \partial y} \\ \pd{w}{x \partial z} & \pd{w}{y \partial z} & \pdd{w}{z} \end{pmatrix} + \div{\begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix}} + Ra T \hat{r} & = \grad{p} \\
+\begin{pmatrix} \pd{\eta}{x} \pd{u}{x} & \pd{\eta}{x} \pd{u}{y} & \pd{\eta}{x} \pd{u}{z} \\ \pd{\eta}{y} \pd{v}{x} & \pd{\eta}{y} \pd{v}{y} & \pd{\eta}{y} \pd{v}{z} \\ \pd{\eta}{z} \pd{w}{x} & \pd{\eta}{z} \pd{w}{y} & \pd{\eta}{z} \pd{w}{z} \end{pmatrix} + \eta \begin{pmatrix} \pdd{u}{x} & \pd{u}{y \partial x} & \pd{u}{z \partial x} \\ \pd{v}{x \partial y} & \pdd{v}{y} & \pd{v}{z \partial y} \\ \pd{w}{x \partial z} & \pd{w}{y \partial z} & \pdd{w}{z} \end{pmatrix} + Ra T \hat{r} & = \grad{p} \\
+%\pd{T}{t} + (\vu \cdot \grad) T & = \Laplacian T \ \ \ \ \ \ \ \ \textsl{(Energy)}\label{eq:stokes_energy}
+\div{\vu} & = 0 \label{eq:stokes_continuity} 
+\end{align}
+
+
 This article introduces the first (to our knowledge) parallel approach to solve the steady-state equations on the surface of the unit sphere with the Radial Basis Function-generated Finite Differences (RBF-FD) method. Building on our work in \cite{bolligFlyerErlebacher2011}, which parallelized explicit RBF-FD advection, our goal is to integrate both explicit and implicit components within a larger transient flow model. 
-
-
-
-\authnote{ follow with details of RBF methods and novelty of RBF-FD. }
 
 
 For decades, the demand for fast and accurate numerical solutions in fluid flow has lead to a plethora of computational methods for various geometries, discretizations and dimensions.  On the sphere in $\R^3$ popular discretizations include the standard latitude-longitude grid, cubed-sphere \cite{NairTransport05}, yin-yang overlapping grid \cite{Kameyama2008a}, icosahedral grid \cite{Randall2002} and centroidal voronoi tessellations \cite{Du2006}. Associate with each discretization is a mesh---specific to the choice of numerical method---that indicates connectivity of nodes for differentiation.
 
-Two decades ago \cite{Kansa1990a}, meshless methods based on Radial Basis Functions (RBFs) were introduced for problems that require geometric flexibility with scattered node layouts in $d$-dimensional space, plus natural extensions to higher dimensions with minimal change in programming complexity \cite{FlyerWright07,WrightFlyerYuen10}. These RBF methods tout competitive accuracy with other state-of-the-art and high-order methods \cite{FlyerWright07, FlyerWright09, FlyerLehto10, WrightFlyerYuen10, FlyerFornberg11}, as well as stability for large time steps. A survey of RBF methods is provided by \cite{FlyerFornberg11}.
 
-% Traditionally, RBF methods function in a global sense. That is,  function values and derivatives at a node are linear combinations of all function values across the \textit{entire} domain, just as in a pseudospectral method. Assuming the use of infinitely smooth RBFs, exponential convergence of the RBF interpolant is possible for smooth data. However, this comes at a heavy price since differentiation matrices (DMs) are completely full. 
-%Assuming $N$ is the total number of nodes, a dense DM implies an $O(N^2)$ cost at each time-step for explicit schemes, and $O(N^3)$ for implicit schemes.
+Until now, most of the focus in RBF-FD has been on explicit methods. However, many practical applications in sciences such as geophysics, climate modeling, and computational fluid dynamics must solve variations of the Navier-Stokes equations, and depend on an implicit solve component. This paper develops multi-GPU algorithms for implicit RBF-FD systems toward the goal of integration within transient flow problems. %The explicit component of transient flow is a natural extension of our work in \cite{BolligFlyerErlebacher2012}. 
 
+%TODO: Speed not the issue. Functioning solutions first. 
+%TODO: Need less RBFs for given accuracy of steady state
+%TODO: less nodes implies less memory
+%TODO: general geometries are supported
+%TODO: better distributions of nodes on spheres. competition like CitComS, etc. use cubed sphere, yinyang grids and triangular meshes in combination with low order methods (2nd and 3rd order). Increasing the order of the method or dimension can significantly increase the complexity of the algorithms. RBF-FD naturally extends to higher dimensions and increasing the order is as simple as increasing the number of nodes in the stencil. 
 
-
-\authnote{Change first sentence} RBF-generated finite differences (RBF-FD) hold a promising future in that they share many advantages of global RBF methods, but reduce computational complexity to $O(N)$
- and exhibit increased parallelism. The method was first suggested in 2000 \cite{Tolstykh2000}, but made its grand debut a few years later in the simultaneous, yet independent,
-efforts of \cite{Shu2003,Tolstykh2003a, Wright2003, Cecil2004}. It has been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
-incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
-
-Compared to classical finite differences (FD) which calculate differentiation weights with one-dimensional polynomials, RBF-FD leverages $d$-dimensional RBFs as test functions. This allows for generalization to $d$-dimensional space on completely scattered node layouts. For both methods, a stencil of size $n$ neighboring nodes determines the accuracy of the approximation. However, contrary to the regular stencil node distributions from FD, RBF-FD allows for completely scattered node distributions. In comparison with global RBF methods, spectral accuracy is sacrificed in exchange for computational speed and parallelism. Still, high-order accuracy is possible with RBF-FD---6th- to 10th-order accuracy is common.
-
-Until now, most of the focus in RBF-FD has been on explicit methods. However, many practical applications in sciences such as geophysics, climate modeling, and computational fluid dynamics must solve variations of the navier stokes equations which include an implicit solve component. This paper develops multi-GPU algorithms for implicit RBF-FD systems toward the goal of integration within transient flow problems. The explicit component of transient flow is a natural extension of our work in \cite{Bollig2011}. 
-
-\authnote{ Flesh these points out and integrate them in surrounding paragraphs (until "end")}
-Speed not the issue. 
-Need less RBFs for given accuracy of steady state
-less nodes implies less memory
-general geometries are supported
-better distributions of nodes on spheres. competition like CitComS, etc. use cubed sphere, yinyang grids and triangular meshes in combination with low order methods (2nd and 3rd order). Increasing the order of the method or dimension can significantly increase the complexity of the algorithms. RBF-FD naturally extends to higher dimensions and increasing the order is as simple as increasing the number of nodes in the stencil. 
-\authnote{end} 
-
-Related work ({\color{blue} list references}): RBF methods for Elliptic PDEs
-\begin{itemize} 
-	\item Global \cite{Schmidt2009b} 
-	\item Compact Support
-	\item divergence-free spherical radial basis Glerkin method for Stokes on the unit sphere \cite{Ganesh2011} 
-	\item RBF-FD	
-	\begin{itemize} 
-		\item Incompressible Navier-Stokes using explicit (Euler) and semi-implicit (Crank Nicholson) time step. Small problem size  ($61 x 61$) and small stencil sizes ($n=9$); ghost nodes beyond boundary strategy.  Both RBF-FD and RBF-HFD tested. \cite{Chinchapatnam2009}
-		\end{itemize} 
-\end{itemize} 
-
-Related work on Preconditioned iterative methods for Stokes Flow
-\begin{itemize}
-\item Survey of preconditioners used for Stokes flow problems \cite{May2008} (limited applicability since they do not assume non-SPD matrices) 
-\item Multi-GPU Jacobi iteration for Navier stokes flow in cavity \url{http://scholarworks.boisestate.edu/cgi/viewcontent.cgi?article=1003&context=mecheng_facpubs}
-\end{itemize} 
-
-For decades, a major push has been executed in science to parallelize algorithms and leverage resources available on the increasingly capable supercomputers and clusters. Perhaps as soon as the next decade, we will see exascale level architectures (\cite{ExaScaleRef}). Given today's technology, those architecture will surely achieve their performance with the help of accelerator hardware such as GPUs. 
-
-To prepare the RBF community for the future, we develop algorithms employing two levels of parallelization: first the MPI standard spans computation across multiple CPUs, and second computation is distributed across the many processing cores of GPU accelerators. 
-
-The two level parallelization can even be extended to three level parallelism
-with pThreads or OpenMP \cite{NVidia_multi-gpu_example}. While OpenCL provides
-the means to target parallelism on either multi-core CPUs or many-core GPUs, it
-does not allow a parallel kernel on one hardware interact with a parallel kernel
-on the another. That is to say, an OpenCL kernel on the CPU cannot launch
-kernels on the GPU.  
+%TODO: Related work
+%TODO: divergence-free spherical radial basis Glerkin method for Stokes on the unit sphere \cite{Ganesh2011} 
+%TODO: Incompressible Navier-Stokes using explicit (Euler) and semi-implicit (Crank Nicholson) time step. Small problem size  ($61 x 61$) and small stencil sizes ($n=9$); ghost nodes beyond boundary strategy.  Both RBF-FD and RBF-HFD tested. \cite{Chinchapatnam2009}
+%TODO: Related work on Preconditioned iterative methods for Stokes Flow
+%\begin{itemize}
+%\item Survey of preconditioners used for Stokes flow problems \cite{May2008} (limited applicability since they do not assume non-SPD matrices) 
+%\item Multi-GPU Jacobi iteration for Navier stokes flow in cavity \url{http://scholarworks.boisestate.edu/cgi/viewcontent.cgi?article=1003&context=mecheng_facpubs}
+%\end{itemize} 
 
 Our goal is to demonstrate to the geosciences that RBF-FD can function well on
 both hyperbolic and elliptic problems. In \cite{bolligFlyerErlebacher2011} we
@@ -168,26 +146,25 @@ Also, observe that multiple right hand sides can be employed to efficiently obta
 
 \section{GPU Based Solver}
 
+Our implementation leverages ViennaCL to directly benefit from improvements to the performance of underlying sparse matrix-vector product, vector dot vector and other linear algebra primitives. Also, ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
-\authnote{We should only discuss the ViennaCL implementation. Unless I can get my ILU preconditioner implemented for CUSP.}
-
-Our implementation leverages existing libraries for sparse matrix-vector operations on the GPU. Two libraries exist for sparse matrix linear algebra on the GPU: CUSP \cite{Bell2009} and ViennaCL \cite{Rupp2010}. By implementing our algorithm in the context of ViennaCL, we directly benefit from improvements to the performance of underlying sparse matrix-vector product, vector dot vector and other linear algebra primitives. Also, ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
-
-{\color{blue} Table comparing CUSP and ViennaCL features} 
+%TODO: Table comparing CUSP and ViennaCL features in GPU SpMV chapter?
 
 The GMRES algorithm was introduced in 1986 by Saad and Schultz \cite{Saad1986}. The iterative solver support general matrix structures, whereas methods like Conjugate Gradient require symmetric positive definiteness. 
 
 \subsection{GMRES Algorithm} 
 
-At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. \authnote{significance of orthogonalization}. 
+At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. %TODO: \authnote{significance of orthogonalization}. 
 
-Multiple variants of GMRES exist \authnote{cite refs} that utilize unique orthogonalization steps. The motivation behind alternative Arnoldi processes is to save both memory and operation counts. In some cases stability of the GMRES iterations can also be improved \authnote{I recall a paper saved on my laptop}. Saad \cite{Saad1986} introduced a practical implementation of the GMRES method that utilizes Given's rotations to compute an implicit QR factorization. The Given's based algorithm is part of the CUSP library; ViennaCL implements the Householder reflection algorithm. 
+%TODO: variants in orthogonalization steps and variants in preconditioners, actual iterations, restarts etc. 
+Variants of GMRES exist that utilize unique orthogonalization steps. The motivation behind alternative Arnoldi processes is to save both memory and operation counts. In some cases stability of the GMRES iterations can also be improved \cite{FindRef}. Saad \cite{Saad1986} introduced a practical implementation of the GMRES method based on Given's rotations to compute an implicit QR factorization. The Given's based algorithm is part of libraries like CUSP \cite{Cusp2010} and CULA Sparse \cite{CULASparse}; ViennaCL implements the Householder reflection algorithm. 
 
-We have implemented the Given's rotation algorithm within ViennaCL, because it is simpler to implement in parallel and increases parallelism \authnote{verify statement with reference}. 
+The Given's rotation algorithm is easier to parallelize than Householder, which led to the addition of an alternate GMRES algorithm with restarts under ViennaCL. 
 
-\cite{Bahi2011} does not describe their use of rotations.) 
+The authors of \cite{Bahi2011} do not describe their orthogonalization process, but based on the description of their parallelization strategy it is safe to assume a Given's rotation is used.
 
-Note that the application of a preconditioner such as ILU0 introduces an additional call to MPI\_Alltoallv before everywhere $M^{-1}$ is present in Algorithm~\ref{alg:gmres}.
+Algorithm~\ref{alg:gmres} presents the basic Left-preconditioned GMRES algorithm with restarts and Given's rotations. The comments in blue denote portions of the algorithm that depend on MPI collectives and the MPI routine used . 
+
 
 \begin{algorithm}                      % enter the algorithm environment
 \caption{Left-preconditioned GMRES(k) with Given's Rotations}          % give the algorithm a caption
@@ -224,7 +201,13 @@ Note that the application of a preconditioner such as ILU0 introduces an additio
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Multiple GPUs}
+
+
+Note that the application of a preconditioner such as ILU0 introduces an additional call to MPI\_Alltoallv before everywhere $M^{-1}$ is present in Algorithm~\ref{alg:gmres}.
+
+Spanning GMRES across multiple GPUs uses the same collectives as those developed in Chapter~\ref{chap:distributed_rbffd}. 
+
+
 %\subsubsection{Domain Decomposition} 
 %A restricted additive Schwarz \cite{Cai1998} domain decomposition is applied. Traditional additive Schwarz methods construct a restriction matrix $R$ to constrain processor computation to a subdomain and $R^T$ project it back onto the global domain. In contrast, restricted additive Schwarz replaces replaces the restriction matrix $R$ with some restriction operator $R^0_P$ where $R^0_P \subset R$, but continues to use $R^T$ to project the solution back onto the global domain. The main idea behind re
 %, restricted additive schwarz assigns all nodes to exactly one subdomain. Regular additive Schwarz would allow nodes to be in one or more subdomains.
@@ -234,14 +217,6 @@ Note that the application of a preconditioner such as ILU0 introduces an additio
 %\end{align} 
 %where $R_p$ is a restriction matrix (identity on diagonals for stencils operated on by a processor, zero elsewhere). In our case, the partitions are determined by node coordinates, so all non-zeros for a stencil row end up on the same processor (i.e., the decomposition of the matrix does not allow multiple domain blocks per row). 
 %
-
-
-\subsubsection{MPI Communication} 
-Mention communication using MPI\_AlltoAllv, MPI\_Allreduce. (Show communication points in algorithm---be sure to explicitly show Givens rotations in algorithm. \cite{Bahi2011} did list rotations. We also use the CPU for Gram Schmidt process.) 
-\section{Multiple GPUs}
-
-Scaling GMRES across multiple GPUs requires a domain decomposition. Domain decompositions can be interpreted as partitioning of nodes or cuts along 
-
 
 %
 %\begin{align} 
@@ -254,7 +229,7 @@ Scaling GMRES across multiple GPUs requires a domain decomposition. Domain decom
 
 \subsection{Solution Ordering}
 
-To simplify distribution of solution values, we apply a reordering to the system to interleave components of the solution and group solutions by node. This allows us to directly copy a double4 for each 
+In a distributed environment values for each $U$, $V$, $W$ and $P$ must be obtained from ghost nodes. Rather than execute four collectives (one per component), we interleave components to group all components by node. Figure~\ref{fig:interleaved_solution} demonstrates the concept of interleaving the solution. This allows us to directly copy a double4 containing the $\{u_i, v_i, w_i, p_i\}$ for node $x_i$
 
 The DM assembly depends on all dimensions of solution values for a single node to be consecutive in memory. While Equation~\ref{eq:stokes_system_with_constraints} has all components of $U, V, W$ and $P$ grouped together, the values of $u_1$, $v_1$, $w_1$ and $p_1$ correspond to node $(x_1, y_1, z_1)$. 
 
@@ -291,26 +266,12 @@ Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving ou
 \end{figure} 
 
 
-\subsubsection{Node Order} 
-\authnote{Should we discuss node ordering and its implications on convergence?}  
-if so, I should state: 
-\begin{itemize} 
-\item Nodes are read from file
-\item Their order is either: unmodified or modified
-\item If modified, our goal is to improve memory access patterns by reducing the bandwidth of the DM. A bandwidth of $n$ is the best case scenario where the solution vector is accessed linearly. The worst case scenario is when bandwidth is $N$ and the solution is accessed randomly via stencils. 
-\item Ordering nodes according to a space filling curve can reduce the ``randomness" of solution access by placing elements of stencils nearby (sometimes sequential) in memory. 
-\item Many space filling curves exist. Raster (IJK), Snake, Morton, Hilbert, U, X, etc. We consider Raster here, with other orderings left for future work. 
-\item Our restriction operator for domain decomposition might reduce the bandwidth for each processor compared to the global DM. How does the combination of restriction and reordering work? 
-\item Reordering the DM has implications on its condition number and the convergence rate of the GMRES algorithm. We should provide bandwidth of matrix before and after reordering, as well as the condition number before and after. We should monitor convergence with and without reordering, and compare the number of GMRES iterations per minute/second. 
-\end{itemize}  
-
-\subsubsection{MPI Communication} 
-The majority of communication within our implementation consists of two MPI routines: MPI\_Alltoallv and MPI\_Allreduce. 
+The distributed GMRES implementation depends on two MPI collectives: MPI\_Alltoallv and MPI\_Allreduce. 
 
 
 \section{Governing Equations} 
 
-We solve the PDE on the surface of the sphere as an example for one and multiple GPUs. Boundary conditions detract from the accuracy of RBF-FD and introduce other issues such as Runge phenomena \cite{RBFRungePaper}, so we first verify the solution without boundaries. 
+We solve the PDE on the surface of the sphere as an example for one and multiple GPUs. Boundary conditions detract from the accuracy of RBF-FD and introduce other issues such as Runge phenomena \cite{RBFRungePaper}, so we first verify the solution without boundaries. Also, this section 
 
 %Viscous Stokes flow is described by the governing equations
 %	\begin{align}
@@ -320,7 +281,8 @@ We solve the PDE on the surface of the sphere as an example for one and multiple
 %\end{align}
 %where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar pressure-field respectively, $\eta$ is the viscosity tensor, $Ra$ is the non-dimensional Rayleigh number, and $T$ is the temperature profile. The focus of this paper is on the the implicit solve for Stokes flow, which amounts to the steady-state problem described by Equations~\ref{eq:stokes_continuity} and \ref{eq:stokes_momentum}. See \cite{Wright2010} for discussion of RBFs applied to the transient problem. 
 
-\authnote{ Need to reference work that solves problem in two steps and justify our approach to solve in one step. Golub paper might be good for this. Or the Stoke preconditioners paper }
+
+%TODO: \authnote{ Need to reference work that solves problem in two steps and justify our approach to solve in one step. Golub paper might be good for this. Or the Stoke preconditioners paper. SIMPLE method?  }
 
 Assuming $\eta$ is a constant (i.e., $\grad\eta = 0$), our system simplifies to
 \begin{align}
@@ -395,6 +357,7 @@ Due to the lack of boundary conditions on the sphere, the family of solutions th
 %sing_value_indices = find(max(Ssvd) < 1e-6)
 %\end{mcode} 
 
+%TODO: null-space *of the solution*? or null-space of the equation?
 One way to close the null-space of the solution is to augment Equation~\ref{eq:stokes_constant_viscosity} with the following constraints: 
 \begin{align}
 \left(\begin{array}{cccc:cccc}  
@@ -412,10 +375,12 @@ u_1 \\ u_2 \\ u_3 \\ p \\ \hdashline c_1 \\ c_2 \\ c_3 \\ c_4
 \end{array} \right) = \frac{RaT}{\sqrt{x_1^2 + x_2^2 + x_3^2}}\begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ 0 \\ \hdashline \int_\Omega u_1 \partial\Omega \\ \int_\Omega u_2 \partial\Omega \\ \int_\Omega u_3 \partial\Omega \\ \int_\Omega p \partial\Omega \end{pmatrix}.
 \label{eq:stokes_system_with_constraints}
 \end{align}
-\authnote{Need the integral of my manufactured solution on the RHS. $\ell_1$ norm does not converge to 0, so it will screw solve with constraints}
-where the subscript on $1_{N \times 1}$ indicates a $N \times 1$ vector of ones. These constraints add the unknowns $(c_1, c_2, c_3, c_4)$, which should solve to be zero. The four rows on the bottom require that the solution satisfy the integral over the domain for each solution component. In combination with the four added columns, the constraints indicate that the solution components must satisfy integrals using the same constant value. This is only possible if the constants are zero. Our added constraints are not chosen for physical significance, but for algebraic significance. When solving Equation~\ref{eq:stokes_system_with_constraints} with GMRES, the constraints improve conditioning of the system and increase the rate of convergence. 
+%TODO explain this in text: \authnote{Need the integral of my manufactured solution on the RHS. $\ell_1$ norm does not converge to 0, so it will screw solve with constraints}
+where the subscript on $1_{N \times 1}$ indicates a $N \times 1$ vector of ones. These constraints add the unknowns $(c_1, c_2, c_3, c_4)$, which should solve to be zero. The four rows on the bottom require that the solution satisfy the integral over the domain for each solution component. In combination with the four added columns, the constraints indicate that the solution components must satisfy integrals using the same constant value. This is only possible if the constants are zero. The added constraints are not physically significant, but are chosen to satisfy the system algebraicly. Of course when solving Equation~\ref{eq:stokes_system_with_constraints} with GMRES, the constraints help increase the rate of convergence. 
 
-We also investigate the use of GMRES without constraints. This increases the number of iterations required to converge, but allows increased parallelism (decreased data sharing). \authnote{Perhaps we can iterate without constraints until convergence slows then ``restart" the problem on a single GPU with constraints included? Limits scalability but would allow more parallelism for part of iterations while also reasonable convergence.}
+%TODO: data to show? 
+We also investigate the use of GMRES without constraints. This increases the number of iterations required to converge, but allows increased parallelism (decreased data sharing). %TODO: why is dropping the constraints valid? GMRES assumes zero for each of those? 
+%\authnote{Perhaps we can iterate without constraints until convergence slows then ``restart" the problem on a single GPU with constraints included? Limits scalability but would allow more parallelism for part of iterations while also reasonable convergence.}
 
 \subsection{Manufactured Solution}
 
@@ -455,6 +420,8 @@ The manufactured solution is shown in Figure~\ref{fig:manufactured_solution}. A 
 \end{figure} 
 
 \subsubsection{Convergence}
+
+%TODO: get this data!
 
 As the problem size $N$ increases, we expect the approximation to the solution to converge on the order of $\sqrt{n}$ where $n$ is the choice of stencil size. Figure~\ref{fig:convergence} demonstrates the convergence of our solution with respect to $\sqrt{N}$ for stencil sizes $n=31$,$101$ \authnote{update when figure is complete}. 
 

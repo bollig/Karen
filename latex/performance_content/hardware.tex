@@ -32,26 +32,27 @@ Need a figure showing the overlapping comm and comp in a general process with th
 \section{Fermi Architecture}
 
 
-In Spring 2010, NVidia will publicly release a new architecture code named "Fermi" \cite{Fermi:2009}. The new hardware will support many features of interest, the most important being 8x faster double precision than the older Tesla C1060 (GT200 architecture). It will also allow for concurrent kernel execution (for up to 16 small kernels) making it easier to keep the GPU saturated with computation. Table~\ref{tbl:fermi_compare} considers some of the more monumental differences between the Fermi and GT200 architectures.
-\begin{table}[t]
-\begin{center}
-\begin{tabular}{D|C|C|}
- & Fermi & GT200 \\ 
- \hline\hline
- \# of concurrent kernels & 16 & 1 \\
- Warps scheduled concurrently & 2 & 1 \\
- Clock cycles to dispatch instruction to warp & 2 & 4 \\
- Caching on Global Device Memory & Yes & No \\
- Shared memory & 64 KB & 16 KB \\
- Shared memory banks & 32 & 16 \\
- Bank conflict free FP64 access & Yes & No \\
- Cycles to read FP64 (from shared memory) & 2 & 32 \\
- Max allowed warps & 48 & 32 \\
-\end{tabular}
-\end{center}
-\caption{Comparison of NVidia's new Fermi architecture to the GT200 architecture used for GTX 280, Tesla C1060 and other GPUs in use today.}
-\label{tbl:fermi_compare}
-\end{table}%
+%TODO: describe each generation of hardware 
+%NVidia released an architecture code named "Fermi" in 2010 \cite{Fermi2009}. The hardware supports many features of interest, the most important being 8x faster double precision than the older Tesla C1060 (GT200 architecture). It will also allow for concurrent kernel execution (for up to 16 small kernels) making it easier to keep the GPU saturated with computation. Table~\ref{tbl:fermi_compare} considers some of the more monumental differences between the Fermi and GT200 architectures.
+%\begin{table}[t]
+%\begin{center}
+%\begin{tabular}{D|C|C|}
+% & Fermi & GT200 \\ 
+% \hline\hline
+% \# of concurrent kernels & 16 & 1 \\
+% Warps scheduled concurrently & 2 & 1 \\
+% Clock cycles to dispatch instruction to warp & 2 & 4 \\
+% Caching on Global Device Memory & Yes & No \\
+% Shared memory & 64 KB & 16 KB \\
+% Shared memory banks & 32 & 16 \\
+% Bank conflict free FP64 access & Yes & No \\
+% Cycles to read FP64 (from shared memory) & 2 & 32 \\
+% Max allowed warps & 48 & 32 \\
+%\end{tabular}
+%\end{center}
+%\caption{Comparison of NVidia's new Fermi architecture to the GT200 architecture used for GTX 280, Tesla C1060 and other GPUs in use today.}
+%\label{tbl:fermi_compare}
+%\end{table}%
 
 %While there has been no word yet as to the date of availability (only speculation for Q1 2010), the Fermi architecture is anticipated to cost around \$2,500 to \$4,000 for the Tesla C2050 (3 GB Global Device Memory) and C2070 (6 GB Global Device Memory) units respectively \cite{FermiPrice:2009}.
 
