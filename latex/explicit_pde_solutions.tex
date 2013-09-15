@@ -13,30 +13,12 @@
 
 \chapter{Numerical Validation} 
 
-\label{chap:explicit_implicit_pdes}
+\label{chap:applications}
 %\label{sec:validation}
 
-
-with the goal of solving coupled fluid flows modelling the physics (?) in the interior of the earth. We require both advective terms and diffusive terms. The components of a good pressure fluid solver are explicit and implicit differentiation. Whether we solve a steady-state PDE implicitly or a hyperbolic PDE with an implicit time-scheme, we require an \emph{implicit solver}. An implicit solver is nothing but a method of assembling a differentiation matrix, forcing terms on the RHS and then solving the linear system. A direct LU factorization would suffice if our system is dense, but with RBF-FD the system is sparse. Sparse systems can be efficiently solved under the right conditions through sparse iterative solvers. :
-
-
-
-%\subsection{CVT epsilon tests}
 %
-%\cite{FlyerLehto11} consider epsilon as a function of the number of nodes on the sphere. However, this assumption requires nodes to be distributed as MD nodes. When we apply the same functions to CVTs of larger problems we get varying results. The subtle perturbations in nodes 
-%
-%\hl{test on icosahedral grid}
-%
-%\hl{function based on min enclosing circle instead. Will be finer tuned to the grid. if nodes are uniform in stencil and stencil size locked then the only things that can influence epsilon and conditioning is the enclosing circle radius.}
-%
+%with the goal of solving coupled fluid flows modelling the physics (?) in the interior of the earth. We require both advective terms and diffusive terms. The components of a good pressure fluid solver are explicit and implicit differentiation. Whether we solve a steady-state PDE implicitly or a hyperbolic PDE with an implicit time-scheme, we require an \emph{implicit solver}. An implicit solver is nothing but a method of assembling a differentiation matrix, forcing terms on the RHS and then solving the linear system.
 
-%\section{Parabolic} 
-%
-%Include figure tracking max temperature and min temperature. If we have zero flux conditions then they should average out. If we have Dirichlet BCs the temperature will converge to 0. 
-%
-
-
-%\section{RBF-FD for Explicit Solutions} 
 
 
 Here, we present the first results in the literature for parallelizing RBF-FDs on multi-CPU and multi-GPU architectures for solving PDEs. 
@@ -45,7 +27,16 @@ for the development of RBFs in solving PDEs on the sphere \cite{FlyerWright07, F
 
 All results in this section are produced by the single-GPU implementation. Multi-CPU and multi-GPU implementations are verified to produce these same results. Synchronization of the solution at each time-step and the use of double precision on both the CPU and GPU ensure consistent results regardless of the number and/or choice of CPU vs GPU. Eigenvalues are computed on the CPU by the Armadillo library \cite{armadillo2010}.
 
-\subsection{Vortex Rollup}
+
+We assume the spherical coordinate system is used in terms of latitude $\lambda$ and longitude $\theta$:
+\begin{eqnarray*} 
+x & = & \rho \cos \lambda \cos \theta, 	\\
+y & = & \rho \sin \lambda \cos \theta, 		\\
+z & = & \rho \sin \theta.		
+\end{eqnarray*}
+
+
+\section{Vortex Rollup}
 \label{sec:numerical_validation}
 The first test case demonstrates vortex roll-up of a fluid on the surface of a unit sphere. An angular velocity field causes the initial condition to spin into two diametrically opposed but stationary vortices.
 
@@ -82,6 +73,7 @@ From a method of lines approach, the discretized version of (\ref{eq:vortex}) is
 \end{equation}
 where $D_\lambda$ is the DM containing the RBF-FD weights that approximate $\pd{}{\lambda}$ at each node on the sphere.
 
+%TODO: hyperviscosity
 For stability, hyperviscosity is added to the right hand side of (\ref{eq:vortex_matrix_form}) in the form given in (\ref{eq:evaluation_with_hyperviscosity}). The scaling parameter $\gamma_c$ and the order of hyperviscosity $k$ are given in
 Table~\ref{tbl:vortex_hv_params}. The goal when choosing $k$ is to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. In this process, the eigenvalues will be pushed into the left half of the complex plane. Then, $\gamma_c$ is used to condense the eigenvalues as near to the imaginary axis as possible. Figure \ref{fig:vortex_eigs_hv} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, in (\ref{eq:vortex_matrix_form}). 
 
@@ -136,7 +128,7 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \begin{subfigure}[b]{0.49\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/vortexComputedSolution-eps-converted-to.pdf}
-	\caption{Computed Solution}
+	\caption{Computed Solution ($t=10$)}
 	\label{fig:vortex_approx}
 \end{subfigure} 
 \begin{subfigure}[b]{0.49\textwidth}
@@ -150,7 +142,7 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \end{center}
 \end{figure}
 
-Figure~\ref{fig:vortex_t10} shows the solution to Equation~(\ref{eq:vortex}) at $t = 10$, on $N=10201$ nodes, with stencil size $n=50$. This resolution is sufficient to properly capture the vortices at $t=10$, but lower resolutions would suffer approximation errors associated with insufficient grid resolution. 
+Figure~\ref{fig:vortex_t10} shows the initial condition for Equation~(\ref{eq:vortex}) and the solution at $t = 10$, on $N=10201$ nodes, with stencil size $n=50$. This resolution is sufficient to properly capture the vortices at $t=10$, but lower resolutions would suffer approximation errors associated with insufficient grid resolution. 
 For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ error convergence study presented in Figure~\ref{fig:conv_plot_vortex_hv}. The time step $\Delta t = 0.05$ for all resolutions.
 
 \begin{figure}[htbp!]
@@ -257,13 +249,13 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 
 \begin{figure}[ht!]
 \begin{center}
-\begin{subfigure}[b]{0.48\textwidth}
+\begin{subfigure}[b]{0.5\textwidth}
 	%\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/cosineComputedSolution.pdf}
 	\caption{10 Revolutions}
 	\label{fig:cosine_approx}
 \end{subfigure}
-\begin{subfigure}[b]{0.48\textwidth}
+\begin{subfigure}[b]{0.5\textwidth}
 	%\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_Error_CoveredScale2.pdf}
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/cosineAbsoluteError-eps-converted-to.pdf}
 	\caption{Absolute Error at $10$ Revolutions}
@@ -293,7 +285,7 @@ Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolu
 \begin{figure}[htbp]
 \begin{center}
 % TODO: Color figure
-\includegraphics[width=3in]{../figures/paper1/figures/cosine_bell/convergence_plot_hv.pdf}
+\includegraphics[width=3in]{../figures/paper1/cosine_bell/convergence_plot_hv-eps-converted-to.pdf}
 \caption{Convergence plot for cosine bell advection. Normalized $\ell_2$ error at 10 revolutions with hyperviscosity enabled. }
 \label{fig:conv_cosine_bell}
 \end{center}

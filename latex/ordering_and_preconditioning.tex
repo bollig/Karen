@@ -692,7 +692,7 @@ The C++ fixed-grid stencil generator defaults to the Raster-/IJK-order due to it
 %TODO: Similar conclusions are drawn by the authors of \cite{MellorCrummey2001}, who found that reordering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
 
 
-Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. Although no known investigations consider RBF-FD on moving nodes, RBF and RBF-FD applications with moving node coordinates and local refinements (e.g., \cite{FlyerLehto10}) should find the fixed-grid method significantly relevant. Future work in this direction would easily justify a GPU implementation following \cite{Krog2010,Green2010,Johnson2011, Goswami2010}. 
+Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. No known investigations consider RBF-FD on moving nodes, but such research could prove local refinements  (e.g., \cite{FlyerLehto10}) should find the fixed-grid method significantly relevant. Future work in this direction would easily justify a GPU implementation following \cite{Krog2010,Green2010,Johnson2011, Goswami2010}. 
 
 It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} developed operators to directly transform floating point coordinates into $Z$-orderings. The MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}) includes a test of those operators, although the investigation is still underway. 
 
