@@ -21,40 +21,36 @@
 
 Parallelizing applications in a distributed computing environment requires three
 design decisions \cite{Saad2003}. First, the problem must be partitioned in some fashion to distribute work across multiple processes. Intelligent partitioning
-impacts load balancing and the ratio of computation versus communication. Imbalanced computation can result in excessive delay per
-iteration as some processors tackle larger problem sizes with others sitting idle. Second, a decision must be made on what subset of node information,
-solution values, etc. are visible to each process, and then establish index mappings that translate between a local context and the global problem. Third, each process must establish a local ordering of data. Choosing the right ordering can improve solver performance and/or simplify data movement. Of particular interest here is how to minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
+impacts load balancing and communication latency.
+%TODO: latency
+ %Imbalanced computation can be the source of excessive delays as processors sit idle and wait for other processors to catch up. 
+Second, a decision must be made on what subset of node information,
+solution values, etc. are visible to each process, and then establish index mappings that translate between a local context and the global problem. Third, each process must establish a local ordering of data. The right local order can improve solver performance and/or simplify data movement. %Of particular interest here is how to minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
 
 This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. 
 
-It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI1993} is used to distribute RBF-FD across an HPC cluster. 
+We operate under the assumption that inter-process communication is managed by the \emph{Message Passing Interface (MPI)} \cite{MPI}. Details on how communication collectives are used are included below in Section~\ref{sec:mpi_collectives}. 
 
 
-Parallelizing RBF-FD made possible with the Message Passing Interface (MPI). 
-MPI history as a standard
-MPI supports distributed and shared. 
-MPI utilizes the fastest fabric possible for communication, so processes on different cores of the same chip will use shared memory for fastest transfer whereas processes on different nodes might use sockets in the worst case; in reality processes on independent nodes use the Infiniband QDR. 
-MPI concept of processes as ranks. Each rank is an independent process with its own memory space. 
-
-
-%TODO: related work
-%TODO: why implement independent of PETSc, Deal.II, Trilinos, etc. 
 
 \section{Partitioning}
 
 For ease of development and parallel debugging, partitioning is initially
-assumed to be linear along the $x$-axis. Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
-$N=10,201$ nodes on the unit sphere for four processes. A similar decomposition along one dimension occurs in \cite{Divo2007} where the authors apply a local RBF collocation scheme to model viscous flow and heat transfer on rectangular domains. 
+assumed to be linear along the $x$-axis. This approach is not uncommon when solving PDEs on rectangular domains (see e.g., \cite{Divo2007, Thibault2009}). However, on irregular domains a simple one-dimensional cut can result in imbalanced workloads across processors. 
 
+% A similar decomposition occurs in \cite{Divo2007} where the authors apply a local RBF collocation scheme to model viscous flow and heat transfer on rectangular domains. Thibault and Senocak  \cite{Thibault2009} partition a rectangular domain along the $z$-dimension for a variety of 3-D fluid benchmarks. 
+
+Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
+$N=10,201$ nodes on the unit sphere for four processes. 
 Each partition, illustrated as a unique color, contains many stencil centers. 
-Although stencil centers are contained within a partition, there is no requirement for all stencil nodes to be contained within the same partition. As a result, many stencils require information updates from neighboring partitions for nodes that are referred to as \emph{ghost nodes} \cite{NeEDREF}. %TODO: need ghost node ref.
-In many cases, \emph{ghost nodes} are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc.. However, values at ghost nodes are modified by another process, so changes must be explicitly synchronized via an MPI collective for dependent processes to maintain consistency. 
+Based on the location of a stencil's center the corresponding partition is easily identified. In cases where stencils are part of one partition and depend on stencil nodes in another, we say that the dependencies are \emph{ghost nodes}. %TODO: need ghost node ref.
+In many cases, ghost nodes are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, values at ghost nodes are modified by another process, so changes must be explicitly synchronized via an MPI in order to maintain consistency. 
 
 In Figure~\ref{fig:decomposed_sphere}, alternating representations between node points and interpolated surfaces illustrates the
 overlap regions where ghost nodes reside. Due to stencil dependencies in each partition, the overlap region representations are double-wide---i.e., they contain a set of ghost nodes for both the left and right partitions. 
 
 As the stencil size increases, the width of the
-overlap regions relative to total number of nodes on the sphere proportionally increases. In the case of the unit sphere from Figure~\ref{fig:decomposed_sphere}, the width of the overlap is roughly $\sqrt{n}$ for stencil size $n$. Figure~\ref{fig:decomposed_sphere} shows the case of $n=31$ nodes per stencil. Higher order RBF-FD stencils (i.e., larger stencil sizes) exacerbate the situation by further increasing the number of bytes that must be sent via MPI. Observe that since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary.
+overlap regions relative to total number of nodes on the sphere proportionally increases. In Figure~\ref{fig:decomposed_sphere}, the width of the overlap is roughly $\sqrt{n}$. Larger stencil sizes add new  exacerbate the situation by further increasing the number of bytes that must be sent via MPI. Observe that since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary.
 
 \begin{figure}[ht!]
 \begin{center}
@@ -241,13 +237,22 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
 
         This approach is scalable to a very large number of 
 		processors, since the individual processors do not require the 
-		full mapping between RBF nodes and CPUs. Here scalable implies the total problem size and processor count can increase . The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
+		full mapping between RBF nodes and CPUs. Here scalable is used loosely as there are two types of scaling: weak and strong. Weak scaling implies the total problem size and processor count can increase. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
 
 
+\section{MPI and Communication Collectives}
+\label{sec:mpi_collectives}
 
-\section{Communication Collectives} 
+It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI1993} is used to distribute RBF-FD across an HPC cluster. 
 
-MPI collectives allow information sharing between processes. Our code leverages three collectives: MPI\_Alltoall, MPI\_Alltoallv and MPI\_Isend/MPI\_Irecv. 
+
+Parallelizing RBF-FD made possible with the Message Passing Interface (MPI). 
+MPI history as a standard
+MPI supports distributed and shared. 
+MPI utilizes the fastest fabric possible for communication, so processes on different cores of the same chip will use shared memory for fastest transfer whereas processes on different nodes might use sockets in the worst case; in reality processes on independent nodes use the Infiniband QDR. 
+MPI concept of processes as ranks. Each rank is an independent process with its own memory space. 
+
+MPI collectives are used to share data between processes. Our code leverages three collectives: MPI\_Alltoall, MPI\_Alltoallv and MPI\_Isend/MPI\_Irecv. 
 
 The collective operation is essentially transposing information as seen in Figure~\ref{fig:mpi_alltoallv_visual}. 
 
@@ -347,10 +352,10 @@ We consider a simple idealized problem where derivatives are computed over a reg
 
 \begin{figure} 
 \centering
-\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_alltoallv.png}  
-\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_speedup.png} \\
-\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_spmvOnly.png}
-\includegraphics[width=5cm]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_commOnly.png} 
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/strong_scaling_4M_regular_alltoallv.png}  
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_speedup.png} \\
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/strong_scaling_4M_regular_spmvOnly.png}
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_commOnly.png} 
 \caption{Strong scaling the distributed SpMV for $N=4096000$ nodes (i.e., a $160^3$ regular grid) and various stencil sizes. Here the MPI\_Alltoallv collective operation is used. (Left) Strong scaling of SpMV (including cost of communication). (Center) Strong scaling of computation only. (Right) Strong scaling of communication only.}
 \end{figure}
 
@@ -373,8 +378,8 @@ We consider a simple idealized problem where derivatives are computed over a reg
 
 \begin{figure}
 \centering
-\includegraphics[width=10cm]{performance_content/scaling/strong_scaling_4M_regular_isend.png}  
-\includegraphics[width=10cm]{performance_content/scaling/weak_scaling_np4000_regular_isend.png}  
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/strong_scaling_4M_regular_isend.png}  
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_isend.png}  
 \caption{Scaling of SpMV with MPI\_Isend/MPI\_Irecv}
 \end{figure}
 

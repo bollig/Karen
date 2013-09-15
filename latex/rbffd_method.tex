@@ -646,17 +646,10 @@ As in classical FD methods, increasing the stencil size, $n$, increases the orde
 %In some ways, RBF-FD and global RBF methods are plagued by shared difficulties. For example, both face a dilemma in choosing the optimal $\epsilon$ to compromise between conditioning and accuracy. A key difference---historically---is that in the multiple independent RBF-FD origins, Wright \cite{Wright2003} focused on bypassing ill-conditioning of RBF-FD and investigated its behavior in the limit as $\epsilon \rightarrow 0$ by means of the Contour-Pad\'{e} algorithm. So while global RBF methods suffered  
 
 %TODO: expand these descriptions
-\authnote{Expand these reference descriptions} 
+%\authnote{Expand these reference descriptions} 
 
 RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
-%Another local alternative for solving PDEs with RBFs was presented by Wright and Fornberg \cite{Wright2004, WrightFornberg06}. 
-%However, in the limit as RBF-FD stencils include all nodes in the domain, Kansa's method is reproduced \cite{Shu2006}. 
-%\togordon{Statement about RBF-FD and Kansa's method is given without proof.}
-%According to Wright and Fornberg \cite{Wright2004}, RBF-FD (and \emph{RBF-HFD} for the Hermite version) was i%ndependently 
-%proposed by many authors including Wright \cite{Wright2003} in his dissertation, Tolstykh \cite{Tolstykh2000,Tolstykh2003a, Tolstykh2003b}, Shu et al. \cite{Shu2003}, and Cecil et al. \cite{Cecil2004}. 
-%RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
-%incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
 Shu et al. \cite{Shu2006} compared the RBF-FD method to Least Squares FD (LSFD) in context of 2D incompressible viscous 
 cavity flow, and found that under similar conditions, the RBF-FD method was more accurate than LSFD, but the solution required 
 more iterations of an iterative solver. RBF-FD was applied to Poisson's 
@@ -666,6 +659,7 @@ convection-diffusion equations, demonstrating solutions that are non-oscillatory
 accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cecil2004}, and 2D linear and non-linear PDEs 
 including Navier-Stokes equations \cite{Shu2003} have all been considered. 
 
+This work focuses on RBF-FD in the context of distributed environments, and on GPUs. Our implementation is verified Chapter~\ref{chap:applications} with a study of transport on the sphere following \cite{FornbergLehto11}. 
 
 
 \section{Multiple Operators}
