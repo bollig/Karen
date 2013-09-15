@@ -74,10 +74,20 @@ From a method of lines approach, the discretized version of (\ref{eq:vortex}) is
 where $D_\lambda$ is the DM containing the RBF-FD weights that approximate $\pd{}{\lambda}$ at each node on the sphere.
 
 %TODO: hyperviscosity
-For stability, hyperviscosity is added to the right hand side of (\ref{eq:vortex_matrix_form}) in the form given in (\ref{eq:evaluation_with_hyperviscosity}). The scaling parameter $\gamma_c$ and the order of hyperviscosity $k$ are given in
-Table~\ref{tbl:vortex_hv_params}. The goal when choosing $k$ is to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. In this process, the eigenvalues will be pushed into the left half of the complex plane. Then, $\gamma_c$ is used to condense the eigenvalues as near to the imaginary axis as possible. Figure \ref{fig:vortex_eigs_hv} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, in (\ref{eq:vortex_matrix_form}). 
+For stability, hyperviscosity is added to the right hand side of (\ref{eq:vortex_matrix_form}) in the form: 
+\begin{align}
+\d{\mathbf{h}}{t} & = - \text{diag}(\omega(\theta)) D_\lambda \mathbf{h} + \gamma_c N^{-k} D_{\Delta^{k}} \mathbf{h}, \nonumber \\
+ & = \left(- \text{diag}(\omega(\theta)) D_\lambda + \gamma_c N^{-k} D_{\Delta^{k}}\right) \mathbf{h}, 
+\label{eq:vortex_matrix_form_w_hv}
+\end{align}
+where $D_{\Delta^{k}}$ is the differentiation matrix for the $k$-th power Laplacian, $\Delta^{k}$, described in Section~\ref{sec:hyperviscosity_operators}, and the expression between parentheses in Equation~\ref{eq:vortex_matrix_form_w_hv} is the stabilized DM applied at each time-step. 
 
-In order to scale to large node sets, the RBF shape parameter, $\epsilon$, is chosen such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ increases ($(\kappa_A)_j$ is the condition number of the interpolation matrix in (\ref{eq:rbffd_weights}), representing the $j^{th}$ stencil). For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
+The scaling parameter $\gamma_c$ and the order of hyperviscosity $k$ are given in
+Table~\ref{tbl:vortex_hv_params}. The parameters are tuned for the MD node sets. Since the values of $\gamma_c$ and $k$ vary based on the eigenvalues/conditioning of $D_\lambda$, switching to an icosahedral or spherical CVT would require additional tuning. Changes to the stencil size or the function for $\epsilon$ also require tuning. 
+
+The goal when choosing $k$ is to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. In this process, the eigenvalues will be pushed into the left half of the complex plane. Then, the scaling $\gamma_c N^{-k}$ is used to condense the eigenvalues as near to the imaginary axis as possible. Figure \ref{fig:vortex_eigs_hv} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, from no hyperviscosity in Equation~\ref{eq:vortex_matrix_form} to the hyperviscosity modified DM in Equation~\ref{eq:vortex_matrix_form_w_hv}. 
+
+The RBF shape parameter, $\epsilon$, is expressed as a function of $N$ based on work in \cite{FlyerLehto11}. If we let $(\kappa_A)_j$ be the condition number of the interpolation matrix in Equation~\ref\ref{eq:rbffd_weights}) for the $j^{th}$ stencil, then we seek an $\epsilon$ such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ grows. For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
 
 \begin{table}[t]
 \caption{Values for hyperviscosity and the RBF shape parameter $\epsilon$ for vortex roll-up test.}
@@ -137,12 +147,12 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 	\caption{Relative Absolute Error}
 	\label{fig:vortex_relerr}
 \end{subfigure}
-\caption{Vortex roll-up solution at time $t=10$ using RBF-FD with $N=10,201$ and $n=50$ point stencil. Normalized $\ell_2$ error of solution at $t=10$ is $1.25(10^{-2})$ }
+\caption{Vortex roll-up solution at time $t=10$ using RBF-FD with $N=10,201$ and $n=50$ point stencil. Normalized $\ell_2$ error of solution at $t=10$ is $1.25(10^{-2})$. }
 \label{fig:vortex_t10}
 \end{center}
 \end{figure}
 
-Figure~\ref{fig:vortex_t10} shows the initial condition for Equation~(\ref{eq:vortex}) and the solution at $t = 10$, on $N=10201$ nodes, with stencil size $n=50$. This resolution is sufficient to properly capture the vortices at $t=10$, but lower resolutions would suffer approximation errors associated with insufficient grid resolution. 
+Figure~\ref{fig:vortex_t10} shows the initial condition for Equation~\ref{eq:vortex} and the solution at $t = 10$, on $N=10201$ nodes, with stencil size $n=50$. This resolution is sufficient to properly capture the vortices at $t=10$, but lower resolutions would suffer approximation errors associated with insufficient grid resolution. 
 For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ error convergence study presented in Figure~\ref{fig:conv_plot_vortex_hv}. The time step $\Delta t = 0.05$ for all resolutions.
 
 \begin{figure}[htbp!]
@@ -164,7 +174,7 @@ For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ 
 %TODO: Mention that CVT nodes require independent tuning of HV param. 
 %TODO: Its useful but not incredibly convenient at the moment.
 
-\subsection{Solid body rotation}
+\section{Solid body rotation}
 
 The second test case simulates the advection of a cosine bell over the surface of a unit sphere at an angle $\alpha$ relative to the pole of a standard latitude-longitude grid. The governing PDE is
 \begin{equation}
@@ -249,13 +259,13 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 
 \begin{figure}[ht!]
 \begin{center}
-\begin{subfigure}[b]{0.5\textwidth}
+\begin{subfigure}[b]{0.55\textwidth}
 	%\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/cosineComputedSolution.pdf}
 	\caption{10 Revolutions}
 	\label{fig:cosine_approx}
 \end{subfigure}
-\begin{subfigure}[b]{0.5\textwidth}
+\begin{subfigure}[b]{0.55\textwidth}
 	%\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_Error_CoveredScale2.pdf}
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/cosineAbsoluteError-eps-converted-to.pdf}
 	\caption{Absolute Error at $10$ Revolutions}
