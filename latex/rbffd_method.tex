@@ -1087,7 +1087,7 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 %
 
 \section{On Choosing the Right $\epsilon$} 
-
+\label{sec:epsilon_contours}
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
 If solving for RBF-Direct weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system} directly), one must balance the choice of $\epsilon$ to avoid ill-conditioning but achieve a reasonable accuracy for the weights. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). 

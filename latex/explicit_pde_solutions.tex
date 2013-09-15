@@ -49,7 +49,7 @@ where the velocity field, $u$, only depends on latitude and is given by
 \begin{equation*}
 u  = \omega(\theta) \cos \theta.
 \end{equation*}
-Note that the $\cos \theta$ in $u$ and $1/\cos{\theta}$ in (\ref{eq:vortex}) cancel in the analytic formulation, so the discrete operator approximates $\omega(\theta) \pd{}{\lambda}$. 
+Note that the $\cos \theta$ in $u$ and $1/\cos{\theta}$ in Equation~\ref{eq:vortex} cancel in the analytic formulation, so the discrete operator approximates $\omega(\theta) \pd{}{\lambda}$. 
 
 Here, $\omega(\theta)$ is the angular velocity component given by
 \begin{equation*}
@@ -59,13 +59,13 @@ Here, $\omega(\theta)$ is the angular velocity component given by
 0 & \rho(\theta) = 0
 \end{cases}
 \end{equation*}
-where $\rho(\theta) = \rho_0 \cos \theta$ is the radial distance of the vortex with $\rho_0=3$. The exact solution to (\ref{eq:vortex}) at non-dimensional time $t$ is
+where $\rho(\theta) = \rho_0 \cos \theta$ is the radial distance of the vortex with $\rho_0=3$. The exact solution to Equation~\ref{eq:vortex} at non-dimensional time $t$ is
 \begin{equation*}
 h(\lambda, \theta, t) = 1 - \mathrm{tanh}\left( \frac{\rho(\theta)}{\gamma} \sin(\lambda - \omega(\theta) t) \right),
 \end{equation*}
 where $\gamma$ defines the width of the frontal zone.
 
-From a method of lines approach, the discretized version of (\ref{eq:vortex}) is
+From a method of lines approach, the discretized version of Equation~\ref{eq:vortex} is
 \begin{equation}
 %\pd{\mathbf{h}}{t} = - \text{diag}(\omega(\theta)) D_\lambda \mathbf{h}.
 \d{\mathbf{h}}{t} = - \text{diag}(\omega(\theta)) D_\lambda \mathbf{h}.
@@ -74,7 +74,7 @@ From a method of lines approach, the discretized version of (\ref{eq:vortex}) is
 where $D_\lambda$ is the DM containing the RBF-FD weights that approximate $\pd{}{\lambda}$ at each node on the sphere.
 
 %TODO: hyperviscosity
-For stability, hyperviscosity is added to the right hand side of (\ref{eq:vortex_matrix_form}) in the form: 
+For stability, hyperviscosity is added to the right hand side of Equation~\ref{eq:vortex_matrix_form} in the form: 
 \begin{align}
 \d{\mathbf{h}}{t} & = - \text{diag}(\omega(\theta)) D_\lambda \mathbf{h} + \gamma_c N^{-k} D_{\Delta^{k}} \mathbf{h}, \nonumber \\
  & = \left(- \text{diag}(\omega(\theta)) D_\lambda + \gamma_c N^{-k} D_{\Delta^{k}}\right) \mathbf{h}, 
@@ -87,7 +87,7 @@ Table~\ref{tbl:vortex_hv_params}. The parameters are tuned for the MD node sets.
 
 The goal when choosing $k$ is to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. In this process, the eigenvalues will be pushed into the left half of the complex plane. Then, the scaling $\gamma_c N^{-k}$ is used to condense the eigenvalues as near to the imaginary axis as possible. Figure \ref{fig:vortex_eigs_hv} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, from no hyperviscosity in Equation~\ref{eq:vortex_matrix_form} to the hyperviscosity modified DM in Equation~\ref{eq:vortex_matrix_form_w_hv}. 
 
-The RBF shape parameter, $\epsilon$, is expressed as a function of $N$ based on work in \cite{FlyerLehto11}. If we let $(\kappa_A)_j$ be the condition number of the interpolation matrix in Equation~\ref\ref{eq:rbffd_weights}) for the $j^{th}$ stencil, then we seek an $\epsilon$ such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ grows. For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
+The RBF shape parameter, $\epsilon$, is expressed as a function of $N$ based on work in \cite{FlyerLehto11}. If we let $(\kappa_A)_j$ be the condition number of the interpolation matrix in Equation~\ref{eq:rbffd_weights} for the $j^{th}$ stencil, then we seek an $\epsilon$ such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ grows. For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b, and the examples in Section~\ref{sec:epsilon_contours}). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
 
 \begin{table}[t]
 \caption{Values for hyperviscosity and the RBF shape parameter $\epsilon$ for vortex roll-up test.}
@@ -153,21 +153,23 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \end{figure}
 
 Figure~\ref{fig:vortex_t10} shows the initial condition for Equation~\ref{eq:vortex} and the solution at $t = 10$, on $N=10201$ nodes, with stencil size $n=50$. This resolution is sufficient to properly capture the vortices at $t=10$, but lower resolutions would suffer approximation errors associated with insufficient grid resolution. 
-For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ error convergence study presented in Figure~\ref{fig:conv_plot_vortex_hv}. The time step $\Delta t = 0.05$ for all resolutions.
+For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ error convergence study presented in Figure~\ref{fig:conv_plot_vortex_hv}. The time step $\Delta t = 0.05$ for all resolutions. Figure~\ref{fig:conv_plot_vortex_hv} 
 
 \begin{figure}[htbp!]
-\begin{center}
-\begin{subfigure}[b]{0.45\textwidth}
-\includegraphics[width=\textwidth] {../figures/vortex/convergence_plot_nohv.pdf}
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth] {../figures/paper1/figures/vortex_rollup/convergence_plot_nohv_color.pdf}
 \caption{No Hyperviscosity}
 \end{subfigure}
-\begin{subfigure}[b]{0.45\textwidth}
+\begin{subfigure}[b]{0.48\textwidth}
+\centering
 \includegraphics[width=\textwidth] {../figures/paper1/figures/vortex_rollup/convergence_plot_hv_color.pdf}
 \caption{With Hyperviscosity}
+\label{fig:conv_plot_vortex_hv}
 \end{subfigure}
 \caption{Convergence plot for vortex roll-up at $t=3$.}
 \label{fig:conv_plot_vortex_hv}
-\end{center}
 \end{figure}
 
 % TODO: note that without stabilization the convergence works in al but one test. If the mat is unstable it is unstable. No fighting it. Use at your own risk. 
@@ -194,15 +196,15 @@ v =  -u_0(\sin \lambda \sin \alpha) &.
 inclined at an angle $\alpha$ relative to the polar axis and velocity $u_0 = 2 \pi / (1036800$ seconds$)$ to require 12 days per revolution of the bell as in \cite{NairTransport05, FlyerWright07}.
 %$u_0 = 1$.
 
-The discretized form of (\ref{eq:cosine_bell}) is
+The discretized form of Equation~\ref{eq:cosine_bell} is
 \begin{equation}
 %D = \text{diag}(\frac{u}{\cos \theta}) D_\lambda + \text{diag}(v) D_\theta
 \d{\mathbf{h}}{t} = -\text{diag}\left(\frac{u}{\cos \theta}\right) D_\lambda \mathbf{h} - \text{diag}(v) D_\theta \mathbf{h}
 \label{eq:cosine_with_hyperviscosity}
 \end{equation}
-where DMs $D_\lambda$ and $D_\theta$ contain RBF-FD weights corresponding to all $N$ stencils that approximate $\pd{}{\lambda}$ and $\pd{}{\theta}$ respectively. Rather than merge the differentiation matrices in (\ref{eq:cosine_with_hyperviscosity}) into one operator, our implementation evaluates them as two sparse matrix-vector multiplies. The separate matrix-vector multiplies are motivated by an effort to provide general and reusable GPU kernels. Additionally, they artificially increase the amount of computation compared to the vortex roll-up test case to simulate cases when operators cannot be merged into one DM (e.g., a non-linear PDE).
+where DMs $D_\lambda$ and $D_\theta$ contain RBF-FD weights corresponding to all $N$ stencils that approximate $\pd{}{\lambda}$ and $\pd{}{\theta}$ respectively. Rather than merge the differentiation matrices in Equation~\ref{eq:cosine_with_hyperviscosity} into one operator, our implementation evaluates them as two sparse matrix-vector multiplies. The separate matrix-vector multiplies are motivated by an effort to provide general and reusable GPU kernels. Additionally, they artificially increase the amount of computation compared to the vortex roll-up test case to simulate cases when operators cannot be merged into one DM (e.g., a non-linear PDE).
 
-By splitting the DM, the singularities at the poles ($1 / \cos{\theta} \rightarrow \infty$ as $\theta \rightarrow \pm\frac{\pi}{2}$) in (\ref{eq:cosine_bell}) remain. However, in this case, the approach functions without amplification of errors because the MD node sets have nodes near, but not on, the poles. As noted in \cite{FlyerWright07, FornbergLehto11}, applying the entire spatial operator to the right hand side of Equation~\ref{eq:rbffd_weights} generates a single DM that analytically removes the singularities at poles. 
+By splitting the DM, the singularities at the poles ($1 / \cos{\theta} \rightarrow \infty$ as $\theta \rightarrow \pm\frac{\pi}{2}$) in Equation~\ref{eq:cosine_bell} remain. However, in this case, the approach functions without amplification of errors because the MD node sets have nodes near, but not on, the poles. As noted in \cite{FlyerWright07, FornbergLehto11}, applying the entire spatial operator to the right hand side of Equation~\ref{eq:rbffd_weights} generates a single DM that analytically removes the singularities at poles. 
 
 We will advect a $C^1$ cosine bell height-field given by
 \begin{equation*}
@@ -244,7 +246,7 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 	\caption{With Hyperviscosity}
 	\label{fig:cosine_eigs_hv}
 \end{subfigure}
-\caption{Eigenvalues of (\ref{eq:cosine_with_hyperviscosity}) for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=8$ and $\gamma_c = 5*10^{-2}$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.}
+\caption{Eigenvalues of Equation~\ref{eq:cosine_with_hyperviscosity} for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=8$ and $\gamma_c = 5*10^{-2}$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.}
 \label{fig:eig_cosine}
 \end{center}
 \end{figure}
