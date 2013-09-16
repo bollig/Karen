@@ -384,6 +384,12 @@ In the time since the publication of \cite{BolligFlyerErlebacher2012} custom Ope
 
 Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants, and a number of variants on the ELL format that operate in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. The HYB format stores the bulk of a matrix in an ELL container and the excess non-zeros per row in a CSR format. HYB benefits from reduced storage and memory loads in the ELL, and maintains the generality of a CSR matrix. 
 
+\begin{figure}
+\centering
+\includegraphics[width=0.5\textwidth]{../figures/spmv/spmv_vcl_gflops.eps}
+\caption{Single GPU ViennaCL SpMV throughput (GFLOPs) compared to Boost::uBLAS CSR. Stencil size $n=50$ for all cases.}
+\label{fig:spmv_vcl_gflops}
+\end{figure}
 
 
 
