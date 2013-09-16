@@ -76,6 +76,8 @@ Indirectly computing weights is of interest for at least two reasons:
 
 \section{Comparison of Direct and Indirect Weights (INCOMPLETE)} 
 
+%TODO: code in ~/Karen/rbffd_prototypes/matlab/stokes/test_weights
+
 To compare direct and indirect approaches, weights are computed with each method for the MD-node sets ranging between $N = 121$ and $N=27556$. The resulting DMs for each resolution are applied to reproduce a manufactured solution. 
 
 We monitor relative error in approximation, defined as: 
@@ -134,14 +136,14 @@ We find that our indirect approach functions well compared to the direct method.
 	\centering
 	\begin{subfigure}[b]{0.425\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/diff_of_rel_l2_errors.pdf}
-	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$}
+	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$ (error is higher because operator is $P_x (D_x D_x + D_y D_y + D_z D_z)$)}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.425\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32/diff_of_rel_l2_errors.pdf}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2})$ }
 	\end{subfigure}
 	\begin{subfigure}[b]{0.425\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/diff_of_rel_l2_errors.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/abs_diff_of_rel_l2_errors.pdf}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$}
 	\end{subfigure}
 	\caption{Signed differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
