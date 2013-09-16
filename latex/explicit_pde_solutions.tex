@@ -84,9 +84,10 @@ For stability, hyperviscosity is added to the right hand side of Equation~\ref{e
 where $D_{\Delta^{k}}$ is the differentiation matrix for the $k$-th power Laplacian, $\Delta^{k}$, described in Section~\ref{sec:hyperviscosity_operators}, and the expression between parentheses in Equation~\ref{eq:vortex_matrix_form_w_hv} is the stabilized DM applied at each time-step. 
 
 The scaling parameter $\gamma_c$ and the order of hyperviscosity $k$ are given in
-Table~\ref{tbl:vortex_hv_params}. The parameters are tuned for the MD node sets. Since the values of $\gamma_c$ and $k$ vary based on the eigenvalues/conditioning of $D_\lambda$, switching to an icosahedral or spherical CVT would require additional tuning. Changes to the stencil size or the function for $\epsilon$ also require tuning. 
+Table~\ref{tbl:vortex_hv_params}. The parameters are tuned for the MD node sets. Since the values of $\gamma_c$ and $k$ vary based on the eigenvalues/conditioning of $D_\lambda$, switching to an icosahedral or spherical CVT requires additional tuning. Changes to the stencil size or the function for $\epsilon$ also require tuning. 
 
-The goal when choosing $k$ is to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. In this process, the eigenvalues will be pushed into the left half of the complex plane. Then, the scaling $\gamma_c N^{-k}$ is used to condense the eigenvalues as near to the imaginary axis as possible. Figure \ref{fig:vortex_eigs_hv} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, from no hyperviscosity in Equation~\ref{eq:vortex_matrix_form} to the hyperviscosity modified DM in Equation~\ref{eq:vortex_matrix_form_w_hv}. 
+The parameters $\gamma_c$ and $k$ are obtained via trial-and-error parameter searching on $N=4096$ nodes. The goal when choosing parameters is to push all eigenvalues to the left half-plane, and then tweak $\gamma_c$ up or down to condense the eigenvalues as near to the imaginary axis as possible. We first choose $k$ to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. This effectively pushes eigenvalues to the left half of the complex plane.  We then try to adjust $\gamma_c$ to get eigenvalues condensed as near to the imaginary axis as possible. As a rule of thumb we try to keep the range of filtered real parts within twice the width of the unfiltered range, so hyperviscosity does not cause excessive diffusion in the solution. Figure \ref{fig:vortex_eigs_hv} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, from no hyperviscosity in Equation~\ref{eq:vortex_matrix_form} to the hyperviscosity modified DM in Equation~\ref{eq:vortex_matrix_form_w_hv}. 
+
 
 The RBF shape parameter, $\epsilon$, is expressed as a function of $N$ based on work in \cite{FlyerLehto11}. If we let $(\kappa_A)_j$ be the condition number of the interpolation matrix in Equation~\ref{eq:rbffd_weights} for the $j^{th}$ stencil, then we seek an $\epsilon$ such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ grows. For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b, and the examples in Section~\ref{sec:epsilon_contours}). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
 
@@ -247,20 +248,20 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \end{subfigure}
 \begin{subfigure}[b]{0.45\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/eigs_HV_N4096_n101_k8_gamma5e_m2_SCALED_color.pdf}
-	\caption{With Hyperviscosity}
+	\caption{With Hyperviscosity ($k=8$ and $\gamma_c = 5*10^{-2}$)}
 	\label{fig:cosine_eigs_hv}
 \end{subfigure}
-\caption{Eigenvalues of Equation~\ref{eq:cosine_with_hyperviscosity} for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Left: no hyperviscosity. Right: hyperviscosity enabled with $k=8$ and $\gamma_c = 5*10^{-2}$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.}
+\caption{Eigenvalues of Equation~\ref{eq:cosine_with_hyperviscosity} for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.}
 \label{fig:eig_cosine}
 \end{center}
 \end{figure}
-%
-%\begin{figure}
-%\centering
-%	\includegraphics[width=0.45\textwidth]{../figures/paper1/cosine_bell/eigs_N4096_n101_HV_k8_gamma5e_m1.pdf}
-%	\caption{Example of excessive hyperviscosity with parameters $k=8$ and $\gamma_c = 5*10^{-1}$. Eigenvalues are not divided by $u_0$ to remove scaling effects of velocity.}
-%	\label{fig:cosine_eigs_hv_m1}
-%\end{figure}
+
+\begin{figure}
+\centering
+	\includegraphics[width=0.45\textwidth]{../figures/paper1/cosine_bell/eigs_N4096_n101_HV_k8_gamma5e_m1.pdf}
+	\caption{Example of excessive hyperviscosity with parameters $k=8$ and $\gamma_c = 5*10^{-1}$.} %Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.}
+	\label{fig:cosine_eigs_hv_m1}
+\end{figure}
 
 
 \begin{figure}[ht!]
@@ -286,21 +287,18 @@ Hyperviscosity parameters are $k = 8$, $\gamma_c = 5(10^{-2})$.
 %TODO: emphasize that the oscillations in cosine bell are not high. The error demonstrates that all oscillations are between 1e-5 and 1.2e-12.
 
 Figure~\ref{fig:eig_cosine} compares eigenvalues of the DM for $N=4096$ nodes and stencil size $n=101$ before and after hyperviscosity is applied. To avoid scaling effects of velocity on the eigenvalues, they have been scaled by $1/u_0$.  The same approach as in the vortex roll-up case is used to determine the parameters for hyperviscosity and $\epsilon$. Our tuned parameters are presented in 
-%\blue{However, note the difference in scale on the real axis compared to the vortex roll-up case; the initial range of the real part of the eigenvalues is approximately four orders of magnitude smaller. In this case, eigenvalues are more sensitive to the hyperviscosity filter. 
-Table~\ref{tbl:cos_hv_params}.
-% provides appropriate parameters for hyperviscosity in this test case. %, which reflect the difference in scale of $\gamma_c$ compared to Table~\ref{tbl:vortex_hv_params}.
-%The parameters for hyperviscosity are dependent on $u_0$ 
+Table~\ref{tbl:cos_hv_params}. In this case, the eigenvalues are significantly more sensitive to hyperviscosity and require fine tuning of $\gamma_c$. Figure~\ref{fig:cosine_eigs_hv_m1} demonstrates the impact on eigenvalues from Figure~\ref{fig:eig_cosine} when $\gamma_c$ is increased from $5*10^{-2}$ to $5*10^{-1}$. The higher $\gamma_c$ excessively damps modes, effectively wiping out those that are needed for the solution. 
 
-%\clearpage
 
-Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolutions around the sphere. Without hyperviscosity, RBF-FD cannot complete a single revolution of the bell before instability takes over. However, adding hyperviscosity allows computation to extend to dozens or even thousands of revolutions and maintain stability (e.g., see \cite{FornbergLehto11}). After ten revolutions, the cosine bell is still intact. The majority of the absolute error (Figure~\ref{fig:cosine_abserror}) appears at the base of the $C^1$ bell where the discontinuity appears in the derivative. At ten revolutions, Figure~\ref{fig:conv_cosine_bell} illustrates the convergence of the RBF-FD method. All tests in Figure~\ref{fig:conv_cosine_bell} assume 1000 time-steps per revolution (i.e., $\Delta t = 1036.8$ seconds). We find that 1000 time-steps is a conservative estimate to stably advect the bell even up to the highest resolution MD node set, $N=27556$. Our choice of $\Delta t$ is half as large as the 30 minute step taken for $N=4096$ nodes in \cite{FlyerWright07}, but still twice as large as the competing Discontinuous Galerkin implementation and 8x larger than both Spherical Harmonics and Double Fourier methods.
+Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolutions around the sphere. Without hyperviscosity, RBF-FD cannot complete a single revolution of the bell before instability takes over. However, adding hyperviscosity allows computation to extend to dozens or even thousands of revolutions and maintain stability (e.g., see \cite{FornbergLehto11}). 
 
-%TODO: It would be good to quantify the appropriate $dt$ that would compare RBF-FD to their $N=4096$ case with global RBFs.
+After ten revolutions, the cosine bell is still intact with only 0.6\% lost from the original peak ($h_0=1$). The white and purple rippling effect shown in Figure~\ref{fig:cosine_approx} is not severe. The absolute error in Figure~\ref{fig:cosine_abserror} clarifies that the majority of the absolute error appears at the base of the $C^1$ bell where the discontinuity appears in the derivative. Beyond the region at the base of the bell, the absolute error drops well below $10^{-5}$. 
+
+Figure~\ref{fig:conv_cosine_bell} illustrates the convergence of the RBF-FD method for the cosine bell advection at 10 full revolutions. All tests in Figure~\ref{fig:conv_cosine_bell} assume 1000 time-steps per revolution (i.e., $\Delta t = 1036.8$ seconds). We find that 1000 time-steps is a conservative estimate to stably advect the bell even up to the highest resolution MD node set, $N=27556$. Our choice of $\Delta t$ is half as large as the 30 minute step taken for $N=4096$ nodes in \cite{FlyerWright07}, but still twice as large as the competing Discontinuous Galerkin implementation and 8x larger than both Spherical Harmonics and Double Fourier methods also considered therein. For $N=27556$ and $n=101$ a minimum of 650 time-steps are required per revolution. 
 
 
 \begin{figure}[htbp]
 \begin{center}
-% TODO: Color figure
 \includegraphics[width=3in]{../figures/paper1/cosine_bell/convergence_plot_hv-eps-converted-to.pdf}
 \caption{Convergence plot for cosine bell advection. Normalized $\ell_2$ error at 10 revolutions with hyperviscosity enabled. }
 \label{fig:conv_cosine_bell}
@@ -309,41 +307,27 @@ Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolu
 
 
 
-\section{Fragments (integrate above)}
 
+%we use the initial conditions
+%\begin{equation*}
+%h  = 
+%\begin{cases} 
+%\frac{h_0}{2} (1 + \cos(\frac{\pi \rho}{R})  & \rho \le R  \\
+% 0 &  \rho \geq R 
+%\end{cases}
+%\end{equation*}
+%where the bell of radius $R = \frac{a}{3}$ is centered at $(\lambda_c, \theta_c)$ and provided by the expression,
+%\begin{eqnarray*}
+%\rho = a \arccos( \sin \theta_{c} \sin \theta + \cos \theta_{c} \cos \theta \cos (\lambda - \lambda_{c}) ).
+%\end{eqnarray*}
+%We assume $a = 1$, $h_0 = 1$, and $(\lambda_c, \theta_c) = (^{3\pi}/_{2}, 0)$. The angle $\alpha =\ ^{\pi}/_{2}$ is chosen to transport the bell over the poles of the coordinate system, and $u_0 =\ ^{2 \pi a}/_{1036800}$. 
 
-
-Hyperviscosity parameters $\gamma_c$ and $k$ depend on the RHS of the PDE. 
-For this test case, hyperviscosity scaling parameters are listed in Table~\ref{tbl:vortex_hv_params}. Linear functions to choose the RBF support parameter $\epsilon$ are also provided. The parameters $\gamma_c$ and $k$ were obtained via trial-and-error parameter searching on $N=4096$ nodes. The goal when choosing parameters is to push all eigenvalues to the left half-plane, and then tweak $\gamma_c$ up or down to condense the eigenvalues as near to the imaginary axis as possible. We try to keep the range of filtered eigenvalue real parts within twice the width of the unfiltered range, so hyperviscosity does not cause too much diffusion in the solution. 
-
-For the cosine bell we use the initial conditions
-\begin{equation*}
-h  = 
-\begin{cases} 
-\frac{h_0}{2} (1 + \cos(\frac{\pi \rho}{R})  & \rho \le R  \\
- 0 &  \rho \geq R 
-\end{cases}
-\end{equation*}
-where the bell of radius $R = \frac{a}{3}$ is centered at $(\lambda_c, \theta_c)$ and provided by the expression,
-\begin{eqnarray*}
-\rho = a \arccos( \sin \theta_{c} \sin \theta + \cos \theta_{c} \cos \theta \cos (\lambda - \lambda_{c}) ).
-\end{eqnarray*}
-We assume $a = 1$, $h_0 = 1$, and $(\lambda_c, \theta_c) = (^{3\pi}/_{2}, 0)$. The angle $\alpha =\ ^{\pi}/_{2}$ is chosen to transport the bell over the poles of the coordinate system, and $u_0 =\ ^{2 \pi a}/_{1036800}$. 
-
-%TODO: State that we can split operator to test cases like nonlinear PDEs.
-
-%TODO: Include figures from NCL or Paraview
-
-\subsection{CFL}
-We constrict our timesteps according to the Courant-Friedrich-Lewy (CFL) condition: 
-
-$$
-C_{\text{max}} \frac{\Delta x_{\text{min}}}{v_{\text{max}}} < \Delta t
-$$
-where $\Delta x_{\text{min}}$ is the minimum distance between any two nodes in the domain, and the $v_{\text{max}}$ is the maximum velocity 
-
-For the cosine bell test cases we use a conservative $C_{\text{max}} = 0.4$ to ensure stable transport in all cases with $n=101$. However, in testing it was found that $n=17$ is capable of stably advecting with $C_{\text{max}} > 1$ for $n=17$; $n=101$ can go up to $C_{\text{max}} = 0.51$ for $N=27556$ (e.g. 650 timesteps per revolution). 
-
+% the Courant-Friedrich-Lewy (CFL) condition: 
+%$$
+%C_{\text{max}} \frac{\Delta x_{\text{min}}}{v_{\text{max}}} < \Delta t
+%$$
+%where $\Delta x_{\text{min}}$ is the minimum distance between any two nodes in the domain, and the $v_{\text{max}}$ is the maximum velocity. 
+%
 
 
 

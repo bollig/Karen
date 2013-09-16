@@ -84,13 +84,6 @@ Others like [...] prefer to use an alternate algorithm. This algorithm is demons
 
 Parallelizing the algorithm is possible with communication points listed in red (*). 
 
-
-
-
-
-Alright, starting here.
-
-
 Itasca
 
 An Alltoall collective shares .... as in Figure~\ref{fig:mpi_alltoall_visual}. A basic Alltoall collective would work in most cases. However, RBF-FD stencils are not required/guaranteed to be symmetric. As a result, we often have non-uniform sharing across partitions, so an Alltoall would require over-padding all send/receive buffers to allow the maximum receive size times the number of processors. 
@@ -137,8 +130,6 @@ NVidia provided CUSPARSE \cite{CUSPARSE}, formulating the problem in terms of
 sparse matrix operations allows us to quickly prototype on the GPU and leverage
 all of the optimizations available within the third party libraries. 
 
-In the most recent version of ViennaCL a set of auto-tuning options were
-introduced. We have not investigated these options, but the idea is that they
-would only improve the efficiency of our code. 
+ 
 
 
