@@ -13,62 +13,6 @@
 \fi
 
 
-\section{On the Future of GPU Computing}
-
-In 2006, NVidia released CUDA to the general public---a milestone representing the moment GPU computing reached the critical mass necessary for uptake into widespread and prolonged use. Since then attempts have been made to leverage the GPU for nearly ever field of scientific research. 
-
-The question, however, is frequently asked: is GPU computing a buzzword that will die out, or is it here to stay? 
-
-Fine tuning of kernels is the way of the past. Anyone fine tuning kernels will be operating at a lower level, attempting to optimize library routines underlying large scale codes. The fine tuning can ultimately be replaced by auto-tuned kernels (e.g., see work in ViennaCL to auto-tune similar to libATLAS). 
-
-Already this is seen in attempts to port applications to the GPU in so-called ``minimally invasive" fashion. 
-
-So the short answer is: yes. And it is from this assumption that we proceed with our efforts to target the GPU with RBF-FD. However, we have made a few predictions on the future of GPUs and these predictions guided our efforts to port RBFs onto GPUs. 
-
-First, we are proponents for OpenCL over CUDA. Although CUDA has a large following due to its early release, we believe in functional portability of code enabled by OpenCL over the performance provided by CUDA. 
-
-\section{OpenCL vs CUDA}
-
-We support opencl. The difference lying in the end-goal of supporting a wide range of hardware with a compiler as support for porting. 
-
-\section{Pragmas}
-
-
-\subsection{PGI Accelerator Pragmas}
-During a 2009 summer internship at NCAR, we investigated the use of Portland Group Inc (PGI) Accelerator pragmas to accelerate a subgrid physics module for resolving clouds in the Community Climate Simulation Models (CCSM). The results were sketchy(*) for numerous reasons. First, as early adopters, we were attempting to  
-\subsection{OpenACC}
-
-
-
-
-\section{MPI and GPU Computing}
-
-CUDA 5 introduced support for MPI directly from the GPU. But we are proponents for OpenCL, not CUDA. The difference lying in the 
-
-
-\section{OpenMP}
-The latest version of OpenMP (v4.0) introduces pragmas for offloading computation to accelerators. These pragmas will function similarly to pragmas from PGI, OpenACC, and the Intel MIC. 
-
-
-\chapter{Applications}
-\label{chap:applications}
-
-\section{Hyperbolic PDEs}
-\subsection{Cosine Bell Advection}
-\subsection{Vortex Roll-up}
-
-\section{GMRES for Stokes}
-
-\chapter{Discussion and Conclusions}
-
-This work leads to a number of additional investigations:
-\begin{itemize}
-\item Transitioning away from RBF-FD specific OpenCL kernels and into the higher level matrix algebra library ViennaCL reveals new optimizations for SpMV, possible only when treating the sparse matrix from a higher level. There are a number of alternatives for SpMV that target various matrix features (e.g., jagged diagonal, blocked ELL, etc). New investigation will determine the which, if any, alternatives can benefit RBF-FD. 
-
-\item ViennaCL has support for multiple backends, including the Intel Phi. Initial experiments result in performance $\frac{1}{10}$th as fast as the K20 GPU. Those results are: a) limited by a beta driver for OpenCL on Intel Phi; and b) using OpenCL kernels intended for the GPU architecture. Continued investigations are targeting features (language, vector instructions, etc.) of the Phi. 
-\item To improve the accuracy of RBF-FD weights, an experimental RBF-GA implementation was started. The initial exposure to the algorithm leaves the impression that the change of basis on the RHS is a nuisance. In effort to bypass the difficulty in deriving new RHS expressions, we plan to assemble complex DMs using DMs of lower (i.e., first-) order operators.
-\end{itemize}
-
 
 
 \ifstandalone

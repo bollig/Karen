@@ -361,7 +361,7 @@ We consider a simple idealized problem where derivatives are computed over a reg
 
 \begin{figure}
 \centering
-\includegraphics[width=0.45\textwidth]{performance_content/scaling/strong_scaling_4M_regular_n17comparison_commOnly.png}
+\includegraphics[width=0.6\textwidth]{performance_content/scaling/strong_scaling_4M_regular_n17comparison_commOnly.png}
 \caption{Scaling comparison of MPI\_Alltoallv and two types of MPI\_Isend/MPI\_Irecv collectives: one with MPI\_Irecv issued after filling the MPI\_Isend send buffer (post-fill), and the other issued before filling the MPI\_Isend buffer (pre-fill).}
 \end{figure}
 
@@ -411,6 +411,16 @@ describe fermi's ability to schedule multiple kernels, what it means for our que
 \section{Keeneland}
 
 \subsection{Shared K20s}
+
+
+
+\section{Future Work}
+
+One of the problems with choosing to work in OpenCL is the fact that the standard offers the lowest common denominator of features from the various hardware vendors that support it. Many vendor specific features never make it into the language. 
+
+Take for example GPUDirect, a technology introduced first CUDA v3.1 for NVidia hardware. GPUDirect allows direct access to GPU memory addresses from various sources including other GPUs. The technology allows GPUs to bypass copies to host memory en-route to another GPU on the same compute node. Combine GPUDirect with the new MPI aware features in CUDA v5.0 and data can pass directly from a GPU onto the infiniband fabric and up to another GPU \cite{NvidiaGPUMPI}. This type of feature may never be available in OpenCL. 
+
+
 
 
 \ifstandalone

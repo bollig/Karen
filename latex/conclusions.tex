@@ -2,11 +2,21 @@
 \label{chap:conclusions}
 
 
-Unanswered Questions: 
-\begin{itemize} 
-\item If RBF-FD is higher order accurate than FV, why would anyone opt for FV?
-\begin{itemize} 
-\item the conservative form FV is preferred in physical science since it does not allow loss of (what? mass/energy/???)
-\item FV are typically low-order. what is the trade-off in complexity between methods. For a much higher-order RBF-FD if it is not conservative, how many iterations is it accurate consistent with the low-order FV? l
+\section{Future Work}
+
+This work leads to a number of additional investigations:
+\begin{itemize}
+\item Transitioning away from RBF-FD specific OpenCL kernels and into the higher level matrix algebra library ViennaCL reveals new optimizations for SpMV, possible only when treating the sparse matrix from a higher level. There are a number of alternatives for SpMV that target various matrix features (e.g., jagged diagonal, blocked ELL, etc). New investigation will determine the which, if any, alternatives can benefit RBF-FD. 
+
+\item ViennaCL has support for multiple backends, including the Intel Phi. Initial experiments result in performance $\frac{1}{10}$th as fast as the K20 GPU. Those results are: a) limited by a beta driver for OpenCL on Intel Phi; and b) using OpenCL kernels intended for the GPU architecture. Continued investigations are targeting features (language, vector instructions, etc.) of the Phi. 
+\item To improve the accuracy of RBF-FD weights, an experimental RBF-GA implementation was started. The initial exposure to the algorithm leaves the impression that the change of basis on the RHS is a nuisance. In effort to bypass the difficulty in deriving new RHS expressions, we plan to assemble complex DMs using DMs of lower (i.e., first-) order operators.
 \end{itemize}
-\end{itemize}
+
+%Unanswered Questions: 
+%\begin{itemize} 
+%\item If RBF-FD is higher order accurate than FV, why would anyone opt for FV?
+%\begin{itemize} 
+%\item the conservative form FV is preferred in physical science since it does not allow loss of (what? mass/energy/???)
+%\item FV are typically low-order. what is the trade-off in complexity between methods. For a much higher-order RBF-FD if it is not conservative, how many iterations is it accurate consistent with the low-order FV? l
+%\end{itemize}
+%\end{itemize}

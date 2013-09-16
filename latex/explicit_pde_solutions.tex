@@ -35,6 +35,7 @@ y & = & \rho \sin \lambda \cos \theta, 		\\
 z & = & \rho \sin \theta.		
 \end{eqnarray*}
 
+Solutions are verified on the Maximum Determinant point distributions on the sphere \cite{Sloan2003} consistent with previously published results (see e.g., \cite{Flyer2007} and \cite{Fornberg2011b}).
 
 \section{Vortex Rollup}
 \label{sec:numerical_validation}
@@ -179,7 +180,7 @@ Based on Figure~\ref{fig:conv_plot_vortex_nohv}, which shows the convergence wit
 
 \section{Solid body rotation}
 
-The second test case simulates the advection of a cosine bell over the surface of a unit sphere at an angle $\alpha$ relative to the pole of a standard latitude-longitude grid. The governing PDE is
+The second test case simulates the advection of a cosine bell over the surface of a unit sphere at an angle, $\alpha$, relative to the pole of a standard latitude-longitude grid. The governing PDE is
 \begin{equation}
 \pd{h}{t} + \frac{u}{\cos \theta} \pd{h}{\lambda} + v \pd{h}{\theta} = 0, \label{eq:cosine_bell}
 \end{equation}
@@ -203,9 +204,11 @@ The discretized form of Equation~\ref{eq:cosine_bell} is
 \d{\mathbf{h}}{t} = -\text{diag}\left(\frac{u}{\cos \theta}\right) D_\lambda \mathbf{h} - \text{diag}(v) D_\theta \mathbf{h}
 \label{eq:cosine_with_hyperviscosity}
 \end{equation}
-where DMs $D_\lambda$ and $D_\theta$ contain RBF-FD weights corresponding to all $N$ stencils that approximate $\pd{}{\lambda}$ and $\pd{}{\theta}$ respectively. Rather than merge the differentiation matrices in Equation~\ref{eq:cosine_with_hyperviscosity} into one operator, our implementation evaluates them as two sparse matrix-vector multiplies. The separate matrix-vector multiplies are motivated by an effort to provide general and reusable GPU kernels. Additionally, they artificially increase the amount of computation compared to the vortex roll-up test case to simulate cases when operators cannot be merged into one DM (e.g., a non-linear PDE).
+where DMs $D_\lambda$ and $D_\theta$ contain RBF-FD weights corresponding to all $N$ stencils that approximate $\pd{}{\lambda}$ and $\pd{}{\theta}$ respectively. 
 
-By splitting the DM, the singularities at the poles ($1 / \cos{\theta} \rightarrow \infty$ as $\theta \rightarrow \pm\frac{\pi}{2}$) in Equation~\ref{eq:cosine_bell} remain. However, in this case, the approach functions without amplification of errors because the MD node sets have nodes near, but not on, the poles. As noted in \cite{FlyerWright07, FornbergLehto11}, applying the entire spatial operator to the right hand side of Equation~\ref{eq:rbffd_weights} generates a single DM that analytically removes the singularities at poles. 
+Rather than merge the differentiation matrices in Equation~\ref{eq:cosine_with_hyperviscosity} into one operator, our implementation evaluates them as two sparse matrix-vector multiplies. The separate operations are motivated by an effort to provide general and reusable GPU kernels. Additionally, they artificially increase the amount of computation compared to the vortex roll-up test case to simulate cases when operators cannot be merged into one DM (e.g., a non-linear PDE).
+
+By splitting the DM, the singularities at the poles ($1 / \cos{\theta} \rightarrow \infty$ as $\theta \rightarrow \pm\frac{\pi}{2}$) in Equation~\ref{eq:cosine_bell} remain. However, in this case, the approach functions without amplification of errors because the MD node sets have nodes near, but not on, the poles. As noted in \cite{FlyerWright07, FornbergLehto11}, applying the entire spatial operator to the right hand side of Equation~\ref{eq:rbffd_weight_system} generates a single DM that analytically removes the singularities at poles (see Appendix~\ref{app:rbffd_remove_singularities} for details). 
 
 We will advect a $C^1$ cosine bell height-field given by
 \begin{equation*}
@@ -307,14 +310,8 @@ Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolu
 
 
 \section{Fragments (integrate above)}
-To verify our multi-CPU and multi-CPU+GPU implementations, two hyperbolic PDEs on the surface of the sphere are tested. For both cases a spherical coordinate system is used in terms of latitude $\lambda$ and longitude $\theta$:
-\begin{eqnarray*} 
-x & = & \rho \cos \lambda \cos \theta, 	\\
-y & = & \rho \sin \lambda \cos \theta, 		\\
-z & = & \rho \sin \theta.		
-\end{eqnarray*}
 
-Node sets are the Maximum Determinant point distributions on the sphere \cite{Sloan2003} consistent with previously published results (see e.g., \cite{Flyer2007} and \cite{Fornberg2011b}).
+
 
 Hyperviscosity parameters $\gamma_c$ and $k$ depend on the RHS of the PDE. 
 For this test case, hyperviscosity scaling parameters are listed in Table~\ref{tbl:vortex_hv_params}. Linear functions to choose the RBF support parameter $\epsilon$ are also provided. The parameters $\gamma_c$ and $k$ were obtained via trial-and-error parameter searching on $N=4096$ nodes. The goal when choosing parameters is to push all eigenvalues to the left half-plane, and then tweak $\gamma_c$ up or down to condense the eigenvalues as near to the imaginary axis as possible. We try to keep the range of filtered eigenvalue real parts within twice the width of the unfiltered range, so hyperviscosity does not cause too much diffusion in the solution. 
@@ -348,7 +345,7 @@ where $\Delta x_{\text{min}}$ is the minimum distance between any two nodes in t
 For the cosine bell test cases we use a conservative $C_{\text{max}} = 0.4$ to ensure stable transport in all cases with $n=101$. However, in testing it was found that $n=17$ is capable of stably advecting with $C_{\text{max}} > 1$ for $n=17$; $n=101$ can go up to $C_{\text{max}} = 0.51$ for $N=27556$ (e.g. 650 timesteps per revolution). 
 
 
-apparently, canceling the cosine analytically causes the conditioning of the system to change slightly. The hyperviscosity parameters I have in the paper are for the case with the cosine present. The parameters continue to function well for the other cases, but their impact on the eigenvalue distributions is noticeably higher (further span to the left). 
+
 
 
 \ifstandalone

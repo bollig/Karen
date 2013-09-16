@@ -116,39 +116,7 @@ This article continues our effort with an implementation of RBF-FD on both singl
 %
 %
 
-\section{RBF-FD Weights} 
-
-Given a set of function values, $\{u(\vx_j)\}_{j=1}^{N}$, on a discrete set of nodes $\{\vx_j\}_{j=1}^{N}$, the operator $\diffop$ acting on $u(\vx_j)$ is approximated by a weighted combination of function values, $\{u(\vx_i)\}_{i=1}^{n}$, in a small neighborhood of $u(\vx_j)$, where $n$ defines the size of the stencil and $n \ll N$:
-\begin{align}
-\diffop{u(\vx)}\mid_{\vx=\vx_j} &\approx \sum_{i=1}^{n} w_i u(\vx_i)
-\label{eq:derivFromFDWeights}
-\end{align}
-The RBF-FD weights, ${w_i}$, are found by enforcing that they are exact within the space spanned by the RBFs $\phi_i(\epsilon r) = \phi(\ep\vectornorm{\vx-\vx_{i}})$, centered at the nodes $\{\vx_i\}_{i=1}^{n}$, with $r=\vectornorm{\vx -\vx_i}$ being the distance between the RBF center and the evaluation point measured in the standard Euclidean 2-norm. It has also been shown through experience and studies \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} that better accuracy is gained by the interpolant being able to reproduce a constant. Hence, the constraint $\sum_{i=1}^{n}c_k=\diffop{1}|_{\vx=\vx_{j}}=0$ is added, where $w_{n+1}$ is ignored after the matrix in (\ref{eq:rbffd_weights}) is inverted. That is,
-\begin{align}
-\begin{pmatrix}
-\phi(\epsilon\vectornorm{\vx_1-\vx_1}) & \phi(\epsilon\vectornorm{\vx_1-\vx_2}) & \cdots & \phi(\epsilon\vectornorm{\vx_1-\vx_n}) & 1 \\
-\phi(\epsilon\vectornorm{\vx_2-\vx_1}) & \phi(\epsilon\vectornorm{\vx_2-\vx_2}) & \cdots &
-\phi(\epsilon\vectornorm{\vx_2-\vx_n}) & 1\\
-\vdots & \ddots & \ddots & \vdots & \vdots\\
-\phi(\epsilon\vectornorm{\vx_n-\vx_1}) & \phi(\epsilon\vectornorm{\vx_n-\vx_2}) & \cdots &
-\phi(\epsilon\vectornorm{\vx_n-\vx_n}) & 1 \\
-1 & 1 & \cdots & 1 & 0
-\end{pmatrix}
-\begin{bmatrix} c_1 \\ c_2 \\ \vdots \\ c_n  \\ c_{n+1}\end{bmatrix}
-&=
-\begin{bmatrix} \diffop{\phi(\ep\vectornorm{\vx-\vx_{1}})}|_{\vx=\vx_{j}} \\
-               \diffop{\phi(\ep\vectornorm{\vx-\vx_{2}})}|_{\vx=\vx_{j}} \\ \vdots \\  \diffop{\phi(\ep\vectornorm{\vx-\vx_{n}})}|_{\vx=\vx_{j}}\\
-		       0
-\end{bmatrix}
-\label{eq:rbffd_weights}
-\end{align}	
-This small system solve is repeated $N$ times for each $\vx_j$, $j=1...N$, to form the DM associated with one derivative quantity.
-As an example, if $\diffop$ is the identity operator then the above procedure will lead to RBF-FD interpolation. If $\diffop$ is $\pd{}{x}$, it will lead to the DM that approximates the first derivative in $x$. %Nodes do not move within this context, so the stencil weights are constant with respect to the grid. Thus calculating differentiation weights is a preprocessing step of O$(N)$. 
-While Equation~\ref{eq:rbffd_weights} is symmetric, the added constraints for coefficient $c_{n+1}$ detracts from the system's positive definite-ness. In lieu of this, a direct LU factorization solves for the weights. 
-Also, observe that multiple right hand sides can be employed to efficiently obtain weights corresponding to all required derivative quantities (i.e., $\pd{}{x}$, $\pd{}{y}$, $\Laplacian$, etc.) in one system solve per stencil center.
-
-
-\section{GPU Based Solver}
+\section{Multi-GPU GMRES}
 
 Our implementation leverages ViennaCL to directly benefit from improvements to the performance of underlying sparse matrix-vector product, vector dot vector and other linear algebra primitives. Also, ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
@@ -156,7 +124,6 @@ Our implementation leverages ViennaCL to directly benefit from improvements to t
 
 The GMRES algorithm was introduced in 1986 by Saad and Schultz \cite{Saad1986}. The iterative solver support general matrix structures, whereas methods like Conjugate Gradient require symmetric positive definiteness. 
 
-\subsection{GMRES Algorithm} 
 
 At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. %TODO: \authnote{significance of orthogonalization}. 
 
@@ -231,7 +198,7 @@ Spanning GMRES across multiple GPUs uses the same collectives as those developed
 %The restriction matrix $R^0_p$ contains only zeros and ones. Cai et al. \cite{Cai1998} let $R^0_p$ contain ones on the diagonal to indicate rows of the system for which a processor $p$ is responsible. Our implementation similarly places $I$ on the diagonal, but we then apply a general permutation matrix $P$ to compress $R^0_p A$ such that processors assemble an $N_p \times m$ local matrix (where $N_p \ll N$ and $m \ll N$). Likewise, processors allocate vectors for the reduced problem size. The solution is $N_p \times 1$ and RHS is $m \times 1$. Recall that the domain decomposition is determined by node partitioning, which does not guarantee rows of the global system corresponding to stencils in a processor's partition will be a contiguous block of the full system. 
 
 
-\subsection{Solution Ordering}
+\subsection{Interleaved Solution}
 
 In a distributed environment values for each $U$, $V$, $W$ and $P$ must be obtained from ghost nodes. Rather than execute four collectives (one per component), we interleave components to group all components by node. Figure~\ref{fig:interleaved_solution} demonstrates the concept of interleaving the solution. This allows us to directly copy a double4 containing the $\{u_i, v_i, w_i, p_i\}$ for node $x_i$
 
@@ -273,7 +240,6 @@ Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving ou
 The distributed GMRES implementation depends on two MPI collectives: MPI\_Alltoallv and MPI\_Allreduce. 
 
 
-\section{Governing Equations} 
 
 We solve the PDE on the surface of the sphere as an example for one and multiple GPUs. Boundary conditions detract from the accuracy of RBF-FD and introduce other issues such as Runge phenomena \cite{RBFRungePaper}, so we first verify the solution without boundaries. Also, this section 
 
@@ -482,10 +448,8 @@ We want to express benchmarks in terms of the number of GMRES iterations per sec
 \end{itemize} 
 
 
-\section{Fragments}
-Need to describe the solver. 
-
-State that the conditions under which a problem is solved determines how quickly it will converge. For example, nodes too close together on delaunay meshes cause higher condition numbers and require more iterations. Proper choice of preconditioners can dramatically reduce the number of iterations required to converge. Although preconditioners incur an additional cost in preprocessing and at each iteration of the solver, the potential number of iterations they save 
+%
+%TODO: State that the conditions under which a problem is solved determines how quickly it will converge. For example, nodes too close together on delaunay meshes cause higher condition numbers and require more iterations. Proper choice of preconditioners can dramatically reduce the number of iterations required to converge. Although preconditioners incur an additional cost in preprocessing and at each iteration of the solver, the potential number of iterations they save 
 
 
-John Dennis dissertation has a list of nice datasets (compare the list to Hoth) and their preconditioners. We might list similar paramters used for results here. 
+%John Dennis dissertation has a list of nice datasets (compare the list to Hoth) and their preconditioners. We might list similar paramters used for results here. 

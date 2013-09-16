@@ -5,9 +5,6 @@ These figures represent optimizations of the Cosine Bell and Vortex Roll-up test
 
 For the MPI I might need to have multiple figures comparing performance. However, for the GPU optimizations I can show a single plot with all the curves on it. These sections will be good 
 
-\section{MPI\_Alltoallv}
-Change send/recv to alltoallv. Track wait time. Show limitation on scalability with GPU (sublinear) vs CPU (linear). How high can we get linear on CPU? 
-
 
 Communication between processors requires each processor to iterate through their neighboring processors and share information. This can be seen as a simple for loop allowing every processor to touch its neighbors in round-robin fashion. The benchmarks seen in \authnote{figures from paper1} show the strong scaling of our implementation with a for loop and send/recv. 
 
