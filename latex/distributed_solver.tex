@@ -256,6 +256,17 @@ MPI collectives are used to share data between processes. Our code leverages thr
 
 The collective operation is essentially transposing information as seen in Figure~\ref{fig:mpi_alltoallv_visual}. 
 
+An Alltoall collective shares .... as in Figure~\ref{fig:mpi_alltoall_visual}. A basic Alltoall collective would work in most cases. However, RBF-FD stencils are not required/guaranteed to be symmetric. As a result, we often have non-uniform sharing across partitions, so an Alltoall would require over-padding all send/receive buffers to allow the maximum receive size times the number of processors. 
+
+In order to avoid excessive padding, we choose the Alltoallv collective, which allows processors to share non-uniform number of bytes with one another. Figure~\ref{fig:mpi_alltoallv_visual} illustrates the benefit of Alltoallv in comparison to Alltoall (Figure~\ref{fig:mpi_alltoall_visual}. By allowing variable number of bytes, the total message size is reduced for all processors. The downside to an alltoallv
+
+
+
+
+The data in the Itasca scaling figures considers the case where an MPI\_Alltoallv or MPI\_Isend/MPI\_Irecv is used. By issuing the receives before encoding the send buffers we ensure that no processes wait unnecessarily long for their collectives to start.
+
+
+
 MPI\_Alltoall requires that all processors send and receive an equivalent number of bytes to one another. Since the size must be equivalent for all processors, the send and receive buffers are padded to the maximum message size for any one connection between processors. MPI\_Alltoallv reduces the number of bytes sent and received by allowing processors to specify variable message sizes when communicating. For a small number of processors the variable message size will function well. However, MPI\_Alltoallv requires all processes to connect with every other process, even in the event that 0 bytes are to be sent. Based on the grid decomposition, processors compute on contiguous partitions with a small number of neighboring partitions. By replacing the MPI\_Alltoallv with a MPI\_Isend/MPI\_Irecv combination, the number of collective connections are truncated such that processors only connect to and communicate with essential neighbors that need/provide data. 
 
 The actual implementation of MPI\_Alltoall and MPI\_Alltoallv likely use Isend and Irecv internally. 

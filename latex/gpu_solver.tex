@@ -243,6 +243,30 @@ From the definition of RBF-FD we can formulate the problem computationally in tw
 
 Unfortunately, perfect concurrency does not imply perfect or even ideal concurrency on the GPU. 
 
+Since our focus within this work is to lay the foundation for parallel computing
+with RBF-FD, we have made several simplifying assumptions in our code design.
+Libraries like PETsc, Hypre, Trilinos and Deal.ii distribute sparse matrix
+operations in similar fashion to our approach. When work initially began on this
+dissertation, none of these competing libraries contained support for the GPU.
+PETsc is currently developing support for the GPU, but we have not had the
+chance to consider it yet. 
+
+Our codebase began as a prototype demonstrating the feasibility of RBF-FD
+operating on the GPU. The initial code, published in \cite{BolligFlyerErlebacher2012}, was developed as $N$ independent dot
+products of weights and solution values to approximate derivatives. Weights were
+stored linearly in memory, with the solution values read randomly. On the GPU,
+stencils were evaluated independently by threads, or shared by a warp of
+threads. Operating on stencils in this way implied that GPU kernels were to be
+hand written, tuned and optimized. 
+
+Much later, our perspective evolved to see derivative approximation and
+time-stepping as sparse matrix operations. This opened new possibilities for
+optimization and allowed us to forego hand optimization and fine-tuning of GPU
+kernels. With all of the effort put into optimizing sparse operations within
+libraries like CUSP \cite{Bell2009}, ViennaCL \cite{Rupp2010} and even the
+NVidia provided CUSPARSE \cite{CUSPARSE}, formulating the problem in terms of
+sparse matrix operations allows us to quickly prototype on the GPU and leverage
+all of the optimizations available within the third party libraries. 
 
 \subsubsection{One Thread per Stencil}
 
