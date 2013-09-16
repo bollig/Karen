@@ -1,13 +1,8 @@
 %!TEX root = karen.tex
 
-These figures represent optimizations of the Cosine Bell and Vortex Roll-up test cases. Essentially, the optimizations here are general for multi-GPU SpMV. Improving these test cases improves all explicit schemes for RBF-FD (i.e., hyperbolic and parabolic equations, and various time stepping schemes like euler, RK4, Adams-Bashforth etc.). 
+\chapter{Keeneland Results}
 
-
-For the MPI I might need to have multiple figures comparing performance. However, for the GPU optimizations I can show a single plot with all the curves on it. These sections will be good 
-
-
-Communication between processors requires each processor to iterate through their neighboring processors and share information. This can be seen as a simple for loop allowing every processor to touch its neighbors in round-robin fashion. The benchmarks seen in \authnote{figures from paper1} show the strong scaling of our implementation with a for loop and send/recv. 
-
+The benchmarks seen in \cite{BolligFlyerErlebacher2012} show the strong scaling of our implementation with a for loop and send/recv. 
 
 These results were run on Keeneland. The changes to MPI communication are the result of changing from blocking communication (MPI\_send/MPI\_recv) to non-blocking communication (MPI\_alltoall).
 
@@ -63,11 +58,11 @@ Figure~\ref{fig:alltoall_multigpu_vs_gpu_scaling} shows the scalability of multi
 Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_costs} show the smaller percentage of time per iteration dedicated to communication compared to the figures in the paper. In the Figure~\ref{fig:alltoall_multigpu_costs}, the way the times bottom out indicates we are/have converged on the minimum time required to launch a GPU kernel, transfer to/from the GPU, and communicate the problem via MPI. To scale to more processors, a larger problem size is absolutely necessary.
 
 
-I am generating another set of figures that demonstrate the scaling when we overlap communication and computation. MPI collectives do not allow overlap, but the asynchronous GPU kernel launches do. Therefore, I expect:
-    - the scaling on multiple CPUs vs 1 CPU to be the same as it is now
-    - the scaling on multiple GPUs vs 1 GPU will improve to linear/super-linear for problem sizes that occupy the hardware longer than the minimum kernel launch time. For N=27556 we might only see linear speedup up to 6 or 8 processors. 
-    - larger problem sizes will still be necessary (I have benchmarks for 100K, 500K and 1M on the sphere).
-    
+%I am generating another set of figures that demonstrate the scaling when we overlap communication and computation. MPI collectives do not allow overlap, but the asynchronous GPU kernel launches do. Therefore, I expect:
+%    - the scaling on multiple CPUs vs 1 CPU to be the same as it is now
+%    - the scaling on multiple GPUs vs 1 GPU will improve to linear/super-linear for problem sizes that occupy the hardware longer than the minimum kernel launch time. For N=27556 we might only see linear speedup up to 6 or 8 processors. 
+%    - larger problem sizes will still be necessary (I have benchmarks for 100K, 500K and 1M on the sphere).
+%    
 
 %TODO: Work-Group Size and Number of Stencils
 %What if a work-group is larger than a warp? What if the group was occupied by multiple stencils. What improvements to speedup do we see?

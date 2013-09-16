@@ -14,31 +14,29 @@
 \chapter{Projected Weights on the Sphere} 
 \label{app:indirect_weights}
 
-
-\authnote{Simplify (already appears in chapter 2). Dust off code that generated images and fix}
-
-It is shown in \cite{FlyerWright09, FlyerLehto11} that a projection operator
-
-$$ 
-\mathbf{P} =  \mathbf{I} - \vx \vx^{T} = \begin{bmatrix} 
-(1 - x^{2}) & -xy & -xz \\ 
--xy & (1 - y^{2}) & -yz \\ 
--xz & -yz & (1-z^{2})
-\end{bmatrix} = \begin{bmatrix} \mathbf{p}_{x}^{T} \\ \mathbf{p}_{y}^{T} \\ \mathbf{p}_{z}^{T} \end{bmatrix}
-$$
-where $\mathbf{p}_{x}^{T}$ represents the projection operator in the $x$ direction. 
-
-From \cite{FlyerWright09}, the projected RBF gradient operator is:
+Operating on the sphere requires constrained operators described in Section~\ref{sec:projected_grad}:
 \begin{align}
 \mathbf{P} \cdot \nabla \phi_{k}(r(\vx)) & = \mathbf{P} \cdot \frac{(\vx-\vx_{k})}{r(\vx)} \d{\phi_{k}(r(\vx))}{r(\vx)}  \nonumber \\
 & = -\mathbf{P} \cdot \vx_{k}\frac{1}{r(\vx)} \d{\phi_{k}(r(\vx))}{r(\vx)}  \nonumber \\ %\label{eq:xsfc_negative}
-& = \begin{bmatrix} x \vx^{T} \vx_{k} - x_{k} \\  y \vx^{T} \vx_{k} - y_{k} \\  z \vx^{T} \vx_{k} - z_{k} \end{bmatrix} \frac{1}{r(\vx)} \d{\phi(r(\vx))}{r} \label{eq:sfc_gradient_operator}.
+& = \begin{pmatrix} x \vx^{T} \vx_{k} - x_{k} \\  y \vx^{T} \vx_{k} - y_{k} \\  z \vx^{T} \vx_{k} - z_{k} \end{pmatrix} \frac{1}{r(\vx)} \d{\phi(r(\vx))}{r} \label{eq:sfc_gradient_operator}.
 \end{align}
-The operator $\mathbf{I} - \vx \vx^{T}$ for $\vx = (x,y,z)$ projects a vector onto the plane tangent to the unit sphere at $(x,y,z)$. Therefore, Equation~\ref{eq:sfc_gradient_operator} gives the projection of the gradient operator at $\vx_{k}$ onto the plane tangent to $\vx$. 
+where 
+\begin{align}
+P = I - \mathbf{x} \mathbf{x}^T =  \begin{pmatrix} 
+(1-x_1^2) & -x_1 x_2 & -x_1 x_3 \\
+-x_1 x_2 & (1-x_2^2) & -x_2 x_3 \\ 
+-x_1 x_3 & -x_2 x_3 & (1-x_3^2) 
+\end{pmatrix} 
+\label{eq:sfc_project_gradient}
+\end{align}
+%The operator $\mathbf{I} - \vx \vx^{T}$ for $\vx = (x,y,z)$ projects a vector onto the plane tangent to the unit sphere at $(x,y,z)$. Therefore, Equation~\ref{eq:sfc_gradient_operator} gives the projection of the gradient operator at $\vx_{k}$ onto the plane tangent to $\vx$. 
+
+Here we investigate the difference between constructing DMs using Equation~\ref{eq:sfc_gradient_operator} on the RHS of Equation~\ref{eq:rbffd_weight_system} versus composing DMs for the standard Cartesian $\grad$ operator and combined using Equation~\ref{eq:sfc_project_gradient}.
+
 
 \section{Direct Weights} 
 
-Following \cite{FlyerLehto11}, \ref{eq:sfc_gradient_operator} takes on the following when adapted to RBF-FD:  
+Following \cite{FlyerLehto11}, \ref{eq:sfc_gradient_operator} takes the following form when adapted to RBF-FD:  
 \begin{equation}
 [ \mathbf{p}_{x} \cdot \nabla{f(\vx)}] |_{\vx = \vx_{c}} = \sum_{k=1}^{n} c_{k} \underbrace{\left[ x_{c} \vx_{c}^{T} \vx_{k} - x_{k} \right] \frac{1}{r} \d{\phi(r(x_{c}))}{r}}_{B_{c,k}^{\mathbf{p}_{x}}}. 
 \label{eq:xsfc_operator_flyer_et_al}
@@ -49,19 +47,19 @@ and so forth for the $\mathbf{p}_{y} \cdot \nabla, \mathbf{p}_{z}  \cdot \nabla$
 
 %TODO: refer to sloan2001 for a set of test functions on the sphere that would be good test cases. 
 
-Alternatively, one is able to compute weights \emph{indirectly} as a weighted combination of existing RBF-FD weights for the unprojected $\nabla$ operator. Here we assume that differentiation matrices to compute the components of $\nabla$ are readily available in memory: 
+Alternatively, weights can be computed \emph{indirectly} as a weighted combination of existing RBF-FD DMs for the unprojected $\nabla$ operator. Here we assume that differentiation matrices to compute the components of $\nabla$ are readily available in memory: 
 $$
-\D_{\nabla} = \begin{bmatrix} \D_{\d{}{x}} \\ \D_{\d{}{y}} \\ \D_{\d{}{z}} \end{bmatrix},
+\D_{\nabla} = \begin{pmatrix} \D_{x} \\ \D_{y} \\ \D_{z} \end{pmatrix},
 $$
-where each matrix contains weights computed with the operators of Equation~\ref{eq:rbffd_grad_weights} applied to the RHS of Equation~\ref{eq:rbffd_weight_system}.  
+where each matrix contains weights computed with the operators from Section~\ref{sec:rbffd_grad_weights} applied to the RHS of Equation~\ref{eq:rbffd_weight_system}.  
 
 The differentiation matrices for $\mathbf{P} \cdot \nabla$ can then be assembled as a weighted combination of the differentiation matrices for the unprojected operator: 
 \begin{equation}
-\D_{\mathbf{P} \cdot \nabla} = \begin{bmatrix} \D_{\mathbf{p_{x} \cdot \nabla}} \\  \D_{\mathbf{p_{y}\cdot \nabla}} \\  \D_{\mathbf{p_{z}\cdot \nabla}} \end{bmatrix} = \begin{bmatrix} 
+\D_{\mathbf{P} \cdot \nabla} = \begin{pmatrix} \D_{\mathbf{p_{x} \cdot \nabla}} \\  \D_{\mathbf{p_{y}\cdot \nabla}} \\  \D_{\mathbf{p_{z}\cdot \nabla}} \end{pmatrix} = \begin{pmatrix} 
 diag(1-X^{2}) \D_{\pd{x}{x}} - diag(XY) \D_{\d{}{y}} - diag(XZ) \D_{\d{}{z}} \\
 - diag(XY)\D_{\d{}{x}} + diag(1-Y^{2}) \D_{\d{}{y}} - diag(YZ) \D_{\d{}{z}} \\
 - diag(XZ)\D_{\d{}{x}} - diag(YZ) \D_{\d{}{y}} + diag(1-Y^{2}) \D_{\d{}{z}} 
-\end{bmatrix}
+\end{pmatrix}
 \end{equation}
 \authnote{make it "partial x" instead of d/dx}
  where $X = \{x_{c,i}\}_{i=1}^{N}$, $Y = \{y_{c,i}\}_{i=1}^{N}$, $Z = \{z_{c,i}\}_{i=1}^{N}$ are all x-components, y-components and z-components of the stencil centers $\{\vx_{c,i}\}_{i=1}^{N}$ respectively. 

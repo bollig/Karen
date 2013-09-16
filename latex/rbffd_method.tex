@@ -780,6 +780,7 @@ The following are used in subsequent derviatives:
 
 
 \subsection{Cartesian Gradient ($\grad$)}
+\label{sec:rbffd_grad_weights}
 The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) are produced via the chain rule:
 	\begin{align*} 
 	 \pd{\phi}{x} = \pd{r}{x} \pd{\phi}{r} = \frac{(x-x_{j})}{r} \pd{\phi}{r} \\
@@ -862,6 +863,7 @@ Although this originated in the spherical coordinate system, \cite{WrightFlyerYu
 where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
 
 \subsection{Constrained Gradient ($P_{x} \cdot \grad$) on the Sphere}
+\label{sec:projected_grad}
 
 Following \cite{FlyerWright09, FlyerLehto11}, the gradient operator can be constrained to the sphere with this projection matrix: 
 %\frac{1}{||\mathbf{x}||}

@@ -101,7 +101,7 @@ Note that the overlapping GPU optimization to reduce the collective times also a
 
 \section{On the use of libraries for parallel solvers}
 
-\authnote{$\rightarrow$} 
+
 Implementations of RBF methods are known to be in PETSC \cite{Yokota2010}. The method is simple, and straight-forward to code, but the majority of implementations exist in MATLAB. MATLAB is justified as a platform for computing due to its plethora of solvers, preconditioners, toolkits and support for all things ``matrices" (as it should with a name like ``MATrix LABoratory" (MATLAB). MATLAB is a wonderful platform to develop new features for the RBF methods, but the efficiency of the platform limits its ability to scale to very large problems. For such cases the developers recommend implementations in C or FORTRAN. To aid development in C/FORTRAN, one can take full advantage of the decades worth of research in
 
 Since our focus within this work is to lay the foundation for parallel computing
