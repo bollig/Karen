@@ -1,20 +1,6 @@
 %!TEX root = karen.tex
 
-We present our implementation of an efficient multi-node, multi-GPU RBF PDE package to run on clusters of GPU compute nodes. Each compute node has one or more GPUs attached. Specifically, we utilize the hardware available in the FSU HPC Spear cluster and the NFS funded Keeneland project. While the Spear cluster is only a handful of nodes with 2 GPUs each, Keeneland boasts a total of 240 CPUs and 320 GPUs. The large scale of Keeneland allows us to verify the scaling of our method. 
-
-
-\section{Metrics} 
-
-The code produces the same results on CPUs and GPUs. However, their performance differs, so we analyze this difference with the speedup metric: 
-$$ 
-S_{p} =\ ^{T_{\text{serial}}} /_{T_{\text{parallel}}}
-$$
-
-\authnote{Include efficiency}: 
-$$ 
-E_{p} =\ ^{S_{p}} /_{\# \text{\ of processors}}
-$$
-
+%We present our implementation of an efficient multi-node, multi-GPU RBF PDE package to run on clusters of GPU compute nodes. Each compute node has one or more GPUs attached. Specifically, we utilize the hardware available in the FSU HPC Spear cluster and the NFS funded Keeneland project. While the Spear cluster is only a handful of nodes with 2 GPUs each, Keeneland boasts a total of 240 CPUs and 320 GPUs. The large scale of Keeneland allows us to verify the scaling of our method. 
 
 %TODO: describe each generation of hardware 
 %NVidia released an architecture code named "Fermi" in 2010 \cite{Fermi2009}. The hardware supports many features of interest, the most important being 8x faster double precision than the older Tesla C1060 (GT200 architecture). It will also allow for concurrent kernel execution (for up to 16 small kernels) making it easier to keep the GPU saturated with computation. Table~\ref{tbl:fermi_compare} considers some of the more monumental differences between the Fermi and GT200 architectures.

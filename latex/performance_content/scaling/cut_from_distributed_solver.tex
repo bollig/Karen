@@ -59,9 +59,6 @@ dirichlet: kernel copies dirichlet values into place \authnote{Need to dust off 
 
 
 
-\subsection{Fragments (integrate above)}
-
-
 %The term \textit{General Purpose Computing on GPUs} (GPGPU) refers to the application of a Graphics Processing Unit (GPU) 
 %to problems other than typical rendering tasks (i.e., vertex transformation, rasterization, etc). Driven by the gaming industry's 
 %insatiable desire for more realistic graphics, GPU performance in the last decade years has grown tremendously compared to CPUs.
@@ -73,66 +70,7 @@ dirichlet: kernel copies dirichlet values into place \authnote{Need to dust off 
 %performance comes with limitations: historically GPUs have always lagged behind the CPU in terms 
 %of flexibility and programmability.
 
-While the nomenclature used in this paper is typically associated with CUDA programming, the names \textit{thread} and \textit{warp} are used to clearly illustrate kernel execution in context of the NVidia specific hardware used in tests. OpenCL assumes a lowest common denominator of hardware capabilities to provide functional portability. However, intimate knowledge of hardware allows for better understanding of performance and optimization on a target architecture. For example, OpenCL assumes all target architectures are capable at some level of SIMD (Single Instruction Multiple Data) execution, but CUDA architectures allow for Single Instruction Multiple Thread (SIMT). SIMT is similar to traditional SIMD, but while SIMD immediately serializes on divergent operations, SIMT allows for a limited amount of divergence without serialization. 
-
-At the hardware level, a \textit{thread} executes instructions on the GPU. On Fermi level GPUs, groups of 32 threads are referred to as \textit{warps}. A warp is the unit of threads executed concurrently on a single \textit{multi-processor}. 
-In OpenCL (i.e., software), a collection of hardware threads performing the same instructions are referred to as a \textit{work-group} of \textit{work-items}. Work-groups execute as a collection of warps constrained to the same multiprocessor. Multiple work-groups of matching dimension are grouped into an \textit{NDRange}. The \textit{kernel} provides a master set of instructions
-for all threads in an NDRange \cite{OpenCL2009}. 
-
-%\authnote{Just rewrote this stuff directly in opencl terms}
-%In software, a collection of threads is referred to as \textit{block}. In hardware, blocks exist as a collection of warps with the constraint that the entire collection executes on the same multiprocessor. Again in software, multiple 
-%blocks of matching dimension are grouped into a \textit{grid}. The \textit{kernel} provides a master set of instructions
-%for all threads in a grid, although each thread executes the instructions on different memory \cite{CudaGuide:2011}. 
-
-%While the nomenclature used in this paper is typically associated with CUDA programming, the names \textit{thread} and \textit{warp} are used to clearly illustrate kernel execution in context of the NVidia specific hardware. OpenCL has one-to-one mappings for CUDA terminology at the software level, so the two can be used interchangeably. For example, OpenCL labels threads as \textit{work-items}. Blocks are \textit{work-groups}, and a grid is an \textit{NDRange} with an associated \textit{kernel} for an instruction set . 
-
-NVidia GPUs have a tiered memory hierarchy related to the grouping of threads described above. 
-In multiprocessors, each computing core executes a thread with a limited set of registers. The number of registers varies with the generation of hardware, but always come in small quantities (e.g., 32K shared by all threads of a multiprocessor on the Fermi). Accessing registers is free, but keeping data in registers requires an effort to maintain balance between kernel complexity and the number of threads per block. Threads of a single work-group can share information within a multiprocessor through \textit{shared memory}. With only 48 KB 
-available per 
-multiprocessor \cite{CudaGuide2011}, shared memory is another fast but limited resource on the GPU. OpenCL refers to shared memory as \textit{local memory}. 
-Sharing information across multiprocessors is possible in \textit{global device memory}---the largest and slowest memory space on the GPU. To improve seek times into global memory, Fermi level architectures include L1 on each multiprocessor and a shared L2 cache for all multiprocessors.
-
-
-%\textit{constant} and \textit{texture} memory caches are available for read-only access. 
-%To use shared memory, 
-%Threads must 
-%explicitly copy intermediate computational results or data in and out. 
-
-%Shared memory is divided evenly into 16 \textit{memory 
-%banks} or 
-%regions of memory that can be accessed simultaneously. Memory and registers can be accessed equally fast as long as no two 
-%threads in the 
-%same half-warp (i.e., first 16 threads or last 16 threads of the warp) are accessing the same memory bank. If this occurs, the 
-%access is 
-%considered to be a \textit{bank conflict} and the multiprocessor is forced to serialize memory access, increasing the delay until 
-%the warp can 
-%proceed with execution \cite{CudaGuide:2008}. 
-
-%\begin{figure}[t] %  figure placement: here, top, bottom, or page
-%   \centering
-%   \includegraphics[width=4.5in]{../figures/paper1/figures/opencl_memory_model.pdf} 
-%   \caption{Comparison of GPU and CPU implementations underlying the OpenCL memory model for a single compute device.}
-%   \label{fig:opencl_memory}
-%\end{figure}
-%
-
-
-% and the place to which all data and kernels from the 
-%CPU are copied for 
-%execution. Note 
-%that multiprocessors maintain read-only \textit{caches} for \textit{constants} and \textit{textures}---constants are values that 
-%never change during kernel execution, 
-%while textures are interpreted as read only arrays and provide a sophisticated cache mechanisms for certain types of non-sequential access. The real memory for constants and textures is part of the global device 
-%memory, so reading 
-%from texture and constant memory is faster than reads from global memory when no cache misses \cite{CudaGuide:2008}. 
-%Also, if a kernel 
-%uses too many registers per thread, \textit{local memory} is reserved in the global device memory to temporarily store register 
-%contents for 
-%later use with an associated penalty in efficiency \cite{CudaGuide:2008}. 
-
-%Under OpenCL, the equivalent to CUDA local memory is called \textit{private memory} and is also reserved read-only per work-item in global device memory. CUDA's shared memory is labeled \textit{local memory} and shared by threads of a work-group. The CUDA texture and constant caches are known as \textit{Global/Constant Cache}, and similar to CUDA, exist outside of developer control. OpenCL refers to \textit{global memory} and \textit{constant memory} when referring to read/write and read-only sections of CUDA's global device memory (respectively). Finally, CUDA textures are equivalent to OpenCL \textit{buffers} (1D arrays) or \textit{images} (2D/3D arrays) \cite{OpenCL:2009}.
-
-%Based on \cite{Behr:2009, OpenCL:2009}, Figure~\ref{fig:opencl_memory} compares the underlying implementation of the OpenCL memory hierarchy on GPUs and CPUs. Notably, on current CPUs most of the memory is reserved in System RAM, whereas the hierarchy naturally fits on the deep memory hierarchy of the GPU.  
+ 
 
 \subsection{Implicit Solvers}
 
