@@ -2,44 +2,42 @@
 
 \chapter{Keeneland Results}
 
-The benchmarks seen in \cite{BolligFlyerErlebacher2012} show the strong scaling of our implementation with a for loop and send/recv. 
-
-These results were run on Keeneland. The changes to MPI communication are the result of changing from blocking communication (MPI\_send/MPI\_recv) to non-blocking communication (MPI\_alltoall).
+The benchmarks seen in \cite{BolligFlyerErlebacher2012} show the strong scaling of our implementation with a for loop and send/recv. These results were run on Keeneland. The changes to MPI communication are the result of changing from blocking sends and receives (MPI\_send/MPI\_recv) to an MPI\_alltoallv. The test case is vortex roll-up. 
 
 \begin{figure}[htbp]
 \centering
 \begin{subfigure}[b]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/chapter5/alltoallv/speedup_1proc_oneWarpPerStencil.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneWarpPerStencil.pdf}
 \caption{One warp per stencil kernel on one GPU in Keeneland}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter5/alltoallv/speedup_1CPU_vs_NCPU.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1CPU_vs_NCPU.pdf}
 \caption{Multi-CPU strong scaling on Keeneland for one warp per stencil \authnote{Check if this is SpMV only or with comm...}}
 \label{fig:alltoall_multicpu_scaling}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter5/alltoallv/speedup_1CPU_vs_NGPU_WarpPerStencil.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1CPU_vs_NGPU_WarpPerStencil.pdf}
 \caption{Multi-GPU strong scaling vs one CPU on Keeneland for one warp per stencil}
 \label{fig:alltoall_multigpu_vs_cpu_scaling}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter5/alltoallv/speedup_1GPU_vs_NGPU_WarpPerStencil.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1GPU_vs_NGPU_WarpPerStencil.pdf}
 \caption{Multi-GPU strong scaling vs one GPU on Keeneland for one warp per stencil}
 \label{fig:alltoall_multigpu_vs_gpu_scaling}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter5/alltoallv/multiCPU_costs.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/multiCPU_costs.pdf}
 \caption{Multi-CPU benchmarks by component on Keeneland}
 \label{fig:alltoall_multicpu_costs}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/chapter5/alltoallv/multiGPU_warp_costs.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/multiGPU_warp_costs.pdf}
 \caption{Multi-GPU benchmarks by component on Keeneland}
 \label{fig:alltoall_multigpu_costs}
 \end{subfigure} 
@@ -71,4 +69,36 @@ Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_c
 %Shared memory bank conflicts? How do we sort the values? 
 %What is the occupancy of the GPU?
 %
+
+
+\chapter{Spear Results}
+
+These results were run on Spear. MPI communication is done with an MPI\_alltoallv collective. The test case is the vortex roll-up. 
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/alltoallv/speedup_1proc_oneWarpPerStencil.eps}
+\caption{One warp per stencil kernel on one GPU in Spear}
+\label{fig:alltoall_1proc_warp}
+\end{subfigure} 
+\begin{subfigure}[b]{0.425\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/alltoallv/speedup_1CPU_vs_NCPU.eps}
+\caption{Multi-CPU strong scaling on spear for one warp per stencil}
+\label{fig:alltoall_multicpu_scaling}
+\end{subfigure} 
+\begin{subfigure}[b]{0.425\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/alltoallv/speedup_1CPU_vs_NGPU_WarpPerStencil.eps}
+\caption{Multi-GPU strong scaling vs one CPU on Spear for one warp per stencil}
+\label{fig:alltoall_multigpu_vs_cpu_scaling}
+\end{subfigure} 
+\begin{subfigure}[b]{0.425\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/alltoallv/speedup_1GPU_vs_NGPU_WarpPerStencil.eps}
+\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
+\label{fig:alltoall_multigpu_vs_gpu_scaling}
+\end{subfigure} 
+\end{figure} 
 
