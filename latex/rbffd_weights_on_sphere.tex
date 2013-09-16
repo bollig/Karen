@@ -56,48 +56,56 @@ where each matrix contains weights computed with the operators from Section~\ref
 The differentiation matrices for $\mathbf{P} \cdot \nabla$ can then be assembled as a weighted combination of the differentiation matrices for the unprojected operator: 
 \begin{equation}
 \D_{\mathbf{P} \cdot \nabla} = \begin{pmatrix} \D_{\mathbf{p_{x} \cdot \nabla}} \\  \D_{\mathbf{p_{y}\cdot \nabla}} \\  \D_{\mathbf{p_{z}\cdot \nabla}} \end{pmatrix} = \begin{pmatrix} 
-diag(1-X^{2}) \D_{\pd{x}{x}} - diag(XY) \D_{\d{}{y}} - diag(XZ) \D_{\d{}{z}} \\
-- diag(XY)\D_{\d{}{x}} + diag(1-Y^{2}) \D_{\d{}{y}} - diag(YZ) \D_{\d{}{z}} \\
-- diag(XZ)\D_{\d{}{x}} - diag(YZ) \D_{\d{}{y}} + diag(1-Y^{2}) \D_{\d{}{z}} 
+diag(1-X^{2}) \D_{x} - diag(XY) \D_{y} - diag(XZ) \D_{z} \\
+- diag(XY)\D_{x} + diag(1-Y^{2}) \D_{y} - diag(YZ) \D_{z} \\
+- diag(XZ)\D_{x} - diag(YZ) \D_{y} + diag(1-Y^{2}) \D_{z} 
 \end{pmatrix}
 \end{equation}
-\authnote{make it "partial x" instead of d/dx}
- where $X = \{x_{c,i}\}_{i=1}^{N}$, $Y = \{y_{c,i}\}_{i=1}^{N}$, $Z = \{z_{c,i}\}_{i=1}^{N}$ are all x-components, y-components and z-components of the stencil centers $\{\vx_{c,i}\}_{i=1}^{N}$ respectively. 
-\authnote{Gordon discussion: B1: explain why we use this manufactured solution. what was it designed to check. }
-\authnote{Cleanup:}
-This concept equates to classical Finite Differences where for example, the standard 5-point finite difference formula for approximating the Laplacian can be expressed a weighted combination of differences for 
+ where $X = \{x_{c,i}\}_{i=1}^{N}$, $Y = \{y_{c,i}\}_{i=1}^{N}$, $Z = \{z_{c,i}\}_{i=1}^{N}$ are the individual component values of the stencil centers $\{\vx_{c,i}\}_{i=1}^{N}$ respectively (i.e., $x_c = (x_c, y_c, z_c)$). 
+%TODO: Gordon discussion: B1: explain why we use this manufactured solution. what was it designed to check.
 
-Check these for cases where operators are composed: 
-\cite{FlyerLehto11}
-\cite{WrightFlyerYuen10}
-\cite{FornbergLehto11}
-\authnote{Generally, its easier to indirectly compose weights, but cheaper to directly compute weights for operators. Direct operators are assumed to be more accurate. But how much more accurate? }
+This concept equates to classical Finite Differences where for example, the standard 5-point finite difference formula in 2-D for approximating the Laplacian can be expressed a weighted combination of coefficients for 1-D differences. 
 
-One benefit of indirect weights is conservation of memory. For example, for complex operators, a single DM on $N=1 \text{million}$ nodes and $n=101$ requires roughly $1.6$ GB of memory. If the PDE is coupled and requires 
-
-This also allows us to compose complex operators with weights loaded from disk
-
-$O(N*n)$ cost to assemble the indirect operators after $O(N*n^{3})$ cost of assembling direct operators means this approach has potential to save FLOPs in the long run
-
-But the question is, how accurate is it? In situations where memory is critical and these FLOPs need to be saved (i.e., large $N$ and complicated equations), would it be useful?
-
-\authnote{Q: how do direct vs indirect weights compare? Is the lsfc different sparsity with same approximation potentials?}
-\authnote{:end}
+Indirectly computing weights is of interest for at least two reasons: 
+\begin{itemize}
+\item The potential for memory conservation. For example, consider a coupled PDE that requires four operators: $D_x, D_y, D_z, D_{\Laplacian{}}$. A single DM on $N=10^6$ nodes with stencil size $n=101$ requires roughly $1.6$ GB of memory in double precision. Indirectly computing $D_{\Laplacian{}}$ based on the three other DMs can save a large chunk of memory. For a GPU or other accelerator (e.g., Intel Phi) with only 6 GB of global memory, the savings can be compelling.
+\item The ability to compose an operator with weights loaded from disk. Possible use cases include distributing a generated grid online with precomputed RBF-FD weights for the Cartesian gradient. New investigations can reuse the grid and indirectly compose consistent operators for their problem.
+%\item The cost to solve for weights and assemble DMs is $O(N*n^{3})$. The cost of adding DMs $O(N*n)$.  
+\end{itemize}
 
 
+\section{Comparison of Direct and Indirect Weights (INCOMPLETE)} 
+
+To compare direct and indirect approaches, weights are computed with each method for the MD-node sets ranging between $N = 121$ and $N=27556$. The resulting DMs for each resolution are applied to reproduce a manufactured solution. 
+
+We monitor relative error in approximation, defined as: 
+$$ \text{relative $\ell_{2}$ error} = \frac{|| f_{approx} - f_{exact} ||_{2} }{ || f_{exact} ||_{2} }, $$ 
+where $f_{approx}$ is the approximate derivatives and $f_{exact}$ is the manufactured solution. 
+
+
+We also look at the difference of relative errors and its absolute value: 
+$$
+\text{(relative $\ell_{2}$ error)}_{\text{direct}} - \text{(relative $\ell_{2}$ error)}_{\text{indirect}}
+$$
+
+We find that our indirect approach functions well compared to the direct method. For small node sizes ($N < 2500$ nodes) we see that the direct method has the advantage with 
+
+%But the question is, how accurate is it? In situations where memory is critical and these FLOPs need to be saved (i.e., large $N$ and complicated equations), would it be useful?
+
+%TODO: analyze results in this appendix
 \begin{figure}[htbp]
 	\centering
-	\begin{subfigure}[b]{0.425\textwidth}
+	\begin{subfigure}[b]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/sph32_times_sin20x.pdf}
 	\caption{Manufactured test function: \\  $f(\vx) = Y_{3}^{2}(\vx)\sin(20x)$.  }
 	\end{subfigure}
-	\begin{subfigure}[b]{0.425\textwidth}
+	\begin{subfigure}[b]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/pdx_sph32_times_sin20x.pdf}
 	\caption{$x$-component of the projected gradient: 
 	$\mathbf{p}_{x} \cdot \nabla f(\vx)$.  }
 	\end{subfigure}
 	
-	\begin{subfigure}[b]{0.425\textwidth}
+	\begin{subfigure}[b]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/lsfc_sph32_times_sin20x.pdf}
 	\caption{Surface Laplacian: $\LaplaceBeltrami f(\vx)$.  }
 	\end{subfigure}
@@ -106,17 +114,17 @@ But the question is, how accurate is it? In situations where memory is critical 
 
 \begin{figure}[htbp]
 	\centering
-	\begin{subfigure}[b]{0.425\textwidth}
+	\begin{subfigure}[b]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error.pdf}
 	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$}
 		\end{subfigure}
-	\begin{subfigure}[b]{0.425\textwidth}
+	\begin{subfigure}[b]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32/direct_rel_l2_error.pdf}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2})$ }
 	\end{subfigure}
-	\begin{subfigure}[b]{0.425\textwidth}
+	\begin{subfigure}[b]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/direct_rel_l2_error.pdf}
-	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ \authnote{rescale 1e0 down to 1e-8} }
+	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ }
 	\end{subfigure}
 	\caption{Relative $\ell_{2}$ error in differentiation.}
 \end{figure}
@@ -161,31 +169,17 @@ But the question is, how accurate is it? In situations where memory is critical 
 %\end{figure}
 
 
-
-\subsection{Comparison of Direct and Indirect Weights} 
-
-We computed direct and indirect approaches for the MD-node sets with size $N = \{121, 256, 400, 841, 1024, 2500, 4096, 6400, 8100, 10201, 16384, 27556\}$.
-
-We check the relative error of the approximation: 
-$$ \text{relative $\ell_{2}$ error} = \frac{|| f_{approx} - f_{exact} ||_{2} }{ || f_{exact} ||_{2} } $$ 
-
-We also look at the difference of relative errors and its absolute value: 
-$$
-\text{(relative $\ell_{2}$ error)}_{\text{direct}} - \text{(relative $\ell_{2}$ error)}_{\text{indirect}}
-$$
-
-We find that our indirect approach functions well compared to the direct method. For small node sizes ($N < 2500$ nodes) we see that the direct method has the advantage with 
-
 \section{Conclusions}
 
-Although it is clear the indirect method functions well compared to the direct method, we must consider its usefulness. Typically, weights are computed only as necessary for the PDE. If the PDE is on the sphere, then directly computing the $\mathbf{P}\cdot \nabla$ operator would be most efficient for both memory and computation. However, one could imagine a scenario such as a 3-D spherical shell domain with physics on the boundaries that must be constrained to the surface, while the interior requires only an unprojected $\nabla$ operator. In such cases, by simply computing for the $\nabla$ operator, we assemble all necessary operators with minimal loss of accuracy and significant savings ($3Nn$ doubles) in storage. 
+%TODO: It appears that indirect weight calculations function. 
+%TODO: They do have potential for savings
+%TODO: Low resolution amplifies the errors in indirect weights. 
+%TODO: still need to compare with the RBF-GA stable weight methods. What if stable weights initially resolve the extra error we see for small resolutions?
 
-%TODO: Table for GB saved to get an idea of how much memory is saved by cutting out and re-using operators
-
-With $N=1e6$ nodes and stencil size $n=101$, the matrix market file for weights is approximately 1.6 GB on disk. For a GPU with only 6 GB of global memory space available, it is worthwhile to consider possibilities for memory conservation. 
 
 
-%TODO: Check to see $\nabla \cdot \nabla$ accuracy for heat equation.
+
+%Although it is clear the indirect method functions well compared to the direct method, we must consider its usefulness. Typically, weights are computed only as necessary for a PDE. If the PDE is on the sphere, then directly computing the $\mathbf{P}\cdot \nabla$ operator would be most efficient for both memory and computation. However, one could imagine a scenario such as a 3-D spherical shell domain with physics on the boundaries that must be constrained to the surface, while the interior requires only an unprojected $\nabla$ operator. In such cases, by simply computing for the $\nabla$ operator, we assemble all necessary operators with minimal loss of accuracy and significant savings ($3Nn$ doubles) in storage. 
 
 
 %\ifstandalone

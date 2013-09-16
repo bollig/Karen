@@ -137,6 +137,11 @@ The authors of \cite{Bahi2011} do not describe their orthogonalization process, 
 Algorithm~\ref{alg:gmres} presents the basic Left-preconditioned GMRES algorithm with restarts and Given's rotations. The comments in blue denote portions of the algorithm that depend on MPI collectives and the MPI routine used . 
 
 
+%TODO: The Arnoldi process can be completed using in a variety of ways. Some libraries like CUSP and \cite{Saad2003} prefer the straightforward Givens rotations because they are easily parallelizable. The givens algorithm is provided in Algorithm~\ref{alg:gmres_givens}
+
+%TODO: Others like [...] prefer to use an alternate algorithm. This algorithm is demonstrated in Algorithm~\ref{alg:gmres_h}.
+
+
 \begin{algorithm}                      % enter the algorithm environment
 \caption{Left-preconditioned GMRES(k) with Given's Rotations}          % give the algorithm a caption
 \label{alg:gmres}                           % and a label for \ref{} commands later in the document
@@ -368,7 +373,10 @@ Then, a manufactured solution that satisfies both momentum and continuity condit
 \end{align} 
 
 Typically, on the surface of the sphere, the projection operator from Equation~\ref{eq:project_gradient} must be applied to an arbitrary $g(\vx)$. 
-Here, we choose the components of $g(\vx)$ to be various spherical harmonics in Cartesian coordinates where $P_x Y_l^m = Y_l^m$. Consequently, application of $P_x$ can be ignored. 
+Here, we choose the components of $g(\vx)$ to be various spherical harmonics in Cartesian coordinates. Spherical harmonics nicely satisfy $P_x Y_l^m = Y_l^m$. Consequently, the entire application of $P_x$ is neglected. 
+
+%TODO: figure showing spherical harmonics 
+
 
 We select $g(x)$ to be: 
 \begin{align}
@@ -383,15 +391,22 @@ The manufactured solution is shown in Figure~\ref{fig:manufactured_solution}. A 
 
 \begin{figure} 
 \centering
-%\subfloat[Solution $Q_x( g(x) )$ with $g(x) = 8 Y_{3}^{2} - 3Y_{10}^{5} + Y_{20}^{20}$]{\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/U_exact.png}} \\
-%\subfloat[Right Hand Side (Constant Viscosity)]{\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/RHS.png}}
+\begin{subfigure}[b]{\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/U_exact.png}
+\caption{Solution $Q_x( g(x) )$ with $g(x) = 8 Y_{3}^{2} - 3Y_{10}^{5} + Y_{20}^{20}$}
+\end{subfigure}
+\begin{subfigure}[b]{\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/RHS.png}
+\caption{Right Hand Side (Constant Viscosity)}
+\end{subfigure}
 \caption{A divergence free field is manufactured for the sphere. }
 \label{fig:manufactured_solution}
 \end{figure} 
 
 \subsubsection{Convergence}
 
-%TODO: get this data!
 
 As the problem size $N$ increases, we expect the approximation to the solution to converge on the order of $\sqrt{n}$ where $n$ is the choice of stencil size. Figure~\ref{fig:convergence} demonstrates the convergence of our solution with respect to $\sqrt{N}$ for stencil sizes $n=31$,$101$ \authnote{update when figure is complete}. 
 
