@@ -361,7 +361,7 @@ However, with stencils sharing many common nodes, and the Fermi hardware providi
 An alternate approach, illustrated in Figure~\ref{fig:oneWarpPerStencil}, dedicates a full warp of threads to a single stencil. Here, 32 threads load the weights of a stencil and the corresponding elements of the solution vector. As the 32 threads each perform a subset of the dot product, their intermediate sums are accumulated in 32 elements of shared memory (one per thread).
 Should  a stencil be larger than the warp size, the warp iterates over the stencil in increments of the warp size until the full dot product is complete. Finally, the first thread of the warp performs a sum reduction across the 32 (warp size)  intermediate sums stored in shared memory and writes the derivative value to global memory. 
 
-By operating on a warp by warp basis, weights for a single stencil are loaded with a reduced number of memory accesses. Memory loads for the solution vector remain random access but see some benefit when solution values for a stencil are in a small neighborhood in the memory space. Proximity in memory can be controlled by node indexing (see e.g., \cite{Bollig2011} and \cite{Connor2009}). 
+By operating on a warp by warp basis, weights for a single stencil are loaded with a reduced number of memory accesses. Memory loads for the solution vector remain random access but see some benefit when solution values for a stencil are in a small neighborhood in the memory space. Proximity in memory can be controlled by node indexing (see Chapter~\ref{chap:stencils}). 
 
 For stencil sizes smaller than 32, some threads in the warp always remain idle. Idle threads do not slow down the computation within a warp, but under-utilization of the GPU is not desirable. For small stencil sizes, caching on the Fermi can hide some of the cost of memory loads for the naive approach, with no idle threads, making it more efficient. The real strength of one warp per stencil is seen for large stencil sizes. 
 As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. 
@@ -408,7 +408,7 @@ The library includes a variety of sparse matrix formats, solvers, preconditioner
 At the onset of work with ViennaCL two things were apparent: 1) the library was incredibly powerful but limited to square matrices; and 2) the library had no support for distributed computing. Our implementation of RBF-FD (\cite{BolligRBFFDGPU}) required rectangular matrices resulting from domain decomposition. The enhancements to the API have since been added to the main branch of ViennaCL. 
 
 
-CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
+%TODO: CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
 
 
 
@@ -416,11 +416,8 @@ CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
 
 %TODO: list example loops for sparse kernels
 
-\section{Performance Comparison}
-\subsection{Performance of Cosine CL vs VCL}
-\subsection{VCL Formats Comparison}
 
-Our assumption with RBF-FD in this manuscript is that all stencils will have equal size. Due to this, the ELL format is preferred as the default. 
+Due to the assumption that all stencils have equal size, the ELL format is preferred as the default. 
  
 
 
@@ -436,18 +433,6 @@ consider the various sparse formats provided by CUSP and ViennaCL.
 
 %TODO later: \item All stencils with non-uniform size
 %TODO: What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
-
-
-
-\section{GPU SpMV Performance}
-
-This section presents benchmarks obtained on a variety of GPU hardware. 
-
-Data from Keeneland
-
-Data from Cascade
-
-Data from 
 
 
 
