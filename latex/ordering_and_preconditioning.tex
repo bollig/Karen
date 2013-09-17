@@ -717,7 +717,7 @@ It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} d
 \caption{Nodes in range $[0,1]^2$, $dx = dy = 0.05$. }
 \label{fig:connor_fails2}
 \end{subfigure}
-\caption{Preliminary results from $Z$-ordering nodes based on  (double precision) floating point node coordinates (following algorithm in \cite{Connor2009}). Initial results function well on integer coordinates in (a) when nodes correspond to integers space by $dx = 1$. Increasing $dx$ in (b) extends some edges to 3-node Z's, but is mostly correct. The implementation fails when nodes are not representations of integers (c) and (d).}
+\caption{Preliminary results from $Z$-ordering nodes based on  (double precision) floating point node coordinates (following algorithm in \cite{Connor2009}). Our implementation functions well on integer coordinates when nodes are floating point representations of integers separated by $dx = 1$ (a). Increasing $dx$ in (b) extends some edges to 3-node Z's, but is mostly correct. The implementation fails when nodes are not representations of integers (c) and (d).}
 \label{fig:float_z_results}
 \end{figure}
 
