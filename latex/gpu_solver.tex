@@ -118,6 +118,9 @@ Such throughput oriented architectures require developers to decompose problems 
 %TODO verify date of open source
 In 2012 NVidia open sourced CUDA to lower level virtual machine. This opened the possibility of directly compiling other languages like Python (Anaconda) to build kernels directly within the Python language for CUDA. 
 
+GPUs support single and double precision. RBF-FD certainly requires double precision at the moment. Solving for the weights in single precision might work, but the lower precision would not be able to handle the ill-conditioned system. Projecting double precision weights into single precision results in weights that sum to $\approx 10^{-4}$, a poor approximation to zero. 
+
+
 \section{Performance}
 \subsection{GFLOP/s}
 In order to quantify the performance of our implementation, we can measure two

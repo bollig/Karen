@@ -694,7 +694,33 @@ The C++ fixed-grid stencil generator defaults to the Raster-/IJK-order due to it
 
 Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. No known investigations consider RBF-FD on moving nodes, but such research could prove local refinements  (e.g., \cite{FlyerLehto10}) should find the fixed-grid method significantly relevant. Future work in this direction would easily justify a GPU implementation following \cite{Krog2010,Green2010,Johnson2011, Goswami2010}. 
 
-It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} developed operators to directly transform floating point coordinates into $Z$-orderings. The MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}) includes a test of those operators, although the investigation is still underway. 
+It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} developed operators to directly transform floating point coordinates into $Z$-orderings. The MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}) includes a test of those operators, although the investigation is incomplete. Preliminary results are shown in Figure~\ref{fig:float_z_results}. In Figure~\ref{fig:connor_works} a set of nodes are distributed in $[0,20]^2$ with $dx = 1.0$ ($dy = dx$). Node coordinates are floating point representations of integers, and the curve drawn shows the successful reproduction of a Z-ordering over the nodes. In Figure~\ref{fig:connor_works2}, the same nodes are scaled to $dx = 3.0$ (i.e., still integer representations). A number of 3-node Z's appear at coordinates that are multiples of powers of two, but that  is an anticipated flaw in the algorithm. The implementation fails when nodes are scaled to non-integer coordinates with $dx = 0.3$ (Figure~\ref{fig:connor_fails}) and $dx=0.05$ (Figure~\ref{fig:connor_fails2}). At this time, investigation into floating point Z-ordering is on hold as there is no urgent need for such an algorithm in RBF-FD. Direct communication with the lead author of \cite{Connor2009} attributed the errors in Figures~\ref{fig:connor_fails} and \ref{fig:connor_fails2} to unexpected behavior/handling of doubles in MATLAB or an unforeseen error in the design of their Algorithm. 
+
+\begin{figure}
+\begin{subfigure}[t]{0.5\textwidth}
+\includegraphics[width=\textwidth]{stencils_content/20x20.png}
+\caption{Nodes in range $[0,20]^2$, $dx = dy = 1$.}
+\label{fig:connor_works}
+\end{subfigure}
+\begin{subfigure}[t]{0.5\textwidth}
+\includegraphics[width=\textwidth]{stencils_content/scale3.png}
+\caption{Nodes in range $[0,60]^2$, $dx = dy = 3$.}
+\label{fig:connor_works2}
+\end{subfigure}
+\begin{subfigure}[t]{0.5\textwidth}
+\includegraphics[width=\textwidth]{stencils_content/scale3em1.png}
+\caption{Nodes in range $[0,6]^2$, $dx = dy = 0.3$.  }
+\label{fig:connor_fails}
+\end{subfigure}
+\begin{subfigure}[t]{0.5\textwidth}
+\includegraphics[width=\textwidth]{stencils_content/range0_1.png}
+\caption{Nodes in range $[0,1]^2$, $dx = dy = 0.05$. }
+\label{fig:connor_fails2}
+\end{subfigure}
+\caption{Preliminary results from $Z$-ordering nodes based on  (double precision) floating point node coordinates (following algorithm in \cite{Connor2009}). Initial results function well on integer coordinates in (a) when nodes correspond to integers space by $dx = 1$. Increasing $dx$ in (b) extends some edges to 3-node Z's, but is mostly correct. The implementation fails when nodes are not representations of integers (c) and (d).}
+\label{fig:float_z_results}
+\end{figure}
+
 
 %
 %\begin{figure}
