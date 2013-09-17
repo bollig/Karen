@@ -87,7 +87,7 @@ where $f_{approx}$ is the approximate derivatives and $f_{exact}$ is the manufac
 
 We also look at the difference of relative errors and its absolute value: 
 $$
-\text{(relative $\ell_{2}$ error)}_{\text{direct}} - \text{(relative $\ell_{2}$ error)}_{\text{indirect}}
+|\text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}}|
 $$
 
 We find that our indirect approach functions well compared to the direct method. For small node sizes ($N < 2500$ nodes) we see that the direct method has the advantage with 
@@ -95,55 +95,54 @@ We find that our indirect approach functions well compared to the direct method.
 %But the question is, how accurate is it? In situations where memory is critical and these FLOPs need to be saved (i.e., large $N$ and complicated equations), would it be useful?
 
 %TODO: analyze results in this appendix
-\begin{figure}[htbp]
+\begin{figure}
 	\centering
-	\begin{subfigure}[b]{0.48\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/sph32_times_sin20x.pdf}
+	\begin{subfigure}[t]{0.48\textwidth}
+	\centering
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/sph32_times_sin20x.eps}
 	\caption{Manufactured test function: \\  $f(\vx) = Y_{3}^{2}(\vx)\sin(20x)$.  }
 	\end{subfigure}
-	\begin{subfigure}[b]{0.48\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/pdx_sph32_times_sin20x.pdf}
+	
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/pdx_sph32_times_sin20x.eps}
 	\caption{$x$-component of the projected gradient: 
 	$\mathbf{p}_{x} \cdot \nabla f(\vx)$.  }
 	\end{subfigure}
-	
-	\begin{subfigure}[b]{0.48\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/lsfc_sph32_times_sin20x.pdf}
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/lsfc_sph32_times_sin20x.eps}
 	\caption{Surface Laplacian: $\LaplaceBeltrami f(\vx)$.  }
 	\end{subfigure}
 	\caption{Test function and its projected derivatives on the surface of the unit sphere. }
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}
 	\centering
 	\begin{subfigure}[b]{0.48\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error.eps}
 	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$}
-		\end{subfigure}
+    \end{subfigure}
 	\begin{subfigure}[b]{0.48\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32/direct_rel_l2_error.pdf}
-	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2})$ }
-	\end{subfigure}
-	\begin{subfigure}[b]{0.48\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/direct_rel_l2_error.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/direct_rel_l2_error.eps}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ }
 	\end{subfigure}
 	\caption{Relative $\ell_{2}$ error in differentiation.}
 \end{figure}
 
 
-\begin{figure}[htbp]
+\begin{figure}
 	\centering
 	\begin{subfigure}[b]{0.425\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/diff_of_rel_l2_errors.pdf}
-	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$ (error is higher because operator is $P_x (D_x D_x + D_y D_y + D_z D_z)$)}
+	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$ (Indirect error is significantly higher for small resolutions. This likely due to compounding errors from the operator $P_x (D_x D_x + D_y D_y + D_z D_z)$)}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.425\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32/diff_of_rel_l2_errors.pdf}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2})$ }
 	\end{subfigure}
 	\begin{subfigure}[b]{0.425\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/abs_diff_of_rel_l2_errors.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/abs_diff_of_rel_l2_errors.eps}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$}
 	\end{subfigure}
 	\caption{Signed differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
@@ -153,11 +152,11 @@ We find that our indirect approach functions well compared to the direct method.
 \begin{figure}[htbp]
 	\centering
 	\begin{subfigure}[b]{0.425\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/abs_diff_of_rel_l2_errors.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/abs_diff_of_rel_l2_errors.eps}
 	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.425\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/abs_diff_of_rel_l2_errors.pdf}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/abs_diff_of_rel_l2_errors.eps}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$}
 	\end{subfigure}
 		\caption{Absolute differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
