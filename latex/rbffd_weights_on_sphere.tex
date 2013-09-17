@@ -101,18 +101,18 @@ We find that our indirect approach functions well compared to the direct method.
 	\begin{subfigure}[t]{0.48\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/sph32_times_sin20x.eps}
-	\caption{Test function:  \\ $f(\vx) = Y_{3}^{2}(\vx)\sin(20x)$.  }
+	\caption{Test function:  \\ $Y_{3}^{2} \sin(20 x) $.  }
 	\end{subfigure}
 	
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/pdx_sph32_times_sin20x.eps}
-	\caption{Projected $x$-derivative: \\	$\mathbf{p}_{x} \cdot \nabla f(\vx)$.  }
+	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ }
 	\end{subfigure}
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/lsfc_sph32_times_sin20x.eps}
-	\caption{Surface Laplacian: \\ $\LaplaceBeltrami f(\vx)$.  }
+	\caption{Surface Laplacian: \\ $\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$  }
 	\end{subfigure}
 	\caption{Test function and its projected derivatives on the surface of the unit sphere. }
 	\end{center}
@@ -122,11 +122,11 @@ We find that our indirect approach functions well compared to the direct method.
 	\centering
 	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/direct_rel_l2_error.eps}
-	\caption{$\mathbf{p}_{x} \cdot \nabla f(\vx)$ }
+	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ }
 	\end{subfigure}
 	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error.eps}
-	\caption{$\LaplaceBeltrami f(\vx)$}
+	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$}
     \end{subfigure}
 	\caption{Relative $\ell_{2}$ error in differentiation.}
 \end{figure}
@@ -141,7 +141,7 @@ We find that our indirect approach functions well compared to the direct method.
 		\begin{subfigure}[t]{0.48\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/diff_of_rel_l2_errors.eps}
-	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$ (Indirect error is significantly higher for small resolutions. This likely due to compounding errors from the operator $P_x (D_x D_x + D_y D_y + D_z D_z)$). Where negative this figure indicates that the error is higher for indirect weight calculation. }
+	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$ (Indirect error is significantly higher for small resolutions. This likely due to compounding errors from the operator $P_x (D_x D_x + D_y D_y + D_z D_z)$). Where negative this figure indicates that the error is higher for indirect weight calculation. }
 	\end{subfigure}
 	\caption{Signed differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights. The sign indicates on the error indicates the higher of the two weight approaches.}
 \end{figure}
@@ -157,7 +157,7 @@ We find that our indirect approach functions well compared to the direct method.
 	\begin{subfigure}[t]{0.48\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/abs_diff_of_rel_l2_errors.eps}
-	\caption{$\LaplaceBeltrami$ of $Y_{3}^{2} \sin(20 x)$}
+	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$}
 	\end{subfigure}
 		\caption{Absolute differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
 \end{figure}
