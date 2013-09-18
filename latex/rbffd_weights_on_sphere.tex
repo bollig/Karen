@@ -85,10 +85,12 @@ $$ \text{relative $\ell_{2}$ error} = \frac{|| f_{approx} - f_{exact} ||_{2} }{ 
 where $f_{approx}$ is the approximate derivatives and $f_{exact}$ is the manufactured solution. 
 
 
-We also look at the difference of relative errors and its absolute value: 
+We also look at the signed and absolute value of the difference in relative errors, 
 $$
-|\text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}}|
+\text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}}\\
+|\text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}}| . 
 $$
+to compare 
 
 We find that our indirect approach functions well compared to the direct method. For small node sizes ($N < 2500$ nodes) we see that the direct method has the advantage with 
 
@@ -126,6 +128,14 @@ We find that our indirect approach functions well compared to the direct method.
 	\end{subfigure}
 	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error.eps}
+	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$}
+    \end{subfigure}
+    	\begin{subfigure}[t]{0.48\textwidth}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/indirect_rel_l2_error.eps}
+	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ }
+	\end{subfigure}
+	\begin{subfigure}[t]{0.48\textwidth}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/indirect_rel_l2_error.eps}
 	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$}
     \end{subfigure}
 	\caption{Relative $\ell_{2}$ error in differentiation.}

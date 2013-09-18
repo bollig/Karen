@@ -11,7 +11,7 @@
 \begin{document}
 \fi
 
-\chapter{GPU SpMV}
+\chapter{GPU SpMV (incomplete)}
 \label{chap:gpu_rbffd}
 
 General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs, and with over 1 TFLOP/s peak throughput possible in double precision on a single GPU \cite{KeplerFactSheet}, a strong argument is made for the latter. 
@@ -19,10 +19,11 @@ General Purpose GPU (GPGPU) computing is one of today's hottest trends in scient
 GPUs originated as dedicated hardware for video games and computer graphics (e.g., for rasterization). Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like programming model. 
 
 
-Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing}, originally from \cite{CudaGuide2013}, gives a high level perspective of CPU versus GPU architecture. Due to the inherent task parallelism in computer graphics, GPU designers early on adopted a many-core strategy for hardware. Since computer graphics traditionally involved simple logic, GPUs were designed with the majority of transistors dedicated to computation in vector pipelines with limited functionality. In contrast to this, CPUs have always focused on fast evaluation of serial codes with advanced scalar logic. Thus, given the same number of transistors as a GPU, CPUs allocate a smaller number to computation in order to satisfy the needs for non-computational tasks like branching, caching, etc \cite{Owens2007,CudaGuide2013}. 
+Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (from \cite{CudaGuide2013}) gives a high level perspective of CPU versus GPU architecture. Due to the inherent task parallelism in computer graphics, GPU designers early on adopted a many-core strategy for hardware. Since computer graphics traditionally involved simple logic, GPUs were designed with the majority of transistors dedicated to computation in vector pipelines with limited functionality. In contrast to this, CPUs have always focused on fast evaluation of serial codes with advanced scalar logic. Thus, given the same number of transistors as a GPU, CPUs allocate a smaller number to computation in order to satisfy the needs for non-computational tasks like branching, caching, etc \cite{Owens2007,CudaGuide2013}. 
 
-Although individual cores on a GPU have lower clock frequency than a CPU, the sheer number of cores on a GPU results in tremendous throughput in terms of floating point operations per second (FLOPs). Similarly, to supply data to those cores the GPU has evolved high memory bandwidth, which is an order of magnitude or more larger than the leading CPU \cite{CudaGuide2013}. 
+Although individual cores on a GPU have lower clock frequency than a CPU, the sheer number of cores on a GPU results in tremendous throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) shows the historical growth in terms of billions of FLOP/s (GFLOP/s) for NVidia GPUs and Intel CPUs. In the last decade the peak GFLOP/s for GPUs has grown as a result of increasing core counts. 
 
+Similarly, to supply data to those cores the GPU has evolved high memory bandwidth, which is an order of magnitude or more larger than the leading CPU \cite{CudaGuide2013}. 
 
 \begin{figure}
 \centering
@@ -40,6 +41,15 @@ Although individual cores on a GPU have lower clock frequency than a CPU, the sh
 
 
 In the last decade, CPU designers have been forced to transition to multi- and many-core chips in order to keep up with demand for continued growth in computational performance. Power constraints make further frequency scaling on CPUs almost impossible, which leaves increased core counts as the only viable solution for designers to continue satisfying Moore's Law \cite{Owens2007}. The GPU, far ahead in the many-core arena, only required a bit of flexibility in control and logic to compete against the CPU. 
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\textwidth]{gpu_content/nvidia_figures/memory-bandwidth.png}
+\caption{Memory Bandwidth for the CPU and GPU (Image courtesy of NVidia \cite{CudaGuide2013})} 
+\label{fig:memory-bandwidth}
+\end{figure}
+
 
 Prior to 2006, the GPU had already evolved away from fixed-function pipelines and on to limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with significant effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Harris2005,Owens2007}). 
 
