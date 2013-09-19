@@ -2,22 +2,22 @@
 
 
 
-\section{Two level parallelism}
-
-Our current implementation assumes that we are computing on a cluster of CPUs,
-with one GPU attached to each CPU. The CPU maintains control of execution and
-launches kernels on the GPU that execute in parallel. Under the OpenCL standard
-\cite{OpenCL2009}, a tiered memory hierarchy is available on the GPU with
-\textit{global device memory} as the primary and most abundant memory space.
-The memory space for GPU kernels is separate from the memory available to a
-CPU, so data must be explicitly copied to/from global device memory on the GPU. 
-
-\begin{itemize} 
-\item How to copy to/from GPU
-\item Where are the synchronization points (lockstep and overlapping)
-\end{itemize}
-
-\authnote{The basic primitives necessary to parallelize our problems: SpMV, AXPY and }
+%\section{Two level parallelism}
+%
+%Our current implementation assumes that we are computing on a cluster of CPUs,
+%with one GPU attached to each CPU. The CPU maintains control of execution and
+%launches kernels on the GPU that execute in parallel. Under the OpenCL standard
+%\cite{OpenCL2009}, a tiered memory hierarchy is available on the GPU with
+%\textit{global device memory} as the primary and most abundant memory space.
+%The memory space for GPU kernels is separate from the memory available to a
+%CPU, so data must be explicitly copied to/from global device memory on the GPU. 
+%
+%\begin{itemize} 
+%\item How to copy to/from GPU
+%\item Where are the synchronization points (lockstep and overlapping)
+%\end{itemize}
+%
+%\authnote{The basic primitives necessary to parallelize our problems: SpMV, AXPY and }
 
 
 %\subsection{Overlapping Computation and Communication} 
