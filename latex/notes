@@ -21,7 +21,14 @@
         -> Tells us how efficient the 
 
 
+Gather related work on SpMV and Distributed
+Write algorithms for SpMV
+	Many problems have simple stencils that can be coded directly. e.g., 5-point
+	Simply state that initial attempts did what we did
+	Then say considering the fact that SpMV has low computational complexity we anticipate it will be memory bound. 
+	Then say that if this is true we need to improve memory layout and reduce memory load overhead
+	Then say formats are best optimization. 
+	Expectations: what are teh GFLOPs achieved by each implementation? What is the peak possible for 2:1 complexity? 
+	How does ViennaCL allow control of blocks, tuning? 
+Write algorithms for Distributed
 
-- GPGPU 
-	trend that is now commonplace.
-git	
