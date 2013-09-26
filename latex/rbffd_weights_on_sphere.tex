@@ -31,21 +31,19 @@ P = I - \mathbf{x} \mathbf{x}^T =  \begin{pmatrix}
 \end{align}
 %The operator $\mathbf{I} - \vx \vx^{T}$ for $\vx = (x,y,z)$ projects a vector onto the plane tangent to the unit sphere at $(x,y,z)$. Therefore, Equation~\ref{eq:sfc_gradient_operator} gives the projection of the gradient operator at $\vx_{k}$ onto the plane tangent to $\vx$. 
 
-Here we investigate the difference between constructing DMs using Equation~\ref{eq:sfc_gradient_operator} on the RHS of Equation~\ref{eq:rbffd_weight_system} versus composing DMs for the standard Cartesian $\grad$ operator and combined using Equation~\ref{eq:sfc_project_gradient}.
+Here we investigate the difference between DMs constructed using Equation~\ref{eq:sfc_gradient_operator} on the RHS of the RBF-FD weight system (Equation~\ref{eq:rbffd_weight_system}) versus DMs composed from combinations of the standard Cartesian $\grad$ operator following Equation~\ref{eq:sfc_project_gradient}. We label the former case as \emph{direct weights} and the latter as \emph{indirect weights}. 
 
 
-\section{Direct Weights} 
+\subsubsection{Direct Weights} 
 
 Following \cite{FlyerLehto11}, \ref{eq:sfc_gradient_operator} takes the following form when adapted to RBF-FD:  
 \begin{equation}
 [ \mathbf{p}_{x} \cdot \nabla{f(\vx)}] |_{\vx = \vx_{c}} = \sum_{k=1}^{n} c_{k} \underbrace{\left[ x_{c} \vx_{c}^{T} \vx_{k} - x_{k} \right] \frac{1}{r} \d{\phi(r(x_{c}))}{r}}_{B_{c,k}^{\mathbf{p}_{x}}}. 
 \label{eq:xsfc_operator_flyer_et_al}
 \end{equation}
-and so forth for the $\mathbf{p}_{y} \cdot \nabla, \mathbf{p}_{z}  \cdot \nabla$ operators, where $\vx_{c}$ is the stencil center and $\vx_{k}$ are stencil nodes. To compute RBF-FD weights for the $\mathbf{p}_{x} \cdot \nabla$ operator, the RHS of Equation~\ref{eq:rbffd_weight_system} is filled with elements $B_{c,k}^{\mathbf{p}_{x}}$. We will refer to this method of obtaining the weights as the \emph{direct} method due to the ability to directly compute RBF-FD weights for the operators $\mathbf{P} \cdot \nabla $, and assemble the differentiation matrices $\D_{\mathbf{p_{x}} \cdot \nabla}, \D_{\mathbf{p_{y}} \cdot \nabla}, \D_{\mathbf{p_{z}} \cdot \nabla}$ without the need to compute   and/or store other weights.
+and so forth for the $\mathbf{p}_{y} \cdot \nabla, \mathbf{p}_{z}  \cdot \nabla$ operators, where $\vx_{c}$ is the stencil center and $\vx_{k}$ are stencil nodes. To compute RBF-FD weights for the $\mathbf{p}_{x} \cdot \nabla$ operator, the RHS of Equation~\ref{eq:rbffd_weight_system} is filled with elements $B_{c,k}^{\mathbf{p}_{x}}$. We will refer to this method of obtaining the weights as the \emph{direct} method due to the ability to directly compute RBF-FD weights for the operators $\mathbf{P} \cdot \nabla $, and assemble the differentiation matrices $\D_{\mathbf{p_{x}} \cdot \nabla}, \D_{\mathbf{p_{y}} \cdot \nabla}, \D_{\mathbf{p_{z}} \cdot \nabla}$ without the need to compute and/or store other (unneeded) weights.
 
-\section{Indirect Weights} 
-
-%TODO: refer to sloan2001 for a set of test functions on the sphere that would be good test cases. 
+\subsubsection{Indirect Weights} 
 
 Alternatively, weights can be computed \emph{indirectly} as a weighted combination of existing RBF-FD DMs for the unprojected $\nabla$ operator. Here we assume that differentiation matrices to compute the components of $\nabla$ are readily available in memory: 
 $$
@@ -53,50 +51,38 @@ $$
 $$
 where each matrix contains weights computed with the operators from Section~\ref{sec:rbffd_grad_weights} applied to the RHS of Equation~\ref{eq:rbffd_weight_system}.  
 
-The differentiation matrices for $\mathbf{P} \cdot \nabla$ can then be assembled as a weighted combination of the differentiation matrices for the unprojected operator: 
+The differentiation matrices for $\mathbf{P} \cdot \nabla$ can then be assembled as a weighted combination of the unprojected gradient matrices: 
 \begin{equation}
 \D_{\mathbf{P} \cdot \nabla} = \begin{pmatrix} \D_{\mathbf{p_{x} \cdot \nabla}} \\  \D_{\mathbf{p_{y}\cdot \nabla}} \\  \D_{\mathbf{p_{z}\cdot \nabla}} \end{pmatrix} = \begin{pmatrix} 
 diag(1-X^{2}) \D_{x} - diag(XY) \D_{y} - diag(XZ) \D_{z} \\
 - diag(XY)\D_{x} + diag(1-Y^{2}) \D_{y} - diag(YZ) \D_{z} \\
 - diag(XZ)\D_{x} - diag(YZ) \D_{y} + diag(1-Y^{2}) \D_{z} 
 \end{pmatrix}
+\label{eq:indirect_project}
 \end{equation}
  where $X = \{x_{c,i}\}_{i=1}^{N}$, $Y = \{y_{c,i}\}_{i=1}^{N}$, $Z = \{z_{c,i}\}_{i=1}^{N}$ are the individual component values of the stencil centers $\{\vx_{c,i}\}_{i=1}^{N}$ respectively (i.e., $x_c = (x_c, y_c, z_c)$). 
-%TODO: Gordon discussion: B1: explain why we use this manufactured solution. what was it designed to check.
 
-This concept equates to classical Finite Differences where for example, the standard 5-point finite difference formula in 2-D for approximating the Laplacian can be expressed a weighted combination of coefficients for 1-D differences. 
+This concept equates to classical Finite Differences where for example, the standard 5-point finite difference formula in 2-D is expressed a weighted combination of coefficients for 1-D differences. 
 
-Indirectly computing weights is of interest for at least two reasons: 
+Indirectly computing weights is of interest for a few reasons: 
 \begin{itemize}
-\item The potential for memory conservation. For example, consider a coupled PDE that requires four operators: $D_x, D_y, D_z, D_{\Laplacian{}}$. A single DM on $N=10^6$ nodes with stencil size $n=101$ requires roughly $1.6$ GB of memory in double precision. Indirectly computing $D_{\Laplacian{}}$ based on the three other DMs can save a large chunk of memory. For a GPU or other accelerator (e.g., Intel Phi) with only 6 GB of global memory, the savings can be compelling.
-\item The ability to compose an operator with weights loaded from disk. Possible use cases include distributing a generated grid online with precomputed RBF-FD weights for the Cartesian gradient. New investigations can reuse the grid and indirectly compose consistent operators for their problem.
-%\item The cost to solve for weights and assemble DMs is $O(N*n^{3})$. The cost of adding DMs $O(N*n)$.  
+\item \emph{The potential for memory conservation.} For example, consider a coupled PDE that requires four operators: $\D_x$, $\D_y$, $\D_z$, $\D_{\Laplacian{}}$. A single DM on $N=10^6$ nodes with stencil size $n=101$ requires roughly $1.6$ GB of memory in double precision. Indirectly computing $\D_{\Laplacian{}}$ based on the three other DMs can save a large chunk of memory. For a GPU or other accelerator (e.g., Intel Phi) with only 6 GB of global memory, the savings can be compelling.
+\item \emph{The ability to compose an operator with weights loaded from disk.} Possible use cases include distributing a generated grid online with precomputed RBF-FD weights for the Cartesian gradient. New investigations can reuse the grid and indirectly compose consistent operators for their problem.
+\item \emph{Simplification in operator construction.} One often finds it difficult to directly/analytically apply high powered differential operators to RBFs. In those cases, the discretized operators can be easily composed indirectly via one or more matrix additions and/or multiplications. 
 \end{itemize}
 
 
-\section{Comparison of Direct and Indirect Weights (INCOMPLETE)} 
+\section{Comparison of Direct and Indirect Weights} 
 
 %TODO: code in ~/Karen/rbffd_prototypes/matlab/stokes/test_weights
 
-To compare direct and indirect approaches, weights are computed with each method for the MD-node sets ranging between $N = 121$ and $N=27556$. The resulting DMs for each resolution are applied to reproduce a manufactured solution. 
+To verify functionality of direct versus indirect approaches, DMs are assembled with each method for the MD-node sets ranging between $N = 121$ and $N=27556$. A manufactured solution is constructed on the sphere as shown in Figure~\ref{fig:direct_vs_indirect_manufactured_solution}. Starting with the function $f(x) = Y_3^2 \sin(20x)$ in Figure~\ref{fig:direct_vs_indirect_manufactured_base}, we seek approximations to the constrained derivative in $x$, $\mathbf{p}_{x} \cdot \nabla f(x)$ (Figure~\ref{fig:direct_vs_indirect_manufactured_xsfc}), and the constrained Laplacian, $\LaplaceBeltrami{f(x)}$ (Figure~\ref{fig:direct_vs_indirect_manufactured_lsfc}). 
 
-We monitor relative error in approximation, defined as: 
-$$ \text{relative $\ell_{2}$ error} = \frac{|| f_{approx} - f_{exact} ||_{2} }{ || f_{exact} ||_{2} }, $$ 
-where $f_{approx}$ is the approximate derivatives and $f_{exact}$ is the manufactured solution. 
+The test case, $f(x)$, checks convergence of approximation on a scalar field with oscillations, which are intentionally difficult to capture without sufficient grid resolution. It also exercises RBF-FD's ability to capture derivatives constrained to the sphere while operating in Cartesian coordinates. 
 
+Since each DM results in approximation error, the expectation is that errors will compound when indirectly assembling DMs.  
+Indirect weights for $\mathbf{p}_{x} \cdot \nabla$ are assembled following the first row of the RHS of Equation~\ref{eq:indirect_project} with $\D_x$, $\D_y$, and $\D_z$ given as the components of the Cartesian gradient. In the case of the $\LaplaceBeltrami{}$ operator, the indirect weights are constructed as $(\mathbf{P} \cdot \nabla) \cdot (\mathbf{P} \cdot \nabla)$ to consider the worst case when errors multiply. The second order constrained operator applies Equation~\ref{eq:indirect_project} to the components of the Cartesian gradient, squares the resulting components of $\D_{\mathbf{P} \cdot \nabla}$ and adds components to get the final matrix with 9 matrix-vector multiplies, 8 matrix additions and 3 matrix multiplies. We arrive at the same results if Equation~\ref{eq:indirect_project} is applied both to the Cartesian gradient and then again to the resulting DMs for $\D_{\mathbf{P} \cdot \nabla}$, or if intermediate DMs are multiplied against function values and the resulting derivative approximations combined in place of the DMs (i.e., the final DM is not explicitly assembled). 
 
-We also look at the signed and absolute value of the difference in relative errors, 
-$$
-\text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}}\\
-|\text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}}| . 
-$$
-to compare 
-
-We find that our indirect approach functions well compared to the direct method. For small node sizes ($N < 2500$ nodes) we see that the direct method has the advantage with 
-
-%But the question is, how accurate is it? In situations where memory is critical and these FLOPs need to be saved (i.e., large $N$ and complicated equations), would it be useful?
-
-%TODO: analyze results in this appendix
 \begin{figure}
 \begin{center}
 	\centering
@@ -104,57 +90,79 @@ We find that our indirect approach functions well compared to the direct method.
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/sph32_times_sin20x.eps}
 	\caption{Test function:  \\ $Y_{3}^{2} \sin(20 x) $.  }
+		\label{fig:direct_vs_indirect_manufactured_base}
 	\end{subfigure}
 	
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/pdx_sph32_times_sin20x.eps}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ }
+			\label{fig:direct_vs_indirect_manufactured_xsfc}
 	\end{subfigure}
 	\begin{subfigure}[t]{0.48\textwidth}
 		\centering
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/lsfc_sph32_times_sin20x.eps}
 	\caption{Surface Laplacian: \\ $\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$  }
+				\label{fig:direct_vs_indirect_manufactured_lsfc}
 	\end{subfigure}
 	\caption{Test function and its projected derivatives on the surface of the unit sphere. }
+				\label{fig:direct_vs_indirect_manufactured_solution}
 	\end{center}
 \end{figure}
+
+The accuracy of each approximation is measured as the $\ell_2$ relative error,  
+$$ \text{relative $\ell_{2}$ error} = \frac{|| f_{approx} - f_{exact} ||_{2} }{ || f_{exact} ||_{2} }, $$ 
+where $f_{approx}$ is the approximate derivatives and $f_{exact}$ is the manufactured solution. Figure~\ref{fig:direct_vs_indirect_relative_error} provides the relative $\ell_{2}$ errors for RBF-FD stencils of size $n=17, 31, 50,$ and $101$. The choice of $\epsilon$ in each case follows the parameters provided in Table~\ref{tbl:vortex_hv_params}. RBF-FD weights are calculated using the RBF-Direct method, and no hyperviscosity. 
+
+The relative error for both direct (Figure~\ref{fig:direct_vs_indirect_relative_error_xsfc_direct}) and indirect approximations (Figure~\ref{fig:direct_vs_indirect_relative_error_xsfc_indirect}) of $\mathbf{p}_{x} \cdot \nabla$ are nearly identical. Although the grid is under-resolved and incapable of capturing oscillations for the first few test cases, the results converge well past $N > 400$. In the case of $\LaplaceBeltrami{}$, the relative $\ell_2$ error for direct (Figure~\ref{fig:direct_vs_indirect_relative_error_lsfc_direct}) versus indirect weights (Figure~\ref{fig:direct_vs_indirect_relative_error_lsfc_indirect}) behaves similarly for both cases when $N > 800$ nodes. However, the direct method starts converging earlier than the indirect method and maintains one or two digits higher precision overall. %This leads to the understanding that while the indirect approach can cut corners, it can require two to four times the number of nodes for the same accuracy on $\LaplaceBeltrami{}$. 
 
 \begin{figure}
 	\centering
 	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/direct_rel_l2_error.eps}
-	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ }
+	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$, direct weights}
+			\label{fig:direct_vs_indirect_relative_error_xsfc_direct}
 	\end{subfigure}
 	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error.eps}
-	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$}
+	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$, direct weights}
+			\label{fig:direct_vs_indirect_relative_error_lsfc_direct}
     \end{subfigure}
     	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/indirect_rel_l2_error.eps}
-	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$ }
+	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$, indirect weights}
+		\label{fig:direct_vs_indirect_relative_error_xsfc_indirect}
 	\end{subfigure}
 	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/indirect_rel_l2_error.eps}
-	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$}
+	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$, indirect weights}
+		\label{fig:direct_vs_indirect_relative_error_lsfc_indirect}
     \end{subfigure}
 	\caption{Relative $\ell_{2}$ error in differentiation.}
+	\label{fig:direct_vs_indirect_relative_error}
 \end{figure}
 
+The plateau on convergence in Figure~\ref{fig:direct_vs_indirect_relative_error} is an indicator of limitations in the RBF-Direct method and the choice of $\epsilon$. Future investigation may consider the use of an alternative weight method like RBF-GA (\cite{Fornberg2012}) to maintain the rate of convergence. RBF-GA utilizes a change of basis on both the LHS and RHS of Equation~\ref{eq:rbffd_weight_system}, which implies the need to apply derivatives to both gaussian RBFs and incomplete gamma functions. With accurate RBF-GA weights, indirectly assembled DMs could be a viable alternative to the pain of deriving the modified RHS. 
 
-\begin{figure}
-	\centering
-	\begin{subfigure}[t]{0.48\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/diff_of_rel_l2_errors.eps}
-	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$}
-	\end{subfigure}
-		\begin{subfigure}[t]{0.48\textwidth}
-	\centering
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/diff_of_rel_l2_errors.eps}
-	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$ (Indirect error is significantly higher for small resolutions. This likely due to compounding errors from the operator $P_x (D_x D_x + D_y D_y + D_z D_z)$). Where negative this figure indicates that the error is higher for indirect weight calculation. }
-	\end{subfigure}
-	\caption{Signed differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights. The sign indicates on the error indicates the higher of the two weight approaches.}
-\end{figure}
+Figure~\ref{fig:direct_vs_indirect_unsigned_diff} considers the unsigned difference in relative $\ell_2$ errors: $| \text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}} |$. The results confirm that indirect weight approximations for the constrained first derivative are as good (or bad) as using direct weights. The absolute value of the differences shows over six digits of agreement in accuracy for the first derivative. In the case of $\LaplaceBeltrami{}$, the indirect approach is significantly less accurate with only one or two digits of agreement in many cases. Fortunately, as $N$ grows the indirect and direct approximations converge. 
+
+In conclusion, the results in Figures~\ref{fig:direct_vs_indirect_relative_error} -- \ref{fig:direct_vs_indirect_unsigned_diff} confirm that indirectly assembling RBF-FD weights can function well in terms of convergence, with similar rates as directly computed weights. Test results for the $\LaplaceBeltrami{}$ operator show that higher order operators assembled from simple Cartesian gradient DMs may lose an order of magnitude accuracy in approximation, and require twice as many grid points to recover the solution produced by directly computed RBF-FD weights. 
+
+
+%\begin{figure}
+%	\centering
+%	\begin{subfigure}[t]{0.48\textwidth}
+%	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/diff_of_rel_l2_errors.eps}
+%	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$}
+%	\end{subfigure}
+%		\begin{subfigure}[t]{0.48\textwidth}
+%	\centering
+%	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/diff_of_rel_l2_errors.eps}
+%	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$ }
+%	\end{subfigure}
+%	\caption{Signed differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights. The sign indicates on the error indicates the higher of the two weight approaches.}
+%    \label{fig:direct_vs_indirect_signed_diff}
+%\end{figure}
 
 
 \begin{figure}
@@ -169,28 +177,10 @@ We find that our indirect approach functions well compared to the direct method.
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/abs_diff_of_rel_l2_errors.eps}
 	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$}
 	\end{subfigure}
-		\caption{Absolute differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
+		\caption{Unsigned differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
+		\label{fig:direct_vs_indirect_unsigned_diff}
 \end{figure}
 
-%% NOT USEFUL: %%
-%\begin{figure}[htbp]
-%\centering
-%\includegraphics[width=0.425\textwidth]{../figures/chapter2/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32/condest_dm_xsfc.pdf}
-%\caption{Condition number estimates (condest) of direct $\mathbf{p}_{x}\nabla$ differentiation matrix}
-%\end{figure}
-
-
-\section{Conclusions}
-
-%TODO: It appears that indirect weight calculations function. 
-%TODO: They do have potential for savings
-%TODO: Low resolution amplifies the errors in indirect weights. 
-%TODO: still need to compare with the RBF-GA stable weight methods. What if stable weights initially resolve the extra error we see for small resolutions?
-
-
-
-
-%Although it is clear the indirect method functions well compared to the direct method, we must consider its usefulness. Typically, weights are computed only as necessary for a PDE. If the PDE is on the sphere, then directly computing the $\mathbf{P}\cdot \nabla$ operator would be most efficient for both memory and computation. However, one could imagine a scenario such as a 3-D spherical shell domain with physics on the boundaries that must be constrained to the surface, while the interior requires only an unprojected $\nabla$ operator. In such cases, by simply computing for the $\nabla$ operator, we assemble all necessary operators with minimal loss of accuracy and significant savings ($3Nn$ doubles) in storage. 
 
 
 %\ifstandalone

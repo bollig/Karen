@@ -20,18 +20,16 @@ In the last decade, CPU designers have been forced to transition to multi- and m
 %TODO: Moore's law states that 
 Power constraints make further frequency scaling on CPUs almost impossible, which leaves increased core counts as the only viable solution for designers to continue satisfying Moore's Law \cite{Owens2007}. 
 
-GPUs originated as dedicated hardware for video games and computer graphics (e.g., for rasterization). 
-Due to the inherent task parallelism in computer graphics, early GPU designers adopted a many-core strategy for hardware, which persists today. Since computer graphics traditionally involved simple operations, the majority of transistors on a GPU are dedicated to computation in vector pipelines with limited control for logic. In contrast to this, CPUs have always focused on fast serial and scalar operations. Thus, CPUs allocate a smaller number to computation in order to satisfy the needs for advanced logic tasks like branching, caching, etc \cite{Owens2007,CudaGuide2013}. Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (from \cite{CudaGuide2013}) gives a high level perspective of CPU versus GPU architecture. A GPU has a high density of Arithmetic Logic Units (ALUs) with simple simple control and caching on shared DRAM memory. 
+GPUs originated as dedicated hardware for video games and computer graphics. 
+Due to the inherent task parallelism in computer graphics  (e.g., for rasterization), early GPU designers adopted a many-core strategy for hardware, which persists today. Computer graphics traditionally involved simple operations, so the majority of transistors on a GPU are dedicated to computation in vector pipelines with limited control for logic. The earliest GPUs had static rendering pipelines with fixed functions. In contrast to this, CPUs have always focused on fast serial and scalar operations, which means they allocate less transistors to computation in order to satisfy the needs for advanced logic tasks like branching, caching, etc. \cite{Owens2007,CudaGuide2013}. Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (from \cite{CudaGuide2013}) illustrates the difference between CPUs and GPUs at a high level. The high density of Arithmetic Logic Units (ALUs) with simple control and caching units is signature of GPUs. 
 
-%TODO: verify ALU 
-
-Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like platform. Prior to 2006, the GPU had already evolved away from fixed-function pipelines and on to limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with significant effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Harris2005,Owens2007}).
+Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like platform. Prior to 2006, the GPU had already evolved away from fixed-function pipelines and on to limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with substantial effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Harris2005,Owens2007}).
 GPUs, far ahead in the many-core arena, only required a bit of flexibility in control and logic to compete against the CPU for general purpose computing.  
 
-The release of NVidia's CUDA architecture and software stack at the end of 2006, deprecated those tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program \cite{CudaGuide2013}. The monumental new CUDA hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were another just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to implement custom GPU codes. Developers who wanted to quickly transition existing code bases to the GPU had access to the CUBLAS API since day one, which offers an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPU computing was easily accessible to the general public. 
+The release of NVidia's CUDA architecture and software stack at the end of 2006, deprecated those tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program \cite{CudaGuide2013}. The monumental new CUDA hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public. 
 
 
-Individual cores on a GPU operate at a lower clock frequency compared to a CPU, but the sheer number of cores on a GPU results in tremendous throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) shows the historical growth in terms of billions of FLOP/s (GFLOP/s) for NVidia GPUs versus Intel CPUs. In the last decade the peak GFLOP/s for a single GPU has sky-rocketed, leaving CPUs a full order of magnitude behind. Similarly, Figure~\ref{fig:memory-bandwidth} compares the difference in memory bandwidth between the two vendors. In order to supply much needed data to the many cores, NVidia GPUs have evolved a memory hierarchy with bandwidth up to five times higher than Intel CPUs \cite{CudaGuide2013}. 
+The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of cores leads to an astounding number of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/s) achieved by NVidia GPUs versus Intel CPUs. In the last decade the peak GFLOP/s for a single GPU has sky-rocketed, and consistently leaves CPUs a full order of magnitude behind. In order to supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than CPUs \cite{CudaGuide2013}. Figure~\ref{fig:memory-bandwidth} (from \cite{CudaGuide2013}) demonstrates memory bandwidth growth for the two vendors. 
 
 \begin{figure}
 \centering
@@ -57,8 +55,38 @@ Individual cores on a GPU operate at a lower clock frequency compared to a CPU, 
 
 
 
+%TODO: The success of CUDA led to a vast number of libraries and publications
+The success of CUDA resulted in 
+
+
+the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
+OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
+
+This transition was 
+followed closely by evolving programming languages. Today, GPUs can be leveraged from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, with new developments appearing every day. 
+
+
+
+%TODO: competition in the market led to similar architectures from vendors like AMD and ever-expanding CPUs
+
 CUDA is not the only solution for GPU computing. 
 
+%TODO: in 2009 enter OpenCL as a standard as a parallel language on top of all those hardware
+
+In early 2009, the Khronos Group--the group responsible for maintaining OpenGL--announced a new specification for a general 
+parallel programming lanugage referred to as the Open Compute Language (OpenCL) \cite{OpenCL2009}. Similar in design to the CUDA language---in many ways it is a simple refactoring of the predecessor---the goal of OpenCL is to provide a mid-to-low level API and language to control any multi- or many-core processor in a uniform fashion. Today, OpenCL drivers exist for a variety of hardware including NVidia GPUs, AMD/ATI CPUs and GPUs, and Intel CPUs. 
+
+This \textit{functional portability} is the cornerstone of the OpenCL language. However, functional portability does not imply performance portability. That is, OpenCL allows developers to write kernels capable of running on all types of target hardware, but optimizing kernels for one type of target (e.g., GPU) does not guarantee the kernel will run efficiently on another target (e.g., CPU).
+
+With CPUs tending toward many cores, and the once special purpose, many-core GPUs offering general purpose functionality, it is already possible to see the CPU and GPU converging into general purpose many-core architectures. Already, ATI has introduced the Fusion APU (Accelerated Processing Unit) which couples an AMD CPU and ATI GPU within a single die. OpenCL is an attempt to standardize programming ahead of this intersection. 
+
+%Home computers, smart-phones and other devices containing many- or multi-core compute units internally have driven the generalization of the accelerator language to provide a unified approach to targeting any available hardware. 
+
+ Already, today, CPUs are tending toward many core architectures. Simultaneously, the once specialized many-core GPUs now offer general purpose functionality. New architectures like the AMD Fusion \cite{AMDFusion} join CPU and GPU on the same chip proving that 
+, and It is easy to see that soon the CPU and GPU will meet somewhere in the middle as general purpose many-core architectures. OpenCL is an attempt to standardize programming before this intersection occurs. 
+TODO: clean. ATI, INTEL, NVIDIA all have units. 
+
+\section{Sparse Matrix Libraries}
 
 One thing missing from the original release of CUDA was sparse matrix algebra support. 
 This led to investigations like \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, developed sparse matrix libraries for the GPU. The APIs of CUSP and ViennaCL are used like 
@@ -69,29 +97,15 @@ Algorithms from \cite{Bell2009} have since been included in the CUDA SDK as the 
 NVidia eventually included a library named CUSPARSE as part of the CUDA SDK. Initial releases were 
 Developers either implemented their own kernels (as we did in \cite{BolligFlyerErlebacher2012}) or   
 
-%TODO: price of GPU was roughly 800 and massively parallel, high performance cards
-
-
-Today, CPUs are designed for scalar arithmetic and logic. GPUs emphasize vector operations with SIMD-like architecture. 
-Due to limitations on how CPUs 
-
-CPU growth is limited by power and size. In response, CPU designers for years have been scaling the number of cores on a die rather than the frequency. 
-
-
-To meet the demand for computer graphics GPUs are designed with emphasis on fast memory bandwidth, thousands of simple compute cores and features like 2-D and 3-D texture caching. 
-
 
 %TODO: CUDA MPI not a feature provided by OpenCL. 
 
-In recent years the 
 
-CPU benefits versus GPU benefits. CPUs are designed for complex branching and advanced logic. GPUs are designed for high throughput. GPU cores are much simpler 
+%TODO: GPU memory layout
+%TODO: GPU multi-processor units
 
-
-%TODO: GPU hardware
 %TODO: GPU software (OpenCL vs CUDA)
 %TODO: targeting the GPU for SpMV (how to write a kernel as forloop without the for)
-%TODO: 
 
  
 %TODO: list all known work on SpMV for GPU
@@ -100,38 +114,7 @@ CPU benefits versus GPU benefits. CPUs are designed for complex branching and ad
 %TODO: each of the dense forms are unique (describe each)
 %TODO: newer forms are available
 
-marked both a 
-new generation of GPU architecture and a programming model 
 
-accessible 
-
-
-the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
-OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
-
-
-Modern GPUs boast thousands of compute cores. 
-
-
-This transition was 
-followed closely by evolving programming languages. Today, GPUs can be leveraged from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, with new developments appearing every day. 
-
- into multi-core co-processors for high performance scientific computing.
-
-In early 2009, the Khronos Group--the group responsible for maintaining OpenGL--announced a new specification for a general 
-parallel programming lanugage referred to as the Open Compute Language (OpenCL) \cite{OpenCL2009}. Similar in design to the CUDA language---in many ways it is a simple refactoring of the predecessor---the goal of OpenCL is to provide a mid-to-low level API and language to control any multi- or many-core processor in a uniform fashion. Today, OpenCL drivers exist for a variety of hardware including NVidia GPUs, AMD/ATI CPUs and GPUs, and Intel CPUs. 
-
-This \textit{functional portability} is the cornerstone of the OpenCL language. However, functional portability does not imply performance portability. That is, OpenCL allows developers to write kernels capable of running on all types of target hardware, but optimizing kernels for one type of target (e.g., GPU) does not guarantee the kernel will run efficiently on another target (e.g., CPU).
-% Already, today, CPUs are tending toward many core architectures. Simultaneously, the once specialized many-core GPUs now offer general purpose functionality. New architectures like the AMD Fusion \cite{AMDFusion} join CPU and GPU on the same chip proving that 
-%, and It is easy to see that soon the CPU and GPU will meet somewhere in the middle as general purpose many-core architectures. OpenCL is an attempt to standardize programming before this intersection occurs. 
-%TODO: clean. ATI, INTEL, NVIDIA all have units. 
-With CPUs tending toward many cores, and the once special purpose, many-core GPUs offering general purpose functionality, it is already possible to see the CPU and GPU converging into general purpose many-core architectures. Already, ATI has introduced the Fusion APU (Accelerated Processing Unit) which couples an AMD CPU and ATI GPU within a single die. OpenCL is an attempt to standardize programming ahead of this intersection. 
-
-%Home computers, smart-phones and other devices containing many- or multi-core compute units internally have driven the generalization of the accelerator language to provide a unified approach to targeting any available hardware. 
-
-Petascale computing centers around the world are leveraging GPU accelerators to achieve peak performance. In fact, many of today's high performance computing installations boast significantly more GPU accelerators than CPU counterparts. The Keeneland project is one such example, currently with 240 CPUs accompanied by 360 NVidia Fermi class GPUs with at least double that number expected by the end of 2012 \cite{Vetter2011}. 
-
-Such throughput oriented architectures require developers to decompose problems into thousands of independent parallel tasks in order to fully harness the capabilities of the hardware. To this end, a plethora of research has been dedicated to researching algorithms in all fields of computational science. Of interest to us are methods for atmospheric- and geo-sciences. 
 
 %TODO: ALL SPMV related work.
 \cite{Bell2009} 
