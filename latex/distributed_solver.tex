@@ -18,14 +18,17 @@
 
 
 %TODO: Similar Overlapping algorithm: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
+ %Imbalanced computation can be the source of excessive delays as processors sit idle and wait for other processors to catch up. 
 
 Parallelizing applications in a distributed computing environment requires three
-design decisions \cite{Saad2003}. First, the problem must be partitioned in some fashion to distribute work across multiple processes. Intelligent partitioning
+design decisions \cite{Saad2003}: 
+\begin{enumerate} 
+\item Partition the problem to distribute work across multiple processes. Intelligent partitioning
 impacts load balancing and communication latency.
-%TODO: latency
- %Imbalanced computation can be the source of excessive delays as processors sit idle and wait for other processors to catch up. 
-Second, a decision must be made on what subset of node information,
-solution values, etc. are visible to each process, and then establish index mappings that translate between a local context and the global problem. Third, each process must establish a local ordering of data. The right local order can improve solver performance and/or simplify data movement. %Of particular interest here is how to minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
+\item Determine the subset of node information,
+solution values, etc. that are visible to each process, and establish index mappings that translate between a local context and the global problem. 
+\item Establish a local ordering of data. The right local order can improve solver performance and/or simplify data movement. %Of particular interest here is how to minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
+\end{enumerate}
 
 This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. 
 
@@ -34,6 +37,10 @@ We operate under the assumption that inter-process communication is managed by t
 
 
 \section{Partitioning}
+
+We start with the concept of a \emph{domain}, which is partitioned into a set of \emph{sub-domains}. %TODO: elaborate
+
+
 
 For ease of development and parallel debugging, partitioning is initially
 assumed to be linear along the $x$-axis. This approach is not uncommon when solving PDEs on rectangular domains (see e.g., \cite{Divo2007, Thibault2009}). However, on irregular domains a simple one-dimensional cut can result in imbalanced workloads across processors. 
@@ -44,13 +51,13 @@ Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
 $N=10,201$ nodes on the unit sphere for four processes. 
 Each partition, illustrated as a unique color, contains many stencil centers. 
 Based on the location of a stencil's center the corresponding partition is easily identified. In cases where stencils are part of one partition and depend on stencil nodes in another, we say that the dependencies are \emph{ghost nodes}. %TODO: need ghost node ref.
-In many cases, ghost nodes are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, values at ghost nodes are modified by another process, so changes must be explicitly synchronized via an MPI in order to maintain consistency. 
+In many cases, ghost nodes are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, values at ghost nodes are modified by another process, so changes must be explicitly synchronized via MPI in order to maintain consistency. 
 
 In Figure~\ref{fig:decomposed_sphere}, alternating representations between node points and interpolated surfaces illustrates the
 overlap regions where ghost nodes reside. Due to stencil dependencies in each partition, the overlap region representations are double-wide---i.e., they contain a set of ghost nodes for both the left and right partitions. 
 
 As the stencil size increases, the width of the
-overlap regions relative to total number of nodes on the sphere proportionally increases. In Figure~\ref{fig:decomposed_sphere}, the width of the overlap is roughly $\sqrt{n}$. Larger stencil sizes add new  exacerbate the situation by further increasing the number of bytes that must be sent via MPI. Observe that since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary.
+overlap regions relative to total number of nodes on the sphere proportionally increases. In Figure~\ref{fig:decomposed_sphere}, the width of the overlap is roughly $\sqrt{n}$. Observe that since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary. 
 
 \begin{figure}[ht!]
 \begin{center}
@@ -60,14 +67,15 @@ overlap regions relative to total number of nodes on the sphere proportionally i
 \end{center}
 \end{figure}
 
-%TODO: concept of a domain and subdomains with nodes determined by isInside()
-
-The choice for a linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is straightforward. On a high number of processors, there are two issues: 1) increasing the number of processors quickly reduces the width of each partition and can result in stencils dependent on more than one partition in each direction introducing the need for more complex collectives; and 2) with near uniform node distributions the resulting partitions are of unequal size and processors are improperly balanced. Thus, in the case of the sphere, linear partitioning is not ideal. 
-
+Linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is straightforward. There are two issues with this approach: 
+\begin{enumerate} 
+\item Scaling the number of processors quickly decreases the width of each partition, and can result in stencils spanning more than one partition in each direction. This introduces the need for complex communication collectives. 
+\item In the case of the sphere, the partitioning of near uniform node distributions results in subdomains that are unequal in size and processors are improperly balanced. 
+\end{enumerate}
 
 Many other options for partitioning the sphere exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere and assigns projected rectangular elements to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. The options for partitioning the sphere are endless, and are outside the scope of this work. 
 
-
+%TODO: concept of a domain and subdomains with nodes determined by isInside()
 
 Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
 
