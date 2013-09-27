@@ -38,57 +38,49 @@ We operate under the assumption that inter-process communication is managed by t
 
 \section{Partitioning}
 
-Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decomposition subdivides the 
+Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decomposition methods simply subdivide/partition the computational domain into \emph{subdomains}, which are then treated independently. Domain decomposition methods comprise an entire field of research. Commonly used methods include Multiplicative Schwarz, Additive Schwarz, and Restricted Additive Schwarz (see references in \cite{Yokota2010,StCyr2007}). The choice of method determines how the computational domain is subdivided, and how frequently data is passed between subdomains. Such methods are well known as a form of preconditioning (see e.g., \cite{Beatson2000, StCyr2007}), but the two Additive variants of Schwarz decomposition are inherently parallel and naturally extend to distributed architectures \cite{Yokota2010}. 
 
+The parallelization strategy employed for RBF-FD in this work is equivalent to a Restricted Additive Schwarz (RAS). Our strategy was implemented prior to the knowledge of the RAS method. In this case we assume that partitioning occurs within the spatial domain. At each time-step the PDE is first solved independently within subdomains, and then information is shared across subdomain boundaries to ensure a consistent global solution entering the next time-step. We also assume that subdomains are always assigned to independent processes, although each process could operate on multiple subdomains in theory. 
 
+Following the notation in \cite{StCyr2007}, consider domain, $\Interior$, decomposed into two overlapping subdomains $\Interior_1$ and $\Interior_2$, with a global boundary $\partial\Interior = \partial\Interior_1 \cup \partial\Interior_2$. Then, at each time-step we seek the simultaneous solution to
+\begin{center}
+\begin{minipage}{0.4\linewidth}
+\begin{align*}
+\diffop{u_{1}^{n+1}} & = f \ \ \text{ in }\Interior_1,\\
+\boundop{u_{1}^{n+1}} &= g \ \ \text{ on }\partial\Interior_1, \\
+u_{1}^{n+1} & = u_2^{n} \ \ \text{ on }\Boundary_{12}, 
+\end{align*}
+\end{minipage}
+\begin{minipage}{0.4\linewidth} 
+\begin{align}
+\diffop{u_{2}^{n+1}} & = f \ \ \text{ in }\Interior_2 \nonumber \\
+\boundop{u_{2}^{n+1}} & = g \ \ \text{ on }\partial\Interior_2, \label{eq:rasm_example} \\
+u_{2}^{n+1} & = u_1^{n} \ \ \text{ on }\Boundary_{21},  \nonumber
+\end{align}
+\end{minipage}
+\end{center}
+\ 
 
-\authnote{todo: subdomain methods are often employed for parallelization.}
-We start with the concept of a \emph{domain}, which is partitioned into a set of \emph{sub-domains}. %TODO: elaborate
+\noindent where $\Boundary_{ij}$ indicates overlap between subdomains and is read as the subset of subdomain $j$ required by subdomain $i$ (i.e., $\Boundary_{ij} = \partial\Interior_i \cap \Interior_j$). A Dirichlet boundary condition connects subdomains at the interfaces. Although not considered here, future investigations may find Robin-type conditions of interest due to their convergence accelerating properties in the context of Schwarz methods for elliptic PDEs (\cite{StCyr2007}). 
 
-Parallel implementations of RBF methods rely on \emph{domain decomposition}. Depending on the implementation, domain decomposition not only accelerates solution procedures, but can decrease the ill-conditioning that plague all global RBF methods (\cite{Divo2007}). The ill-conditioning is reduced if each domain is treated as a separate RBF domain, and the boundary update is treated separately. Domain decomposition methods for RBFs were introduced by Beatson et al. \cite{Beatson2000}. Their work provided a solution to solve problem sizes into the millions of nodes.
-
-This work leverages a domain decomposition, but not for the purpose of conditioning. Instead subdomains are distributed across multiple compute nodes and scaling RBF-FD across more than a thousand CPU cores of an HPC cluster. Add to this a twist to incorporate a novel implementation on the GPU with overlapping communication and computation. This combination is unmatched in related work. However, RBF methods do have a bit of history of parallel implementations. 
-
-In 2007, Divo and Kassab \cite{Divo2007} used a domain decomposition method with artificial 
-subdomain boundaries for their implementation of a local collocation method \cite{Divo2007}. 
-The subdomains are processed independently, with derivative values 
-at artificial boundary points averaged to maintain global consistency of physical values. Their implementation 
-was designed for a 36 node cluster, but benchmarks and scalability tests are not provided.
-
-% Divo: it seems almost unnecessary to use domain decomposition if they have the local method.
-% I suppose the domain decomposition is necessary for averaging physical values more than RBF collocation.
-However, research on the parallelization of RBF algorithms to solve PDEs on multiple CPU/GPU architectures is essentially non-existent. We have found three studies that have addressed this topic, none of which implement RBF-FD but rather take the avenue of domain decomposition for global RBFs (similar to a spectral element approach). In \cite{Divo2007}, Divo and Kassab introduce subdomains with artificial boundaries that are processed independently. Their implementation was designed for a 36 node cluster, but benchmarks and scalability tests are not provided. Kosec and \v{S}arler \cite{Kosec2008} parallelize coupled heat transfer and fluid flow models using OpenMP on a single workstation with one dual-core processor. They achieved a speedup factor of 1.85x over serial execution, although there were
-no results from scaling tests. Yokota, Barba and Knepley \cite{Yokota2010} apply a restrictive additive Schwarz domain decomposition to parallelize global RBF interpolation of more then 50 million nodes on 1024 CPU processors.
-
-Kosec and \v{S}arler \cite{Kosec2008} have the only known (to our knowledge) OpenMP implementation for RBFs. The authors parallelize coupled heat transfer 
-and fluid flow problems on a single workstation. 
-The application involves the local RBF collocation method, explicit time-stepping and Neumann boundary conditions. A speedup 
-factor of 1.85x over serial execution was achieved by executing on two CPU cores; no further 
-results from scaling tests were provided. 
-
-Stevens et al. \cite{Stevens2009a} mention a parallel implementation under development, but no document is available at this time. 
-
-Perhaps the most competitive parallel implementation of RBFs is the PetRBF branch of PETSc \cite{Yokota2010}. The authors of PetRBF have implemented a highly scalable, efficient RBF interpolation method based on compact RBFs (i.e., they operate on sparse matrices). The authors demonstrate efficient weak scaling of PetRBF across 1024 processes on a Blue Gene/L, and strong scaling up to 128 processes on the same hardware. On the Blue Gene/L, PetRBF is demonstrated to achieve an impressive 74\% parallel weak scaling efficiency on 1024 processes (operating on over 50 million points), and 84\% strong scaling efficiency for 128 processes. Strong scaling was also tested on a Cray XT4, where strong scaling tops out at 36\% for 128 processes, a respectable number---and similar to observed results for our own code on for the same number of processes (see Chapter~\ref{chap:distributed_rbffd}).  
-
-
-
+Equation~\ref{eq:rasm_example} illustrates how nicely a PDE can be partitioned in half, and then solved by independent processes. MPI connects processes by transferring the values $u_j^{n}$ across interfaces. Note that as the number of subdomains increases additional constraints for $\Boundary_{ij}$ must be imposed on each subdomain. In the worst case a partitioning for $p$ subdomains requires $p-1$ conditions (i.e., $\Boundary_{ij}$, for $i,j=1,2,...,p$ and $i \neq j$). Conditions can be excluded if subdomains do not overlap. 
 
 For ease of development and parallel debugging, partitioning is initially
-assumed to be linear along the $x$-axis. This approach is not uncommon when solving PDEs on rectangular domains (see e.g., \cite{Divo2007, Thibault2009}). However, on irregular domains a simple one-dimensional cut can result in imbalanced workloads across processors. 
+assumed to be linear along one spatial dimension (in this case the $x$-axis). Each partition/subdomain is then contiguous and overlaps with neighboring subdomains to the left and right. This approach is not uncommon when solving PDEs on rectangular domains (see e.g., \cite{Divo2007, Thibault2009}). However, on irregular geometries a simple one-dimensional cut can result in imbalanced workloads across processes. 
 
 % A similar decomposition occurs in \cite{Divo2007} where the authors apply a local RBF collocation scheme to model viscous flow and heat transfer on rectangular domains. Thibault and Senocak  \cite{Thibault2009} partition a rectangular domain along the $z$-dimension for a variety of 3-D fluid benchmarks. 
 
-Figure~\ref{fig:decomposed_sphere} illustrates a partitioning of
+Figure~\ref{fig:decomposed_sphere} illustrates the partitioning of
 $N=10,201$ nodes on the unit sphere for four processes. 
 Each partition, illustrated as a unique color, contains many stencil centers. 
-Based on the location of a stencil's center the corresponding partition is easily identified. In cases where stencils are part of one partition and depend on stencil nodes in another, we say that the dependencies are \emph{ghost nodes}. %TODO: need ghost node ref.
-In many cases, ghost nodes are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, values at ghost nodes are modified by another process, so changes must be explicitly synchronized via MPI in order to maintain consistency. 
+Based on the location of a stencil's center, its corresponding partition is easily identified. In cases where stencils in one partition and depend on stencil nodes in another, we say that the dependencies (i.e., the nodes in $\Boundary_{ij}$) are \emph{ghost nodes}. 
+In many ways ghost nodes are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, ghost nodes are managed by another subdomain/process, so any changes must be explicitly synchronized via MPI in order to maintain consistency. 
 
 In Figure~\ref{fig:decomposed_sphere}, alternating representations between node points and interpolated surfaces illustrates the
 overlap regions where ghost nodes reside. Due to stencil dependencies in each partition, the overlap region representations are double-wide---i.e., they contain a set of ghost nodes for both the left and right partitions. 
 
-As the stencil size increases, the width of the
-overlap regions relative to total number of nodes on the sphere proportionally increases. In Figure~\ref{fig:decomposed_sphere}, the width of the overlap is roughly $\sqrt{n}$. Observe that since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary. 
+The width of the overlap in Figure~\ref{fig:decomposed_sphere} is between five and six nodes. As the stencil size increases, the width of the
+overlap grows as $\sqrt{n}$. Since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary. 
 
 \begin{figure}[ht!]
 \begin{center}
@@ -445,6 +437,9 @@ Distributing SpMV across multiple GPUs poses a new problem: as previous mentione
 Petascale computing centers around the world are leveraging GPU accelerators to achieve peak performance. In fact, many of today's high performance computing installations boast significantly more GPU accelerators than CPU counterparts. The Keeneland project is one such example, currently with 240 CPUs accompanied by 360 NVidia Fermi class GPUs with at least double that number expected by the end of 2012 \cite{Vetter2011}. 
 
 Such throughput oriented architectures require developers to decompose problems into thousands of independent parallel tasks in order to fully harness the capabilities of the hardware. To this end, a plethora of research has been dedicated to researching algorithms in all fields of computational science. Of interest to us are methods for atmospheric- and geo-sciences. 
+
+
+Similar approaches to overlapping communication and computation can be found in \cite{Schubert2011} and \cite{Thibault2009}.
 
 \section{Overlapped Queues}
 
