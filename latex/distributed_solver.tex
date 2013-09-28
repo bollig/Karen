@@ -38,7 +38,7 @@ We operate under the assumption that inter-process communication is managed by t
 
 \section{Partitioning}
 
-Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decomposition methods simply subdivide/partition the computational domain into \emph{subdomains}, which are then treated independently. Domain decomposition methods comprise an entire field of research. Commonly used methods include Multiplicative Schwarz, Additive Schwarz, and Restricted Additive Schwarz (see references in \cite{Yokota2010,StCyr2007}). The choice of method determines how the computational domain is subdivided, and how frequently data is passed between subdomains. Such methods are well known as a form of preconditioning (see e.g., \cite{Beatson2000, StCyr2007}), but the two Additive variants of Schwarz decomposition are inherently parallel and naturally extend to distributed architectures \cite{Yokota2010}. 
+Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decomposition methods simply subdivide/partition the computational domain into \emph{subdomains}, which are then treated independently. Domain decomposition methods comprise an entire field of research. Commonly used methods include Multiplicative Schwarz, Additive Schwarz, and Restricted Additive Schwarz (see references in \cite{Yokota2010,StCyr2007}). The choice of method determines how the computational domain is subdivided, and how frequently data is passed between subdomains. Such methods are well known as a form of preconditioning (see e.g., \cite{Beatson2000, StCyr2007}), but the two Additive variants of Schwarz decomposition are inherently parallel and naturally extend to distributed architectures \cite{Yokota2010, Gropp1990}. 
 
 The parallelization strategy employed for RBF-FD in this work is equivalent to a Restricted Additive Schwarz (RAS). Our strategy was implemented prior to the knowledge of the RAS method. In this case we assume that partitioning occurs within the spatial domain. At each time-step the PDE is first solved independently within subdomains, and then information is shared across subdomain boundaries to ensure a consistent global solution entering the next time-step. We also assume that subdomains are always assigned to independent processes, although each process could operate on multiple subdomains in theory. 
 
@@ -65,15 +65,18 @@ u_{2}^{n+1} & = u_1^{n} \ \ \text{ on }\Boundary_{21},  \nonumber
 
 Equation~\ref{eq:rasm_example} illustrates how nicely a PDE can be partitioned in half, and then solved by independent processes. MPI connects processes by transferring the values $u_j^{n}$ across interfaces. Note that as the number of subdomains increases additional constraints for $\Boundary_{ij}$ must be imposed on each subdomain. In the worst case a partitioning for $p$ subdomains requires $p-1$ conditions (i.e., $\Boundary_{ij}$, for $i,j=1,2,...,p$ and $i \neq j$). Conditions can be excluded if subdomains do not overlap. 
 
+
+The continuous form of decomposition in Equation~\ref{eq:rasm_example} allows complete freedom in the choice of how subdomains are actually partitioned. In this work we assume partitioning of the geometry on which the PDE is solved. Here we are particularly interested in partitioning the unit sphere, but also consider the challenge of partitioning general geometries. 
+
 For ease of development and parallel debugging, partitioning is initially
-assumed to be linear along one spatial dimension (in this case the $x$-axis). Each partition/subdomain is then contiguous and overlaps with neighboring subdomains to the left and right. This approach is not uncommon when solving PDEs on rectangular domains (see e.g., \cite{Divo2007, Thibault2009}). However, on irregular geometries a simple one-dimensional cut can result in imbalanced workloads across processes. 
+assumed to be linear along one spatial dimension (in this case the $x$-axis). Each partition/subdomain is then contiguous and overlaps with neighboring subdomains to the left and right. This approach is not uncommon when solving PDEs on rectangular domains (see e.g., \cite{Divo2007, Thibault2009}). 
 
 % A similar decomposition occurs in \cite{Divo2007} where the authors apply a local RBF collocation scheme to model viscous flow and heat transfer on rectangular domains. Thibault and Senocak  \cite{Thibault2009} partition a rectangular domain along the $z$-dimension for a variety of 3-D fluid benchmarks. 
 
 Figure~\ref{fig:decomposed_sphere} illustrates the partitioning of
 $N=10,201$ nodes on the unit sphere for four processes. 
 Each partition, illustrated as a unique color, contains many stencil centers. 
-Based on the location of a stencil's center, its corresponding partition is easily identified. In cases where stencils in one partition and depend on stencil nodes in another, we say that the dependencies (i.e., the nodes in $\Boundary_{ij}$) are \emph{ghost nodes}. 
+Based on the location of a stencil's center, its corresponding partition is easily identified. In cases where stencils in one partition depend on stencil nodes in another, we say that the dependencies (i.e., the nodes in $\Boundary_{ij}$) are \emph{ghost nodes}. 
 In many ways ghost nodes are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, ghost nodes are managed by another subdomain/process, so any changes must be explicitly synchronized via MPI in order to maintain consistency. 
 
 In Figure~\ref{fig:decomposed_sphere}, alternating representations between node points and interpolated surfaces illustrates the
@@ -90,17 +93,30 @@ overlap grows as $\sqrt{n}$. Since stencils need not have symmetric dependencies
 \end{center}
 \end{figure}
 
-Linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is straightforward. There are two issues with this approach: 
+Linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is straightforward. There are two concerns with this approach: 
 \begin{enumerate} 
 \item Scaling the number of processors quickly decreases the width of each partition, and can result in stencils spanning more than one partition in each direction. This introduces the need for complex communication collectives. 
-\item In the case of the sphere, the partitioning of near uniform node distributions results in subdomains that are unequal in size and processors are improperly balanced. 
+\item In the case of the sphere and other irregular geometries, the partitioning of near uniform node distributions results in subdomains that contain unequal number of stencils and processor loads become imbalanced. 
 \end{enumerate}
 
-Many other options for partitioning the sphere exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere and assigns projected rectangular elements to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. The options for partitioning the sphere are endless, and are outside the scope of this work. 
+Alternative sphere partitionings exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere, and assigns projected rectangular subdivisions to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. A complete list of options for partitioning the sphere are outside the scope of this work, but most involve recursive subdivisions based on simple geometric elements (i.e., triangle, rectangle, hexagon, etc.). 
 
-%TODO: concept of a domain and subdomains with nodes determined by isInside()
 
-Other interesting partitionings can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
+\subsection{Graph Partitioning with METIS}
+
+One of the major concerns with partitioning for a distributed environment is load balancing. If nodes are distributed 
+
+Following \cite{Gropp1990}: 
+
+\begin{align}
+S_p = \frac{(p-1) W_1 + W_2}{W_2}
+\end{align}
+
+
+In an effort to maintain load balancing, we turn to a more general method for decomposition that performs a \emph{graph partitioning}. Graph partitioning 
+
+
+ Other interesting decompositions can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
 
 
 %TODO: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil
