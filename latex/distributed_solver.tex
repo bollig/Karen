@@ -99,21 +99,19 @@ Linear partitioning is simple and easy to code. Each MPI process has a left and 
 \item In the case of the sphere and other irregular geometries, the partitioning of near uniform node distributions results in subdomains that contain unequal number of stencils and processor loads become imbalanced. 
 \end{enumerate}
 
-Alternative sphere partitionings exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere, and assigns projected rectangular subdivisions to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. A complete list of options for partitioning the sphere are outside the scope of this work, but most involve recursive subdivisions based on simple geometric elements (i.e., triangle, rectangle, hexagon, etc.). 
+Alternative sphere partitionings exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere, and assigns projected rectangular subdivisions to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. A complete list of options for partitioning the sphere are outside the scope of this work, but many involve recursive subdivisions based on simple geometric elements (i.e., triangle, rectangle, hexagon, etc.). 
 
 
 \subsection{Graph Partitioning with METIS}
 
-One of the major concerns with partitioning for a distributed environment is load balancing. If nodes are distributed 
-
-Following \cite{Gropp1990}: 
-
+One of the major concerns with partitioning for a distributed environment is load balancing. Consider, for example, the situation where $p-1$ processors have equal sized partitions, each with $W_1$ amount of work, and a $p$-th processors is allocated some larger amount of work, $W_2$. In that case, the maximum possible speedup on $p$ processors obeys \cite{Gropp1990}:  
 \begin{align}
-S_p = \frac{(p-1) W_1 + W_2}{W_2}
+S_p = \frac{(p-1) W_1 + W_2}{W_2} = 1 + (p-1)\frac{W_1}{W_2}.
+\label{eq:load_balance}
 \end{align}
+The take-away from Equation~\ref{eq:load_balance} is that potential gains in parallelism are limited by the disproportionality of workloads. Balancing the loads equally allows the ideal factor $p$ gain from parallelization. 
 
-
-In an effort to maintain load balancing, we turn to a more general method for decomposition that performs a \emph{graph partitioning}. Graph partitioning 
+To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms to decompose discretized grids into partitions containing roughly the same number of nodes and corresponding stencils. Graph partitioning algorithms operate on the adjacency graph produced by RBF-FD stencil connections (\S~\ref{subsec:adjacency}). Based on their influence  on properties such as 
 
 
  Other interesting decompositions can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
@@ -377,6 +375,15 @@ The first improvement on Alltoallv collectives is to truncate the number of conn
 
 
 \section{CPU Scaling}
+
+In truth, parallel gains are also bounded by Amdahl's law, which states that the speedup is limited by the fraction of code that must run in serial, $s$:
+\begin{align}
+S_p = \frac{T_1}{T_p} = T_1(s + \frac{1}{p}(1-s)),  \nonumber
+\end{align}
+where $T_1$ and $T_p$ are the serial and parallel execution times respectively. 
+%TODO: citation for amdahls
+
+
 
 To test and demonstrate scaling of our method, we consider an idealized regular grid in three dimensions. 
 
