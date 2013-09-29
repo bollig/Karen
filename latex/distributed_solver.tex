@@ -115,7 +115,7 @@ To ensure load balancing, one commonly turns to \emph{graph partitioning} algori
 
 The output from graph partitioning algorithms are ideal for parallel applications. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges correspond to ghost node dependencies, so minimizing those connections also minimizes data transfer in parallel applications. 
 
-In the 1990s a number of libraries surfaced for graph partitioning including Chaco, SCOTCH, and METIS \cite{Karypis1999}. 
+In the 1990s a number of libraries surfaced for graph partitioning including Chaco \cite{CHACO1995}, SCOTCH \cite{SCOTCH1996}, and METIS \cite{Karypis1999}. 
 
 
  Other interesting decompositions can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
