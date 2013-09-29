@@ -111,13 +111,15 @@ S_p = \frac{(p-1) W_1 + W_2}{W_2} = 1 + (p-1)\frac{W_1}{W_2}.
 \end{align}
 The take-away from Equation~\ref{eq:load_balance} is that potential gains in parallelism are limited by the disproportionality of workloads. Balancing the loads equally allows the ideal factor $p$ gain from parallelization. 
 
-To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms to decompose discretized grids into partitions containing roughly the same number of nodes and corresponding stencils. Graph partitioning algorithms operate on the adjacency graph produced by RBF-FD stencil connections (\S~\ref{subsec:adjacency}). Based on their influence  on properties such as 
+To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms. Formally, graph partitioning algorithms attempt to solve the $k$-way partitioning problem \cite{Karypis1999}: given a graph $G = (V,E)$ with vertices ($V$) and any number of edges ($E$), partition $V$ into $k$ subsets, $V_1, V_2, ..., V_k$ such that $V_i \cap V_j = \emptyset$ for $i \neq j$, the size of each partition $|V_i| \approx \frac{N}{k}$, $\bigcup_i V_i = V$, and the number of edges whose incident vertices belong to different $V_i$ is minimized. In other words, we seek a partitioning of a graph that results in roughly equal sized subgraphs connected by as few edges as possible. In this case we apply the algorithms to the adjacency graph produced by RBF-FD stencils (see \S~\ref{subsec:adjacency}).
+
+The output from graph partitioning algorithms are ideal for parallel applications. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges correspond to ghost node dependencies, so minimizing those connections also minimizes data transfer in parallel applications. 
+
+In the 1990s a number of libraries surfaced for graph partitioning including Chaco, SCOTCH, and METIS \cite{Karypis1999}. 
 
 
  Other interesting decompositions can be generated with software libraries such as the METIS \cite{Karypis1999} family of algorithms, capable of partitioning and reordering directed graphs produced by RBF-FD stencils. 
 
-
-%TODO: what is the percentage overlap for $n$? $\frac{1}{2} n^{\frac{1}{d}}$ gives depth into neighbor since n is uniformly sampled we expect a cube shape. (SHould be literature on this...no?)} % assume sphere, sqrt of N for scaling area covered by stencil
 
 
 In order to partition our nodes, METIS requires an undirected adjacency graph representing the edges that connect nodes. In this case the adjacency graph for RBF-FD is directed. The undirected version is constructed with. 
@@ -125,16 +127,15 @@ In order to partition our nodes, METIS requires an undirected adjacency graph re
 The undirected graph is used only for partitioning and subsequently discarded. 
 
 METIS divides stencils into contiguous partitions of nearly equivalent size. 
-%TODO: Need to flesh detail on METIS
+
+
 %TODO: give overview of how boost graph library is used to construct a sparse adjacency graph
 
 In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symmetry. Since the goal is to partition the physical domain, this added connectivity is harmless to RBF-FD. However, with respect to load balancing, this may not be ideal. For every new nonzero introduced to a row, METIS assumes an additional node utilized by the partition. When the node is a false connection, it is one fewer centers that METIS will assign to the partition in an attempt to keep all partitions balanced. 
 
-%TODO: \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
 
 
-
-\begin{figure}[ht!]
+\begin{figure}
 \begin{center}
 \includegraphics[width=0.8\textwidth]{rbffd_methods_content/decompositions/gpmetis_decomp_sphere_4parts.png}
 \caption{METIS partitioning of $N=10,201$ nodes to span four processors with stencil size $n=31$. }
@@ -142,10 +143,18 @@ In Figure~\ref{fig:undirected_graph} new non-zeros are introduced to induce symm
 \end{center}
 \end{figure}
 
-%TODO: related work that uses linear partitioning
-%Thibault et al. \cite{Thibault200*} use a linear partitioning in the $z$-direction of a 3D cube domain.  
-%TODO: related work that uses METIS.
 
+
+%TODO: \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
+%\begin{table}
+%\centering
+%\caption{Comparison }
+%\begin{tabular}{c|c|c|c|c|c|c}
+%     & Linear & METIS  \\ \hline
+%     &  $\min$  &  $\max$  &  stddev  &  min  & max  &  stddev   \\ \hline
+% max &   &   &   &    &    \\
+%\end{tabular}
+%\end{table}
 
 
 
