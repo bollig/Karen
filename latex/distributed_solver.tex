@@ -32,7 +32,7 @@ solution values, etc. that are visible to each process, and establish index mapp
 
 This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. The discussion in this chapter applies to both multi-CPU and multi-GPU implementations of RBF-FD. Since each GPU is used as an accelerator, details of partitioning, local and global index mappings, and node ordering are managed on the CPU.  
 
-We operate under the assumption that inter-process communication is managed by the \emph{Message Passing Interface (MPI)} \cite{MPI}. Details on how communication collectives are used are included below in Section~\ref{sec:mpi_collectives}. Modern CPUs have multiple cores, so we use the term \emph{MPI process} to refer to a process that occupies one CPU core and is associated with at most one GPU accelerator.
+We operate under the assumption that inter-process communication is managed by the \emph{Message Passing Interface (MPI)} \cite{MPI}. Detail on how communication collectives are used is included below in Section~\ref{sec:mpi_collectives}. We use the term \emph{MPI process} to refer to a process that occupies one CPU core and is associated with at most one GPU accelerator. MPI processes on multiple cores of the same CPU behave the same as processes on independent compute nodes in a cluster; the only difference being the fabric used for communication (i.e., fast shared memory versus a slower QDR Infiniband). MPI always uses the fastest interconnect possible to connect processes. 
 
 
 \section{Partitioning}
@@ -217,7 +217,6 @@ The set $\setProvide\in\setCenters$ indexes nodes that are needed in other parti
 
 Constructing these index mappings allows each process to ignore nodes/stencils outside their subdomain and focus only on their subset of the problem. Processes avoid both the cost of storing a complete RBF-FD DM as well as full solution vectors. A rectangular sub-DM is kept for $\setAllNodes$, with compressed solution vectors to match. Our implementation follows a workflow that first generates stencils, and then partitions the adjacency graph in serial. In parallel, each processor loads its assigned partition, constructs index mappings, and solves for RBF-FD weights to generate a local DM.  
 
-
 \section{Local Ordering}
 
 Figure~\ref{fig:stencilSets2CPU} lists global node indices contained in $\setAllNodes$ for each MPI process. Global indices are paired with a local mapping to indicate the internal node ordering for each process. The structure of set $\setAllNodes$,
@@ -233,6 +232,16 @@ Figure~\ref{fig:stencilSets2CPU} lists global node indices contained in $\setAll
 
  The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap of communication and computation. This will be investigated in Chapter~\ref{chap:multigpu_rbffd}, where distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ without waiting on MPI communication to send and receive $\mathcal{O}$ and $\mathcal{R}$. 
 
+When targeting the GPU, communication of solution or intermediate values is a four step process:
+   \begin{enumerate}
+    \item Transfer $\mathcal{O}$ from GPU to CPU
+	\item Distribute $\mathcal{O}$ to other CPUs, receive $R$ from other CPUs
+	\item Transfer $\mathcal{R}$ to the GPU
+	\item Launch a GPU kernel to operate on $\mathcal{Q}$
+   \end{enumerate} 
+The data transfers involved in this process are illustrated at the bottom of Figure~\ref{fig:stencilSets2CPU}.
+    Each GPU is only aware of the local indexing in Equation~\ref{eq:decompose_g}. Benefiting from the local structure, set 
+$\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU then maps local to global indices and transfers $\setProvide$ to other processes. As the set $\setDepend$ is received from one or more processes, the data is reordered into local order before copying a contiguous block of memory to the GPU. 
 
 
 \begin{figure}
@@ -243,9 +252,9 @@ Figure~\ref{fig:stencilSets2CPU} lists global node indices contained in $\setAll
 \end{center}
 \end{figure}
 
-Consider Figure~\ref{fig:decomp_matrix_view} which shows the index sets for a single partition in context of a global RBF-FD differentiation matrix. Here the gray area is zero, and non-zeros exist between bowed lines. The partition is illustrated as the contiguous set of rows between dashed lines. Set membership for each row is determined based on how the off-diagonal non-zeros in a row match vertically with the center diagonal. When an MPI process constructs the local DM for the partition, the two sets of $\mathcal{B}$ in Figure~\ref{fig:decomp_matrix_view} are compressed into one contiguous set. An example of this effect is demonstrated in Figure~\ref{fig:decomp_spy}. 
+The next step is to translate the local ordering of nodes to a local DM. Consider Figure~\ref{fig:decomp_matrix_view} which shows the index sets for a single partition in context of a global RBF-FD differentiation matrix. Here the gray area is zero, and non-zeros exist between bowed lines. The partition is illustrated as the contiguous set of rows between dashed lines. Set membership for each row is determined based on how the off-diagonal non-zeros in a row match vertically with the center diagonal. When an MPI process constructs the local DM for the partition, the two sets of $\mathcal{B}$ in Figure~\ref{fig:decomp_matrix_view} are compressed into one contiguous set. An example of this effect is demonstrated in Figure~\ref{fig:decomp_spy}. 
 
-Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the labels indicating the components of Equation~\ref{eq:decompose_g}. Figure~\ref{fig:decomp_spy} represents one of four partitions for an original DM with $N=4096$ rows and $n=31$ non-zeros per row. The matrix was generated with the $N=4096$ MD node set, and partitioned with METIS. The index sets illustrated in Figure~\ref{fig:decomp_spy}
+Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the labels indicating the components of Equation~\ref{eq:decompose_g}. The local DM represents the third of four partitions from an original matrix with $N=4096$ rows and $n=31$ non-zeros per row. The RBF-FD stencils were generated on the $N=4096$ MD node set, and partitioned with METIS. 
 \begin{figure}
 \begin{center}
 \includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
@@ -259,45 +268,18 @@ Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the lab
 
 %TODO: Domain boundary nodes appear at beginning of the list 
 
-
-
-When targeting the GPU, communication of solution or intermediate values is a four step process:
-        \begin{enumerate}
-    \item Transfer $\mathcal{O}$ from GPU to CPU
-	\item Distribute $\mathcal{O}$ to other CPUs, receive $R$ from other CPUs
-	\item Transfer $\mathcal{R}$ to the GPU
-	\item Launch a GPU kernel to operate on $\mathcal{Q}$
-     \end{enumerate} 
-The data transfers involved in this process are illustrated at the bottom of Figure~\ref{fig:stencilSets2CPU}.
-    Each GPU operates on the local indices ordered 
-according to Equation~(\ref{eq:decompose_g}). The set 
-$\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU then maps local to global indices and transfers $\setProvide$ to other CPUs. CPUs send only the subset of node values from $\setProvide$ that is required by the destination processors, but it is important to note that node information might be sent to several destinations. 
-As the set $\setDepend$ is received, the CPU converts back from global to local indices before copying a contiguous block of memory to the GPU. 
-
-
-%TODO: \authnote{remember distributed case: no decode}
-
-        This approach is scalable to a very large number of 
-		processors, since the individual processors do not require the 
-		full mapping between RBF nodes and CPUs. Here scalable is used loosely as there are two types of scaling: weak and strong. Weak scaling implies the total problem size and processor count can increase. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
-
-
 \section{MPI and Communication Collectives}
 \label{sec:mpi_collectives}
 
-It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI1993} is used to distribute RBF-FD across an HPC cluster. 
+With a partitioning and local ordering complete, the next task is to establish communication collectives for transferring data between MPI processes. 
 
+%TODO: MPI history as a standard
 
- MPI processes executing on different cores of the same CPU are managed the same as processes on independent CPUs. Most MPI implementations are aware of where processes execute and adjust communication to use the fastest possible fabric possible. 
+%TODO: how does \cite{Schubert2011} do it? \cite{Yokota2010}. 
 
+Our implementation in \cite{BolligFlyerErlebacher2012} leveraged a horribly inefficient send/recv collective. 
 
-Parallelizing RBF-FD made possible with the Message Passing Interface (MPI). 
-MPI history as a standard
-MPI supports distributed and shared. 
-MPI utilizes the fastest fabric possible for communication, so processes on different cores of the same chip will use shared memory for fastest transfer whereas processes on different nodes might use sockets in the worst case; in reality processes on independent nodes use the Infiniband QDR. 
-MPI concept of processes as ranks. Each rank is an independent process with its own memory space. 
-
-MPI collectives are used to share data between processes. Our code leverages three collectives: MPI\_Alltoall, MPI\_Alltoallv and MPI\_Isend/MPI\_Irecv. 
+Our code leverages three collectives: MPI\_Alltoall, MPI\_Alltoallv and MPI\_Isend/MPI\_Irecv. 
 
 The collective operation is essentially transposing information as seen in Figure~\ref{fig:mpi_alltoallv_visual}. 
 
@@ -373,6 +355,12 @@ The first improvement on Alltoallv collectives is to truncate the number of conn
 
 
 \section{CPU Scaling}
+
+      Our approach is scalable to a very large number of 
+		processors as the individual processes do not require the 
+		full mapping between RBF nodes and CPUs. 
+		
+Here scalable is used loosely as there are two types of scaling: weak and strong. Weak scaling implies the total problem size and processor count can increase. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
 
 In truth, parallel gains are also bounded by Amdahl's law, which states that the speedup is limited by the fraction of code that must run in serial, $s$:
 \begin{align}

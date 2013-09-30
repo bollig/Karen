@@ -20,6 +20,13 @@ In the last decade, CPU designers have been forced to transition to multi- and m
 %TODO: Moore's law states that 
 Power constraints make further frequency scaling on CPUs almost impossible, which leaves increased core counts as the only viable solution for designers to continue satisfying Moore's Law \cite{Owens2007}. 
 
+\begin{figure}
+\centering
+\includegraphics[width=0.8\textwidth]{gpu_content/nvidia_figures/gpu-devotes-more-transistors-to-data-processing.png}
+\caption{The GPU Devotes More Transistors to Data Processing (Image courtesy of NVidia \cite{CudaGuide2013})} 
+\label{fig:gpu-devotes-more-transistors-to-data-processing}
+\end{figure}
+
 GPUs originated as dedicated hardware for video games and computer graphics. 
 Due to the inherent task parallelism in computer graphics  (e.g., for rasterization), early GPU designers adopted a many-core strategy for hardware, which persists today. Computer graphics traditionally involved simple operations, so the majority of transistors on a GPU are dedicated to computation in vector pipelines with limited control for logic. The earliest GPUs had static rendering pipelines with fixed functions. In contrast to this, CPUs have always focused on fast serial and scalar operations, which means they allocate less transistors to computation in order to satisfy the needs for advanced logic tasks like branching, caching, etc. \cite{Owens2007,CudaGuide2013}. Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (from \cite{CudaGuide2013}) illustrates the difference between CPUs and GPUs at a high level. The high density of Arithmetic Logic Units (ALUs) with simple control and caching units is signature of GPUs. 
 
@@ -31,12 +38,6 @@ The release of NVidia's CUDA architecture and software stack at the end of 2006,
 
 The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of cores leads to an astounding number of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/s) achieved by NVidia GPUs versus Intel CPUs. In the last decade the peak GFLOP/s for a single GPU has sky-rocketed, and consistently leaves CPUs a full order of magnitude behind. In order to supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than CPUs \cite{CudaGuide2013}. Figure~\ref{fig:memory-bandwidth} (from \cite{CudaGuide2013}) demonstrates memory bandwidth growth for the two vendors. 
 
-\begin{figure}
-\centering
-\includegraphics[width=0.9\textwidth]{gpu_content/nvidia_figures/gpu-devotes-more-transistors-to-data-processing.png}
-\caption{The GPU Devotes More Transistors to Data Processing (Image courtesy of NVidia \cite{CudaGuide2013})} 
-\label{fig:gpu-devotes-more-transistors-to-data-processing}
-\end{figure}
 
 \begin{figure}
 \centering
@@ -54,10 +55,15 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 \end{figure}
 
 
+The success of CUDA led to a vast number of libraries and publications
 
-%TODO: The success of CUDA led to a vast number of libraries and publications
-The success of CUDA resulted in 
+New languages
 
+
+\section{Managing Expectations for the GPU}
+Success stories abound with massive gains
+
+RBF-FD is embarrassingly parallel with stencils applied independently. Unfortunately, perfect concurrency does not always imply perfect performance. (SHOW RBF-FD benchmarks for Vortex and Cosine as an example of 1x and 2x SpMV on GPU; state that the generation GPU they were run on has a peak of xxx which means performance was xxx\% (dismal).).
 
 the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
 OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
@@ -286,23 +292,11 @@ NVidia provided CUSPARSE \cite{CUSPARSE}, formulating the problem in terms of
 sparse matrix operations allows us to quickly prototype on the GPU and leverage
 all of the optimizations available within the third party libraries. 
 
-\subsubsection{One Thread per Stencil}
-
-We first demonstrate the case where one thread is dedicated to each stencil. This is followed by dedicating a group of thread to the stencil. In each case we are operating under the assumption that each stencil is independent on the GPU. 
-
-\subsubsection{One Warp per Stencil}
 
 \subsection{Explicit Solvers}
 
 
-Our implementation leverages the GPU for acceleration of the standard fourth order Runge-Kutta (RK4) scheme. Nodes are stationary, so stencil weights are calculated once at the beginning of the simulation, and reused in every iteration. To avoid the cost of calculating stencil weights each time a test case is run, they are written to disk and loaded from file on subsequent runs. There is one set of weights computed for each new grid.  Ignoring code initialization, the cost of the algorithm is simply the explicit time advancement of the solution. 
-
-\begin{figure}[t]
-      \centering
-       \includegraphics[width=5in]{../figures/paper1/figures/omnigraffle/RK4_multi_GPU_flow.pdf}
-      \caption{Workflow for RK4 on multiple GPUs. }
-      \label{fig:multi_GPU_flow}
-\end{figure}
+Our initial implementation in \cite{BolligFlyerErlebacher2012} leverages the GPU for acceleration of the standard fourth order Runge-Kutta (RK4) scheme. Stencil weights are calculated once at the beginning of the simulation, and reused in every iteration. Subsequent runs load weights from disk. Ignoring code initialization, the cost of the algorithm is simply the explicit time advancement of the solution. 
 
 Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for the multi-CPU/GPU implementation. The RK4 steps are: 
 \begin{eqnarray*} 
@@ -319,6 +313,14 @@ where each equation has a corresponding kernel launch. To handle a variety of Ru
 \item  $\mathbf{u}_n + \alpha_{i+1} \mathbf{k}_i$
 \end{enumerate} 
 We choose $\alpha_{i}=0, \frac{1}{2}, \frac{1}{2}, 1, 0$ and $\mathbf{k}_{0} = \mathbf{u}_n$. The second output for each $\mathbf{k}_{i=1,2,3}$ serves as input to the next evaluation, $\mathbf{k}_{i+1}$. In an effort to avoid an extra kernel launch---and corresponding memory loads---the SAXPY that produces the second output uses the same evaluation kernel. Both outputs are stored in global device memory. When the computation spans multiple GPUs, steps $\mathbf{k}_{1\rightarrow3}$ are each followed by a communication barrier to synchronize the subsets $\mathcal{O}$ and $\mathcal{R}$ of the second output (this includes copying the subsets between GPU and CPU). An additional synchronization occurs on the updated  solution, $\mathbf{u}_{n+1}$, to ensure that all GPUs share a consistent view of the solution going into the next time-step.
+
+\begin{figure}[t]
+      \centering
+       \includegraphics[width=5in]{../figures/paper1/figures/omnigraffle/RK4_multi_GPU_flow.pdf}
+      \caption{Workflow for RK4 on multiple GPUs. }
+      \label{fig:multi_GPU_flow}
+\end{figure}
+
 
 To evaluate $\mathbf{k}_{1\rightarrow4}$, the discretized operators from Equation~(\ref{eq:evaluation_with_hyperviscosity}) are applied using sparse matrix-vector multiplication. If the operator $D$ is composed of multiple derivatives, a differentiation matrix for each derivative is applied independently, including an additional multiplication for the discretized $H$ operator.
  On the GPU, the kernel parallelizes across rows of the DMs, so all derivatives for stencils are computed in one kernel call.
