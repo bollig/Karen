@@ -30,19 +30,18 @@ solution values, etc. that are visible to each process, and establish index mapp
 \item Establish a local ordering of data. The right local order can improve solver performance and/or simplify data movement. %Of particular interest here is how to minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
 \end{enumerate}
 
-This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. 
+This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. The discussion in this chapter applies to both multi-CPU and multi-GPU implementations of RBF-FD. Since each GPU is used as an accelerator, details of partitioning, local and global index mappings, and node ordering are managed on the CPU.  
 
-We operate under the assumption that inter-process communication is managed by the \emph{Message Passing Interface (MPI)} \cite{MPI}. Details on how communication collectives are used are included below in Section~\ref{sec:mpi_collectives}. 
-
+We operate under the assumption that inter-process communication is managed by the \emph{Message Passing Interface (MPI)} \cite{MPI}. Details on how communication collectives are used are included below in Section~\ref{sec:mpi_collectives}. Modern CPUs have multiple cores, so we use the term \emph{MPI process} to refer to a process that occupies one CPU core and is associated with at most one GPU accelerator.
 
 
 \section{Partitioning}
 
-Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decomposition methods simply subdivide/partition the computational domain into \emph{subdomains}, which are then treated independently. Domain decomposition methods comprise an entire field of research. Commonly used methods include Multiplicative Schwarz, Additive Schwarz, and Restricted Additive Schwarz (see references in \cite{Yokota2010,StCyr2007}). The choice of method determines how the computational domain is subdivided, and how frequently data is passed between subdomains. Such methods are well known as a form of preconditioning (see e.g., \cite{Beatson2000, StCyr2007}), but the two Additive variants of Schwarz decomposition are inherently parallel and naturally extend to distributed architectures \cite{Yokota2010, Gropp1990}. 
+Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decomposition methods simply subdivide/partition the computational domain of a PDE into \emph{subdomains}, which are then solved independently. Subdomains can be solved sequentially by the same MPI process or in parallel across multiple processes. A number of methods exist for domain decomposition including Multiplicative Schwarz, Additive Schwarz, and Restricted Additive Schwarz (see related work in \cite{Yokota2010,StCyr2007}). The choice of method determines how the domain is subdivided, and how often data is passed between subdomains (i.e., how parallelizable the method is). Domain decomposition methods are well known as a form of preconditioning (see e.g., \cite{Beatson2000, StCyr2007}), but the two Additive variants of Schwarz decomposition are inherently parallel and naturally extend to distributed architectures \cite{Yokota2010, Gropp1990}. 
 
-The parallelization strategy employed for RBF-FD in this work is equivalent to a Restricted Additive Schwarz (RAS). Our strategy was implemented prior to the knowledge of the RAS method. In this case we assume that partitioning occurs within the spatial domain. At each time-step the PDE is first solved independently within subdomains, and then information is shared across subdomain boundaries to ensure a consistent global solution entering the next time-step. We also assume that subdomains are always assigned to independent processes, although each process could operate on multiple subdomains in theory. 
+The parallelization strategy employed for RBF-FD in this work is equivalent to a Restricted Additive Schwarz (RAS), although our strategy was implemented prior to formal knowledge of the RAS method. In this case we assume that partitioning occurs within the spatial domain. At each time-step the PDE is first solved independently within subdomains, and then information is shared across subdomain boundaries to ensure a consistent global solution entering the next time-step. We also assume that subdomains are always assigned to independent processes, even though each process could operate on multiple subdomains in theory. 
 
-Following the notation in \cite{StCyr2007}, consider domain, $\Interior$, decomposed into two overlapping subdomains $\Interior_1$ and $\Interior_2$, with a global boundary $\partial\Interior = \partial\Interior_1 \cup \partial\Interior_2$. Then, at each time-step we seek the simultaneous solution to
+Following the notation in \cite{StCyr2007}, consider domain, $\Interior$, decomposed into overlapping subdomains $\Interior_1$ and $\Interior_2$, with a global boundary $\partial\Interior = \partial\Interior_1 \cup \partial\Interior_2$. At each time-step we seek the simultaneous solution to
 \begin{center}
 \begin{minipage}{0.4\linewidth}
 \begin{align*}
@@ -63,10 +62,10 @@ u_{2}^{n+1} & = u_1^{n} \ \ \text{ on }\Boundary_{21},  \nonumber
 
 \noindent where $\Boundary_{ij}$ indicates overlap between subdomains and is read as the subset of subdomain $j$ required by subdomain $i$ (i.e., $\Boundary_{ij} = \partial\Interior_i \cap \Interior_j$). A Dirichlet boundary condition connects subdomains at the interfaces. Although not considered here, future investigations may find Robin-type conditions of interest due to their convergence accelerating properties in the context of Schwarz methods for elliptic PDEs (\cite{StCyr2007}). 
 
-Equation~\ref{eq:rasm_example} illustrates how nicely a PDE can be partitioned in half, and then solved by independent processes. MPI connects processes by transferring the values $u_j^{n}$ across interfaces. Note that as the number of subdomains increases additional constraints for $\Boundary_{ij}$ must be imposed on each subdomain. In the worst case a partitioning for $p$ subdomains requires $p-1$ conditions (i.e., $\Boundary_{ij}$, for $i,j=1,2,...,p$ and $i \neq j$). Conditions can be excluded if subdomains do not overlap. 
+Equation~\ref{eq:rasm_example} illustrates how nicely a PDE can be split in half, and then solved by independent processes. To enforce the Dirichlet conditions on $\Boundary_{ij}$, MPI transfers values $u_j^{n}$ across interfaces at each time-step. Note that as the number of subdomains increases additional constraints for $\Boundary_{ij}$ must be imposed on each subdomain. The worst case a partitioning for $p$ subdomains requires $p-1$ conditions (i.e., $\Boundary_{ij}$, for $i,j=1,2,...,p$ and $i \neq j$). Ideally each $\Interior_i$ should only overlap with a small number of neighboring subdomains to minimize MPI communication. 
 
 
-The continuous form of decomposition in Equation~\ref{eq:rasm_example} allows complete freedom in the choice of how subdomains are actually partitioned. In this work we assume partitioning of the geometry on which the PDE is solved. Here we are particularly interested in partitioning the unit sphere, but also consider the challenge of partitioning general geometries. 
+The continuous form of decomposition in Equation~\ref{eq:rasm_example} allows complete freedom in choosing how subdomains are actually partitioned. In this work we assume partitioning of the geometry on which the PDE is solved. Of particular interest here is how to partition the unit sphere, but the challenge of more general geometries is also kept in mind. 
 
 For ease of development and parallel debugging, partitioning is initially
 assumed to be linear along one spatial dimension (in this case the $x$-axis). Each partition/subdomain is then contiguous and overlaps with neighboring subdomains to the left and right. This approach is not uncommon when solving PDEs on rectangular domains (see e.g., \cite{Divo2007, Thibault2009}). 
@@ -75,12 +74,12 @@ assumed to be linear along one spatial dimension (in this case the $x$-axis). Ea
 
 Figure~\ref{fig:decomposed_sphere} illustrates the partitioning of
 $N=10,201$ nodes on the unit sphere for four processes. 
-Each partition, illustrated as a unique color, contains many stencil centers. 
-Based on the location of a stencil's center, its corresponding partition is easily identified. In cases where stencils in one partition depend on stencil nodes in another, we say that the dependencies (i.e., the nodes in $\Boundary_{ij}$) are \emph{ghost nodes}. 
-In many ways ghost nodes are treated the same as any other stencil node. The CPU process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, ghost nodes are managed by another subdomain/process, so any changes must be explicitly synchronized via MPI in order to maintain consistency. 
+Each partition, illustrated as a unique color, contains many stencil centers.  
+A center's coordinates easily identify the containing partition. In cases where stencils in one partition depend on stencil nodes in another, we say that the dependencies (i.e., the nodes in $\Boundary_{ij}$) are \emph{ghost nodes}. 
+In many ways ghost nodes are treated the same as any other stencil node. The MPI process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, ghost nodes are managed by another subdomain/process, so any changes must be explicitly synchronized in order to maintain consistency. 
 
 In Figure~\ref{fig:decomposed_sphere}, alternating representations between node points and interpolated surfaces illustrates the
-overlap regions where ghost nodes reside. Due to stencil dependencies in each partition, the overlap region representations are double-wide---i.e., they contain a set of ghost nodes for both the left and right partitions. 
+overlap regions where ghost nodes reside. Due to stencil dependencies, the representations of overlap regions are double-wide---i.e., they contain a set of ghost nodes for both the left and right partitions. 
 
 The width of the overlap in Figure~\ref{fig:decomposed_sphere} is between five and six nodes. As the stencil size increases, the width of the
 overlap grows as $\sqrt{n}$. Since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary. 
@@ -111,20 +110,16 @@ S_p = \frac{(p-1) W_1 + W_2}{W_2} = 1 + (p-1)\frac{W_1}{W_2}.
 \end{align}
 The take-away from Equation~\ref{eq:load_balance} is that potential gains in parallelism are limited by the disproportionality of workloads. Balancing the loads equally allows the ideal factor $p$ gain from parallelization. 
 
-To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms. Formally, graph partitioning algorithms attempt to solve the $k$-way partitioning problem \cite{Karypis1999}: given a graph $G = (V,E)$ with vertices ($V$) and any number of edges ($E$), partition $V$ into $k$ subsets, $V_1, V_2, ..., V_k$ such that $V_i \cap V_j = \emptyset$ for $i \neq j$, the size of each partition $|V_i| \approx \frac{N}{k}$, $\bigcup_i V_i = V$, and the number of edges whose incident vertices belong to different $V_i$ is minimized. In other words, we seek a partitioning of a graph that results in roughly equal sized subgraphs connected by as few edges as possible. In this case we apply the algorithms to the adjacency graph produced by RBF-FD stencils (see \S~\ref{subsec:adjacency}).
+To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms. Formally, graph partitioning algorithms attempt to solve the $k$-way partitioning problem \cite{Karypis1999}: given a graph $G = (V,E)$ with vertices ($V$) and any number of edges ($E$), partition $V$ into $k$ subsets, $V_1, V_2, ..., V_k$ such that $V_i \cap V_j = \emptyset$ for $i \neq j$, the size of each partition $|V_i| \approx \frac{N}{k}$, $\bigcup_i V_i = V$, and the number of edges whose incident vertices belong to different $V_i$ is minimized. In other words, we seek a partitioning that results in roughly equal sized subgraphs connected by as few edges as possible. In this case we apply the algorithms to the adjacency graph produced by RBF-FD stencils (see \S~\ref{subsec:adjacency}).
 
-The output from graph partitioning algorithms are ideal for parallel applications for two reasons. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges correspond to ghost node dependencies, so minimizing those connections also ensures minimized data transfer via MPI. 
+The output from graph partitioning algorithms are ideal for distributed applications for two reasons. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges correspond to ghost node dependencies, so minimizing those connections also ensures minimized data transfer via MPI. 
 
-A number of libraries exist for graph partitioning including Chaco \cite{CHACO1995}, SCOTCH \cite{SCOTCH1996}, and the METIS family of algorithms (METIS, ParMETIS, hMETIS) \cite{Karypis1999}. The partitioning algorithm varies by library, but in all cases the libraries provide options for partitioning, vertex reordering, and graph coloring.
+A number of libraries exist for graph partitioning including Chaco \cite{CHACO1995}, SCOTCH \cite{SCOTCH1996}, and the METIS family of algorithms (e.g., METIS, ParMETIS, hMETIS) \cite{Karypis1999}. The partitioning algorithm varies by library, but in all cases the libraries provide options for partitioning, vertex reordering, and graph coloring.
 
-This work employs the METIS library for partitioning via the library's included \emph{gpmetis} executable. METIS performs a multi-level recursive bisection algorithm for partitioning. At its core the algorithm first coarsen the graph into a sequence of smaller resolutions, applies a split to the coarsest resolution, and then pops back through the levels of recursion to project the coarse split onto finer graphs \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
-In return for the graph, METIS writes a file containing one integer per vertex, indicating the partition to which each stencil center is assigned. 
+In addition to the linear partitioning in $x$, our work in \cite{BolligRBFFDCode} also employs METIS for partitioning via the library's included \emph{gpmetis} executable. METIS performs a multi-level recursive bisection algorithm for partitioning. At its core the algorithm first coarsens graphs into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs, smoothing/correcting the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
+In return for the graph, METIS writes a file containing one integer per vertex, indicating the partition to which each stencil center is assigned. Note that METIS does not guarantee partitions will be contiguous. While this is often the case, METIS may decide that the alternative is more fitting and assign disjoint subgraphs to the same CPU process for reduced communication. 
 
-Since the adjacency graph for RBF-FD is directed, symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting stencil nodes $s_1$ and $s_2$, is equivalent to cutting its transpose, so METIS is equally resistant apply a cut whether the edge is directed or undirected. 
-
-%TODO: give overview of how boost graph library is used to construct a sparse adjacency graph
-
-
+The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting stencil nodes $s_1$ and $s_2$, is equivalent to cutting its transpose, so METIS is equally resistant apply a cut whether the edge is directed or undirected. 
 
 \begin{figure}
 \begin{center}
@@ -133,6 +128,12 @@ Since the adjacency graph for RBF-FD is directed, symmetry is induced in the ass
 \label{fig:metis_decomposed_sphere}
 \end{center}
 \end{figure}
+
+Figure~\ref{fig:metis_decomposed_sphere} provides an example of a METIS generated partitioning of $N=10,201$ MD nodes for four processors. Three camera angles show the sphere viewed from the $(-x)$-axis (left), $(+x)$-axis (top-right), and $(-z)$-axis (bottom-right). 
+
+%TODO: give overview of how boost graph library is used to construct a sparse adjacency graph
+
+
 
 
 
@@ -149,31 +150,17 @@ Since the adjacency graph for RBF-FD is directed, symmetry is induced in the ass
 
 
 
-\section{Index Mappings and Local View}
+\section{Index Mappings}
 
-Partitioning is equivalent to subdividing the global DM by rows. 
-The rows 
-
-\begin{figure}
-\begin{center}
-\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/MatrixDecompositionSets_RBF-FD_Bowed.pdf} 
-\caption{Decomposition for one processor selects a subset of rows from the DM. Blocks corresponding to node sets $\setCenters \backslash \setBoundary$, $\setProvide$, and $\setDepend$ are labeled for clarity. The subdomain for the processor is outlined by dashed lines.}
-\label{fig:decomp_matrix_view}
-\end{center}
-\end{figure}
-
-
-
-\section{Local node ordering}
-
-After partitioning, each CPU/GPU is responsible for its own subset of nodes. 
+Once a partitioning is available, each MPI process is responsible for its own subset of nodes. 
 To simplify accounting, we track nodes in two ways. Each node is assigned
 a global index, that uniquely identifies it. This index follows the node 
 and its associated data as it is shuffled between processors. In addition, 
 it is important to treat the nodes on each CPU/GPU in an identical manner. 
 Implementations on the GPU are more efficient when node indices
 are sequential. Therefore, we also assign a local index for the nodes on 
-a given CPU, which run from 1 to the maximum number of nodes on that CPU. 
+a given MPI process, which run from 1 to the maximum number of nodes on that process. 
+
 
 It is convenient to break up the nodes on a given CPU into various sets
 according to whether they are sent to other processors, are retrieved from 
@@ -181,49 +168,6 @@ other processors, are permanently on the processor, etc. Note as well,
 that each node has a home processor since the RBF nodes are partitioned into 
 multiple domains without overlap.
 Table~\ref{tbl:stencil_sets}, defines the collection of index lists that each CPU must maintain for both multi-CPU and multi-GPU implementations.  
-
-
-\begin{figure}[ht!]
-\begin{center}
-\includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
-%\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
-\caption{Spy of the sub-DM view on processor 3 of 4 from a METIS partitioning of $N=4096$ nodes with stencil size $n=31$ and stencils generated with Algorithm~\ref{alg:hash_stencils} ($hnx=100$). Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setBoundary$, and $\setDepend$. $\setDepend$ Stencils involved in MPI communications have been permuted to the bottom of the matrix. The split in $\setDepend$ indicates communication with two neighboring partitions. }
-\label{fig:decomp_spy}
-\end{center}
-\end{figure}
-
-
-Figure~\ref{fig:stencilSets2CPU} illustrates a configuration with two 
-CPUs and two GPUs, and 9 stencils, four on CPU1, and five on CPU2, separated
-by a vertical line in the figure. Each stencil
-has size $n=5$. In the top part of the figures, the stencils are laid out
-with blue arrows pointing to stencil neighbors and creating the edges of a directed adjacency graph. Note that the connection between two nodes is not 
-always bidirectional. For example, node 6 is in the stencil of node 3, but 
-node 3 {\em is not\/} a member of the stencil of node 6. 
-Gray arrows point to stencil neighbors outside the small window and are not relevant to the following discussion, which focuses only on data flow between 
-CPU1 and CPU2. 
-Since each CPU is responsible for the derivative evaluation and solution updates for any stencil center, it is clear that some nodes have a stencil with nodes that are on a different CPU. For example, node 8 on CPU1 has a stencil comprised of
-nodes 4,5,6,9, and itself. The data associated with node 6 must be retrieved
-from CPU2. Similarly, the data from node 5 must be sent to CPU2 to 
-complete calculations at the center of node 6.
-
-
-The set of all nodes that a CPU interacts with is denoted by $\setAllNodes$, which includes not only the nodes stored on the CPU, but the nodes required from other CPUs to complete the calculations. 
-The set $\setCenters\in\setAllNodes$ contains the nodes at which the CPU 
-will compute derivatives and apply solution updates. 
-The set $\setDepend = \setAllNodes \backslash \setCenters$ 
-is formed from the set of nodes whose values must be retrieved from another CPU. 
-For each CPU, the set $\setProvide\in\setCenters$ is sent to other CPUs. The set $\setBoundary\in\setCenters$ consists of nodes that depend on  values from $\setDepend$ in order to evaluate derivatives. Note that $\setProvide$ and $\setBoundary$ can overlap, but differ in size, since the directed adjacency graph produced by stencil edges is not necessarily symmetric. The set $\setBoundary \backslash \setProvide$ represents nodes that depend on $\setDepend$ but are not sent to other CPUs, while $\setCenters \backslash \setBoundary$ are nodes that have no dependency on information from other CPUs.
-The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices contained in $\setAllNodes$ for each CPU. Global indices are paired with local indices to indicate the node ordering internal to each CPU. The structure of set $\setAllNodes$,
-   \begin{equation}
- 		\setAllNodes = \{ \mathcal{Q}\backslash\mathcal{B} \ \ \mathcal{B}\backslash\mathcal{O} \ \ \mathcal{O} \ \ \setDepend \},
-            \label{eqn:decompose_g}
-        \end{equation}
- is designed to simplify both CPU-CPU and CPU-GPU memory transfers by grouping nodes of similar type. The color of the global and local indices in the figure
- indicate the sets to which they belong. They are as follows: white represents $\setCenters \backslash \setBoundary$, 
- yellow represents $\setBoundary \backslash \setProvide$, green indices 
- represent $\setProvide$, and red represent $\setDepend$.  
-
 
         \begin{table}[t]
             \begin{center}
@@ -242,8 +186,8 @@ The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices co
                             \label{tbl:stencil_sets}
             \end{center}
         \end{table}
-
-        \begin{figure}[ht] 
+        
+                \begin{figure}[ht] 
             \centering
             \includegraphics[width=3.5in]{../figures/paper1/figures/omnigraffle/SimpleExample.pdf} 
             \caption{Partitioning, index mappings and memory transfers for nine stencils ($n=5$) spanning two CPUs and two GPUs. Top: the directed graph created by stencil edges is partitioned for two CPUs. Middle: the partitioned stencil centers are reordered locally by each CPU to keep values sent to/received from other CPUs contiguous in memory. Bottom: to synchronize GPUs, CPUs must act as intermediaries for communication and global to local index translation. Middle and Bottom: color coding on indices indicates membership in sets from Table~\ref{tbl:stencil_sets}: $\setCenters \backslash \setBoundary$ is white, $\setBoundary \backslash \setProvide$ is yellow, $\setProvide$ is green and $\setDepend$ is red.
@@ -251,18 +195,69 @@ The middle section Figure~\ref{fig:stencilSets2CPU} lists global node indices co
             \label{fig:stencilSets2CPU}
         \end{figure}	
 
- The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap of communication and computation. This will be considered as part of future research on algorithm optimization.  Distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ while waiting on $\mathcal{R}$. 
+Refer to Figure~\ref{fig:stencilSets2CPU}, which illustrates a configuration with two 
+CPUs and two GPUs, and 9 stencils, four on CPU1, and five on CPU2, separated
+by a vertical line in the figure. Each stencil
+has size $n=5$. At the top of Figure~\ref{fig:stencilSets2CPU}, stencils are laid out
+with blue arrows pointing to stencil neighbors and creating the edges of the directed adjacency graph. Note that the connections between nodes are not 
+always bidirectional. For example, node 6 is in the stencil of node 3, but 
+node 3 is excluded from the stencil around 6. 
+Gray arrows point to stencil neighbors outside the small window and are irrelevant in the following discussion focused only on data flow between two processes on CPU1 and CPU2. 
+Since each process is responsible for the derivative evaluation and solution updates for any stencil center, it is clear that edges intersecting the vertical line point to ghost node dependencies. For example, node 8 on CPU1 has a stencil comprised of
+nodes 4,5,6,9, and itself. The data associated with node 6 must be retrieved
+from CPU2. Similarly, the data from node 5 must be sent to CPU2 to 
+complete calculations at the center of node 6.
+        
+        
+       
+The center of Figure~\ref{fig:stencilSets2CPU} assigns the nine nodes to local sets for each process. The set of all nodes that a process interacts with is denoted by $\setAllNodes$, which includes both the stencil centers within the partition ($\Interior_i$), and all ghost nodes required to complete the calculations: $\bigcup_{j} \Boundary_{ij}$.  
+We let $\setCenters\in\setAllNodes$ contain indices for all nodes within the partition $\Interior_i$. 
+Then the set $\setDepend = \setAllNodes \backslash \setCenters$ contains indices of all ghost nodes. 
+The set $\setProvide\in\setCenters$ indexes nodes that are needed in other partitions (i.e., $\bigcup_j \Boundary_{ji}$). The set $\setBoundary\in\setCenters$ consists of nodes dependent on values from $\setDepend$. Note that $\setProvide$ and $\setBoundary$ overlap, but can differ in size due to lack of symmetry in the adjacency matrix. To capture the difference, set $\setBoundary \backslash \setProvide$ are nodes that depend on $\setDepend$ but are not sent to other processes, while $\setCenters \backslash \setBoundary$ are nodes that have no dependency on information from other processes.
+
+Constructing these index mappings allows each process to ignore nodes/stencils outside their subdomain and focus only on their subset of the problem. Processes avoid both the cost of storing a complete RBF-FD DM as well as full solution vectors. A rectangular sub-DM is kept for $\setAllNodes$, with compressed solution vectors to match. Our implementation follows a workflow that first generates stencils, and then partitions the adjacency graph in serial. In parallel, each processor loads its assigned partition, constructs index mappings, and solves for RBF-FD weights to generate a local DM.  
+
+
+\section{Local Ordering}
+
+Figure~\ref{fig:stencilSets2CPU} lists global node indices contained in $\setAllNodes$ for each MPI process. Global indices are paired with a local mapping to indicate the internal node ordering for each process. The structure of set $\setAllNodes$,
+   \begin{equation}
+ 		\setAllNodes = \{ \mathcal{Q}\backslash\mathcal{B} \ \ \mathcal{B}\backslash\mathcal{O} \ \ \mathcal{O} \ \ \setDepend \},
+            \label{eq:decompose_g}
+        \end{equation}
+ is designed to simplify both CPU-CPU and CPU-GPU memory transfers by grouping nodes of similar type. The color of the global and local indices in the figure
+ indicate the sets to which they belong. They are as follows: white represents $\setCenters \backslash \setBoundary$, 
+ yellow represents $\setBoundary \backslash \setProvide$, green indices 
+ represent $\setProvide$, and red represent $\setDepend$.  
+
+
+ The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap of communication and computation. This will be investigated in Chapter~\ref{chap:multigpu_rbffd}, where distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ without waiting on MPI communication to send and receive $\mathcal{O}$ and $\mathcal{R}$. 
+
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/MatrixDecompositionSets_RBF-FD_Bowed.pdf} 
+\caption{Decomposition for one processor selects a subset of rows from the DM. Blocks corresponding to node sets $\setCenters \backslash \setBoundary$, $\setProvide$, and $\setDepend$ are labeled for clarity. The subdomain/partition is outlined by dashed lines.}
+\label{fig:decomp_matrix_view}
+\end{center}
+\end{figure}
+
+Consider Figure~\ref{fig:decomp_matrix_view} which shows the index sets for a single partition in context of a global RBF-FD differentiation matrix. Here the gray area is zero, and non-zeros exist between bowed lines. The partition is illustrated as the contiguous set of rows between dashed lines. Set membership for each row is determined based on how the off-diagonal non-zeros in a row match vertically with the center diagonal. When an MPI process constructs the local DM for the partition, the two sets of $\mathcal{B}$ in Figure~\ref{fig:decomp_matrix_view} are compressed into one contiguous set. An example of this effect is demonstrated in Figure~\ref{fig:decomp_spy}. 
+
+Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the labels indicating the components of Equation~\ref{eq:decompose_g}. Figure~\ref{fig:decomp_spy} represents one of four partitions for an original DM with $N=4096$ rows and $n=31$ non-zeros per row. The matrix was generated with the $N=4096$ MD node set, and partitioned with METIS. The index sets illustrated in Figure~\ref{fig:decomp_spy}
+\begin{figure}
+\begin{center}
+\includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
+%\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
+\caption{Spy of the local DM on processor 3 of 4 from a METIS partitioning of $N=4096$ nodes with stencil size $n=31$ and stencils generated with Algorithm~\ref{alg:hash_stencils} ($hnx=100$). Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setBoundary$, and $\setDepend$. $\setDepend$ Stencils involved in MPI communications have been permuted to the bottom of the matrix. The split in $\setDepend$ indicates communication with two neighboring partitions. }
+\label{fig:decomp_spy}
+\end{center}
+\end{figure}
+
 
 
 %TODO: Domain boundary nodes appear at beginning of the list 
-
-Returning to Figure~\ref{fig:decomposed_sphere}, each partition, illustrated
-as a unique color, represents set $\setAllNodes$ for a single CPU.  Alternating
-representations between node points and interpolated surfaces illustrates the
-overlap regions where nodes in sets $\mathcal{O}$ and $\mathcal{R}$ (i.e., nodes
-requiring MPI communication) reside. As stencil size increases, the width of the
-overlap regions relative to total number of nodes on the sphere also increases. 
-
 
 
 
@@ -275,7 +270,7 @@ When targeting the GPU, communication of solution or intermediate values is a fo
      \end{enumerate} 
 The data transfers involved in this process are illustrated at the bottom of Figure~\ref{fig:stencilSets2CPU}.
     Each GPU operates on the local indices ordered 
-according to Equation~(\ref{eqn:decompose_g}). The set 
+according to Equation~(\ref{eq:decompose_g}). The set 
 $\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU then maps local to global indices and transfers $\setProvide$ to other CPUs. CPUs send only the subset of node values from $\setProvide$ that is required by the destination processors, but it is important to note that node information might be sent to several destinations. 
 As the set $\setDepend$ is received, the CPU converts back from global to local indices before copying a contiguous block of memory to the GPU. 
 
@@ -291,6 +286,9 @@ As the set $\setDepend$ is received, the CPU converts back from global to local 
 \label{sec:mpi_collectives}
 
 It is assumed that the \emph{Message Passing Interface (MPI)} \cite{MPI1993} is used to distribute RBF-FD across an HPC cluster. 
+
+
+ MPI processes executing on different cores of the same CPU are managed the same as processes on independent CPUs. Most MPI implementations are aware of where processes execute and adjust communication to use the fastest possible fabric possible. 
 
 
 Parallelizing RBF-FD made possible with the Message Passing Interface (MPI). 
