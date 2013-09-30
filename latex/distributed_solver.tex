@@ -268,18 +268,19 @@ Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the lab
 
 %TODO: Domain boundary nodes appear at beginning of the list 
 
-\section{MPI and Communication Collectives}
+\section{Communication Collectives}
 \label{sec:mpi_collectives}
 
 With a partitioning and local ordering complete, the next task is to establish communication collectives for transferring data between MPI processes. 
 
+Depending on the 
 %TODO: MPI history as a standard
 
 %TODO: how does \cite{Schubert2011} do it? \cite{Yokota2010}. 
 
 Our implementation in \cite{BolligFlyerErlebacher2012} leveraged a horribly inefficient send/recv collective. 
 
-Our code leverages three collectives: MPI\_Alltoall, MPI\_Alltoallv and MPI\_Isend/MPI\_Irecv. 
+The data presented here considers collectives: MPI\_Alltoall, MPI\_Alltoallv and MPI\_Isend/MPI\_Irecv. 
 
 The collective operation is essentially transposing information as seen in Figure~\ref{fig:mpi_alltoallv_visual}. 
 
