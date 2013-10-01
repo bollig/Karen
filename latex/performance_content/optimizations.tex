@@ -11,28 +11,28 @@ The following data, also acquired on Keeneland, demonstrates performance of our 
 \begin{figure}
 \centering
 \begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_cpu_1proc_oneWarpPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_cpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Keeneland}
 \label{fig:gflops_cpu_1proc_keeneland}
 \end{subfigure} 
 
 \begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneWarpPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Keeneland}
 \label{fig:speedup_1proc_oneWarp_keeneland}
 \end{subfigure} 
 \begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneThreadPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneThreadPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Keeneland}
 \label{fig:speedup_1proc_oneThread_keeneland}
 \end{subfigure} 
 \begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneWarpPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Keeneland}
 \label{fig:gflops_gpu_1proc_oneWarp_keeneland}
 \end{subfigure} 
 \begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneThreadPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Keeneland}
 \label{fig:gflops_gpu_1proc_oneThread_keeneland}
 \end{subfigure} 
@@ -114,28 +114,28 @@ These results were run on Spear. MPI communication is done with an MPI\_alltoall
 \begin{figure}[htbp]
 \centering
 \begin{subfigure}[b]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_cpu_1proc_oneWarpPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_cpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
 
 \begin{subfigure}[b]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneWarpPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneThreadPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneThreadPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneWarpPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneThreadPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
@@ -145,21 +145,39 @@ These results were run on Spear. MPI communication is done with an MPI\_alltoall
 \centering
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1CPU_vs_NCPU.eps}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1CPU_vs_NCPU-eps-converted-to.pdf}
 \caption{Multi-CPU strong scaling on spear for one warp per stencil}
 \label{fig:alltoall_multicpu_scaling}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1CPU_vs_NGPU_WarpPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1CPU_vs_NGPU_WarpPerStencil-eps-converted-to.pdf}
 \caption{Multi-GPU strong scaling vs one CPU on Spear for one warp per stencil}
 \label{fig:alltoall_multigpu_vs_cpu_scaling}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1GPU_vs_NGPU_WarpPerStencil.eps}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1GPU_vs_NGPU_WarpPerStencil-eps-converted-to.pdf}
 \caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
 \label{fig:alltoall_multigpu_vs_gpu_scaling}
 \end{subfigure} 
 \end{figure} 
 
+
+\section{Spear SpMV} 
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.425\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
+\caption{Multi-CPU strong scaling on spear for one warp per stencil}
+\label{fig:alltoall_multicpu_scaling}
+\end{subfigure} 
+\begin{subfigure}[b]{0.425\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_speedup-eps-converted-to.pdf}
+\caption{Multi-GPU strong scaling vs one CPU on Spear for one warp per stencil}
+\label{fig:alltoall_multigpu_vs_cpu_scaling}
+\end{subfigure} 
+\end{figure}
