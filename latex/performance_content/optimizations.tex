@@ -2,7 +2,11 @@
 
 \chapter{Keeneland Results}
 
-The benchmarks seen in \cite{BolligFlyerErlebacher2012} show the strong scaling of our implementation with a for loop and send/recv. These results were run on Keeneland. The changes to MPI communication are the result of changing from blocking sends and receives (MPI\_send/MPI\_recv) to an MPI\_alltoallv. The test case is vortex roll-up. 
+\authnote{Show plots from paper as "before" and this as after} 
+
+The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial strong scaling of our implementation for a distributed RK4 iteration and primitive communication with blocking MPI\_send/MPI\_recv routines. Data was acquired on the multi-GPU cluster named Keeneland \cite{Vetter2011}. The scaling of our implementation in the paper was poor as processes regularly waited on communication. However, the objective in \cite{BolligFlyerErlebacher2012} was not to present a well tuned distributed GPU implementation of RBF-FD, but instead focused on the design decisions for partitioning, index mapping, etc. and verification of both single and distributed GPU implementations as inefficient as they were. 
+
+The following data, also acquired on Keeneland, demonstrates performance of our implementation with communication managed by an MPI\_alltoallv collective. The test case considered is the vortex roll-up problem from Section~\ref{sec:vortex_rollup}. 
 
 \begin{figure}[htbp]
 \centering
@@ -14,7 +18,7 @@ The benchmarks seen in \cite{BolligFlyerErlebacher2012} show the strong scaling 
 \begin{subfigure}[b]{0.425\textwidth}
 \centering
 \includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1CPU_vs_NCPU.pdf}
-\caption{Multi-CPU strong scaling on Keeneland for one warp per stencil \authnote{Check if this is SpMV only or with comm...}}
+\caption{Multi-CPU strong scaling on Keeneland for one warp per stencil}
 \label{fig:alltoall_multicpu_scaling}
 \end{subfigure} 
 \begin{subfigure}[b]{0.425\textwidth}
@@ -43,7 +47,9 @@ The benchmarks seen in \cite{BolligFlyerErlebacher2012} show the strong scaling 
 \end{subfigure} 
 \end{figure} 
 
-Figure~\ref{fig:alltoall_1proc_warp} shows that our GPU kernel is not much different than in the paper. I have a list of optimizations I'm going through, but this test case focuses on improving the communication. 
+%TODO: urgent
+\authnote{FIX:} 
+Figure~\ref{fig:alltoall_1proc_warp} shows the performance of the one warp-per-stencil GPU kernel  in the paper. 
 
 Figure~\ref{fig:alltoall_multicpu_scaling}  shows the strong scalability of our method on Multiple CPUs. In distributed computing, ideal scaling is linear. This figure demonstrates that our method does scale linearly (almost super-linearly) as the number of CPUs increases, so our prospect for spanning all CPUs on Keeneland is within reach for problem sizes large enough. The super-linear speedup seen for 10 processors results from improved caching on processors as their individual problem sizes decrease and the processors are able to keep a larger percentage of the problem within fast cache memory.
 

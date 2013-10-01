@@ -271,9 +271,13 @@ Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the lab
 \section{Communication Collectives}
 \label{sec:mpi_collectives}
 
-With a partitioning and local ordering complete, the next task is to establish communication collectives to transfer data between MPI processes. Processes commonly share data with more than one neighbors. To accommodate this, general communication collectives are assumed for many-to-many and subset-to-subset connections. 
+With a partitioning and local ordering complete, the next task is to establish communication collectives for transferring data between MPI processes. Processes commonly share data with more than one neighbor. To accommodate this, general communication collectives are assumed for many-to-many and subset-to-subset connections. 
 
-Amdahl's law states that we g
+In order to manage expectations of parallel performance in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial:
+\begin{align}
+S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
+\end{align}
+where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Scaling to a very large number of processors may make the time in parallelizable portions of code vanish, but $T_s$ remains constant. In any distributed implementation communication is always included in estimate for $T_s$, so it is pertinent to choose an MPI collective that sends/receives the minimum number of bytes and requires . 
 
 
 %TODO: MPI history as a standard
@@ -368,12 +372,7 @@ The first improvement on Alltoallv collectives is to truncate the number of conn
 		
 Here scalable is used loosely as there are two types of scaling: weak and strong. Weak scaling implies the total problem size and processor count can increase. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
 
-In truth, parallel gains are also bounded by Amdahl's law, which states that the speedup is limited by the fraction of code that must run in serial, $s$:
-\begin{align}
-S_p = \frac{T_1}{T_p} = T_1(s + \frac{1}{p}(1-s)),  \nonumber
-\end{align}
-where $T_1$ and $T_p$ are the serial and parallel execution times respectively. 
-%TODO: citation for amdahls
+In truth, %TODO: citation for amdahls
 
 
 
