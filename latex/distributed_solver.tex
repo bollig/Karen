@@ -277,7 +277,18 @@ In order to manage expectations of parallel performance in a distributed environ
 \begin{align}
 S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
 \end{align}
-where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Scaling to a very large number of processors may make the time in parallelizable portions of code vanish, but $T_s$ remains constant. In any distributed implementation communication is always included in estimate for $T_s$, so it is pertinent to choose an MPI collective that sends/receives the minimum number of bytes and requires . 
+where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Scaling to a very large number of processors may make the time in parallelizable portions of code vanish, but $T_s$ remains constant. In any distributed implementation communication is always included in estimate for $T_s$, so it is pertinent to choose an MPI collective with minimal overhead and latency. 
+
+An all-to-all collective interconnects all processes together and ensures that zero or more bytes are transmitted between processes. All-to-all x
+
+MPI communication can be either blocking or non-blocking. Blocking routines such as MPI\_Send/MPI\_Recv, MPI\_Alltoall, MPI\_
+
+%TODO: blocking vs non-blocking
+%TODO: all to all vs subset to subset
+
+The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial scaling of our implementation for a distributed RK4 iteration using primitive blocking MPI\_Send/MPI\_Recv communication routines. The collective was a round-robin all-to-all connection between processors, each taking a turn send data (0 or more bytes) to all other processes and otherwise waiting to receive data. Blocking communication was implemented for code verification. Data in \cite{BolligFlyerErlebacher2012} was acquired on the multi-GPU cluster named Keeneland \cite{Vetter2011}. The implementation demonstrated poor scaling behavior as blocking collectives serialized transmissions, and every process had to wait until the end of the collective to proceed. The objective in \cite{BolligFlyerErlebacher2012}, however, was not to present a well tuned distributed GPU implementation of RBF-FD. Instead we focused on the design decisions for partitioning, index mapping, etc. and verification of both single and distributed GPU implementations as inefficient as they were. 
+
+The most common improvement 
 
 
 %TODO: MPI history as a standard
@@ -287,7 +298,7 @@ The most common communication collective is the MPI\_Alltoall shown in Figure~\r
 
 All-to-all collectives would work in most cases, RBF-FD stencils are not required/guaranteed to be symmetric. As a result, we often have non-uniform sharing across partitions, so an Alltoall would require over-padding all send/receive buffers to allow the maximum receive size times the number of processors. 
 
-Our implementation in \cite{BolligFlyerErlebacher2012} leveraged a horribly inefficient send/recv collective. 
+
 
 The data presented here considers collectives: MPI\_Alltoall, MPI\_Alltoallv and MPI\_Isend/MPI\_Irecv. 
 

@@ -4,40 +4,9 @@
 
 \authnote{Show plots from paper as "before" and this as after} 
 
-The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial strong scaling of our implementation for a distributed RK4 iteration and primitive communication with blocking MPI\_send/MPI\_recv routines. Data was acquired on the multi-GPU cluster named Keeneland \cite{Vetter2011}. The scaling of our implementation in the paper was poor as processes regularly waited on communication. However, the objective in \cite{BolligFlyerErlebacher2012} was not to present a well tuned distributed GPU implementation of RBF-FD, but instead focused on the design decisions for partitioning, index mapping, etc. and verification of both single and distributed GPU implementations as inefficient as they were. 
 
-The following data, also acquired on Keeneland, demonstrates performance of our implementation with communication managed by an MPI\_alltoallv collective. The test case considered is the cosine bell advection problem from Section~\ref{sec:cosine_bell}. 
 
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_cpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:gflops_cpu_1proc_keeneland}
-\end{subfigure} 
-
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:speedup_1proc_oneWarp_keeneland}
-\end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneThreadPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:speedup_1proc_oneThread_keeneland}
-\end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:gflops_gpu_1proc_oneWarp_keeneland}
-\end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:gflops_gpu_1proc_oneThread_keeneland}
-\end{subfigure} 
-\end{figure} 
-
+The following data, acquired on Keeneland, demonstrates performance of our implementation with communication managed by an MPI\_alltoallv collective. The test case considered is the cosine bell advection problem from Section~\ref{sec:cosine_bell}. Data measures  \authnote{clean}
 
 \begin{figure}
 \centering
@@ -164,6 +133,31 @@ These results were run on Spear. MPI communication is done with an MPI\_alltoall
 \end{figure} 
 
 
+%\begin{figure}[htbp]
+%\centering
+%\begin{subfigure}[b]{0.425\textwidth}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiCPU_costs.eps}
+%\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
+%\label{fig:alltoall_multigpu_vs_gpu_scaling}
+%\end{subfigure} 
+%\begin{subfigure}[b]{0.425\textwidth}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiGPU_warp_costs.eps}
+%\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
+%\label{fig:alltoall_multigpu_vs_gpu_scaling}
+%\end{subfigure} 
+%\begin{subfigure}[b]{0.425\textwidth}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiGPU_thread_costs.eps}
+%\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
+%\label{fig:alltoall_multigpu_vs_gpu_scaling}
+%\end{subfigure} 
+%\end{figure} 
+
+
+
+
 \section{Spear SpMV} 
 
 \begin{figure}[htbp]
@@ -181,3 +175,6 @@ These results were run on Spear. MPI communication is done with an MPI\_alltoall
 \label{fig:alltoall_multigpu_vs_cpu_scaling}
 \end{subfigure} 
 \end{figure}
+
+
+

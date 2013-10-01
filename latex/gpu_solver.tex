@@ -55,7 +55,7 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 \end{figure}
 
 
-In the years since the release of CUDA a vast number of libraries and language extensions have surfaced that leverage the hardware for scientific computing. 
+In the years since CUDA was released a vast number of libraries and language extensions have surfaced to leverage the GPU architecture for scientific computing. Developers can now use FORTRAN, Python, java and more. 
 
 
 \section{Managing Expectations for the GPU}
@@ -441,6 +441,41 @@ At the onset of work with ViennaCL two things were apparent: 1) the library was 
 
 Due to the assumption that all stencils have equal size, the ELL format is preferred as the default. 
  
+
+
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_cpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_cpu_1proc_keeneland}
+\end{subfigure} 
+
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_gpu_1proc_oneWarp_keeneland}
+\end{subfigure} 
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_gpu_1proc_oneThread_keeneland}
+\end{subfigure} 
+
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:speedup_1proc_oneWarp_keeneland}
+\end{subfigure} 
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneThreadPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:speedup_1proc_oneThread_keeneland}
+\end{subfigure} 
+\caption{Benchmarks from the Keeneland GPU cluster compare the average run-time of a single time-step of RK4 executed custom kernels.}
+\end{figure} 
+
+
 
 
 \subsection{Intel Phi} 
