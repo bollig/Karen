@@ -271,98 +271,100 @@ Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the lab
 \section{Communication Collectives}
 \label{sec:mpi_collectives}
 
-With a partitioning and local ordering complete, the next task is to establish communication collectives for transferring data between MPI processes. Two types of collectives are possible: all-to-all and subset-to-subset. 
+With a partitioning and local ordering complete, the next task is to establish communication collectives for transferring data between MPI processes. Two types of collectives are possible: all-to-all and all-to-subset. 
 
 All-to-all collectives pass data from every processor to all other processors. The most basic MPI implementation of an all-to-all, the MPI\_Alltoall routine, is illustrated in Figure~\ref{fig:mpi_alltoall_visual}. For a cluster of $p$ processes, MPI\_Alltoall assumes that every process intends to send $N_p$ bytes to each of its $p-1$ neighbors. On the left, an output buffer with $p*N_p$ bytes, \emph{sendBuf}, is assembled locally on each process. Block sizes in Figure~\ref{fig:mpi_alltoall_visual} are indicative of the number of bytes sent to each process. Example data A, B, C are labelled with subscripts to indicate the destination.  When the collective executes, MPI\_Alltoall scatters $N_p$ bytes from each process to each process to effectively interchange/transpose all data as it is received in \emph{recvBuf} on the right of Figure~\ref{fig:mpi_alltoall_visual}. 
 
 \begin{figure}
-\begin{center}
-\includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoall_Visual.png}
-\caption{An ``all-to-all" communication collective interchanges/transposes data across processes. All processors connect and transmit data to every other processor.}
+\centering
+\includegraphics[width=10cm]{../figures/omnigraffle/MPI_Alltoall_Visual.png}
+\caption{An ``all-to-all" communication collective interchanges/transposes data across processes. All processors (e.g., 0, 1, 2) connect and transmit data subsets (e.g., A, B, C) to every other processor.}
 \label{fig:mpi_alltoall_visual}
-\end{center}
 \end{figure}
 
-All-to-all collectives are only useful when data needs to be simultaneously interchanged between all processes. Since RBF-FD partitioning typically restricts overlap in subdomains to a subset of neighbors, it makes sense to adopt a subset-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
-Two types of subset-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_visual} and \ref{fig:mpi_isendirecv_visual}. 
+All-to-all collectives are only useful when data needs to be simultaneously interchanged between all processes. Since RBF-FD partitioning typically restricts overlap in subdomains to a subset of neighbors, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
+Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_visual} and \ref{fig:mpi_isendirecv_visual}. 
 
 
 \begin{figure}
-\begin{center}
-\includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
-\caption{RBF-FD interchanges a variable number bytes between processes. The MPI\_Alltoallv collective compresses the interchange by allowing for variable message sizes between all processors. Assume message sizes are proportional to square size in figure. When message sizes between processes are null implementations of MPI\_Alltoallv avoid connections resulting in a subset-to-subset behavior.}
+\centering
+\includegraphics[width=10cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
+\caption{RBF-FD interchanges a variable number bytes between processes. An MPI\_Alltoallv collective compresses the interchange by allowing for variable message sizes between all processors.}
 \label{fig:mpi_alltoallv_visual}
-\end{center}
+\end{figure}
 
-The first example in Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv. The MPI\_Alltoallv collective interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, the overall communication time drops as fewer bytes are transmitted. Modern implementations of MPI detect when zero bytes are sent to processes and avoid those connections to achieve the subset-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For large $p$ the communication time can be dominated by those operations, defeating the gains in subset-to-subset connection \cite{Balaji2010}.
+The first example in Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv. The MPI\_Alltoallv collective interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, fewer bytes are transmitted and the overall communication time drops. Modern implementations of MPI detect when zero-byte messages are intended for processes and skip those connections. This gives MPI\_Alltoallv an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}).
 
-Figure~\ref{fig:mpi_alltoallv_visual} shows a true subset-to-subset collective implemented with MPI\_Send/MPI\_Recv or MPI\_Isend/MPI\_Irecv routines. In this case communication occurs strictly with the subset of processes 
-%TODO: paper showed blocking send/recv subset-to-subset
 
-%TODO: %TODO: in which case we have a subset-to-subset.
+\begin{figure}
+\centering
+\includegraphics[width=10cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
+\caption{A true ``all-to-subset" collective allows for variable message sizes, and truncates the number of connections between processors to only required connections. This collective is implemented with MPI\_Send/MPI\_Recv or MPI\_Isend/MPI\_Irecv.}
+\label{fig:mpi_isendirecv_visual}
+\end{figure}
+Figure~\ref{fig:mpi_alltoallv_visual} presents an all-to-subset collective implemented with sends and receives that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). In this example processes strictly communicate with the subset of neighbors necessary; no zero-byte messages impact communication times for large $p$. 
+
+The difference between MPI\_Send/MPI\_Recv and MPI\_Isend/MPI\_Irecv
+The first improvement on Alltoallv collectives is to truncate the number of connections made between processes. Compact stencils implies an overlap region for each processor that draws values from a limited number of neighboring processors. 
+
 
 %TODO: encoding into a sendBuf
 %TODO: decoding out of recvBuf
 
+%TODO: here I need figure showing isend/irecv in context of encode decode
 
 
+\section{Scaling Results} 
+This section provides evidence that our implementation is scalable. The term scalable is used loosely as there are two types of scaling: weak and strong. Weak scaling implies the total problem size and processor count can increase. The performance scalability of the code depends on the problem size and the MPI collective. 
+
+To demonstrate the effectiveness of our decomposition and indexing, we perform scaling experiments. 
+
+Strong scaling tests the growth in time for a fixed total problem size, and a variable number of processors. 
+
+Weak scaling considers the amount of time for a fixed problem size per process and variable number of processors. That is to say, each processor has roughly the same amount of work, so as we scale to a large number of processors, changes in time will be the result of increased communication overhead. 
 
 
-\end{figure}
-\begin{figure}
-\begin{center}
-\includegraphics[width=9cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
-\caption{A true ``subset-to-subset" collective allows for variable message sizes, and truncates the number of connections between processors to only required connections. This collective is implemented with MPI\_Send/MPI\_Recv and MPI\_Isend/MPI\_Irecv.}
-\label{fig:mpi_isendirecv_visual}
-\end{center}
-\end{figure}
 
 In order to manage expectations of parallel performance in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial:
 \begin{align}
 S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
 \end{align}
-where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Scaling to a very large number of processors may make the time in parallelizable portions of code vanish, but $T_s$ remains constant. In any distributed implementation communication is always included in estimate for $T_s$, so it is pertinent to choose an MPI collective with minimal overhead and latency. 
+where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Scaling to a very large number of processors may make the time in parallelizable portions of code vanish, but $T_s$ remains constant. In any distributed implementation communication is always included in estimate for $T_s$, so it is expected for  pertinent to choose an MPI collective with minimal overhead and latency. 
+
+As the number of processors grows, more messages enter the infiniband network, increasing communication times. 
+
+%TODO: copy down, encode, send/recv, decode, copy up
 
 
-
-MPI communication can be either blocking or non-blocking. Blocking routines such as MPI\_Send/MPI\_Recv, MPI\_Alltoall, MPI\_
-
+\subsection{Basic Scaling (Keeneland)}
 
 
-%TODO: blocking vs non-blocking
-%TODO: all to all vs subset to subset
+%TODO: show evidence from paper (keeneland) on scaling as send/recv with blocking. 
 
-The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial scaling of our implementation for a distributed RK4 iteration using primitive blocking MPI\_Send/MPI\_Recv communication routines. The collective was a round-robin all-to-all connection between processors, each taking a turn send data (0 or more bytes) to all other processes and otherwise waiting to receive data. Blocking communication was implemented for code verification. Data in \cite{BolligFlyerErlebacher2012} was acquired on the multi-GPU cluster named Keeneland \cite{Vetter2011}. The implementation demonstrated poor scaling behavior as blocking collectives serialized transmissions, and every process had to wait until the end of the collective to proceed. The objective in \cite{BolligFlyerErlebacher2012}, however, was not to present a well tuned distributed GPU implementation of RBF-FD. Instead we focused on the design decisions for partitioning, index mapping, etc. and verification of both single and distributed GPU implementations as inefficient as they were. 
-
+The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial scaling of our implementation for a distributed RK4 iteration using primitive blocking MPI\_Send/MPI\_Recv communication routines. The collective was a round-robin all-to-subset connection between processors, each taking a turn send data (0 or more bytes) to all other processes and otherwise waiting to receive data. Blocking communication was implemented for code verification. Data in \cite{BolligFlyerErlebacher2012} was acquired on the multi-GPU cluster named Keeneland \cite{Vetter2011}. The implementation demonstrated poor scaling behavior as blocking collectives serialized transmissions, and every process had to wait until the end of the collective to proceed. The objective in \cite{BolligFlyerErlebacher2012}, however, was not to present a well tuned distributed GPU implementation of RBF-FD. Instead we focused on the design decisions for partitioning, index mapping, etc. and verification of both single and distributed GPU implementations as inefficient as they were. 
 
 
-%TODO: MPI history as a standard
+%TODO: non-blocking on keeneland
+
+
+\subsection{Tuned Scaling (Itasca)}
+
 
 %TODO: how does \cite{Schubert2011} do it? \cite{Yokota2010}. 
 
-The downside to an alltoallv
+
+By issuing the receives before encoding the send buffers we ensure that no processes wait unnecessarily long for their collectives to start.
 
 
 
-The data in the Itasca scaling figures considers the case where an MPI\_Alltoallv or MPI\_Isend/MPI\_Irecv is used. By issuing the receives before encoding the send buffers we ensure that no processes wait unnecessarily long for their collectives to start.
-
-
-
-MPI\_Alltoall requires that all processors send and receive an equivalent number of bytes to one another. Since the size must be equivalent for all processors, the send and receive buffers are padded to the maximum message size for any one connection between processors. MPI\_Alltoallv reduces the number of bytes sent and received by allowing processors to specify variable message sizes when communicating. For a small number of processors the variable message size will function well. However, MPI\_Alltoallv requires all processes to connect with every other process, even in the event that 0 bytes are to be sent. Based on the grid decomposition, processors compute on contiguous partitions with a small number of neighboring partitions. By replacing the MPI\_Alltoallv with a MPI\_Isend/MPI\_Irecv combination, the number of collective connections are truncated such that processors only connect to and communicate with essential neighbors that need/provide data. 
-
-The actual implementation of MPI\_Alltoall and MPI\_Alltoallv likely use Isend and Irecv internally. 
-
-
-Figure~\ref{fig:mpi_alltoallv_visual}: observes that the zero-byte messages still add up due to processing required to analyze send-buffer and determine when connection is required. 
-
-
+communicate with essential neighbors that need/provide data
 
 MPI\_Isend/MPI\_Irecv also allows for overlapping communication and computation by posting receives early 
 
+\subsubsection{Irecv pre-fill}
 
-The first improvement on Alltoallv collectives is to truncate the number of connections made between processes. Compact stencils implies an overlap region for each processor that draws values from a limited number of neighboring processors. 
 
-\subsection{No Decode}
+\subsubsection{No Decode}
 \authnote{figure: per iteration stacked bar for n=50 and 16 processes to show cost of decode}
 \authnote{figure: algorithm for collective}
 
@@ -370,7 +372,7 @@ The first improvement on Alltoallv collectives is to truncate the number of conn
 \authnote{figure: comm\_combo gains}
 \authnote{figure: algorithm for collective}
 
-\subsection{Immediate Isend on Encode}
+\subsubsection{Immediate Isend on Encode}
 \authnote{figure: algorithm for collective}
 
 \authnote{back to section: figure: improvement on all CPU collectives (n=50)}
@@ -379,16 +381,13 @@ The first improvement on Alltoallv collectives is to truncate the number of conn
 
 
 
-\section{CPU Scaling}
+\section{Conclusion}
 
       Our approach is scalable to a very large number of 
 		processors as the individual processes do not require the 
 		full mapping between RBF nodes and CPUs. 
 		
 Here scalable is used loosely as there are two types of scaling: weak and strong. Weak scaling implies the total problem size and processor count can increase. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
-
-In truth, %TODO: citation for amdahls
-
 
 
 To test and demonstrate scaling of our method, we consider an idealized regular grid in three dimensions. 
@@ -399,19 +398,9 @@ the grid is regular and 3D.
 We test strong scaling on a $N=160^3$ grid, and weak scaling with $N_p=4000$. This way at $p=1024$ processes we have weak scaling testing the full $N=160^3$ grid. 
 
 
-\authnote{Show the strong and weak scaling here}
-
-To demonstrate the effectiveness of our decomposition and indexing, we perform scaling experiments. 
-
-\subsection{Strong Scaling}
-Strong scaling tests the growth in time for a fixed total problem size, and a variable number of processors. 
-
-\subsection{Weak Scaling}
-Weak scaling considers the amount of time for a fixed problem size per process and variable number of processors. That is to say, each processor has roughly the same amount of work, so as we scale to a large number of processors, changes in time will be the result of increased communication overhead. 
-
 Although our weak scaling results are promising, they also contain a problem. First, since we are subsampling a $160^3$ regular grid to get the first $N=p*4000$ nodes, many of the tests consider domains that are ``L" shaped and have odd partitions with limited connectivity.
 
-\authnote{Here and strong scaling: table showing the min and max Osize,Rsize}
+\authnote{table showing the min and max Osize,Rsize}
 
 
 \subsection{Bandwidth}
@@ -422,6 +411,7 @@ The aggregate bandwidth reveals when processes saturate the interconnects.
 
 We consider a simple idealized problem where derivatives are computed over a regular grid generated in 3-D. The experiment computes the SpMV one thousand times. At the end of each SpMV the MPI\_Alltoallv collective is used to synchronize the local derivative vectors. After one thousand iterations, each process computes the local norm of the resulting vector and an MPI\_Reduce collective dra
 
+In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
 
 \begin{figure} 
 \centering
@@ -441,17 +431,21 @@ We consider a simple idealized problem where derivatives are computed over a reg
 \begin{figure}
 \centering
 \includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv_commOnly.png}
-\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv.png}  
-\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare_commOnly.png} \\
+\includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv.png}   \\
 \includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_spmvOnly.png} 
 \includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare.png}
 \caption{Weak scaling of the SpMV}
 \end{figure}
 
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_n17_compare_commOnly.png}
+\caption{Communication times for weak scaling SpMV. The difference between MPI\_Alltoallv and MPI\_Irecv times is attributed to the overhead in checking for zero-byte messages for the large number of processors. Similar behavior for MPI\_Alltoallv is found in \cite{Balaji2010}.}
+\end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.45\textwidth]{performance_content/scaling/strong_scaling_4M_regular_isend.png}  
+\includegraphics[width=0.6\textwidth]{performance_content/scaling/strong_scaling_4M_regular_isend.png}  
 \includegraphics[width=0.45\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_isend.png}  
 \caption{Scaling of SpMV with MPI\_Isend/MPI\_Irecv}
 \end{figure}
