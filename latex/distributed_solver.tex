@@ -271,7 +271,52 @@ Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the lab
 \section{Communication Collectives}
 \label{sec:mpi_collectives}
 
-With a partitioning and local ordering complete, the next task is to establish communication collectives for transferring data between MPI processes. Processes commonly share data with more than one neighbor. To accommodate this, general communication collectives are assumed for many-to-many and subset-to-subset connections. 
+With a partitioning and local ordering complete, the next task is to establish communication collectives for transferring data between MPI processes. Two types of collectives are possible: all-to-all and subset-to-subset. 
+
+All-to-all collectives pass data from every processor to all other processors. The most basic MPI implementation of an all-to-all, the MPI\_Alltoall routine, is illustrated in Figure~\ref{fig:mpi_alltoall_visual}. For a cluster of $p$ processes, MPI\_Alltoall assumes that every process intends to send $N_p$ bytes to each of its $p-1$ neighbors. On the left, an output buffer with $p*N_p$ bytes, \emph{sendBuf}, is assembled locally on each process. Block sizes in Figure~\ref{fig:mpi_alltoall_visual} are indicative of the number of bytes sent to each process. Example data A, B, C are labelled with subscripts to indicate the destination.  When the collective executes, MPI\_Alltoall scatters $N_p$ bytes from each process to each process to effectively interchange/transpose all data as it is received in \emph{recvBuf} on the right of Figure~\ref{fig:mpi_alltoall_visual}. 
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoall_Visual.png}
+\caption{An ``all-to-all" communication collective interchanges/transposes data across processes. All processors connect and transmit data to every other processor.}
+\label{fig:mpi_alltoall_visual}
+\end{center}
+\end{figure}
+
+All-to-all collectives are only useful when data needs to be simultaneously interchanged between all processes. Since RBF-FD partitioning typically restricts overlap in subdomains to subset of neighbors, it makes sense to adopt a subset-to-subset approach, to avoid the overhead of unnecessary connections. 
+Two types of subset-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_visual} and \ref{fig:mpi_isendirecv_visual}. 
+
+
+Figure~\ref{fig:mpi_alltoallv_visual} is similar in concept to MPI\_Alltoall, although block sizes indicate variable message sizes passed between processes. In this case, an MPI\_Alltoallv collective is used to interconnect processes and transpose data. Similar to the all-to-all counterpart, MPI\_Alltoallv must be informed of the number of bytes to send to all other processes. 
+Most implementations of MPI detect when zero bytes are sent to a process via MPI\_Alltoallv and those connections are avoided resulting in the desired subset-to-subset behavior.
+
+
+%TODO: paper showed blocking send/recv subset-to-subset
+
+%TODO: %TODO: in which case we have a subset-to-subset.
+
+%TODO: encoding into a sendBuf
+%TODO: decoding out of recvBuf
+
+
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
+\caption{RBF-FD interchanges a variable number bytes between processes. The MPI\_Alltoallv collective compresses the interchange by allowing for variable message sizes between all processors. Assume message sizes are proportional to square size in figure. When message sizes between processes are null implementations of MPI\_Alltoallv avoid connections resulting in a subset-to-subset behavior.}
+\label{fig:mpi_alltoallv_visual}
+\end{center}
+
+
+\end{figure}
+\begin{figure}
+\begin{center}
+\includegraphics[width=9cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
+\caption{A true ``subset-to-subset" collective allows for variable message sizes, and truncates the number of connections between processors to only required connections. This collective is implemented with MPI\_Send/MPI\_Recv and MPI\_Isend/MPI\_Irecv}
+\label{fig:mpi_isendirecv_visual}
+\end{center}
+\end{figure}
 
 In order to manage expectations of parallel performance in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial:
 \begin{align}
@@ -282,6 +327,8 @@ where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions o
 An all-to-all collective interconnects all processes together and ensures that zero or more bytes are transmitted between processes. All-to-all x
 
 MPI communication can be either blocking or non-blocking. Blocking routines such as MPI\_Send/MPI\_Recv, MPI\_Alltoall, MPI\_
+
+
 
 %TODO: blocking vs non-blocking
 %TODO: all to all vs subset to subset
@@ -319,31 +366,10 @@ MPI\_Alltoall requires that all processors send and receive an equivalent number
 
 The actual implementation of MPI\_Alltoall and MPI\_Alltoallv likely use Isend and Irecv internally. 
 
-\begin{figure}[ht!]
-\begin{center}
-\includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoall_Visual.png}
-\caption{The MPI\_Alltoall collective allows processors to interchange/transpose data by passing an equivalent number of bytes to every other processor.}
-\label{fig:mpi_alltoall_visual}
-\end{center}
-\end{figure}
-\begin{figure}[ht!]
-\begin{center}
-\includegraphics[width=9cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
-\caption{The MPI\_Alltoallv collective compresses the interchange from MPI\_Alltoall by allowing for variable message sizes between all processors. Assume message sizes are proportional to square size in figure. When packet sizes are null MPI\_Alltoallv has undefined behavior.}
-\label{fig:mpi_alltoallv_visual}
-\end{center}
 
-Figure~\ref{fig:mpi_alltoallv_visual}: \url{http://www.mcs.anl.gov/papers/P1699.pdf} observes that the zero-byte messages still add up due to processing required to analyze send-buffer and determine when connection is required. 
+Figure~\ref{fig:mpi_alltoallv_visual}: observes that the zero-byte messages still add up due to processing required to analyze send-buffer and determine when connection is required. 
 
 
-\end{figure}
-\begin{figure}[ht!]
-\begin{center}
-\includegraphics[width=9cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
-\caption{The ``subset-to-subset" (MPI\_Isend/MPI\_Irecv) collective allows for variable message sizes, and truncates the number of connections between processors to only required connections.}
-\label{fig:mpi_isendirecv_visual}
-\end{center}
-\end{figure}
 
 MPI\_Isend/MPI\_Irecv also allows for overlapping communication and computation by posting receives early 
 
