@@ -289,7 +289,7 @@ Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_vis
 \begin{figure}
 \centering
 \includegraphics[width=10cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
-\caption{RBF-FD interchanges a variable number bytes between processes. An MPI\_Alltoallv collective compresses the interchange by allowing for variable message sizes between all processors.}
+\caption{RBF-FD interchanges a variable number bytes between processes. An MPI\_Alltoallv collective compresses the interchange to allow variable message sizes between processors.}
 \label{fig:mpi_alltoallv_visual}
 \end{figure}
 
@@ -299,9 +299,10 @@ The first example in Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of
 \begin{figure}
 \centering
 \includegraphics[width=10cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
-\caption{A true ``all-to-subset" collective allows for variable message sizes, and truncates the number of connections between processors to only required connections. This collective is implemented with MPI\_Send/MPI\_Recv or MPI\_Isend/MPI\_Irecv.}
+\caption{A true ``all-to-subset" collective allows for variable message sizes, and strictly truncates the number of connections between processors to only required connections. This collective is implemented with MPI\_Send/MPI\_Recv or MPI\_Isend/MPI\_Irecv.}
 \label{fig:mpi_isendirecv_visual}
 \end{figure}
+
 Figure~\ref{fig:mpi_alltoallv_visual} presents an all-to-subset collective implemented with sends and receives that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). In this example processes strictly communicate with the subset of neighbors necessary; no zero-byte messages impact communication times for large $p$. 
 
 The difference between MPI\_Send/MPI\_Recv and MPI\_Isend/MPI\_Irecv
@@ -344,7 +345,23 @@ As the number of processors grows, more messages enter the infiniband network, i
 The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial scaling of our implementation for a distributed RK4 iteration using primitive blocking MPI\_Send/MPI\_Recv communication routines. The collective was a round-robin all-to-subset connection between processors, each taking a turn send data (0 or more bytes) to all other processes and otherwise waiting to receive data. Blocking communication was implemented for code verification. Data in \cite{BolligFlyerErlebacher2012} was acquired on the multi-GPU cluster named Keeneland \cite{Vetter2011}. The implementation demonstrated poor scaling behavior as blocking collectives serialized transmissions, and every process had to wait until the end of the collective to proceed. The objective in \cite{BolligFlyerErlebacher2012}, however, was not to present a well tuned distributed GPU implementation of RBF-FD. Instead we focused on the design decisions for partitioning, index mapping, etc. and verification of both single and distributed GPU implementations as inefficient as they were. 
 
 
+\subsubsection{MPI\_Alltoallv Keeneland}
 %TODO: non-blocking on keeneland
+With the distributed multi-CPU and mult-GPU implementations were verified we were able to focus our efforts on reducing the collective bottlenecks. The first step was to test an MPI\_Alltoallv on Keeneland. Results are as follows
+
+Scaling tests were performed on the unit sphere with the linear-in-$x$ partitioning. 
+
+
+
+\subsubsection{MPI\_Alltoallv Spear}
+Similar numbers are obtained on Spear, the multi-GPU cluster at FSU. Again, results are for strong scaling across 10 GPUs
+
+However, in the case of Spear it was found that the performance of the interconnect
+
+
+As an aside, some benchmark on Spear highlight the imbalanced workloads on processors. Excessive wait times on MPI collectives meant that processes were not entering communication stages at similar times. In response launched a new effort to load-balance and tune MPI for a large number of processes.
+
+At this point scaling the code allows us to reach a higher number of nodes. To confirm this  
 
 
 \subsection{Tuned Scaling (Itasca)}
