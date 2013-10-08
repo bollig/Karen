@@ -293,7 +293,7 @@ Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_vis
 \label{fig:mpi_alltoallv_visual}
 \end{figure}
 
-The first example in Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv. The MPI\_Alltoallv collective interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, fewer bytes are transmitted and the overall communication time drops. Modern implementations of MPI detect when zero-byte messages are intended for processes and skip those connections. This gives MPI\_Alltoallv an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}).
+The first example in Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv. The MPI\_Alltoallv collective interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, fewer bytes are transmitted and the overall communication time drops. Technically, MPI\_Alltoallv is considered an all-to-all collective since messages of zero bytes or more are scattered to all processors. Details of how zero-byte messages are actually handled is not part of the specification . Modern implementations of the routine detect when zero-byte messages are intended for processes and skip those connections. This gives MPI\_Alltoallv an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}).
 
 
 \begin{figure}
@@ -308,7 +308,9 @@ Figure~\ref{fig:mpi_alltoallv_visual} presents an all-to-subset collective imple
 The difference between MPI\_Send/MPI\_Recv and MPI\_Isend/MPI\_Irecv
 The first improvement on Alltoallv collectives is to truncate the number of connections made between processes. Compact stencils implies an overlap region for each processor that draws values from a limited number of neighboring processors. 
 
+MPI\_Ialltoallv, introduced in the MPI v3.0 specification (\cite{MPI}), adds similar non-blocking characteristics as MPI\_Isend/MPI\_Irecv to the variable message size all-to-all collective. Implementations have yet to be tested, but open the door to overlapping communication and computation on the CPU. 
 
+%TODO: overlapping comm and comp (Q\B) on MPI_Irecv->encode->MPI_Isend->Q\B->MPI_\Waitall->decode->B. 
 %TODO: encoding into a sendBuf
 %TODO: decoding out of recvBuf
 
