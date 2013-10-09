@@ -544,6 +544,34 @@ New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. 
 %TODO: put somewhere else
 % When matrix is sparse, a direct LU decomposition causes fill-in on factorization. In some cases the fill-in can be minimal, but in general one must assume that fill in can turn the sparse matrix into a dense matrix. To invert and solve Equation~\ref{eq:implicit_eq}, use an iterative solver like GMRES. The GMRES algorithm (described further in Chapter~\ref{chap:applications} applies successive SpMVs along with other vector operations to converge on a solution. Due to the dominance of SpMV in GMRES, the performance of RBF-FD reduces once again to SpMV.
 
+
+
+\section{Test Environments}
+
+\begin{itemize}	
+\item Early testing was completed on the Keeneland GPU cluster. At the time Keeneland was in the Keeneland Initial Deployment System (KIDS) had 320 NVidia M2070 GPUs (Fermi). 240 CPUs. 6GB of memory. 
+\item The Spear cluster at FSU has 16x NVIDIA Tesla m2050 GPUs. 3GB of memory. 
+\item The Cascade cluster at the Minnesota Supercomputing Institute (UMN) has 32x NVidia M2070 GPUs. 8 nodes, 12 cores each with four GPUs attached to each. 6GB of memory each. In addition, Cascade has 8 NVidia Kepler K20 GPUs. 
+\end{itemize}
+
+\begin{figure} 
+\begin{subfigure}{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/spmv/roofline_m2050_m2070.eps}
+\caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 36 GFLOP/s.}
+\label{fig:roofline_k20}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/spmv/roofline_k20.eps}
+\caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 52 GFLOP/s.}
+\label{fig:roofline_k20}
+\end{subfigure}
+\caption{Roofline models manage expectations for maximum possible GFLOP/s based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $0.25$. }
+\end{figure}
+
+
+
 \ifstandalone
 \bibliographystyle{plain}
 \bibliography{merged_references}

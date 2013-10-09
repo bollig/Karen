@@ -112,11 +112,11 @@ The take-away from Equation~\ref{eq:load_balance} is that potential gains in par
 
 To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms. Formally, graph partitioning algorithms attempt to solve the $k$-way partitioning problem \cite{Karypis1999}: given a graph $G = (V,E)$ with vertices ($V$) and any number of edges ($E$), partition $V$ into $k$ subsets, $V_1, V_2, ..., V_k$ such that $V_i \cap V_j = \emptyset$ for $i \neq j$, the size of each partition $|V_i| \approx \frac{N}{k}$, $\bigcup_i V_i = V$, and the number of edges whose incident vertices belong to different $V_i$ is minimized. In other words, we seek a partitioning that results in roughly equal sized subgraphs connected by as few edges as possible. In this case we apply the algorithms to the adjacency graph produced by RBF-FD stencils (see \S~\ref{subsec:adjacency}).
 
-The output from graph partitioning algorithms are ideal for distributed applications for two reasons. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges correspond to ghost node dependencies, so minimizing those connections also ensures minimized data transfer via MPI. 
+The output from graph partitioning algorithms are ideal for distributed applications for two reasons. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges crossing partitions correspond to ghost node dependencies, so minimizing those connections also ensures minimized data transfer via MPI. 
 
 A number of libraries exist for graph partitioning including Chaco \cite{CHACO1995}, SCOTCH \cite{SCOTCH1996}, and the METIS family of algorithms (e.g., METIS, ParMETIS, hMETIS) \cite{Karypis1999}. The partitioning algorithm varies by library, but in all cases the libraries provide options for partitioning, vertex reordering, and graph coloring.
 
-In addition to the linear partitioning in $x$, our work in \cite{BolligRBFFDCode} also employs METIS for partitioning via the library's included \emph{gpmetis} executable. METIS performs a multi-level recursive bisection algorithm for partitioning. At its core the algorithm first coarsens graphs into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs, smoothing/correcting the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
+In addition to the linear partitioning in $x$, our work in \cite{BolligRBFFDCode} employs METIS for partitioning via the library's included \emph{gpmetis} executable. During stencil generation, the undirected adjacency graph, $A+A^T$ is written to file and passed as input to the \emph{gpmetis} executable. METIS then performs a multi-level recursive bisection algorithm for partitioning. At its core the algorithm first coarsens the graph into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs and smooth/correct the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
 In return for the graph, METIS writes a file containing one integer per vertex, indicating the partition to which each stencil center is assigned. Note that METIS does not guarantee partitions will be contiguous. While this is often the case, METIS may decide that the alternative is more fitting and assign disjoint subgraphs to the same CPU process for reduced communication. 
 
 The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting stencil nodes $s_1$ and $s_2$, is equivalent to cutting its transpose, so METIS is equally resistant apply a cut whether the edge is directed or undirected. 
@@ -282,33 +282,43 @@ All-to-all collectives pass data from every processor to all other processors. T
 \label{fig:mpi_alltoall_visual}
 \end{figure}
 
-All-to-all collectives are only useful when data needs to be simultaneously interchanged between all processes. Since RBF-FD partitioning typically restricts overlap in subdomains to a subset of neighbors, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
+%All-to-all collectives are only useful when data needs to be simultaneously interchanged between all processes. 
+Since RBF-FD partitioning typically restricts overlap in subdomains to a subset of neighbors, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
 Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_visual} and \ref{fig:mpi_isendirecv_visual}. 
 
 
 \begin{figure}
 \centering
 \includegraphics[width=10cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
-\caption{RBF-FD interchanges a variable number bytes between processes. An MPI\_Alltoallv collective compresses the interchange to allow variable message sizes between processors.}
+\caption{RBF-FD interchanges a variable number bytes between processes. An ``all-to-subset" collective implemented via the MPI\_Alltoallv collective compresses the interchange by allowing variable message sizes between processors. Zero-byte connections are skipped by the routine internally.}
 \label{fig:mpi_alltoallv_visual}
 \end{figure}
 
-The first example in Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv. The MPI\_Alltoallv collective interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, fewer bytes are transmitted and the overall communication time drops. Technically, MPI\_Alltoallv is considered an all-to-all collective since messages of zero bytes or more are scattered to all processors. Details of how zero-byte messages are actually handled is not part of the specification . Modern implementations of the routine detect when zero-byte messages are intended for processes and skip those connections. This gives MPI\_Alltoallv an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}).
+Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv, which interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, fewer bytes are transmitted and the overall communication time drops. Modern implementations of MPI\_Alltoallv detect when zero-byte messages are intended for processes and skip those connections. This gives the routine an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}). 
 
 
 \begin{figure}
 \centering
 \includegraphics[width=10cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
-\caption{A true ``all-to-subset" collective allows for variable message sizes, and strictly truncates the number of connections between processors to only required connections. This collective is implemented with MPI\_Send/MPI\_Recv or MPI\_Isend/MPI\_Irecv.}
+\caption{A true ``all-to-subset" collective based on direct sends and receives allows for variable message sizes, and strictly truncates the number of connections between processors to only required connections. This collective is implemented with MPI\_Send/MPI\_Recv or MPI\_Isend/MPI\_Irecv.}
 \label{fig:mpi_isendirecv_visual}
 \end{figure}
 
-Figure~\ref{fig:mpi_alltoallv_visual} presents an all-to-subset collective implemented with sends and receives that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). In this example processes strictly communicate with the subset of neighbors necessary; no zero-byte messages impact communication times for large $p$. 
+Figure~\ref{fig:mpi_isendirecv_visual} shows the all-to-subset collective implemented with direct sends and receives between processes that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). Since processes strictly communicate with the subset of neighbors necessary, no zero-byte messages inflate communication times for large $p$. 
 
-The difference between MPI\_Send/MPI\_Recv and MPI\_Isend/MPI\_Irecv
-The first improvement on Alltoallv collectives is to truncate the number of connections made between processes. Compact stencils implies an overlap region for each processor that draws values from a limited number of neighboring processors. 
 
-MPI\_Ialltoallv, introduced in the MPI v3.0 specification (\cite{MPI}), adds similar non-blocking characteristics as MPI\_Isend/MPI\_Irecv to the variable message size all-to-all collective. Implementations have yet to be tested, but open the door to overlapping communication and computation on the CPU. 
+%TODO: Blocking communication
+
+
+%TODO: Non-blocking communication 
+
+The main benefit of non-blocking communication is that computation proceeds while the communication occurs in the background. 
+
+
+
+\section{Future Work}
+
+%MPI\_Ialltoallv, introduced in the MPI v3.0 specification (\cite{MPI}), adds similar non-blocking characteristics as MPI\_Isend/MPI\_Irecv to the variable message size all-to-all collective. Implementations have yet to be tested, but open the door to overlapping communication and computation on the CPU. 
 
 %TODO: overlapping comm and comp (Q\B) on MPI_Irecv->encode->MPI_Isend->Q\B->MPI_\Waitall->decode->B. 
 %TODO: encoding into a sendBuf
