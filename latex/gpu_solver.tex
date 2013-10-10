@@ -342,6 +342,21 @@ is treated as random access.
 All the computation on the GPU is performed in 8-byte double precision. 
 
 
+
+\subsection{Complexity of Custom Kernels (For Keeneland and Spear Benchmarks)}
+
+An SpMV requires $N * n * 2$ floating point operations due to the 2 operations, multiply and add, required when applying $N$ dot-products of size $n$. An iteration of RK4 requires four evaluations of the function $F(t,\vu)$, whose operation count varies by application, plus $7*N$ operations (four additions and three multiplications) per time-step. 
+
+In Figure~\ref{fig:cosine_keeneland} the function $F(t,\vu)$ performs three independent SpMVs and two AXPY operations ($2*N$ each) for a total of $6*N*n + 4*N$ operations. Thus the total operation count for a single RK4 iteration would be: $24*N*n +23*N$. 
+In the case of the Vortex Roll-up kernel, only two SpMVs and one AXPY are required which drops the total operation count to: $16*N*n + 15*N$. 
+
+The GFLOP/sec is computed as 
+\begin{align}
+GFLOP/sec = 10^{-9} * Operations / t_{RK4}
+\end{align}
+
+
+
 \subsubsection{Naive Approach: One thread per stencil}
 
 In this first implementation, each thread computes 
@@ -570,7 +585,7 @@ New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. 
 \caption{Roofline models manage expectations for maximum possible GFLOP/s based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $0.25$. }
 \end{figure}
 
-
+On the Fermi GPUs at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/s per card. On the K20 you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/s on the Fermi and 13 on the K20 (compared to the 2 GFLOP/s on Itasca). 
 
 \ifstandalone
 \bibliographystyle{plain}

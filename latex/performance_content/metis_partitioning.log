@@ -1,0 +1,621 @@
+Loading grid: /Users/evan/GRIDS/md/md100.10201.
+Number of expected columns: 4.
+Number of expected nodes: 10201.
+Number of nodes per stencil: 31.
+Weight method is set to: 0.
+Number of coarse grid cells per dimension: 100.
+[loadedgrid] 	reading file: loadedgrid_10201nodes_final.ascii
+Trying generic filename: input_grid.ascii
+[loadedgrid] 	Loaded 10201 nodes from 	loadedgrid_10201nodes_final.ascii
+Updating extents
+[loadedgrid] 	reading boundary file: bndry_loadedgrid_10201nodes_final.ascii
+Trying generic filename: bndry_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary indices from 	bndry_loadedgrid_10201nodes_final.ascii
+[loadedgrid] 	reading normals file: nrmls_loadedgrid_10201nodes_final.ascii
+Trying generic filename: nrmls_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary normals from 	nrmls_loadedgrid_10201nodes_final.ascii
+[loadedgrid] 	reading stencil file: stencils_maxsz31_loadedgrid_10201nodes_final.ascii
+Error opening stencil file to read
+Error loading stencils
+************** Generating Stencils **************
+Stencil Generator: LSH Raster 
+[Grid] WARNING! nb_bnd == 0; Did the Grid::generate() execute properly?!
+[Grid] WARNING! stencil_map.size() < node_list.size(). Resizing this vector and possibly corrupting memory! (Reserving: 10201 * 31 * 8 = 2529848 bytes)
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+[loadedgrid] 	Wrote 10201 nodes to 	input_grid.ascii
+[loadedgrid] 	Wrote 0 boundary indices to 	bndry_input_grid.ascii
+[loadedgrid] 	Wrote 0 boundary normals to 	nrmls_input_grid.ascii
+[loadedgrid] 	Wrote 10201 doubles to 	avg_radii_input_grid.ascii
+[loadedgrid] 	Wrote 10201 doubles to 	max_radii_input_grid.ascii
+[loadedgrid] 	Wrote 10201 doubles to 	min_radii_input_grid.ascii
+[loadedgrid] 	Wrote 10201 stencils to 	stencils_maxsz31_input_grid.ascii
+[loadedgrid] 	Nothing extra to write
+Generating Adjacency Graph for METIS
+Assembled adjacency_list.
+Wrote the METIS graph file: metis_stencils.graph
+Deleted grid
+[Timer] [Main] Assemble and write METIS graph...  |  avg:   212.7450  |  tot:   212.7450  |  count=     1
+[Timer] [Main] Assemble METIS graph               |  avg:    78.9520  |  tot:    78.9520  |  count=     1
+[Timer] [Main] Grid Reader Load File From Disk    |  avg:     0.0030  |  tot:     0.0030  |  count=     1
+[Timer] [Main] Load Grid (and Stencils) from ...  |  avg:    77.3000  |  tot:    77.3000  |  count=     1
+[Timer] [Main] write METIS graph to file          |  avg:    53.3060  |  tot:    53.3060  |  count=     1
+[Timer] [Main] Load settings                      |  avg:     0.0000  |  tot:     0.0000  |  count=     1
+[Timer] [Main] Stencil generation                 |  avg:   295.9790  |  tot:   295.9790  |  count=     1
+[Timer] [Main] Total runtime for this proc        |  avg:   787.5920  |  tot:   787.5920  |  count=     1
+[Timer] [Main] Write Stencils to Disk             |  avg:   199.7010  |  tot:   199.7010  |  count=     1
+----------------  END OF MAIN ------------------
++ echo 'sten_gen Exit status: 0'
+sten_gen Exit status: 0
++ gpmetis metis_stencils.graph 4
+******************************************************************************
+METIS 5.0 Copyright 1998-11, Regents of the University of Minnesota
+ (HEAD: , Built on: May 18 2013, 17:10:20)
+ size of idx_t: 32bits, real_t: 32bits, idx_t *: 64bits
+
+Graph Information -----------------------------------------------------------
+ Name: metis_stencils.graph, #Vertices: 10201, #Edges: 157845, #Parts: 4
+
+Options ---------------------------------------------------------------------
+ ptype=kway, objtype=cut, ctype=shem, rtype=greedy, iptype=metisrb
+ dbglvl=0, ufactor=1.030, minconn=NO, contig=NO, nooutput=NO
+ seed=-1, niter=10, ncuts=1
+
+Direct k-way Partitioning ---------------------------------------------------
+ - Edgecut: 7259, communication volume: 1982.
+
+ - Balance:
+     constraint #0:  1.021 out of 0.000
+
+ - Most overweight partition:
+     pid: 3, actual: 2603, desired: 2550, ratio: 1.02.
+
+ - Subdomain connectivity: max: 3, min: 3, avg: 3.00
+
+ - Each partition is contiguous.
+
+Timing Information ----------------------------------------------------------
+  I/O:          		   0.016 sec
+  Partitioning: 		   0.011 sec   (METIS time)
+  Reporting:    		   0.004 sec
+
+Memory Information ----------------------------------------------------------
+  Max memory used:		   2.896 MB
+******************************************************************************
++ echo 'gpmetis Exit status: 0'
+gpmetis Exit status: 0
++ mpirun -np 4 ../compute_weights.x -w 15 -g input_grid.ascii -N 10201 -n 31 --eps_c1 0.035 --eps_c2 0.1 -p metis_stencils.graph.part.4
+Loading grid: input_grid.ascii.
+Loading partition file: metis_stencils.graph.part.4.
+grid_num_cols was not set. Defaulting to grid_dim = 3.
+Number of expected nodes: 10201.
+Weight choices overridden to compute: 15.
+Number of nodes per stencil: 31.
+Epsilon c1: 0.035.
+Epsilon c2: 0.1.
+Loading grid: input_grid.ascii.
+Loading partition file: metis_stencils.graph.part.4.
+grid_num_cols was not set. Defaulting to grid_dim = 3.
+Number of expected nodes: 10201.
+Weight choices overridden to compute: 15.
+Number of nodes per stencil: 31.
+Epsilon c1: 0.035.
+Epsilon c2: 0.1.
+Loading grid: input_grid.ascii.
+Loading partition file: metis_stencils.graph.part.4.
+grid_num_cols was not set. Defaulting to grid_dim = 3.
+Number of expected nodes: 10201.
+Weight choices overridden to compute: 15.
+Number of nodes per stencil: 31.
+Epsilon c1: 0.035.
+Epsilon c2: 0.1.
+Loading grid: input_grid.ascii.
+Loading partition file: metis_stencils.graph.part.4.
+grid_num_cols was not set. Defaulting to grid_dim = 3.
+Number of expected nodes: 10201.
+Weight choices overridden to compute: 15.
+Number of nodes per stencil: 31.
+Epsilon c1: 0.035.
+Epsilon c2: 0.1.
+[loadedgrid] 	reading file: input_grid.ascii
+[loadedgrid] 	reading file: input_grid.ascii
+[loadedgrid] 	reading file: input_grid.ascii
+[loadedgrid] 	reading file: input_grid.ascii
+[loadedgrid] 	Loaded 10201 nodes from 	input_grid.ascii
+Updating extents
+[loadedgrid] 	reading boundary file: bndry_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary indices from 	bndry_input_grid.ascii
+[loadedgrid] 	reading normals file: nrmls_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary normals from 	nrmls_input_grid.ascii
+[loadedgrid] 	reading stencil file: stencils_maxsz31_input_grid.ascii
+[loadedgrid] 	Loaded 10201 nodes from 	input_grid.ascii
+Updating extents
+[loadedgrid] 	reading boundary file: bndry_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary indices from 	bndry_input_grid.ascii
+[loadedgrid] 	reading normals file: nrmls_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary normals from 	nrmls_input_grid.ascii
+[loadedgrid] 	reading stencil file: stencils_maxsz31_input_grid.ascii
+[loadedgrid] 	Loaded 10201 nodes from 	input_grid.ascii
+Updating extents
+[loadedgrid] 	reading boundary file: bndry_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary indices from 	bndry_input_grid.ascii
+[loadedgrid] 	reading normals file: nrmls_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary normals from 	nrmls_input_grid.ascii
+[loadedgrid] 	reading stencil file: stencils_maxsz31_input_grid.ascii
+[loadedgrid] 	Loaded 10201 nodes from 	input_grid.ascii
+Updating extents
+[loadedgrid] 	reading boundary file: bndry_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary indices from 	bndry_input_grid.ascii
+[loadedgrid] 	reading normals file: nrmls_input_grid.ascii
+[loadedgrid] 	Loaded 0 boundary normals from 	nrmls_input_grid.ascii
+[loadedgrid] 	reading stencil file: stencils_maxsz31_input_grid.ascii
+[loadedgrid] 	Loaded 10201 stencils, with a total of 316231 elements from 	stencils_maxsz31_input_grid.ascii
+[loadedgrid] 	Loaded 10201 stencils, with a total of 316231 elements from 	stencils_maxsz31_input_grid.ascii
+[loadedgrid] 	Loaded 10201 stencils, with a total of 316231 elements from 	stencils_maxsz31_input_grid.ascii
+[loadedgrid] 	Loaded 10201 stencils, with a total of 316231 elements from 	stencils_maxsz31_input_grid.ascii
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_4proc/metis_stencils.graph.part.4
+Domain 2, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 2536
+D size before set operations: 474
+SQ.size before difference: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_4proc/metis_stencils.graph.part.4
+Domain 3, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 2603
+D size before set operations: 441
+SQ.size before difference: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_4proc/metis_stencils.graph.part.4
+Domain 0, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_4proc/metis_stencils.graph.part.4
+Domain 1, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 2528
+D size before set operations: 465
+SQ.size before difference: 0
+SQ.size before difference: 3064
+R.size before difference: 0
+Q size before set operations: 2534
+D size before set operations: 482
+SQ.size before difference: 0
+R.size after difference: 461
+SQ.size before difference: 3041
+R.size before difference: 0
+R.size after difference: 505
+A.size after difference: 10201
+AmQ.size after difference: 7598
+SAmQ.size before stencilSet: 0
+A.size after difference: 10201
+AmQ.size after difference: 7665
+SAmQ.size before stencilSet: 0
+SQ.size before difference: 3035
+R.size before difference: 0
+R.size after difference: 501
+A.size after difference: 10201
+AmQ.size after difference: 7667
+SAmQ.size before stencilSet: 0
+SQ.size before difference: 3021
+R.size before difference: 0
+R.size after difference: 493
+A.size after difference: 10201
+AmQ.size after difference: 7673
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 8040
+O.size before stencilSet: 0
+O.size after stencilSet: 442
+QmB.size= 2156
+BmO.size= 5
+O.size= 442
+R.size= 461
+G.size = 3064
+Q size= 2603
+QmD.size= 2162
+D.size= 441
+B.size= 447
+SAmQ.size after stencilSet: 8140
+O.size before stencilSet: 0
+O.size after stencilSet: 467
+SAmQ.size after stencilSet: 8150
+O.size before stencilSet: 0
+SAmQ.size after stencilSet: 8141
+O.size before stencilSet: 0
+O.size after stencilSet: 476
+QmB.size= 2056
+BmO.size= 5
+O.size= 467
+R.size= 493
+G.size = 3021
+Q size= 2528
+QmD.size= 2063
+D.size= 465
+B.size= 472
+O.size after stencilSet: 483
+QmB.size= 2057
+BmO.size= 3
+O.size= 476
+R.size= 505
+G.size = 3041
+Q size= 2536
+QmD.size= 2062
+D.size= 474
+B.size= 479
+QmB.size= 2046
+BmO.size= 5
+O.size= 483
+R.size= 501
+G.size = 3035
+Q size= 2534
+QmD.size= 2052
+D.size= 482
+B.size= 488
+Domain stencils size = 2603
+Domain stencils size = 2528
+Domain stencils size = 2536
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 3064
+g2l size= 3064
+node_list size= 3064 (nb_nodes=3064)
+avg_stencil_radii size= 3064
+max_stencil_radii size= 3064
+min_stencil_radii size= 3064
+Domain stencils size = 2534
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 3041
+g2l size= 3041
+node_list size= 3041 (nb_nodes=3041)
+avg_stencil_radii size= 3041
+max_stencil_radii size= 3041
+min_stencil_radii size= 3041
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 3021
+g2l size= 3021
+node_list size= 3021 (nb_nodes=3021)
+avg_stencil_radii size= 3021
+max_stencil_radii size= 3021
+min_stencil_radii size= 3021
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 3035
+g2l size= 3035
+node_list size= 3035 (nb_nodes=3035)
+avg_stencil_radii size= 3035
+max_stencil_radii size= 3035
+min_stencil_radii size= 3035
+[domain] 	Wrote 3041 nodes to 	domain_domain_rank_2_of_4_final.ascii
+[domain] 	Wrote 0 boundary indices to 	bndry_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Wrote 3064 nodes to 	domain_domain_rank_3_of_4_final.ascii
+[domain] 	Wrote 0 boundary normals to 	nrmls_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Wrote 0 boundary indices to 	bndry_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Wrote 0 boundary normals to 	nrmls_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Wrote 3021 nodes to 	domain_domain_rank_1_of_4_final.ascii
+[domain] 	Wrote 3035 nodes to 	domain_domain_rank_0_of_4_final.ascii
+[domain] 	Wrote 0 boundary indices to 	bndry_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Wrote 0 boundary normals to 	nrmls_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Wrote 0 boundary indices to 	bndry_domain_domain_rank_1_of_4_final.ascii
+[domain] 	Wrote 0 boundary normals to 	nrmls_domain_domain_rank_1_of_4_final.ascii
+[Domain] 	Wrote 3041 global to local index map elements to 	g2lmap_domain_domain_rank_2_of_4_final.ascii
+[Domain] 	Wrote 3021 global to local index map elements to 	g2lmap_domain_domain_rank_1_of_4_final.ascii
+[Domain] 	Wrote 3064 global to local index map elements to 	g2lmap_domain_domain_rank_3_of_4_final.ascii
+[Domain] 	Wrote 3035 global to local index map elements to 	g2lmap_domain_domain_rank_0_of_4_final.ascii
+[Domain] 	Wrote 3041 local to global index map elements to 	l2gmap_domain_domain_rank_2_of_4_final.ascii
+[domain] 	 writing stencils to file: stencils_maxsz31_domain_domain_rank_2_of_4_final.ascii
+[Domain] 	Wrote 3021 local to global index map elements to 	l2gmap_domain_domain_rank_1_of_4_final.ascii
+[domain] 	 writing stencils to file: stencils_maxsz31_domain_domain_rank_1_of_4_final.ascii
+[Domain] 	Wrote 3064 local to global index map elements to 	l2gmap_domain_domain_rank_3_of_4_final.ascii
+[domain] 	 writing stencils to file: stencils_maxsz31_domain_domain_rank_3_of_4_final.ascii
+[Domain] 	Wrote 3035 local to global index map elements to 	l2gmap_domain_domain_rank_0_of_4_final.ascii
+[domain] 	 writing stencils to file: stencils_maxsz31_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Wrote 2603 stencils to 	stencils_maxsz31_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Wrote 2534 stencils to 	stencils_maxsz31_domain_domain_rank_0_of_4_final.ascii
+[Domain] 	Wrote 506 O_by_rank map elements to 	O_by_rank_domain_domain_rank_0_of_4_final.ascii
+[Domain] 	Wrote 501 R_by_rank map elements to 	R_by_rank_domain_domain_rank_0_of_4_final.ascii
+Computing Weights
+USE 0
+Global Node List Size: 10201
+DERIVATIVE:: SET UNIFORM EPSILON = 3.435
+start computing weights
+Will compute DerType: 0x1 (x)
+Will compute DerType: 0x2 (y)
+Will compute DerType: 0x4 (z)
+Will compute DerType: 0x8 (lapl)
+[Domain] 	Wrote 465 O_by_rank map elements to 	O_by_rank_domain_domain_rank_3_of_4_final.ascii
+[Domain] 	Wrote 461 R_by_rank map elements to 	R_by_rank_domain_domain_rank_3_of_4_final.ascii
+Computing Weights
+USE 0
+Global Node List Size: 10201
+DERIVATIVE:: SET UNIFORM EPSILON = 3.435
+start computing weights
+Will compute DerType: 0x1 (x)
+Will compute DerType: 0x2 (y)
+Will compute DerType: 0x4 (z)
+Will compute DerType: 0x8 (lapl)
+[domain] 	Wrote 2536 stencils to 	stencils_maxsz31_domain_domain_rank_2_of_4_final.ascii
+[Domain] 	Wrote 500 O_by_rank map elements to 	O_by_rank_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Wrote 2528 stencils to 	stencils_maxsz31_domain_domain_rank_1_of_4_final.ascii
+[Domain] 	Wrote 489 O_by_rank map elements to 	O_by_rank_domain_domain_rank_1_of_4_final.ascii
+[Domain] 	Wrote 505 R_by_rank map elements to 	R_by_rank_domain_domain_rank_2_of_4_final.ascii
+Computing Weights
+USE 0
+Global Node List Size: 10201
+DERIVATIVE:: SET UNIFORM EPSILON = 3.435
+start computing weights
+Will compute DerType: 0x1 (x)
+Will compute DerType: 0x2 (y)
+Will compute DerType: 0x4 (z)
+Will compute DerType: 0x8 (lapl)
+[Domain] 	Wrote 493 R_by_rank map elements to 	R_by_rank_domain_domain_rank_1_of_4_final.ascii
+Computing Weights
+USE 0
+Global Node List Size: 10201
+DERIVATIVE:: SET UNIFORM EPSILON = 3.435
+start computing weights
+Will compute DerType: 0x1 (x)
+Will compute DerType: 0x2 (y)
+Will compute DerType: 0x4 (z)
+Will compute DerType: 0x8 (lapl)
+end computing weights
+WRITING ASCII: 0
+Writing 80693 weights to x_weights_domain_rank_3_of_4.bmtx
+end computing weights
+end computing weights
+WRITING ASCII: 0
+Writing 78616 weights to x_weights_domain_rank_2_of_4.bmtx
+WRITING ASCII: 0
+Writing 78554 weights to x_weights_domain_rank_0_of_4.bmtx
+end computing weights
+WRITING ASCII: 0
+Writing 78368 weights to x_weights_domain_rank_1_of_4.bmtx
+Wrote 80693 rows to x_weights_domain_rank_3_of_4.bmtx
+WRITING ASCII: 0
+Writing 80693 weights to y_weights_domain_rank_3_of_4.bmtx
+Wrote 78616 rows to x_weights_domain_rank_2_of_4.bmtx
+WRITING ASCII: 0
+Writing 78616 weights to y_weights_domain_rank_2_of_4.bmtx
+Wrote 78554 rows to x_weights_domain_rank_0_of_4.bmtx
+WRITING ASCII: 0
+Writing 78554 weights to y_weights_domain_rank_0_of_4.bmtx
+Wrote 80693 rows to y_weights_domain_rank_3_of_4.bmtx
+WRITING ASCII: 0
+Writing 80693 weights to z_weights_domain_rank_3_of_4.bmtx
+Wrote 78368 rows to x_weights_domain_rank_1_of_4.bmtx
+WRITING ASCII: 0
+Writing 78368 weights to y_weights_domain_rank_1_of_4.bmtx
+Wrote 78368 rows to y_weights_domain_rank_1_of_4.bmtx
+WRITING ASCII: 0
+Writing 78368 weights to z_weights_domain_rank_1_of_4.bmtx
+Wrote 78616 rows to y_weights_domain_rank_2_of_4.bmtx
+WRITING ASCII: 0
+Writing 78616 weights to z_weights_domain_rank_2_of_4.bmtx
+Wrote 80693 rows to z_weights_domain_rank_3_of_4.bmtx
+WRITING ASCII: 0
+Writing 80693 weights to lapl_weights_domain_rank_3_of_4.bmtx
+Wrote 78554 rows to y_weights_domain_rank_0_of_4.bmtx
+WRITING ASCII: 0
+Writing 78554 weights to z_weights_domain_rank_0_of_4.bmtx
+Wrote 78616 rows to z_weights_domain_rank_2_of_4.bmtx
+WRITING ASCII: 0
+Writing 78616 weights to lapl_weights_domain_rank_2_of_4.bmtx
+Wrote 78368 rows to z_weights_domain_rank_1_of_4.bmtx
+WRITING ASCII: 0
+Writing 78368 weights to lapl_weights_domain_rank_1_of_4.bmtx
+Wrote 80693 rows to lapl_weights_domain_rank_3_of_4.bmtx
+end write weights to file
+Wrote 78554 rows to z_weights_domain_rank_0_of_4.bmtx
+WRITING ASCII: 0
+Writing 78554 weights to lapl_weights_domain_rank_0_of_4.bmtx
+Deleted grid
+Deleted subdomain
+[Timer] [Main] Setup RBFFD class                  |  avg:     0.2850  |  tot:     0.2850  |  count=     1
+[Timer] [Main] Grid Reader Load File From Disk    |  avg:     0.0120  |  tot:     0.0120  |  count=     1
+[Timer] [Main] Load Grid (and Stencils) from ...  |  avg:   266.4210  |  tot:   266.4210  |  count=     1
+[Timer] [Main] Load settings                      |  avg:     0.0000  |  tot:     0.0000  |  count=     1
+[Timer] [Main] Total runtime for this proc        |  avg:  1933.1121  |  tot:  1933.1121  |  count=     1
+[Timer] [Main] Compute Weights                    |  avg:   372.6030  |  tot:   372.6030  |  count=     1
+[Timer] [Main] Output weights to file             |  avg:    63.5100  |  tot:    63.5100  |  count=     1
+----------------  END OF MAIN ------------------
+Wrote 78616 rows to lapl_weights_domain_rank_2_of_4.bmtx
+end write weights to file
+Wrote 78368 rows to lapl_weights_domain_rank_1_of_4.bmtx
+end write weights to file
+Deleted grid
+Deleted grid
+Deleted subdomain
+[Timer] [Main] Setup RBFFD class                  |  avg:     0.7120  |  tot:     0.7120  |  count=     1
+[Timer] [Main] Grid Reader Load File From Disk    |  avg:     0.0110  |  tot:     0.0110  |  count=     1
+Wrote 78554 rows to lapl_weights_domain_rank_0_of_4.bmtx
+Deleted subdomain
+[Timer] [Main] Setup RBFFD class                  |  avg:     0.3150  |  tot:     0.3150  |  count=     1
+[Timer] [Main] Grid Reader Load File From Disk    |  avg:     0.0100  |  tot:     0.0100  |  count=     1
+[Timer] [Main] Load Grid (and Stencils) from ...  |  avg:   273.6240  |  tot:   273.6240  |  count=     1
+[Timer] [Main] Load settings                      |  avg:     0.0000  |  tot:     0.0000  |  count=     1
+[Timer] [Main] Total runtime for this proc        |  avg:  1944.9010  |  tot:  1944.9010  |  count=     1
+[Timer] [Main] Compute Weights                    |  avg:   363.7970  |  tot:   363.7970  |  count=     1
+[Timer] [Main] Output weights to file             |  avg:    65.6790  |  tot:    65.6790  |  count=     1
+----------------  END OF MAIN ------------------
+end write weights to file
+[Timer] [Main] Load Grid (and Stencils) from ...  |  avg:   267.3520  |  tot:   267.3520  |  count=     1
+[Timer] [Main] Load settings                      |  avg:     0.0000  |  tot:     0.0000  |  count=     1
+[Timer] [Main] Total runtime for this proc        |  avg:  1945.5220  |  tot:  1945.5220  |  count=     1
+[Timer] [Main] Compute Weights                    |  avg:   359.1420  |  tot:   359.1420  |  count=     1
+[Timer] [Main] Output weights to file             |  avg:    69.4180  |  tot:    69.4180  |  count=     1
+----------------  END OF MAIN ------------------
+Deleted grid
+Deleted subdomain
+[Timer] [Main] Setup RBFFD class                  |  avg:     0.2820  |  tot:     0.2820  |  count=     1
+[Timer] [Main] Grid Reader Load File From Disk    |  avg:     0.0160  |  tot:     0.0160  |  count=     1
+[Timer] [Main] Load Grid (and Stencils) from ...  |  avg:   277.6510  |  tot:   277.6510  |  count=     1
+[Timer] [Main] Load settings                      |  avg:     0.0000  |  tot:     0.0000  |  count=     1
+[Timer] [Main] Total runtime for this proc        |  avg:  1949.9960  |  tot:  1949.9960  |  count=     1
+[Timer] [Main] Compute Weights                    |  avg:   372.4590  |  tot:   372.4590  |  count=     1
+[Timer] [Main] Output weights to file             |  avg:    76.4560  |  tot:    76.4560  |  count=     1
+----------------  END OF MAIN ------------------
++ echo 'compute_weights Exit status: 0'
+compute_weights Exit status: 0
++ touch job_ran
++ mpirun -np 4 ../evaluate_derivatives_overlap.x -g input_grid.ascii -N 10201 -n 31 --eps_c1=0.035 --eps_c2=0.1 -w 15
+Loading grid: input_grid.ascii.
+WARNING: partition_filename not specified, defaulting to all stencils for each processor
+grid_num_cols was not set. Defaulting to grid_dim = 3.
+Number of expected nodes: 10201.
+Weight choices overridden to compute: 15.
+Number of nodes per stencil: 31.
+Epsilon c1: 0.035.
+Epsilon c2: 0.1.
+Loading grid: input_grid.ascii.
+WARNING: partition_filename not specified, defaulting to all stencils for each processor
+grid_num_cols was not set. Defaulting to grid_dim = 3.
+Number of expected nodes: 10201.
+Weight choices overridden to compute: 15.
+Number of nodes per stencil: 31.
+Epsilon c1: 0.035.
+Epsilon c2: 0.1.
+Loading grid: input_grid.ascii.
+WARNING: partition_filename not specified, defaulting to all stencils for each processor
+grid_num_cols was not set. Defaulting to grid_dim = 3.
+Number of expected nodes: 10201.
+Weight choices overridden to compute: 15.
+Number of nodes per stencil: 31.
+Epsilon c1: 0.035.
+Epsilon c2: 0.1.
+Loading grid: input_grid.ascii.
+WARNING: partition_filename not specified, defaulting to all stencils for each processor
+grid_num_cols was not set. Defaulting to grid_dim = 3.
+Number of expected nodes: 10201.
+Weight choices overridden to compute: 15.
+Number of nodes per stencil: 31.
+Epsilon c1: 0.035.
+Epsilon c2: 0.1.
+MPI Initialized: 0, 4
+INSIDE METISDomain CONSTRUCTOR!4
+[domain] 	reading file: domain_domain_rank_0_of_4_final.ascii
+MPI Initialized: 1, 4
+INSIDE METISDomain CONSTRUCTOR!4
+[domain] 	reading file: domain_domain_rank_1_of_4_final.ascii
+MPI Initialized: 2, 4
+INSIDE METISDomain CONSTRUCTOR!4
+[domain] 	reading file: domain_domain_rank_2_of_4_final.ascii
+MPI Initialized: 3, 4
+INSIDE METISDomain CONSTRUCTOR!4
+[domain] 	reading file: domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 3021 nodes from 	domain_domain_rank_1_of_4_final.ascii
+Updating extents
+[domain] 	Loaded 3064 nodes from 	domain_domain_rank_3_of_4_final.ascii
+Updating extents
+[domain] 	reading boundary file: bndry_domain_domain_rank_1_of_4_final.ascii
+[domain] 	Loaded 0 boundary indices from 	bndry_domain_domain_rank_1_of_4_final.ascii
+[domain] 	reading normals file: nrmls_domain_domain_rank_1_of_4_final.ascii
+[domain] 	Loaded 0 boundary normals from 	nrmls_domain_domain_rank_1_of_4_final.ascii
+[domain] 	reading stencil file: stencils_maxsz31_domain_domain_rank_1_of_4_final.ascii
+[domain] 	reading boundary file: bndry_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 0 boundary indices from 	bndry_domain_domain_rank_3_of_4_final.ascii
+[domain] 	reading normals file: nrmls_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 0 boundary normals from 	nrmls_domain_domain_rank_3_of_4_final.ascii
+[domain] 	reading stencil file: stencils_maxsz31_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 3035 nodes from 	domain_domain_rank_0_of_4_final.ascii
+Updating extents
+[domain] 	reading boundary file: bndry_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Loaded 0 boundary indices from 	bndry_domain_domain_rank_0_of_4_final.ascii
+[domain] 	reading normals file: nrmls_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Loaded 0 boundary normals from 	nrmls_domain_domain_rank_0_of_4_final.ascii
+[domain] 	reading stencil file: stencils_maxsz31_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Loaded 3041 nodes from 	domain_domain_rank_2_of_4_final.ascii
+Updating extents
+[domain] 	reading boundary file: bndry_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Loaded 0 boundary indices from 	bndry_domain_domain_rank_2_of_4_final.ascii
+[domain] 	reading normals file: nrmls_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Loaded 0 boundary normals from 	nrmls_domain_domain_rank_2_of_4_final.ascii
+[domain] 	reading stencil file: stencils_maxsz31_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Loaded 2603 stencils, with a total of 80693 elements from 	stencils_maxsz31_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 2528 stencils, with a total of 78368 elements from 	stencils_maxsz31_domain_domain_rank_1_of_4_final.ascii
+[domain] 	Loaded 2534 stencils, with a total of 78554 elements from 	stencils_maxsz31_domain_domain_rank_0_of_4_final.ascii
+[Grid] avg_int.size() = 2534
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076371 (size: 2534)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+[domain] 	reading global to local (g2lmap) file: g2lmap_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Loaded 3035 global to local mappings from 	g2lmap_domain_domain_rank_0_of_4_final.ascii
+[domain] 	reading local to global (l2gmap) file: l2gmap_domain_domain_rank_0_of_4_final.ascii
+[Grid] avg_int.size() = 2528
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076357 (size: 2528)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+[domain] 	reading global to local (g2lmap) file: g2lmap_domain_domain_rank_1_of_4_final.ascii
+[domain] 	Loaded 3021 global to local mappings from 	g2lmap_domain_domain_rank_1_of_4_final.ascii
+[domain] 	reading local to global (l2gmap) file: l2gmap_domain_domain_rank_1_of_4_final.ascii
+[domain] 	Loaded 3021 global to local mappings from 	l2gmap_domain_domain_rank_1_of_4_final.ascii
+[domain] 	reading O_by_rank map file: O_by_rank_domain_domain_rank_1_of_4_final.ascii
+[domain] 	Loaded 2536 stencils, with a total of 78616 elements from 	stencils_maxsz31_domain_domain_rank_2_of_4_final.ascii
+[Grid] avg_int.size() = 2603
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076340 (size: 2603)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+[domain] 	reading global to local (g2lmap) file: g2lmap_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 3064 global to local mappings from 	g2lmap_domain_domain_rank_3_of_4_final.ascii
+[domain] 	reading local to global (l2gmap) file: l2gmap_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 489 mappings from 	O_by_rank_domain_domain_rank_1_of_4_final.ascii
+[domain] 	reading R_by_rank map file: R_by_rank_domain_domain_rank_1_of_4_final.ascii
+[domain] 	Loaded 493 mappings from 	R_by_rank_domain_domain_rank_1_of_4_final.ascii
+DECOMPOSED
+SETING UP OPENCL CONTEXT
+GETTING DEVICE (TYPE: GPU and ACCELERATOR): 
+[Grid] avg_int.size() = 2536
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076379 (size: 2536)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+[domain] 	reading global to local (g2lmap) file: g2lmap_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Loaded 3041 global to local mappings from 	g2lmap_domain_domain_rank_2_of_4_final.ascii
+[domain] 	reading local to global (l2gmap) file: l2gmap_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Loaded 3064 global to local mappings from 	l2gmap_domain_domain_rank_3_of_4_final.ascii
+[domain] 	reading O_by_rank map file: O_by_rank_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 465 mappings from 	O_by_rank_domain_domain_rank_3_of_4_final.ascii
+[domain] 	reading R_by_rank map file: R_by_rank_domain_domain_rank_3_of_4_final.ascii
+[domain] 	Loaded 461 mappings from 	R_by_rank_domain_domain_rank_3_of_4_final.ascii
+DECOMPOSED
+SETING UP OPENCL CONTEXT
+GETTING DEVICE (TYPE: GPU and ACCELERATOR): 
+[domain] 	Loaded 3035 global to local mappings from 	l2gmap_domain_domain_rank_0_of_4_final.ascii
+[domain] 	reading O_by_rank map file: O_by_rank_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Loaded 506 mappings from 	O_by_rank_domain_domain_rank_0_of_4_final.ascii
+[domain] 	reading R_by_rank map file: R_by_rank_domain_domain_rank_0_of_4_final.ascii
+[domain] 	Loaded 501 mappings from 	R_by_rank_domain_domain_rank_0_of_4_final.ascii
+DECOMPOSED
+SETING UP OPENCL CONTEXT
+GETTING DEVICE (TYPE: GPU and ACCELERATOR): 
+[domain] 	Loaded 3041 global to local mappings from 	l2gmap_domain_domain_rank_2_of_4_final.ascii
+[domain] 	reading O_by_rank map file: O_by_rank_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Loaded 500 mappings from 	O_by_rank_domain_domain_rank_2_of_4_final.ascii
+[domain] 	reading R_by_rank map file: R_by_rank_domain_domain_rank_2_of_4_final.ascii
+[domain] 	Loaded 505 mappings from 	R_by_rank_domain_domain_rank_2_of_4_final.ascii
+DECOMPOSED
+SETING UP OPENCL CONTEXT
+

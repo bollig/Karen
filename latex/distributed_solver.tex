@@ -41,28 +41,28 @@ Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decompos
 
 The parallelization strategy employed for RBF-FD in this work is equivalent to a Restricted Additive Schwarz (RAS), although our strategy was implemented prior to formal knowledge of the RAS method. In this case we assume that partitioning occurs within the spatial domain. At each time-step the PDE is first solved independently within subdomains, and then information is shared across subdomain boundaries to ensure a consistent global solution entering the next time-step. We also assume that subdomains are always assigned to independent processes, even though each process could operate on multiple subdomains in theory. 
 
-Following the notation in \cite{StCyr2007}, consider domain, $\Interior$, decomposed into overlapping subdomains $\Interior_1$ and $\Interior_2$, with a global boundary $\partial\Interior = \partial\Interior_1 \cup \partial\Interior_2$. At each time-step we seek the simultaneous solution to
+Following the notation in \cite{StCyr2007}, consider domain, $\Interior$, decomposed into overlapping subdomains $\Interior_1$ and $\Interior_2$, with a global boundary $\Boundary = \Boundary_1 \cup \Boundary_2$. At each time-step we seek the simultaneous solution to
 \begin{center}
 \begin{minipage}{0.4\linewidth}
 \begin{align*}
 \diffop{u_{1}^{n+1}} & = f \ \ \text{ in }\Interior_1,\\
-\boundop{u_{1}^{n+1}} &= g \ \ \text{ on }\partial\Interior_1, \\
-u_{1}^{n+1} & = u_2^{n} \ \ \text{ on }\Boundary_{12}, 
+\boundop{u_{1}^{n+1}} &= g \ \ \text{ on }\Boundary_1, \\
+u_{1}^{n+1} & = u_2^{n} \ \ \text{ on }\Gamma_{12}, 
 \end{align*}
 \end{minipage}
 \begin{minipage}{0.4\linewidth} 
 \begin{align}
 \diffop{u_{2}^{n+1}} & = f \ \ \text{ in }\Interior_2 \nonumber \\
-\boundop{u_{2}^{n+1}} & = g \ \ \text{ on }\partial\Interior_2, \label{eq:rasm_example} \\
-u_{2}^{n+1} & = u_1^{n} \ \ \text{ on }\Boundary_{21},  \nonumber
+\boundop{u_{2}^{n+1}} & = g \ \ \text{ on }\Boundary_2, \label{eq:rasm_example} \\
+u_{2}^{n+1} & = u_1^{n} \ \ \text{ on }\Gamma_{21},  \nonumber
 \end{align}
 \end{minipage}
 \end{center}
 \ 
 
-\noindent where $\Boundary_{ij}$ indicates overlap between subdomains and is read as the subset of subdomain $j$ required by subdomain $i$ (i.e., $\Boundary_{ij} = \partial\Interior_i \cap \Interior_j$). A Dirichlet boundary condition connects subdomains at the interfaces. Although not considered here, future investigations may find Robin-type conditions of interest due to their convergence accelerating properties in the context of Schwarz methods for elliptic PDEs (\cite{StCyr2007}). 
+\noindent where $\Gamma_{ij}$ indicates overlap between subdomains and is read as the subset of subdomain $j$ required by subdomain $i$ (i.e., $\Gamma_{ij} = \Boundary_i \cap \Interior_j$). A Dirichlet boundary condition connects subdomains at the interfaces. Although not considered here, future investigations may find Robin-type conditions of interest due to their convergence accelerating properties in the context of Schwarz methods for elliptic PDEs (\cite{StCyr2007}). 
 
-Equation~\ref{eq:rasm_example} illustrates how nicely a PDE can be split in half, and then solved by independent processes. To enforce the Dirichlet conditions on $\Boundary_{ij}$, MPI transfers values $u_j^{n}$ across interfaces at each time-step. Note that as the number of subdomains increases additional constraints for $\Boundary_{ij}$ must be imposed on each subdomain. The worst case a partitioning for $p$ subdomains requires $p-1$ conditions (i.e., $\Boundary_{ij}$, for $i,j=1,2,...,p$ and $i \neq j$). Ideally each $\Interior_i$ should only overlap with a small number of neighboring subdomains to minimize MPI communication. 
+Equation~\ref{eq:rasm_example} illustrates how nicely a PDE can be split in half, and then solved by independent processes. To enforce the Dirichlet conditions on $\Gamma_{ij}$, MPI transfers values $u_j^{n}$ across interfaces at each time-step. Note that as the number of subdomains increases additional constraints for $\Gamma_{ij}$ must be imposed on each subdomain. The worst case a partitioning for $p$ subdomains requires $p-1$ conditions (i.e., $\Gamma_{ij}$, for $i,j=1,2,...,p$ and $i \neq j$). Ideally each $\Interior_i$ should only overlap with a small number of neighboring subdomains to minimize MPI communication. 
 
 
 The continuous form of decomposition in Equation~\ref{eq:rasm_example} allows complete freedom in choosing how subdomains are actually partitioned. In this work we assume partitioning of the geometry on which the PDE is solved. Of particular interest here is how to partition the unit sphere, but the challenge of more general geometries is also kept in mind. 
@@ -75,14 +75,11 @@ assumed to be linear along one spatial dimension (in this case the $x$-axis). Ea
 Figure~\ref{fig:decomposed_sphere} illustrates the partitioning of
 $N=10,201$ nodes on the unit sphere for four processes. 
 Each partition, illustrated as a unique color, contains many stencil centers.  
-A center's coordinates easily identify the containing partition. In cases where stencils in one partition depend on stencil nodes in another, we say that the dependencies (i.e., the nodes in $\Boundary_{ij}$) are \emph{ghost nodes}. 
-In many ways ghost nodes are treated the same as any other stencil node. The MPI process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, ghost nodes are managed by another subdomain/process, so any changes must be explicitly synchronized in order to maintain consistency. 
+A center's coordinates easily identify the containing partition. In cases where stencils in one partition depend on stencil nodes in another, we say that the dependencies (i.e., the nodes in $\Gamma_{ij}$) are \emph{ghost nodes}. 
+In many ways ghost nodes are treated the same as any other stencil node. The MPI process in charge of a partition is fully aware of the ghost node coordinate, current solution value(s), etc. However, ghost nodes are managed by another subdomain/process, so changes must be explicitly synchronized in order to maintain consistency. 
 
-In Figure~\ref{fig:decomposed_sphere}, alternating representations between node points and interpolated surfaces illustrates the
-overlap regions where ghost nodes reside. Due to stencil dependencies, the representations of overlap regions are double-wide---i.e., they contain a set of ghost nodes for both the left and right partitions. 
-
-The width of the overlap in Figure~\ref{fig:decomposed_sphere} is between five and six nodes. As the stencil size increases, the width of the
-overlap grows as $\sqrt{n}$. Since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary. 
+Alternating representations between node points and interpolated surfaces in Figure~\ref{fig:decomposed_sphere} illustrates the
+overlap regions where ghost nodes reside. Due to stencil dependencies, the representations of overlap regions are double-wide---i.e., they contain a set of ghost nodes for both the left and right partitions. The illustrated width of the overlap is between five and six nodes. As the stencil size increases, the overlap grows as $\sqrt{n}$. Since stencils need not have symmetric dependencies (i.e., if stencil $s_1$ depends on $s_2$, $s_2$ need not depend on $s_1$), the number of ghost nodes for each partition can vary. 
 
 \begin{figure}[ht!]
 \begin{center}
@@ -92,34 +89,34 @@ overlap grows as $\sqrt{n}$. Since stencils need not have symmetric dependencies
 \end{center}
 \end{figure}
 
-Linear partitioning is simple and easy to code. Each MPI process has a left and right neighbor, so communication is straightforward. There are two concerns with this approach: 
+Linear partitioning is simple and easy to code. Each MPI process has at most two neighbors (left and right), so communication is straightforward. There are two concerns with this approach: 
 \begin{enumerate} 
-\item Scaling the number of processors quickly decreases the width of each partition, and can result in stencils spanning more than one partition in each direction. This introduces the need for complex communication collectives. 
-\item In the case of the sphere and other irregular geometries, the partitioning of near uniform node distributions results in subdomains that contain unequal number of stencils and processor loads become imbalanced. 
+\item Scaling the number of processors can result in stencils spanning more than one narrow partitions in each direction. This introduces the need for complex communication collectives. 
+\item In the case of irregular geometries, the partitioning of near uniform node distributions may result imbalanced subdomains with unequal number of stencils.
 \end{enumerate}
 
-Alternative sphere partitionings exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere, and assigns projected rectangular subdivisions to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. A complete list of options for partitioning the sphere are outside the scope of this work, but many involve recursive subdivisions based on simple geometric elements (i.e., triangle, rectangle, hexagon, etc.). 
+Alternative sphere partitionings exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere, and assigns projected rectangular subdivisions to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. A complete list of options for partitioning the sphere are outside the scope of this work. %, but many involve recursive subdivisions based on simple geometric elements (i.e., triangle, rectangle, hexagon, etc.). 
 
 
 \subsection{Graph Partitioning with METIS}
 
-One of the major concerns with partitioning for a distributed environment is load balancing. Consider, for example, the situation where $p-1$ processors have equal sized partitions, each with $W_1$ amount of work, and a $p$-th processors is allocated some larger amount of work, $W_2$. In that case, the maximum possible speedup on $p$ processors obeys \cite{Gropp1990}:  
+One of the major concerns when partitioning for a distributed environment is load balancing. Consider, for example, the situation where $p-1$ processors have equal sized partitions, each with $W_1$ amount of work, and a $p$-th processors is allocated some larger amount of work, $W_2$. In that case, the maximum possible speedup on $p$ processors obeys \cite{Gropp1990}:  
 \begin{align}
 S_p = \frac{(p-1) W_1 + W_2}{W_2} = 1 + (p-1)\frac{W_1}{W_2}.
 \label{eq:load_balance}
 \end{align}
-The take-away from Equation~\ref{eq:load_balance} is that potential gains in parallelism are limited by the disproportionality of workloads. Balancing the loads equally allows the ideal factor $p$ gain from parallelization. 
+The take-away from Equation~\ref{eq:load_balance} is that potential gains in parallelism are limited by the disproportionality of workloads. 
 
-To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms. Formally, graph partitioning algorithms attempt to solve the $k$-way partitioning problem \cite{Karypis1999}: given a graph $G = (V,E)$ with vertices ($V$) and any number of edges ($E$), partition $V$ into $k$ subsets, $V_1, V_2, ..., V_k$ such that $V_i \cap V_j = \emptyset$ for $i \neq j$, the size of each partition $|V_i| \approx \frac{N}{k}$, $\bigcup_i V_i = V$, and the number of edges whose incident vertices belong to different $V_i$ is minimized. In other words, we seek a partitioning that results in roughly equal sized subgraphs connected by as few edges as possible. In this case we apply the algorithms to the adjacency graph produced by RBF-FD stencils (see \S~\ref{subsec:adjacency}).
+To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms. Formally, graph partitioning algorithms attempt to solve the $k$-way partitioning problem \cite{Karypis1999}: given a graph $G = (V,E)$ with vertices ($V$) and any number of edges ($E$), partition $V$ into $k$ subsets, $V_1, V_2, ..., V_k$ such that $V_i \cap V_j = \emptyset$ for $i \neq j$, the size of each partition $|V_i| \approx \frac{N}{k}$, $\bigcup_i V_i = V$, and the number of edges whose incident vertices belong to different $V_i$ is minimized. In other words, we seek a partitioning that results in roughly equal sized subgraphs connected by as few edges as possible. In this case algorithms are applied to the adjacency graph produced by RBF-FD stencils (see \S~\ref{subsec:adjacency}).
 
 The output from graph partitioning algorithms are ideal for distributed applications for two reasons. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges crossing partitions correspond to ghost node dependencies, so minimizing those connections also ensures minimized data transfer via MPI. 
 
-A number of libraries exist for graph partitioning including Chaco \cite{CHACO1995}, SCOTCH \cite{SCOTCH1996}, and the METIS family of algorithms (e.g., METIS, ParMETIS, hMETIS) \cite{Karypis1999}. The partitioning algorithm varies by library, but in all cases the libraries provide options for partitioning, vertex reordering, and graph coloring.
+A number of libraries exist for graph partitioning including Chaco \cite{CHACO1995}, SCOTCH \cite{SCOTCH1996}, and the METIS family of algorithms (e.g., METIS, ParMETIS, hMETIS) \cite{Karypis1999}. The partitioning algorithm varies by library, but in all cases options exist for partitioning, vertex reordering, and graph coloring. As of this writing, only partitioning features are employed.
 
-In addition to the linear partitioning in $x$, our work in \cite{BolligRBFFDCode} employs METIS for partitioning via the library's included \emph{gpmetis} executable. During stencil generation, the undirected adjacency graph, $A+A^T$ is written to file and passed as input to the \emph{gpmetis} executable. METIS then performs a multi-level recursive bisection algorithm for partitioning. At its core the algorithm first coarsens the graph into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs and smooth/correct the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
-In return for the graph, METIS writes a file containing one integer per vertex, indicating the partition to which each stencil center is assigned. Note that METIS does not guarantee partitions will be contiguous. While this is often the case, METIS may decide that the alternative is more fitting and assign disjoint subgraphs to the same CPU process for reduced communication. 
+Our latest work within \cite{BolligRBFFDCode} partitions graphs via METIS and the library's included \emph{gpmetis} executable. During stencil generation, the resulting adjacency graph is written to file and passed as input to the executable. METIS then performs a multi-level recursive bisection algorithm for partitioning. At its core the algorithm first coarsens the graph into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs and smooth/correct the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
+In return for the graph, METIS writes a file containing one integer per vertex, indicating the partition to which each stencil center is assigned. Note that METIS does not guarantee partitions will be contiguous. While this is often the case, METIS may find the alternative more fitting and assign disjoint subgraphs to the same MPI process. % for reduced communication. 
 
-The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting stencil nodes $s_1$ and $s_2$, is equivalent to cutting its transpose, so METIS is equally resistant apply a cut whether the edge is directed or undirected. 
+The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting two stencil nodes, is equivalent to cutting its transpose, so METIS is equally resistant apply a cut whether the edge is directed or undirected. 
 
 \begin{figure}
 \begin{center}
@@ -131,23 +128,48 @@ The adjacency graph for RBF-FD is directed, so symmetry is induced in the associ
 
 Figure~\ref{fig:metis_decomposed_sphere} provides an example of a METIS generated partitioning of $N=10,201$ MD nodes for four processors. Three camera angles show the sphere viewed from the $(-x)$-axis (left), $(+x)$-axis (top-right), and $(-z)$-axis (bottom-right). 
 
-%TODO: give overview of how boost graph library is used to construct a sparse adjacency graph
+\subsection{A Load Balancing Comparison}
+Table~\ref{tbl:load_balance} compares the load balance for partitionings of the unit sphere. The first two rows consider $p=4$ processes as shown in Figures~\ref{fig:decomposed_sphere} and \ref{fig:metis_decomposed_sphere}. Also shown in Table~\ref{tbl:load_balance} is the case of $p=16$ processors. We assume each partition has $N_p = N_i + N_r$ nodes where $N_i$ nodes are contained within each partition and $N_r$ are ghost nodes. Although values at the $N_r$ nodes are not computed within a partition, each process must still obtain their values. For the sake of argument we assume that the cost of communicating data for $N_r$ nodes is equivalent to the cost of computing them---in practice communication is much more expensive. Based on these assumptions, the ratio of work across partitions, $\frac{W_1}{W_2} \approx \frac{\min N_p}{\max N_p}$, is found in the column labeled ``Total". Recall that ideal balancing is achieved at a ratio of 1. Columns labeled ``Interior" and ``Ghost Nodes" consider the interiors and overlap regions, respectively, in an effort to diagnose the source of imbalance across partitions. 
 
-
-
-
-
-%TODO: \authnote{show example of 4 or 8 partitions in table to see how Q, O, R can be disproportionate.}
+\begin{table}
+\centering
+\caption{Load balance comparison by partitioning for $N=10201$ MD-nodes on the unit sphere with stencil size $n=31$. A ratio of $1$ is ideal.}
+\label{tbl:load_balance}
+\begin{tabular}{c|c|c|c|c|c|c|c}
+$p$ & Partitioning & Total ($\frac{\min N_p}{\max N_p}$) &  Interior ($\frac{\min N_i}{\max N_i}$) & Ghost Nodes ($\frac{\min N_r}{\max N_r}$)  \\ \hline
+\multirow{2}{*}{4} & Linear  &  0.863 & 0.997 & 0.482  \\
+& METIS  & 0.986 & 0.971 & 0.913   \\ \hline
+\multirow{2}{*}{16} & Linear &  0.551 & 0.980 & 0.264   \\
+& METIS & 0.925 & 0.942 & 0.864  \\
+\end{tabular}
+\end{table}
 %\begin{table}
 %\centering
-%\caption{Comparison }
-%\begin{tabular}{c|c|c|c|c|c|c}
-%     & Linear & METIS  \\ \hline
-%     &  $\min$  &  $\max$  &  stddev  &  min  & max  &  stddev   \\ \hline
-% max &   &   &   &    &    \\
+%\caption{Load balance comparison by partitioning for $N=10201$ MD-nodes on the unit sphere with stencil size $n=31$. A ratio of $1$ is ideal.}
+%\label{tbl:load_balance}
+%\begin{tabular}{c|c|c|c|c|c|c|c}
+%& $p$ & Total ($\frac{\min N_p}{\max N_p}$) &  Interior ($\frac{\min N_i}{\max N_i}$) & Ghost Nodes ($\frac{\min N_r}{\max N_r}$) & $\max(\frac{N_r}{N_p}) * 100\%$ \\ \hline
+%\multirow{2}{*}{4} & Linear & 0.863 & 0.997 & 0.482 & 26.7\% \\
+%& METIS & 0.986 & 0.971 & 0.913 & 16.7\% \\ \hline
+%\multirow{2}{*}{16} & Linear & 0.551 & 0.980 & 0.264 & 61.1\% \\
+%& METIS & 0.925 & 0.942 & 0.864 & 33.2\% \\
 %\end{tabular}
 %\end{table}
+%
+Based on the per process $N_p$'s, we find that linear partitioning works moderately well for $p=4$ but becomes horribly imbalanced at $p=16$. In both cases METIS proves significantly better with ratios $> 0.9$. Joining Table~\ref{tbl:load_balance} and Equation~\ref{eq:load_balance}, we find that linear partitioning would be limited to less than 9.3x expected speedup for $p=16$ processes, while METIS would be bounded by at most 14.9x. Data for the partition interiors reveals that both linear and METIS partitioning distribute roughly equivalent number of nodes per interior---in fact, linear partitioning appears to be the more consistent of the two options. However, the problem with linear partitioning boils down to how it balances ghost nodes:
+\begin{itemize} 
+\item The end-cap partitions have only left or right dependencies whereas other partitions have two-way dependencies, which by default drops the ratio $\leq 0.5$. 
+\item Each overlap region is a small circle of the sphere, and approximately $\sqrt{n}$ ghost nodes thick. The number of nodes in each region is therefore a function of its circumference. As $p$ grows $\frac{\min N_r}{\max N_r}$ scales as the ratio of the smallest and largest overlap region circumferences.
+\end{itemize}
+The conclusion is that as $p$ increases the situation only becomes more dire for linear partitions. While the approach works well for initial development, METIS is preferred for consistent partition sizes and minimized overlap (communication).
 
+%DATA: 
+%           G & R & O & Q
+% Linear (4x): 3001/3479 & 448/928 & 425/952 & 2545/2553 & 928/3473
+% METIS (4x): 3021/3064 & 461/505 & 442/483 & 2528/2603 & 505/3021
+% Linear (16x): 901/1635 & 263/996 & 223/644 & 631/644 
+% METIS (16x): 893/965 & 272/315 & 228/271 & 618/656
+% 
 
 
 \section{Index Mappings}
@@ -210,10 +232,10 @@ complete calculations at the center of node 6.
         
         
        
-The center of Figure~\ref{fig:stencilSets2CPU} assigns the nine nodes to local sets for each process. The set of all nodes that a process interacts with is denoted by $\setAllNodes$, which includes both the stencil centers within the partition ($\Interior_i$), and all ghost nodes required to complete the calculations: $\bigcup_{j} \Boundary_{ij}$.  
+The center of Figure~\ref{fig:stencilSets2CPU} assigns the nine nodes to local sets for each process. The set of all nodes that a process interacts with is denoted by $\setAllNodes$, which includes both the stencil centers within the partition ($\Interior_i$), and all ghost nodes required to complete the calculations: $\bigcup_{j} \Gamma_{ij}$.  
 We let $\setCenters\in\setAllNodes$ contain indices for all nodes within the partition $\Interior_i$. 
 Then the set $\setDepend = \setAllNodes \backslash \setCenters$ contains indices of all ghost nodes. 
-The set $\setProvide\in\setCenters$ indexes nodes that are needed in other partitions (i.e., $\bigcup_j \Boundary_{ji}$). The set $\setBoundary\in\setCenters$ consists of nodes dependent on values from $\setDepend$. Note that $\setProvide$ and $\setBoundary$ overlap, but can differ in size due to lack of symmetry in the adjacency matrix. To capture the difference, set $\setBoundary \backslash \setProvide$ are nodes that depend on $\setDepend$ but are not sent to other processes, while $\setCenters \backslash \setBoundary$ are nodes that have no dependency on information from other processes.
+The set $\setProvide\in\setCenters$ indexes nodes that are needed in other partitions (i.e., $\bigcup_j \Gamma_{ji}$). The set $\setBoundary\in\setCenters$ consists of nodes dependent on values from $\setDepend$. Note that $\setProvide$ and $\setBoundary$ overlap, but can differ in size due to lack of symmetry in the adjacency matrix. To capture the difference, set $\setBoundary \backslash \setProvide$ are nodes that depend on $\setDepend$ but are not sent to other processes, while $\setCenters \backslash \setBoundary$ are nodes that have no dependency on information from other processes.
 
 Constructing these index mappings allows each process to ignore nodes/stencils outside their subdomain and focus only on their subset of the problem. Processes avoid both the cost of storing a complete RBF-FD DM as well as full solution vectors. A rectangular sub-DM is kept for $\setAllNodes$, with compressed solution vectors to match. Our implementation follows a workflow that first generates stencils, and then partitions the adjacency graph in serial. In parallel, each processor loads its assigned partition, constructs index mappings, and solves for RBF-FD weights to generate a local DM.  
 
@@ -306,7 +328,7 @@ Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv, w
 
 Figure~\ref{fig:mpi_isendirecv_visual} shows the all-to-subset collective implemented with direct sends and receives between processes that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). Since processes strictly communicate with the subset of neighbors necessary, no zero-byte messages inflate communication times for large $p$. 
 
-
+In \cite{BolligFlyerErlebacher2012} communication was m	anaged by a blocking all-to-subset implemented with MPI\_Send/MPI\_Recv. The 
 %TODO: Blocking communication
 
 

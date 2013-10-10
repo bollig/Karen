@@ -1,0 +1,340 @@
+************** Generating new Grid **************
+[loadedgrid] 	reading file: /Users/evan/GRIDS/md/md100.10201
+[loadedgrid] 	Loaded 10201 nodes from 	~/GRIDS/md/md100.10201
+Updating extents
+Generating stencils files
+Stencil Generator: LSH Raster 
+[Grid] WARNING! nb_bnd == 0; Did the Grid::generate() execute properly?!
+[Grid] WARNING! stencil_map.size() < node_list.size(). Resizing this vector and possibly corrupting memory! (Reserving: 10201 * 31 * 8 = 2529848 bytes)
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.075672 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+Domain 0, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 10201
+D size before set operations: 0
+SQ.size before difference: 0
+SQ.size before difference: 10201
+R.size before difference: 0
+R.size after difference: 0
+A.size after difference: 10201
+AmQ.size after difference: 0
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 0
+O.size before stencilSet: 0
+O.size after stencilSet: 0
+QmB.size= 10201
+BmO.size= 0
+O.size= 0
+R.size= 0
+G.size = 10201
+Q size= 10201
+QmD.size= 10201
+D.size= 0
+B.size= 0
+INSIDE ODDBALL
+Domain stencils size = 10201
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 10201
+g2l size= 10201
+node_list size= 10201 (nb_nodes=10201)
+avg_stencil_radii size= 10201
+max_stencil_radii size= 10201
+min_stencil_radii size= 10201
+Generating subdomains
+domain decomposition deltas (dx, dy, dz) = (0.499974, 1.999846, 1.999854)
+Subdomain[0 (1 of 4)] Extents = (-0.999894, -0.499921) x (-0.999846, 1.000000) x (-0.999854, 1.000000)
+Tile (ix, iy, iz) = (0, 0, 0) of (0, 1, 1)
+Subdomain[1 (2 of 4)] Extents = (-0.499921, 0.000053) x (-0.999846, 1.000000) x (-0.999854, 1.000000)
+Tile (ix, iy, iz) = (1, 0, 0) of (0, 1, 1)
+Subdomain[2 (3 of 4)] Extents = (0.000053, 0.500026) x (-0.999846, 1.000000) x (-0.999854, 1.000000)
+Tile (ix, iy, iz) = (2, 0, 0) of (0, 1, 1)
+Subdomain[3 (4 of 4)] Extents = (0.500026, 1.000000) x (-0.999846, 1.000000) x (-0.999854, 1.000000)
+Tile (ix, iy, iz) = (3, 0, 0) of (1, 1, 1)
+nb subdomains: 4
+
+ ***************** CPU 0 ***************** 
+Domain 0, xmin/max= -0.999894, -0.499921, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 2553
+D size before set operations: 428
+SQ.size before difference: 0
+SQ.size before difference: 3001
+R.size before difference: 0
+R.size after difference: 448
+A.size after difference: 10201
+AmQ.size after difference: 7648
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 8073
+O.size before stencilSet: 0
+O.size after stencilSet: 425
+QmB.size= 2124
+BmO.size= 4
+O.size= 425
+R.size= 448
+G.size = 3001
+Q size= 2553
+QmD.size= 2125
+D.size= 428
+B.size= 429
+
+ ***************** CPU 1 ***************** 
+Domain 1, xmin/max= -0.499921, 0.000053, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 2551
+D size before set operations: 948
+SQ.size before difference: 0
+SQ.size before difference: 3479
+R.size before difference: 0
+R.size after difference: 928
+A.size after difference: 10201
+AmQ.size after difference: 7650
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 8599
+O.size before stencilSet: 0
+O.size after stencilSet: 949
+QmB.size= 1595
+BmO.size= 7
+O.size= 949
+R.size= 928
+G.size = 3479
+Q size= 2551
+QmD.size= 1603
+D.size= 948
+B.size= 956
+
+ ***************** CPU 2 ***************** 
+Domain 2, xmin/max= 0.000053, 0.500026, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 2545
+D size before set operations: 956
+SQ.size before difference: 0
+SQ.size before difference: 3473
+R.size before difference: 0
+R.size after difference: 928
+A.size after difference: 10201
+AmQ.size after difference: 7656
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 8608
+O.size before stencilSet: 0
+O.size after stencilSet: 952
+QmB.size= 1584
+BmO.size= 9
+O.size= 952
+R.size= 928
+G.size = 3473
+Q size= 2545
+QmD.size= 1589
+D.size= 956
+B.size= 961
+
+ ***************** CPU 3 ***************** 
+Domain 3, xmin/max= 0.500026, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 2552
+D size before set operations: 427
+SQ.size before difference: 0
+SQ.size before difference: 3001
+R.size before difference: 0
+R.size after difference: 449
+A.size after difference: 10201
+AmQ.size after difference: 7649
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 8076
+O.size before stencilSet: 0
+O.size after stencilSet: 427
+QmB.size= 2121
+BmO.size= 4
+O.size= 427
+R.size= 449
+G.size = 3001
+Q size= 2552
+QmD.size= 2125
+D.size= 427
+B.size= 431
+
+ ***************** FILLING R_by_rank for CPU0 ***************** 
+
+ ***************** FILLING R_by_rank for CPU1 ***************** 
+
+ ***************** FILLING R_by_rank for CPU2 ***************** 
+
+ ***************** FILLING R_by_rank for CPU3 ***************** 
+
+ ***************** Local Ordering 0 ***************** 
+GLOBAL STENCIL MAP SIZE= 10201
+Domain stencils size = 2553
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 3001
+g2l size= 3001
+node_list size= 3001 (nb_nodes=3001)
+avg_stencil_radii size= 3001
+max_stencil_radii size= 3001
+min_stencil_radii size= 3001
+
+ ***************** Local Ordering 1 ***************** 
+GLOBAL STENCIL MAP SIZE= 10201
+Domain stencils size = 2551
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 3479
+g2l size= 3479
+node_list size= 3479 (nb_nodes=3479)
+avg_stencil_radii size= 3479
+max_stencil_radii size= 3479
+min_stencil_radii size= 3479
+
+ ***************** Local Ordering 2 ***************** 
+GLOBAL STENCIL MAP SIZE= 10201
+Domain stencils size = 2545
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 3473
+g2l size= 3473
+node_list size= 3473 (nb_nodes=3473)
+avg_stencil_radii size= 3473
+max_stencil_radii size= 3473
+min_stencil_radii size= 3473
+
+ ***************** Local Ordering 3 ***************** 
+GLOBAL STENCIL MAP SIZE= 10201
+Domain stencils size = 2552
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 3001
+g2l size= 3001
+node_list size= 3001 (nb_nodes=3001)
+avg_stencil_radii size= 3001
+max_stencil_radii size= 3001
+min_stencil_radii size= 3001
+
+ ***************** FILLING O_by_rank for CPU0 ***************** 
+
+ ***************** FILLING O_by_rank for CPU1 ***************** 
+
+ ***************** FILLING O_by_rank for CPU2 ***************** 
+
+ ***************** FILLING O_by_rank for CPU3 ***************** 
+Sending subdomain[1]
+RANK 0 REPORTS: sent Domain object
+Sending subdomain[2]
+RANK 1 of 4 REPORTS: received Domain object
+RANK 0 REPORTS: sent Domain object
+Sending subdomain[3]
+RANK 2 of 4 REPORTS: received Domain object
+RANK 0 REPORTS: sent Domain object
+----------------------
+END MASTER ONLY
+----------------------
+
+
+RANK 3 of 4 REPORTS: received Domain object
+USE 1
+[Project Settings] 	EPSILON_C1 = 0.035
+[Project Settings] 	EPSILON_C2 = 0.1
+Global Node List Size: 10201
+DERIVATIVE:: SET UNIFORM EPSILON = 3.435
+USE 1
+[Project Settings] 	EPSILON_C1 = 0.035
+USE 1
+[Project Settings] 	EPSILON_C1 = 0.035
+[Project Settings] 	EPSILON_C2 = 0.1
+Global Node List Size: 10201
+[Project Settings] 	EPSILON_C2 = 0.1
+Global Node List Size: 10201
+DERIVATIVE:: SET UNIFORM EPSILON = 3.435
+[Project Settings] 	HV_K = 4
+[Project Settings] 	HV_GAMMA = 5e-2
+Attempting to load Stencil Weights
+DERIVATIVE:: SET UNIFORM EPSILON = 3.435
+[Project Settings] 	HV_K = 4
+[Project Settings] 	HV_GAMMA = 5e-2
+Attempting to load Stencil Weights
+[Project Settings] 	HV_K = 4
+[Project Settings] 	HV_GAMMA = 5e-2
+Attempting to load Stencil Weights
+USE 1
+File not found: hv_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_3_of_4.bmtx
+File not found: hv_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_2_of_4.bmtx
+File not found: lambda_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_2_of_4.bmtx
+File not found: lambda_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_3_of_4.bmtx
+File not found: theta_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_2_of_4.bmtx
+start computing weights
+File not found: theta_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_3_of_4.bmtx
+start computing weights
+Will compute DerType: 0x20 (hv)
+Will compute DerType: 0x40 (lambda)
+Will compute DerType: 0x80 (theta)
+Will compute DerType: 0x20 (hv)
+Will compute DerType: 0x40 (lambda)
+Will compute DerType: 0x80 (theta)
+[Project Settings] 	EPSILON_C1 = 0.035
+[Project Settings] 	EPSILON_C2 = 0.1
+Global Node List Size: 10201
+DERIVATIVE:: SET UNIFORM EPSILON = 3.435
+[Project Settings] 	HV_K = 4
+[Project Settings] 	HV_GAMMA = 5e-2
+Attempting to load Stencil Weights
+File not found: hv_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_0_of_4.bmtx
+File not found: lambda_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_0_of_4.bmtx
+File not found: theta_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_0_of_4.bmtx
+start computing weights
+Will compute DerType: 0x20 (hv)
+Will compute DerType: 0x40 (lambda)
+Will compute DerType: 0x80 (theta)
+File not found: hv_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_1_of_4.bmtx
+File not found: lambda_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_1_of_4.bmtx
+File not found: theta_weights_direct_uniform_epsilon_3.435_hv_k_4_hv_gamma_0.05_stsize_31_2d_domain_rank_1_of_4.bmtx
+start computing weights
+Will compute DerType: 0x20 (hv)
+Will compute DerType: 0x40 (lambda)
+Will compute DerType: 0x80 (theta)
+HVSCALAR = -4.61742e-18 (HV_K=4, HV_GAMMA=0.05)
+HVSCALAR = -4.61742e-18 (HV_K=4, HV_GAMMA=0.05)
+HVSCALAR = -4.61742e-18 (HV_K=4, HV_GAMMA=0.05)
+HVSCALAR = -4.61742e-18 (HV_K=4, HV_GAMMA=0.05)
+end computing weights
+[Project Settings] 	RUN_DERIVATIVE_TESTS = 0
+sdispl[0] = 0, sendcounts = 0
+sdispl[1] = 0, sendcounts = 503
+sdispl[2] = 503, sendcounts = 0
+sdispl[3] = 503, sendcounts = 449
+O_tot = 952
+R_tot = 928
+Earth Radius = 1
+end computing weights
+[Project Settings] 	RUN_DERIVATIVE_TESTS = 0
+sdispl[0] = 0, sendcounts = 0
+sdispl[1] = 0, sendcounts = 425
+sdispl[2] = 425, sendcounts = 0
+sdispl[3] = 425, sendcounts = 0
+O_tot = 425
+R_tot = 448
+Earth Radius = 1
+end computing weights
+[Project Settings] 	RUN_DERIVATIVE_TESTS = 0
+sdispl[0] = 0, sendcounts = 448
+sdispl[1] = 448, sendcounts = 0
+sdispl[2] = 448, sendcounts = 501
+sdispl[3] = 949, sendcounts = 0
+O_tot = 949
+R_tot = 928
+Earth Radius = 1
+end computing weights
+[Project Settings] 	RUN_DERIVATIVE_TESTS = 0
+sdispl[0] = 0, sendcounts = 0
+sdispl[1] = 0, sendcounts = 0
+sdispl[2] = 0, sendcounts = 427
+sdispl[3] = 427, sendcounts = 0
+O_tot = 427
+R_tot = 449
+
+
+
+
+
+
+

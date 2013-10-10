@@ -1,0 +1,385 @@
+ ***************** CPU 0 ***************** 
+Domain 0, xmin/max= -0.999894, -0.874901, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 638
+D size before set operations: 221
+SQ.size before difference: 0
+SQ.size before difference: 901
+R.size before difference: 0
+R.size after difference: 263
+A.size after difference: 10201
+AmQ.size after difference: 9563
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 9786
+O.size before stencilSet: 0
+O.size after stencilSet: 223
+QmB.size= 415
+BmO.size= 0
+O.size= 223
+R.size= 263
+G.size = 901
+Q size= 638
+QmD.size= 417
+D.size= 221
+B.size= 223
+
+ ***************** CPU 1 ***************** 
+Domain 1, xmin/max= -0.874901, -0.749908, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 631
+D size before set operations: 573
+SQ.size before difference: 0
+SQ.size before difference: 1202
+R.size before difference: 0
+R.size after difference: 571
+A.size after difference: 10201
+AmQ.size after difference: 9570
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10143
+O.size before stencilSet: 0
+O.size after stencilSet: 573
+QmB.size= 54
+BmO.size= 4
+O.size= 573
+R.size= 571
+G.size = 1202
+Q size= 631
+QmD.size= 58
+D.size= 573
+B.size= 577
+
+ ***************** CPU 2 ***************** 
+Domain 2, xmin/max= -0.749908, -0.624914, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 643
+D size before set operations: 643
+SQ.size before difference: 0
+SQ.size before difference: 1359
+R.size before difference: 0
+R.size after difference: 716
+A.size after difference: 10201
+AmQ.size after difference: 9558
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 643
+QmB.size= 0
+BmO.size= 0
+O.size= 643
+R.size= 716
+G.size = 1359
+Q size= 643
+QmD.size= 0
+D.size= 643
+B.size= 643
+
+ ***************** CPU 3 ***************** 
+Domain 3, xmin/max= -0.624914, -0.499921, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 641
+D size before set operations: 641
+SQ.size before difference: 0
+SQ.size before difference: 1465
+R.size before difference: 0
+R.size after difference: 824
+A.size after difference: 10201
+AmQ.size after difference: 9560
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 641
+QmB.size= 0
+BmO.size= 0
+O.size= 641
+R.size= 824
+G.size = 1465
+Q size= 641
+QmD.size= 0
+D.size= 641
+B.size= 641
+
+ ***************** CPU 4 ***************** 
+Domain 4, xmin/max= -0.499921, -0.374927, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 638
+D size before set operations: 638
+SQ.size before difference: 0
+SQ.size before difference: 1543
+R.size before difference: 0
+R.size after difference: 905
+A.size after difference: 10201
+AmQ.size after difference: 9563
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 638
+QmB.size= 0
+BmO.size= 0
+O.size= 638
+R.size= 905
+G.size = 1543
+Q size= 638
+QmD.size= 0
+D.size= 638
+B.size= 638
+
+ ***************** CPU 5 ***************** 
+Domain 5, xmin/max= -0.374927, -0.249934, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 637
+D size before set operations: 637
+SQ.size before difference: 0
+SQ.size before difference: 1580
+R.size before difference: 0
+R.size after difference: 943
+A.size after difference: 10201
+AmQ.size after difference: 9564
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 637
+QmB.size= 0
+BmO.size= 0
+O.size= 637
+R.size= 943
+G.size = 1580
+Q size= 637
+QmD.size= 0
+D.size= 637
+B.size= 637
+
+ ***************** CPU 6 ***************** 
+Domain 6, xmin/max= -0.249934, -0.124941, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 637
+D size before set operations: 637
+SQ.size before difference: 0
+SQ.size before difference: 1608
+R.size before difference: 0
+R.size after difference: 971
+A.size after difference: 10201
+AmQ.size after difference: 9564
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 637
+QmB.size= 0
+BmO.size= 0
+O.size= 637
+R.size= 971
+G.size = 1608
+Q size= 637
+QmD.size= 0
+D.size= 637
+B.size= 637
+
+ ***************** CPU 7 ***************** 
+Domain 7, xmin/max= -0.124941, 0.000053, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 639
+D size before set operations: 639
+SQ.size before difference: 0
+SQ.size before difference: 1635
+R.size before difference: 0
+R.size after difference: 996
+A.size after difference: 10201
+AmQ.size after difference: 9562
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 639
+QmB.size= 0
+BmO.size= 0
+O.size= 639
+R.size= 996
+G.size = 1635
+Q size= 639
+QmD.size= 0
+D.size= 639
+B.size= 639
+
+ ***************** CPU 8 ***************** 
+Domain 8, xmin/max= 0.000053, 0.125046, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 634
+D size before set operations: 634
+SQ.size before difference: 0
+SQ.size before difference: 1628
+R.size before difference: 0
+R.size after difference: 994
+A.size after difference: 10201
+AmQ.size after difference: 9567
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 634
+QmB.size= 0
+BmO.size= 0
+O.size= 634
+R.size= 994
+G.size = 1628
+Q size= 634
+QmD.size= 0
+D.size= 634
+B.size= 634
+
+ ***************** CPU 9 ***************** 
+Domain 9, xmin/max= 0.125046, 0.250040, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 637
+D size before set operations: 637
+SQ.size before difference: 0
+SQ.size before difference: 1607
+R.size before difference: 0
+R.size after difference: 970
+A.size after difference: 10201
+AmQ.size after difference: 9564
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 637
+QmB.size= 0
+BmO.size= 0
+O.size= 637
+R.size= 970
+G.size = 1607
+Q size= 637
+QmD.size= 0
+D.size= 637
+B.size= 637
+
+ ***************** CPU 10 ***************** 
+Domain 10, xmin/max= 0.250040, 0.375033, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 634
+D size before set operations: 634
+SQ.size before difference: 0
+SQ.size before difference: 1585
+R.size before difference: 0
+R.size after difference: 951
+A.size after difference: 10201
+AmQ.size after difference: 9567
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 634
+QmB.size= 0
+BmO.size= 0
+O.size= 634
+R.size= 951
+G.size = 1585
+Q size= 634
+QmD.size= 0
+D.size= 634
+B.size= 634
+
+ ***************** CPU 11 ***************** 
+Domain 11, xmin/max= 0.375033, 0.500026, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 640
+D size before set operations: 640
+SQ.size before difference: 0
+SQ.size before difference: 1545
+R.size before difference: 0
+R.size after difference: 905
+A.size after difference: 10201
+AmQ.size after difference: 9561
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 640
+QmB.size= 0
+BmO.size= 0
+O.size= 640
+R.size= 905
+G.size = 1545
+Q size= 640
+QmD.size= 0
+D.size= 640
+B.size= 640
+
+ ***************** CPU 12 ***************** 
+Domain 12, xmin/max= 0.500026, 0.625020, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 639
+D size before set operations: 639
+SQ.size before difference: 0
+SQ.size before difference: 1465
+R.size before difference: 0
+R.size after difference: 826
+A.size after difference: 10201
+AmQ.size after difference: 9562
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 639
+QmB.size= 0
+BmO.size= 0
+O.size= 639
+R.size= 826
+G.size = 1465
+Q size= 639
+QmD.size= 0
+D.size= 639
+B.size= 639
+
+ ***************** CPU 13 ***************** 
+Domain 13, xmin/max= 0.625020, 0.750013, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 644
+D size before set operations: 644
+SQ.size before difference: 0
+SQ.size before difference: 1362
+R.size before difference: 0
+R.size after difference: 718
+A.size after difference: 10201
+AmQ.size after difference: 9557
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10201
+O.size before stencilSet: 0
+O.size after stencilSet: 644
+QmB.size= 0
+BmO.size= 0
+O.size= 644
+R.size= 718
+G.size = 1362
+Q size= 644
+QmD.size= 0
+D.size= 644
+B.size= 644
+
+ ***************** CPU 14 ***************** 
+Domain 14, xmin/max= 0.750013, 0.875007, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 631
+D size before set operations: 580
+SQ.size before difference: 0
+SQ.size before difference: 1203
+R.size before difference: 0
+R.size after difference: 572
+A.size after difference: 10201
+AmQ.size after difference: 9570
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 10146
+O.size before stencilSet: 0
+O.size after stencilSet: 576
+QmB.size= 50
+BmO.size= 5
+O.size= 576
+R.size= 572
+G.size = 1203
+Q size= 631
+QmD.size= 51
+D.size= 580
+B.size= 581
+
+ ***************** CPU 15 ***************** 
+Domain 15, xmin/max= 0.875007, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 2D)
+Q size before set operations: 638
+D size before set operations: 225
+SQ.size before difference: 0
+SQ.size before difference: 903
+R.size before difference: 0
+R.size after difference: 265
+A.size after difference: 10201
+AmQ.size after difference: 9563
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 9788
+O.size before stencilSet: 0
+O.size after stencilSet: 225
+QmB.size= 413
+BmO.size= 0
+O.size= 225
+R.size= 265
+G.size = 903
+Q size= 638
+QmD.size= 413
+D.size= 225
+B.size= 225
+
+

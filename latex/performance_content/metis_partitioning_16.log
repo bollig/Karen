@@ -1,0 +1,627 @@
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 8, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 632
+D size before set operations: 231
+SQ.size before difference: 0
+[loadedgrid] 	Loaded 10201 stencils, with a total of 316231 elements from 	stencils_maxsz31_input_grid.ascii
+[Grid] avg_int.size() = 10201
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 5, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 640
+D size before set operations: 242
+SQ.size before difference: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+Domain 13, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 656
+D size before set operations: 273
+SQ.size before difference: 0
+SQ.size before difference: 923
+R.size before difference: 0
+R.size after difference: 283
+SQ.size before difference: 965
+R.size before difference: 0
+R.size after difference: 309
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 9, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 633
+D size before set operations: 269
+SQ.size before difference: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+[loadedgrid] 	Loaded 10201 stencils, with a total of 316231 elements from 	stencils_maxsz31_input_grid.ascii
+Domain 3, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 624
+D size before set operations: 244
+SQ.size before difference: 0
+SQ.size before difference: 948
+R.size before difference: 0
+SQ.size before difference: 904
+R.size before difference: 0
+R.size after difference: 280
+R.size after difference: 315
+A.size after difference: 10201
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+A.size after difference: 10201
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 15, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 11, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 643
+D size before set operations: 253
+SQ.size before difference: 0
+Q size before set operations: 653
+D size before set operations: 267
+SQ.size before difference: 0
+SQ.size before difference: 962
+R.size before difference: 0
+R.size after difference: 309
+SQ.size before difference: 928
+R.size before difference: 0
+R.size after difference: 285
+Domain 1, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 641
+D size before set operations: 258
+SQ.size before difference: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 0, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 618
+D size before set operations: 234
+SQ.size before difference: 0
+SQ.size before difference: 936
+R.size before difference: 0
+R.size after difference: 295
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+[loadedgrid] 	Loaded 10201 stencils, with a total of 316231 elements from 	stencils_maxsz31_input_grid.ascii
+Domain 6, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+A.size after difference: 10201
+SQ.size before difference: 902
+R.size before difference: 0
+R.size after difference: 284
+A.size after difference: 10201
+Q size before set operations: 642
+D size before set operations: 256
+SQ.size before difference: 0
+SQ.size before difference: 933
+R.size before difference: 0
+R.size after difference: 291
+A.size after difference: 10201
+AmQ.size after difference: 9583
+SAmQ.size before stencilSet: 0
+AmQ.size after difference: 9559
+SAmQ.size before stencilSet: 0
+SQ.size before difference: 907
+R.size before difference: 0
+AmQ.size after difference: 9568
+SAmQ.size before stencilSet: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+R.size after difference: 275
+Domain 4, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 642
+D size before set operations: 262
+SQ.size before difference: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 7, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+A.size after difference: 10201
+SQ.size before difference: 948
+R.size before difference: 0
+R.size after difference: 306
+A.size after difference: 10201
+Q size before set operations: 656
+D size before set operations: 234
+SQ.size before difference: 0
+SQ.size before difference: 937
+R.size before difference: 0
+R.size after difference: 281
+AmQ.size after difference: 9569
+SAmQ.size before stencilSet: 0
+A.size after difference: 10201
+AmQ.size after difference: 9545
+SAmQ.size before stencilSet: 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 10, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 618
+D size before set operations: 248
+SQ.size before difference: 0
+SQ.size before difference: 910
+R.size before difference: 0
+R.size after difference: 292
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+Domain 12, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 656
+D size before set operations: 244
+SQ.size before difference: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+SQ.size before difference: 944
+R.size before difference: 0
+R.size after difference: 288
+Domain 14, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 621
+D size before set operations: 231
+SQ.size before difference: 0
+A.size after difference: 10201
+A.size after difference: 10201
+AmQ.size after difference: 9561
+SAmQ.size before stencilSet: 0
+AmQ.size after difference: 9583
+SAmQ.size before stencilSet: 0
+SQ.size before difference: 893
+R.size before difference: 0
+R.size after difference: 272
+A.size after difference: 10201
+AmQ.size after difference: 9577
+SAmQ.size before stencilSet: 0
+A.size after difference: 10201
+AmQ.size after difference: 9545
+SAmQ.size before stencilSet: 0
+A.size after difference: 10201
+A.size after difference: 10201
+AmQ.size after difference: 9548
+SAmQ.size before stencilSet: 0
+AmQ.size after difference: 9558
+SAmQ.size before stencilSet: 0
+AmQ.size after difference: 9560
+SAmQ.size before stencilSet: 0
+[Grid] avg_int.size() = 10201
+[Grid] avg_bnd.size() = 0
+[Grid] mean of mean interior distances: 0.076362 (size: 10201)
+[Grid] mean of mean boundary distances: 0.000000 (size: 0)
+No extra loads from disk required.
+INSIDE METISDomain CONSTRUCTOR!
+	reading file: /Users/evan/Karen/rbffd_gpu/build/tests/unified/reg_10201_31_16proc/metis_stencils.graph.part.16
+A.size after difference: 10201
+AmQ.size after difference: 9545
+SAmQ.size before stencilSet: 0
+Domain 2, xmin/max= -0.999894, 1.000000, ymin/max= -0.999846, 1.000000, zmin/max= -0.999854, 1.000000 (Checking 3D)
+Q size before set operations: 626
+D size before set operations: 248
+SQ.size before difference: 0
+SQ.size before difference: 919
+R.size before difference: 0
+R.size after difference: 293
+A.size after difference: 10201
+AmQ.size after difference: 9559
+SAmQ.size before stencilSet: 0
+AmQ.size after difference: 9575
+SAmQ.size before stencilSet: 0
+AmQ.size after difference: 9580
+SAmQ.size before stencilSet: 0
+SAmQ.size after stencilSet: 9797
+O.size before stencilSet: 0
+O.size after stencilSet: 228
+QmB.size= 400
+BmO.size= 4
+O.size= 228
+R.size= 275
+G.size = 907
+Q size= 632
+QmD.size= 401
+D.size= 231
+B.size= 232
+SAmQ.size after stencilSet: 9819
+O.size before stencilSet: 0
+O.size after stencilSet: 236
+QmB.size= 381
+BmO.size= 1
+O.size= 236
+R.size= 284
+G.size = 902
+Q size= 618
+QmD.size= 384
+D.size= 234
+B.size= 237
+SAmQ.size after stencilSet: 9804
+O.size before stencilSet: 0
+O.size after stencilSet: 243
+QmB.size= 393
+BmO.size= 4
+O.size= 243
+R.size= 283
+G.size = 923
+Q size= 640
+QmD.size= 398
+D.size= 242
+B.size= 247
+Domain stencils size = 640
+SAmQ.size after stencilSet: 9812
+O.size before stencilSet: 0
+O.size after stencilSet: 253
+QmB.size= 384
+BmO.size= 5
+O.size= 253
+R.size= 291
+G.size = 933
+Q size= 642
+QmD.size= 386
+D.size= 256
+B.size= 258
+SAmQ.size after stencilSet: 9779
+O.size before stencilSet: 0
+O.size after stencilSet: 234
+QmB.size= 421
+BmO.size= 1
+O.size= 234
+R.size= 281
+G.size = 937
+Q size= 656
+QmD.size= 422
+D.size= 234
+B.size= 235
+SAmQ.size after stencilSet: 9826
+O.size before stencilSet: 0
+O.size after stencilSet: 243
+QmB.size= 369
+BmO.size= 6
+O.size= 243
+R.size= 292
+G.size = 910
+Q size= 618
+QmD.size= 370
+D.size= 248
+B.size= 249
+SAmQ.size after stencilSet: 9816
+O.size before stencilSet: 0
+O.size after stencilSet: 271
+QmB.size= 382
+BmO.size= 3
+O.size= 271
+R.size= 309
+G.size = 965
+Q size= 656
+QmD.size= 383
+D.size= 273
+B.size= 274
+SAmQ.size after stencilSet: 9838
+O.size before stencilSet: 0
+O.size after stencilSet: 270
+QmB.size= 361
+BmO.size= 2
+O.size= 270
+R.size= 315
+G.size = 948
+Q size= 633
+QmD.size= 364
+D.size= 269
+B.size= 272
+SAmQ.size after stencilSet: 9813
+O.size before stencilSet: 0
+O.size after stencilSet: 255
+QmB.size= 386
+BmO.size= 2
+O.size= 255
+R.size= 285
+G.size = 928
+Q size= 643
+QmD.size= 390
+D.size= 253
+B.size= 257
+Domain stencils size = 618
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 902
+g2l size= 902
+node_list size= 902 (nb_nodes=902)
+avg_stencil_radii size= 902
+max_stencil_radii size= 902
+min_stencil_radii size= 902
+SAmQ.size after stencilSet: 9820
+O.size before stencilSet: 0
+O.size after stencilSet: 243
+QmB.size= 378
+BmO.size= 3
+O.size= 243
+R.size= 280
+G.size = 904
+Q size= 624
+QmD.size= 380
+D.size= 244
+B.size= 246
+SAmQ.size after stencilSet: 9818
+O.size before stencilSet: 0
+O.size after stencilSet: 270
+QmB.size= 380
+BmO.size= 3
+O.size= 270
+R.size= 309
+G.size = 962
+Q size= 653
+QmD.size= 386
+D.size= 267
+B.size= 273
+Domain stencils size = 633
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 948
+g2l size= 948
+node_list size= 948 (nb_nodes=948)
+avg_stencil_radii size= 948
+max_stencil_radii size= 948
+min_stencil_radii size= 948
+Domain stencils size = 643
+Domain stencils size = 656
+Domain stencils size = 653
+Domain stencils size = 624
+SAmQ.size after stencilSet: 9819
+O.size before stencilSet: 0
+O.size after stencilSet: 259
+QmB.size= 380
+BmO.size= 2
+O.size= 259
+R.size= 295
+G.size = 936
+Q size= 641
+QmD.size= 383
+D.size= 258
+B.size= 261
+Domain stencils size = 641
+Domain stencils size = 632
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 907
+g2l size= 907
+node_list size= 907 (nb_nodes=907)
+avg_stencil_radii size= 907
+max_stencil_radii size= 907
+min_stencil_radii size= 907
+SAmQ.size after stencilSet: 9792
+O.size before stencilSet: 0
+O.size after stencilSet: 247
+QmB.size= 407
+BmO.size= 2
+O.size= 247
+R.size= 288
+G.size = 944
+Q size= 656
+QmD.size= 412
+D.size= 244
+B.size= 249
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 965
+g2l size= 965
+node_list size= 965 (nb_nodes=965)
+avg_stencil_radii size= 965
+max_stencil_radii size= 965
+min_stencil_radii size= 965
+SAmQ.size after stencilSet: 9811
+O.size before stencilSet: 0
+O.size after stencilSet: 231
+QmB.size= 388
+BmO.size= 2
+O.size= 231
+R.size= 272
+G.size = 893
+Q size= 621
+QmD.size= 390
+D.size= 231
+B.size= 233
+Domain stencils size = 621
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 893
+g2l size= 893
+node_list size= 893 (nb_nodes=893)
+avg_stencil_radii size= 893
+max_stencil_radii size= 893
+min_stencil_radii size= 893
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 936
+g2l size= 936
+node_list size= 936 (nb_nodes=936)
+avg_stencil_radii size= 936
+max_stencil_radii size= 936
+min_stencil_radii size= 936
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 904
+g2l size= 904
+node_list size= 904 (nb_nodes=904)
+avg_stencil_radii size= 904
+max_stencil_radii size= 904
+min_stencil_radii size= 904
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 923
+g2l size= 923
+node_list size= 923 (nb_nodes=923)
+avg_stencil_radii size= 923
+max_stencil_radii size= 923
+min_stencil_radii size= 923
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 928
+g2l size= 928
+node_list size= 928 (nb_nodes=928)
+avg_stencil_radii size= 928
+max_stencil_radii size= 928
+min_stencil_radii size= 928
+Domain stencils size = 618
+Domain stencils size = 656
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 910
+g2l size= 910
+node_list size= 910 (nb_nodes=910)
+avg_stencil_radii size= 910
+max_stencil_radii size= 910
+min_stencil_radii size= 910
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 944
+g2l size= 944
+node_list size= 944 (nb_nodes=944)
+avg_stencil_radii size= 944
+max_stencil_radii size= 944
+min_stencil_radii size= 944
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 962
+g2l size= 962
+node_list size= 962 (nb_nodes=962)
+avg_stencil_radii size= 962
+max_stencil_radii size= 962
+min_stencil_radii size= 962
+SAmQ.size after stencilSet: 9822
+O.size before stencilSet: 0
+O.size after stencilSet: 247
+QmB.size= 376
+BmO.size= 3
+O.size= 247
+R.size= 293
+G.size = 919
+Q size= 626
+QmD.size= 378
+D.size= 248
+B.size= 250
+Domain stencils size = 656
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 937
+g2l size= 937
+node_list size= 937 (nb_nodes=937)
+avg_stencil_radii size= 937
+max_stencil_radii size= 937
+min_stencil_radii size= 937
+SAmQ.size after stencilSet: 9820
+O.size before stencilSet: 0
+O.size after stencilSet: 261
+QmB.size= 378
+BmO.size= 3
+O.size= 261
+R.size= 306
+G.size = 948
+Q size= 642
+QmD.size= 380
+D.size= 262
+B.size= 264
+Domain stencils size = 642
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 933
+g2l size= 933
+node_list size= 933 (nb_nodes=933)
+avg_stencil_radii size= 933
+max_stencil_radii size= 933
+min_stencil_radii size= 933
+Domain stencils size = 642
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 948
+g2l size= 948
+node_list size= 948 (nb_nodes=948)
+avg_stencil_radii size= 948
+max_stencil_radii size= 948
+min_stencil_radii size= 948
+Domain stencils size = 626
+MASTER BOUNDARY.size= 0
+SUBDOMAIN BOUNDARY.size= 0
+GLOBAL_BOUNDARY.size= 0
+l2g size= 919
+g2l size= 919
+node_list size= 919 (nb_nodes=919)
+avg_stencil_radii size= 919
+max_stencil_radii size= 919
+min_stencil_radii size= 919
