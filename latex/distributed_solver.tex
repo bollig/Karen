@@ -116,7 +116,7 @@ A number of libraries exist for graph partitioning including Chaco \cite{CHACO19
 Our latest work within \cite{BolligRBFFDCode} partitions graphs via METIS and the library's included \emph{gpmetis} executable. During stencil generation, the resulting adjacency graph is written to file and passed as input to the executable. METIS then performs a multi-level recursive bisection algorithm for partitioning. At its core the algorithm first coarsens the graph into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs and smooth/correct the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
 In return for the graph, METIS writes a file containing one integer per vertex, indicating the partition to which each stencil center is assigned. Note that METIS does not guarantee partitions will be contiguous. While this is often the case, METIS may find the alternative more fitting and assign disjoint subgraphs to the same MPI process. % for reduced communication. 
 
-The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting two stencil nodes, is equivalent to cutting its transpose, so METIS is equally resistant apply a cut whether the edge is directed or undirected. 
+The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting a stencil center to a stencil node, is equivalent to cutting its transpose, so METIS is equally resistant apply a cut whether the edge is directed or undirected. 
 
 \begin{figure}
 \begin{center}
@@ -129,7 +129,9 @@ The adjacency graph for RBF-FD is directed, so symmetry is induced in the associ
 Figure~\ref{fig:metis_decomposed_sphere} provides an example of a METIS generated partitioning of $N=10,201$ MD nodes for four processors. Three camera angles show the sphere viewed from the $(-x)$-axis (left), $(+x)$-axis (top-right), and $(-z)$-axis (bottom-right). 
 
 \subsection{A Load Balancing Comparison}
-Table~\ref{tbl:load_balance} compares the load balance for partitionings of the unit sphere. The first two rows consider $p=4$ processes as shown in Figures~\ref{fig:decomposed_sphere} and \ref{fig:metis_decomposed_sphere}. Also shown in Table~\ref{tbl:load_balance} is the case of $p=16$ processors. We assume each partition has $N_p = N_i + N_r$ nodes where $N_i$ nodes are contained within each partition and $N_r$ are ghost nodes. Although values at the $N_r$ nodes are not computed within a partition, each process must still obtain their values. For the sake of argument we assume that the cost of communicating data for $N_r$ nodes is equivalent to the cost of computing them---in practice communication is much more expensive. Based on these assumptions, the ratio of work across partitions, $\frac{W_1}{W_2} \approx \frac{\min N_p}{\max N_p}$, is found in the column labeled ``Total". Recall that ideal balancing is achieved at a ratio of 1. Columns labeled ``Interior" and ``Ghost Nodes" consider the interiors and overlap regions, respectively, in an effort to diagnose the source of imbalance across partitions. 
+Table~\ref{tbl:load_balance} compares the load balance for linear and METIS-based partitionings of the unit sphere. The first two rows consider $p=4$ processes as shown in Figures~\ref{fig:decomposed_sphere} and \ref{fig:metis_decomposed_sphere}. Also shown in Table~\ref{tbl:load_balance} is the case of $p=16$ processors. 
+
+We assume each partition has $N_p = N_i + N_r$ nodes where $N_i$ nodes are contained within each partition and $N_r$ are ghost nodes. Although values at the $N_r$ nodes are not computed within a partition, each process must still obtain their values. For the sake of argument we assume that the cost of communicating data for $N_r$ nodes is equivalent to the cost of computing them---in practice communication is much more expensive. Based on these assumptions, the ratio of work across partitions, $\frac{W_1}{W_2} \approx \frac{\min N_p}{\max N_p}$, is found in the column labeled ``Total". Recall that ideal balancing is achieved at a ratio of 1. Columns labeled ``Interior" and ``Ghost Nodes" consider the load balancing of only interior and overlap regions, respectively, in an effort to diagnose the source of imbalance across partitions. 
 
 \begin{table}
 \centering
@@ -176,7 +178,7 @@ The conclusion is that as $p$ increases the situation only becomes more dire for
 
 Once a partitioning is available, each MPI process is responsible for its own subset of nodes. 
 To simplify accounting, we track nodes in two ways. Each node is assigned
-a global index, that uniquely identifies it. This index follows the node 
+a global index that uniquely identifies it. This index follows the node 
 and its associated data as it is shuffled between processors. In addition, 
 it is important to treat the nodes on each CPU/GPU in an identical manner. 
 Implementations on the GPU are more efficient when node indices
@@ -237,7 +239,7 @@ We let $\setCenters\in\setAllNodes$ contain indices for all nodes within the par
 Then the set $\setDepend = \setAllNodes \backslash \setCenters$ contains indices of all ghost nodes. 
 The set $\setProvide\in\setCenters$ indexes nodes that are needed in other partitions (i.e., $\bigcup_j \Gamma_{ji}$). The set $\setBoundary\in\setCenters$ consists of nodes dependent on values from $\setDepend$. Note that $\setProvide$ and $\setBoundary$ overlap, but can differ in size due to lack of symmetry in the adjacency matrix. To capture the difference, set $\setBoundary \backslash \setProvide$ are nodes that depend on $\setDepend$ but are not sent to other processes, while $\setCenters \backslash \setBoundary$ are nodes that have no dependency on information from other processes.
 
-Constructing these index mappings allows each process to ignore nodes/stencils outside their subdomain and focus only on their subset of the problem. Processes avoid both the cost of storing a complete RBF-FD DM as well as full solution vectors. A rectangular sub-DM is kept for $\setAllNodes$, with compressed solution vectors to match. Our implementation follows a workflow that first generates stencils, and then partitions the adjacency graph in serial. In parallel, each processor loads its assigned partition, constructs index mappings, and solves for RBF-FD weights to generate a local DM.  
+Constructing these index mappings allows each process to ignore nodes/stencils outside their subdomain and focus only on their subset of the problem. Processes avoid both the cost of storing a complete RBF-FD differentiation matrix (DM) as well as full solution vectors. Instead, a local rectangular DM of size $|\setCenters| \times |\setAllNodes|$ is constructed by each process with compressed solution vectors of size $|\setAllNodes|$ to match. Our implementation follows a workflow that first generates stencils, and then partitions the adjacency graph in serial. In parallel, each processor loads its assigned partition, constructs index mappings, and solves for RBF-FD weights to generate a local DM.  
 
 \section{Local Ordering}
 
@@ -252,18 +254,20 @@ Figure~\ref{fig:stencilSets2CPU} lists global node indices contained in $\setAll
  represent $\setProvide$, and red represent $\setDepend$.  
 
 
- The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap of communication and computation. This will be investigated in Chapter~\ref{chap:multigpu_rbffd}, where distinguishing the set $\mathcal{B} \backslash \mathcal{O}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ without waiting on MPI communication to send and receive $\mathcal{O}$ and $\mathcal{R}$. 
+ The structure of $\setAllNodes$ offers two benefits: first, solution values in $\setDepend$ and $\setProvide$ are contiguous in memory and can be copied to or from the GPU without the filtering and/or re-ordering normally required in preparation for efficient data transfers. Second, asynchronous communication allows for the overlap with computation, where distinguishing the set $\mathcal{B}$ allows the computation of $\mathcal{Q}\backslash \mathcal{B}$ without waiting on MPI communication to send and receive $\mathcal{O}$ and $\mathcal{R}$. 
 
-When targeting the GPU, communication of solution or intermediate values is a four step process:
+When targeting the GPU, communication of solution or intermediate values is a multi-step process:
    \begin{enumerate}
     \item Transfer $\mathcal{O}$ from GPU to CPU
+    \item Encode $\mathcal{O}$ to send buffer
 	\item Distribute $\mathcal{O}$ to other CPUs, receive $R$ from other CPUs
+	\item Decode $\mathcal{R}$ from received buffer  
 	\item Transfer $\mathcal{R}$ to the GPU
 	\item Launch a GPU kernel to operate on $\mathcal{Q}$
    \end{enumerate} 
 The data transfers involved in this process are illustrated at the bottom of Figure~\ref{fig:stencilSets2CPU}.
     Each GPU is only aware of the local indexing in Equation~\ref{eq:decompose_g}. Benefiting from the local structure, set 
-$\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU then maps local to global indices and transfers $\setProvide$ to other processes. As the set $\setDepend$ is received from one or more processes, the data is reordered into local order before copying a contiguous block of memory to the GPU. 
+$\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU is then responsible for an \emph{encode} process that maps local to global indices, copies elements of $\setProvide$ into an MPI buffer with one entry for each receiving CPU. The encoded buffer is sent to other processes. As the set $\setDepend$ is received from one or more processes, the data is sent through a \emph{decode} process to reorder elements for the proper local ordering before copying a contiguous block of memory to the GPU. 
 
 
 \begin{figure}
@@ -293,9 +297,9 @@ Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the lab
 \section{Communication Collectives}
 \label{sec:mpi_collectives}
 
-With a partitioning and local ordering complete, the next task is to establish communication collectives for transferring data between MPI processes. Two types of collectives are possible: all-to-all and all-to-subset. 
+With a partitioning and local ordering decided, communication collectives can be established to transfer data between MPI processes. Two types of collectives are possible: all-to-all and all-to-subset. 
 
-All-to-all collectives pass data from every processor to all other processors. The most basic MPI implementation of an all-to-all, the MPI\_Alltoall routine, is illustrated in Figure~\ref{fig:mpi_alltoall_visual}. For a cluster of $p$ processes, MPI\_Alltoall assumes that every process intends to send $N_p$ bytes to each of its $p-1$ neighbors. On the left, an output buffer with $p*N_p$ bytes, \emph{sendBuf}, is assembled locally on each process. Block sizes in Figure~\ref{fig:mpi_alltoall_visual} are indicative of the number of bytes sent to each process. Example data A, B, C are labelled with subscripts to indicate the destination.  When the collective executes, MPI\_Alltoall scatters $N_p$ bytes from each process to each process to effectively interchange/transpose all data as it is received in \emph{recvBuf} on the right of Figure~\ref{fig:mpi_alltoall_visual}. 
+All-to-all collectives pass data from every processor to all other processors. The most basic MPI implementation of an all-to-all, the MPI\_Alltoall routine, is illustrated in Figure~\ref{fig:mpi_alltoall_visual}. For a cluster of $p$ processes, MPI\_Alltoall assumes that every process intends to send $N_p$ bytes to all $p-1$ processors. On the left, an output buffer with $p*N_p$ bytes, \emph{sendBuf}, is assembled locally on each process. Block sizes in Figure~\ref{fig:mpi_alltoall_visual} are indicative of the number of bytes sent to each process. The subscripts on example data A, B, C indicate the destination process.  When the collective executes, MPI\_Alltoall scatters $N_p$ bytes from all processes to effectively interchange/transpose data on the right of Figure~\ref{fig:mpi_alltoall_visual}. 
 
 \begin{figure}
 \centering
@@ -305,7 +309,7 @@ All-to-all collectives pass data from every processor to all other processors. T
 \end{figure}
 
 %All-to-all collectives are only useful when data needs to be simultaneously interchanged between all processes. 
-Since RBF-FD partitioning typically restricts overlap in subdomains to a subset of neighbors, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
+Since RBF-FD partitioning restricts overlap in subdomains to a subset of neighboring partitions, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
 Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_visual} and \ref{fig:mpi_isendirecv_visual}. 
 
 
@@ -316,8 +320,10 @@ Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_vis
 \label{fig:mpi_alltoallv_visual}
 \end{figure}
 
-Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv, which interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, fewer bytes are transmitted and the overall communication time drops. Modern implementations of MPI\_Alltoallv detect when zero-byte messages are intended for processes and skip those connections. This gives the routine an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}). 
+Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv, which interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, fewer bytes are transmitted and the overall communication time drops. Modern implementations of MPI\_Alltoallv detect when zero-byte messages are intended for processes and skip those connections. This gives the routine an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For very large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}). 
 
+
+MPI\_Alltoallv is a blocking collective. When the routine is called, all processes must communicate and meet at an internal barrier before control is returned to computation. This limits MPI\_Alltoallv's usefulness for overlapping communication and computation on the CPU. However, with respect to the GPU, overlap is still possible due to non-blocking GPU commands that return immediately after launch and allow the GPU kernels to execute while the CPU waits on communication. In the near future, implementations of MPI v3.0 standard will add MPI\_Ialltoallv, a non-blocking collective that allows overlap on the CPU \cite{MPI}.
 
 \begin{figure}
 \centering
@@ -326,21 +332,9 @@ Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv, w
 \label{fig:mpi_isendirecv_visual}
 \end{figure}
 
-Figure~\ref{fig:mpi_isendirecv_visual} shows the all-to-subset collective implemented with direct sends and receives between processes that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). Since processes strictly communicate with the subset of neighbors necessary, no zero-byte messages inflate communication times for large $p$. 
+Figure~\ref{fig:mpi_isendirecv_visual} shows a true all-to-subset collective implemented with direct sends and receives between processes that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). Since processes strictly communicate with the subset of neighbors necessary, no zero-byte messages inflate communication times for large $p$. The blocking version of this all-to-subset was employed in \cite{BolligFlyerErlebacher2012} for debugging purposes. All sends and receives were serialized making it infeasible to target large $p$ (tests were for $p \leq 10$). In the data that follows the non-blocking sends and receives perform communication concurrently, minimizing the wait for data. 
 
-In \cite{BolligFlyerErlebacher2012} communication was m	anaged by a blocking all-to-subset implemented with MPI\_Send/MPI\_Recv. The 
-%TODO: Blocking communication
-
-
-%TODO: Non-blocking communication 
-
-The main benefit of non-blocking communication is that computation proceeds while the communication occurs in the background. 
-
-
-
-\section{Future Work}
-
-%MPI\_Ialltoallv, introduced in the MPI v3.0 specification (\cite{MPI}), adds similar non-blocking characteristics as MPI\_Isend/MPI\_Irecv to the variable message size all-to-all collective. Implementations have yet to be tested, but open the door to overlapping communication and computation on the CPU. 
+In the case of distributed CPU, it is possible to overlap communication and computation with MPI\_Isend and MPI\_Irecv, but this was not tested.
 
 %TODO: overlapping comm and comp (Q\B) on MPI_Irecv->encode->MPI_Isend->Q\B->MPI_\Waitall->decode->B. 
 %TODO: encoding into a sendBuf

@@ -431,6 +431,10 @@ GFLOP/s = ^{N * n * 2} /_{t_ms} * 10^{-9}.
 
 
 
+%TODO: paralution
+Paralution is another library that provides sparse matrix containers, iterative solvers, preconditioners, etc. Paralution provides interfaces to plug into Deal.ii, OpenFOAM, and other packages, and runs on multi-core CPUs and GPUs. 
+
+
 To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sparse Matrix-Vector Mulitply (SpMV). When we consider the problem in this light we generate a single Differentiation Matrix that can see two optimizations not possible with our stencil-based view: 
 \begin{itemize} 
 \item First, the sparse containers used in SpMV allow for their own unique optimizations to compress storage and leverage hardware cache.
