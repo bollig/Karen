@@ -381,13 +381,13 @@ Figure~\ref{fig:mpi_tuning} illustrates a number of communication collectives at
 \begin{subfigure}{0.6\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/omnigraffle/IsendPreIrecvCPU.pdf}
-\caption{Post MPI\_Irecv ASAP}
+\caption{Post MPI\_Irecv ASAP (``Pre-Recv")}
 \label{fig:preirecv_cpu}
 \end{subfigure}
 \begin{subfigure}{0.6\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/omnigraffle/NoDecode.pdf}
-\caption{No decoding}
+\caption{No Decode}
 \label{fig:no_decode_cpu}
 \end{subfigure}
 \begin{subfigure}{0.6\textwidth}
@@ -399,6 +399,40 @@ Figure~\ref{fig:mpi_tuning} illustrates a number of communication collectives at
 \caption{MPI tuning steps to scale from 10 processors in \cite{BolligFlyerErlebacher2012} to 1024 processors here. Each horizontal timeline indicates the order of operations for a single distributed SpMV (i.e., between vertical bars). Concurrent operations are launched from top to bottom. } 
 \label{fig:mpi_tuning}
 \end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{performance_content/scaling/weak_scaling_np4000_compare_SpMV_and_comm_n50.png}
+\caption{Weak scaling comparison for $n=50$ and $N_p = 4000$ on a regular grid with maximum resolution $N=4096000$ on Itasca.}
+\label{fig:compare_weak_scaling_n50}
+\end{figure}
+
+%
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.6\textwidth]{performance_content/scaling/weak_scaling_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
+%\caption{Weak scaling comparison for various stencil sizes ($n=17, 31, 50, 101$) and $N_p = 4000$ on a regular grid with maximum resolution $N=4096000$ on Itasca.}
+%\label{fig:compare_weak_scaling_n50}
+%\end{figure}
+
+\begin{figure}
+\centering
+\begin{subfigure}{0.6\textwidth}
+\centering
+\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\caption{Scaling (All Stencils)}
+\label{fig:compare_weak_scaling_all_stencils}
+\end{subfigure}
+\begin{subfigure}{0.6\textwidth}
+\centering
+\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_efficiency_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\caption{Efficiency}
+\label{fig:compare_weak_scaling_efficiency_all_stencils}
+\end{subfigure}
+\caption{Weak scaling and efficiency comparison for various stencil sizes ($n=17, 31, 50, 101$) and $N_p = 4000$ on a regular grid with maximum resolution $N=4096000$ on Itasca. } 
+\label{fig:weak_scaling_all_stencils}
+\end{figure}
+
 
 Our implementation is now demonstrated to be scalable. The term scalable is used loosely here as two types of scaling are possible: weak and strong. Weak scaling monitors the growth in run-time as the number of processes ($p$) increases with the per process workload, $N_p$, kept constant; in other words the global problem size grows as $N = p*N_p$. Strong scaling keeps a fixed global problem size to consider $N_p = \frac{N}{p}$, where processes are issued diminishing workloads as $p$ grows. 
 
@@ -568,9 +602,12 @@ Such throughput oriented architectures require developers to decompose problems 
 
 Similar approaches to overlapping communication and computation can be found in \cite{Schubert2011} and \cite{Thibault2009}.
 
-\section{Overlapped Queues}
+\begin{itemize} 
+\item Show no overlap scaling
+\item Show overlap scaling
+\item 
+\end{itemize}
 
-\section{Avoiding Copy Out}
 When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
 
 
