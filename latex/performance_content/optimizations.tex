@@ -48,11 +48,13 @@ The following data, acquired on Keeneland, demonstrates performance of our imple
 \end{subfigure} 
 \end{figure} 
 
-%TODO: urgent
-\authnote{Relocate SpMV only data:} 
-Figure~\ref{fig:alltoall_1proc_warp} shows the speedup gained of the one warp-per-stencil GPU kernel
+%%TODO: urgent
+%\authnote{Relocate SpMV only data:} 
+%Figure~\ref{fig:alltoall_1proc_warp} shows the speedup gained of the one warp-per-stencil GPU kernel
 
-Figure~\ref{fig:alltoall_multicpu_scaling}  shows the strong scalability of our method on Multiple CPUs. In distributed computing, ideal scaling is linear. This figure demonstrates that our method does scale linearly (almost super-linearly) as the number of CPUs increases, so our prospect for spanning all CPUs on Keeneland is within reach for problem sizes large enough. The super-linear speedup seen for 10 processors results from improved caching on processors as their individual problem sizes decrease and the processors are able to keep a larger percentage of the problem within fast cache memory.
+Figure~\ref{fig:alltoall_multicpu_scaling} shows the strong scalability of our method on Multiple CPUs. Ideal strong scaling is linear. This figure demonstrates that our method does scale linearly (almost super-linearly) as the number of CPUs increases. 
+%, so our prospect for spanning all CPUs on Keeneland is within reach for problem sizes large enough.
+The super-linear speedup is due to improved caching on processors as individual problem sizes decrease and the processors are able to keep a larger percentage of the problem within fast cache memory.
 
 Figure~\ref{fig:alltoall_multigpu_vs_cpu_scaling}  shows the scaling of multiple GPUs vs 1 CPU. Ideally, this figure would be the product of the previous two figures since the GPUs are attached to CPUs in a one to one correspondence. However, we see from the sub-linear scaling that while the GPU accelerators are decreasing the time to compute solutions, there is less and less return of investment as the number of processors increase. Between this Figure and the previous, the only thing that differs is the hardware on which stencils are evaluated. The cost of communication stays the same as in the previous figure. But that means the communication consumes a increasing percentage of the iteration time, until is dominates. 
 Additionally, computing on the GPU requires transfer (additional communication) of data between CPU and GPU. 

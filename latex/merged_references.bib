@@ -2,12 +2,36 @@
 %% http://bibdesk.sourceforge.net/
 
 
-%% Created for Evan Bollig at 2013-10-01 22:23:01 -0500 
+%% Created for Evan Bollig at 2013-10-11 23:53:58 -0500 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
 
 
+
+@misc{Tuminaro1995,
+	Author = {Ray S. Tuminaro and John N. Shadid and Scott A. Hutchinson},
+	Date-Added = {2013-10-12 04:53:50 +0000},
+	Date-Modified = {2013-10-12 04:53:55 +0000},
+	Title = {Parallel Sparse Matrix-Vector Multiply Software for Matrices with Data Locality},
+	Year = {1995}}
+
+@article{Yokota2012,
+	Abstract = {Among the algorithms that are likely to play a major role in future exascale computing, the fast multipole method (fmm) appears as a rising star. Our previous recent work showed scaling of an fmm on gpu clusters, with problem sizes of the order of billions of unknowns. That work led to an extremely parallel fmm, scaling to thousands of gpus or tens of thousands of cpus. This paper reports on a campaign of performance tuning and scalability studies using multi-core cpus, on the Kraken supercomputer. All kernels in the fmm were parallelized using OpenMP, and a test using 107 particles randomly distributed in a cube showed 78% efficiency on 8 threads. Tuning of the particle-to-particle kernel using single instruction multiple data (SIMD) instructions resulted in 4 × speed-up of the overall algorithm on single-core tests with 103--107 particles. Parallel scalability was studied in both strong and weak scaling. The strong scaling test used 108 particles and resulted in 93% parallel efficiency on 2048 processes for the non-SIMD code and 54% for the SIMD-optimized code (which was still 2 × faster). The weak scaling test used 106 particles per process, and resulted in 72% efficiency on 32,768 processes, with the largest calculation taking about 40 seconds to evaluate more than 32 billion unknowns. This work builds up evidence for our view that fmm is poised to play a leading role in exascale computing, and we end the paper with a discussion of the features that make it a particularly favorable algorithm for the emerging heterogeneous and massively parallel architectural landscape. The code is open for unrestricted use under the MIT license.},
+	Author = {Yokota, Rio and Barba, Lorena A},
+	Date-Added = {2013-10-12 04:04:18 +0000},
+	Date-Modified = {2013-10-12 04:04:27 +0000},
+	Doi = {10.1177/1094342011429952},
+	Eprint = {http://hpc.sagepub.com/content/26/4/337.full.pdf+html},
+	Journal = {International Journal of High Performance Computing Applications},
+	Number = {4},
+	Pages = {337-346},
+	Title = {A tuned and scalable fast multipole method as a preeminent algorithm for exascale systems},
+	Url = {http://hpc.sagepub.com/content/26/4/337.abstract},
+	Volume = {26},
+	Year = {2012},
+	Bdsk-Url-1 = {http://hpc.sagepub.com/content/26/4/337.abstract},
+	Bdsk-Url-2 = {http://dx.doi.org/10.1177/1094342011429952}}
 
 @article{Balaji2010,
 	Acmid = {1734770},
