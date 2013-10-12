@@ -19,8 +19,10 @@
 
 
 %TODO: related distributed 
-The power of hindsight tells us RBF-FD can be implemented with any library designed for sparse matrix algebra. 
+\authnote{related work}
+The power of hindsight reveals that RBF-FD can be implemented with any library designed for sparse matrix algebra. 
 
+Our implementation is unlikely to to compete well against a number of well established libraries that have seen decades of active development. 
  that PETSc, Hypre, Trilinos are all libraries/frameworks that we could have developed in, but none of them had GPU support. We continued with custom built code, but that decision required additional decisions from us. 
 
 \cite{Yokota2010}
@@ -121,9 +123,9 @@ To ensure load balancing, one commonly turns to \emph{graph partitioning} algori
 
 The output from graph partitioning algorithms are ideal for distributed applications for two reasons. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges crossing partitions correspond to ghost node dependencies, so minimizing those connections also ensures minimized data transfer via MPI. 
 
-A number of libraries exist for graph partitioning including Chaco \cite{CHACO1995}, SCOTCH \cite{SCOTCH1996}, and the METIS family of algorithms (e.g., METIS, ParMETIS, hMETIS) \cite{Karypis1999}. The partitioning algorithm varies by library, but in all cases options exist for partitioning, vertex reordering, and graph coloring. As of this writing, only partitioning features are employed.
+A number of libraries exist for graph partitioning including Chaco \cite{CHACO1995}, SCOTCH \cite{SCOTCH1996}, and the METIS family of algorithms (e.g., METIS, ParMETIS, hMETIS) \cite{Karypis1999}. The algorithms vary by library, but in all cases vertex reordering and graph coloring capabilities are provided in addition to partitioning. %This work considers only the partitioning features.
 
-Our latest work within \cite{BolligRBFFDCode} partitions graphs via METIS and the library's included \emph{gpmetis} executable. During stencil generation, the resulting adjacency graph is written to file and passed as input to the executable. METIS then performs a multi-level recursive bisection algorithm for partitioning. At its core the algorithm first coarsens the graph into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs and smooth/correct the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
+Our latest work (in \cite{BolligRBFFDCode}) partitions graphs via METIS using the library's \emph{gpmetis} executable. During stencil generation, the associated adjacency graph is written to file. The METIS executable reads the file and performs a multi-level recursive bisection algorithm to partition the graph. At its core the algorithm first coarsens the graph into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs and smooth/correct the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
 In return for the graph, METIS writes a file containing one integer per vertex, indicating the partition to which each stencil center is assigned. Note that METIS does not guarantee partitions will be contiguous. While this is often the case, METIS may find the alternative more fitting and assign disjoint subgraphs to the same MPI process. % for reduced communication. 
 
 The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting a stencil center to a stencil node, is equivalent to cutting its transpose, so METIS is equally resistant apply a cut whether the edge is directed or undirected. 
@@ -139,9 +141,11 @@ The adjacency graph for RBF-FD is directed, so symmetry is induced in the associ
 Figure~\ref{fig:metis_decomposed_sphere} provides an example of a METIS generated partitioning of $N=10,201$ MD nodes for four processors. Three camera angles show the sphere viewed from the $(-x)$-axis (left), $(+x)$-axis (top-right), and $(-z)$-axis (bottom-right). 
 
 \subsection{A Load Balancing Comparison}
+\label{sec:load_balance}
+
 Table~\ref{tbl:load_balance} compares the load balance for linear and METIS-based partitionings of the unit sphere. The first two rows consider $p=4$ processes as shown in Figures~\ref{fig:decomposed_sphere} and \ref{fig:metis_decomposed_sphere}. Also shown in Table~\ref{tbl:load_balance} is the case of $p=16$ processors. 
 
-We assume each partition has $N_p = N_i + N_r$ nodes where $N_i$ nodes are contained within each partition and $N_r$ are ghost nodes. Although values at the $N_r$ nodes are not computed within a partition, each process must still obtain their values. For the sake of argument we assume that the cost of communicating data for $N_r$ nodes is equivalent to the cost of computing them---in practice communication is much more expensive. Based on these assumptions, the ratio of work across partitions, $\frac{W_1}{W_2} \approx \frac{\min N_p}{\max N_p}$, is found in the column labeled ``Total". Recall that ideal balancing is achieved at a ratio of 1. Columns labeled ``Interior" and ``Ghost Nodes" consider the load balancing of only interior and overlap regions, respectively, in an effort to diagnose the source of imbalance across partitions. 
+We assume each partition has $N_p = N_i + N_r$ nodes where $N_i$ nodes are contained within each partition and $N_r$ are ghost nodes. Although values at the $N_r$ nodes are not computed within a partition, each process must still obtain their values. For the sake of argument we assume that the cost of communicating data for $N_r$ nodes is equivalent to the cost of computing them---in practice communication is much more expensive. Based on these assumptions, we consider the ratio of work across partitions, $\frac{W_1}{W_2} \approx \frac{\min N_p}{\max N_p}$, in the column labeled ``Total". Recall that ideal balancing is achieved at a ratio of 1. Columns labeled ``Interior" and ``Ghost Nodes" show the load balancing of only interior and overlap regions, respectively, in an effort to diagnose the source of imbalance across partitions. 
 
 \begin{table}
 \centering
@@ -168,12 +172,12 @@ $p$ & Partitioning & Total ($\frac{\min N_p}{\max N_p}$) &  Interior ($\frac{\mi
 %\end{tabular}
 %\end{table}
 %
-Based on the per process $N_p$'s, we find that linear partitioning works moderately well for $p=4$ but becomes horribly imbalanced at $p=16$. In both cases METIS proves significantly better with ratios $> 0.9$. Joining Table~\ref{tbl:load_balance} and Equation~\ref{eq:load_balance}, we find that linear partitioning would be limited to less than 9.3x expected speedup for $p=16$ processes, while METIS would be bounded by at most 14.9x. Data for the partition interiors reveals that both linear and METIS partitioning distribute roughly equivalent number of nodes per interior---in fact, linear partitioning appears to be the more consistent of the two options. However, the problem with linear partitioning boils down to how it balances ghost nodes:
+Based on the per process $N_p$'s, we find that linear partitioning works moderately well for $p=4$ but becomes horribly imbalanced at $p=16$. In both cases METIS proves significantly better with ratios $> 0.9$. Based on Table~\ref{tbl:load_balance} and Equation~\ref{eq:load_balance}, use of the linear partitioning should expect less than 9.3x speedup for $p=16$ processes, while METIS is bounded by at most 14.9x. Data for the partition interiors reveals that both linear and METIS partitioning distribute roughly equivalent number of nodes per interior---in fact, linear partitioning appears to be the more consistent of the two options. However, the problem with linear partitioning boils down to balancing ghost nodes. There are two obvious issues with linear partitioning:
 \begin{itemize} 
-\item The end-cap partitions have only left or right dependencies whereas other partitions have two-way dependencies, which by default drops the ratio $\leq 0.5$. 
-\item Each overlap region is a small circle of the sphere, and approximately $\sqrt{n}$ ghost nodes thick. The number of nodes in each region is therefore a function of its circumference. As $p$ grows $\frac{\min N_r}{\max N_r}$ scales as the ratio of the smallest and largest overlap region circumferences.
+\item End-cap partitions only have dependencies in on direction, whereas interior partitions have left and right dependencies. This immediately drops the ratio of $\frac{\min N_r}{\max N_r} \leq 0.5$. 
+\item Since each overlap region is a small circle of the sphere and approximately $\sqrt{n}$ ghost nodes thick, the number of nodes in each region is therefore a function of its circumference. As $p$ grows $\frac{\min N_r}{\max N_r}$ scales as the ratio of the smallest and largest overlap region circumferences. 
 \end{itemize}
-The conclusion is that as $p$ increases the situation only becomes more dire for linear partitions. While the approach works well for initial development, METIS is preferred for consistent partition sizes and minimized overlap (communication).
+While useful for development and testing, the conclusion is that even at moderate $p$ the situation is dire for linear partitions. METIS is preferred for consistent partition sizes and minimized overlap, but cautiously note the increasing imbalance in ghost nodes for METIS. Scaling tests in \S~\ref{sec:cpu_scaling} demonstrate that even METIS fails to find a partitioning of the graph that properly balances ghost nodes when $p$ is large.  
 
 %DATA: 
 %           G & R & O & Q
@@ -351,9 +355,11 @@ The blocking version of this all-to-subset was employed in \cite{BolligFlyerErle
 
 
 \section{Scaling Results} 
+\label{sec:cpu_scaling}
+
 
 %TODO: Itasca scaling to demonstrate behavior as 
-The scalability of our implementation (\cite{BolligFlyerErlebacher2012}) is test on the Itasca HPC cluster at the University of Minnesota. Owned and operated by the Minnesota Supercomputing Institute, the Itasca cluster is \authnote{finish}
+The scalability of our implementation is tested in distributed CPU mode  on the Itasca HPC cluster at the University of Minnesota. Owned and operated by the Minnesota Supercomputing Institute, the Itasca cluster is \authnote{finish}
 
 Figure~\ref{fig:mpi_tuning} illustrates a number of communication collectives attempted. Each of the tiles, \ref{fig:alltoallv_cpu} -- \ref{fig:overlap_cpu}, show a progression of improvement and effort to tune the communication for a large cluster. The progression occurred as follows:  
 \begin{enumerate} 
