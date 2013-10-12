@@ -275,18 +275,14 @@ When targeting the GPU, communication of solution or intermediate values is a mu
    \begin{enumerate}
     \item Transfer $\mathcal{O}$ from GPU to CPU
     \item Encode $\mathcal{O}$ to send buffer
-	\item Distribute $\mathcal{O}$ to other CPUs, receive $R$ from other CPUs
+	\item Distribute $\mathcal{O}$ to other CPUs and receive $R$ from other CPUs
 	\item Decode $\mathcal{R}$ from received buffer  
 	\item Transfer $\mathcal{R}$ to the GPU
 	\item Launch a GPU kernel to operate on $\mathcal{Q}$
    \end{enumerate} 
 The data transfers involved in this process are illustrated at the bottom of Figure~\ref{fig:stencilSets2CPU}.
     Each GPU is only aware of the local indexing in Equation~\ref{eq:decompose_g}. Benefiting from the local structure, set 
-$\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU is then responsible for an \emph{encode} process that maps local to global indices, copies elements of $\setProvide$ into an MPI buffer with one entry for each receiving CPU. The encoded buffer is sent to other processes. As the set $\setDepend$ is received from one or more processes, the data is sent through a \emph{decode} process to reorder elements for the proper local ordering before copying a contiguous block of memory to the GPU. 
-
-%TODO: R is assumed to be contiguous by receiving processor which greatly simplifies life
-
-R is assumed to be contiguous by receiving processor which greatly simplifies life
+$\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory block. The CPU is then responsible for an \emph{encode} process that maps local to global indices, copies elements of $\setProvide$ into an MPI buffer with one entry for each receiving CPU (i.e., data is grouped by destination). MPI distributes the encoded buffer and receives $\setDepend$ in a buffer that is sorted by origin. In general, Equation~\ref{eq:decompose_g} need not have $\setDepend$ structured the same as the receive buffer (i.e., data grouped by origin process). However, if the two do not match then received data must go through a \emph{decode} process to shuffle elements into the proper local ordering. The reordered data is then copied as a contiguous block of memory to the GPU. Decoding data is avoided with a simple assumption on the ordering of $\setDepend$. In \S~\ref{sec:cpu_scaling} bypassing the decode phase is one of several strategies employed for improved scalability. 
 
 \begin{figure}
 \begin{center}
@@ -296,9 +292,11 @@ R is assumed to be contiguous by receiving processor which greatly simplifies li
 \end{center}
 \end{figure}
 
-The next step is to translate the local ordering of nodes to a local DM. Consider Figure~\ref{fig:decomp_matrix_view} which shows the index sets for a single partition in context of a global RBF-FD differentiation matrix. Here the gray area is zero, and non-zeros exist between bowed lines. The partition is illustrated as the contiguous set of rows between dashed lines. Set membership for each row is determined based on how the off-diagonal non-zeros in a row match vertically with the center diagonal. When an MPI process constructs the local DM for the partition, the two sets of $\mathcal{B}$ in Figure~\ref{fig:decomp_matrix_view} are compressed into one contiguous set. An example of this effect is demonstrated in Figure~\ref{fig:decomp_spy}. 
+\subsection{Local Differentiation Matrix (DM) Structure}
 
-Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the labels indicating the components of Equation~\ref{eq:decompose_g}. The local DM represents the third of four partitions from an original matrix with $N=4096$ rows and $n=31$ non-zeros per row. The RBF-FD stencils were generated on the $N=4096$ MD node set, and partitioned with METIS. 
+The local ordering of nodes leads to a unique DM on each MPI process. Consider Figure~\ref{fig:decomp_matrix_view} which shows the index sets for a single partition in context of a global RBF-FD differentiation matrix. Here the gray area is zero, and non-zeros exist between bowed lines. The partition is illustrated as the contiguous set of rows between dashed lines. Set membership for each row is determined based on how the off-diagonal non-zeros in a row match vertically with the center diagonal. When an MPI process constructs the local DM for the partition, the two sets of $\mathcal{B}$ in Figure~\ref{fig:decomp_matrix_view} are compressed into one contiguous set. %An example of this effect is demonstrated in Figure~\ref{fig:decomp_spy}. 
+
+Figure~\ref{fig:decomp_spy} demonstrates the structure of a local DM on an MPI process. Labels denote the components of Equation~\ref{eq:decompose_g}. The local DM represents partition three of four from an original matrix with $N=4096$ rows and $n=31$ non-zeros per row. The RBF-FD stencils were generated on the $N=4096$ MD node set, and partitioned with METIS. 
 \begin{figure}
 \begin{center}
 \includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
@@ -315,9 +313,9 @@ Figure~\ref{fig:decomp_spy} shows a local DM for a single partition with the lab
 \section{Communication Collectives}
 \label{sec:mpi_collectives}
 
-With a partitioning and local ordering decided, communication collectives can be established to transfer data between MPI processes. Two types of collectives are possible: all-to-all and all-to-subset. 
+With a partitioning and local ordering decided, communication collectives are established to transfer data between MPI processes. Two types of collectives are possible: all-to-all and all-to-subset. 
 
-All-to-all collectives pass data from every processor to all other processors. The most basic MPI implementation of an all-to-all, the MPI\_Alltoall routine, is illustrated in Figure~\ref{fig:mpi_alltoall_visual}. For a cluster of $p$ processes, MPI\_Alltoall assumes that every process intends to send $N_p$ bytes to all $p-1$ processors. On the left, an output buffer with $p*N_p$ bytes, \emph{sendBuf}, is assembled locally on each process. Block sizes in Figure~\ref{fig:mpi_alltoall_visual} are indicative of the number of bytes sent to each process. The subscripts on example data A, B, C indicate the destination process.  When the collective executes, MPI\_Alltoall scatters $N_p$ bytes from all processes to effectively interchange/transpose data on the right of Figure~\ref{fig:mpi_alltoall_visual}. 
+All-to-all collectives pass data from every processor to all other processors. The most basic MPI implementation of an all-to-all, the MPI\_Alltoall routine, is illustrated in Figure~\ref{fig:mpi_alltoall_visual}. For a cluster of $p$ processes, MPI\_Alltoall assumes that every process intends to send $N_p$ bytes to all $p-1$ processors. On the left, an output buffer with $p*N_p$ bytes is assembled locally on each process. Block sizes in Figure~\ref{fig:mpi_alltoall_visual} are indicative of the number of bytes sent to each process. The subscripts on example data A, B, C indicate the destination process.  When the collective executes, MPI\_Alltoall scatters $N_p$ bytes from all processes to effectively interchange/transpose data on the right of Figure~\ref{fig:mpi_alltoall_visual}. 
 
 \begin{figure}
 \centering
@@ -327,7 +325,7 @@ All-to-all collectives pass data from every processor to all other processors. T
 \end{figure}
 
 %All-to-all collectives are only useful when data needs to be simultaneously interchanged between all processes. 
-Since RBF-FD partitioning restricts overlap in subdomains to a subset of neighboring partitions, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
+Since RBF-FD partitioning via METIS restricts overlap to a subset of neighboring partitions, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
 Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_visual} and \ref{fig:mpi_isendirecv_visual}. 
 
 
@@ -338,10 +336,16 @@ Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_vis
 \label{fig:mpi_alltoallv_visual}
 \end{figure}
 
-Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv, which interconnects processes and transposes data similar to MPI\_Alltoall, yet it allows variable message sizes per connection. With no padding on messages, fewer bytes are transmitted and the overall communication time drops. Modern implementations of MPI\_Alltoallv detect when zero-byte messages are intended for processes and skip those connections. This gives the routine an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For very large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}). 
+Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv. MPI\_Alltoallv improves on the all-to-all counterpart by allowing variable message sizes per connection. Unpadded messages transmit fewer bytes and reduce the overall communication time. Implementations of MPI\_Alltoallv detect \emph{zero-byte messages} (i.e., empty messages), and skip connections to their intended processes. This gives the routine an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows as the number of processors scales. For very large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}). 
 
 
-MPI\_Alltoallv is a blocking collective. When the routine is called, all processes must communicate and meet at an internal barrier before control is returned to computation. This limits MPI\_Alltoallv's usefulness for overlapping communication and computation on the CPU. However, with respect to the GPU, overlap is still possible due to non-blocking GPU commands that return immediately after launch. Non-blocking commands allow GPU kernels to execute while the CPU waits on communication. In the near future, implementations of MPI v3.0 standard will add MPI\_Ialltoallv, a non-blocking collective that allows overlap on the CPU \cite{MPI}.
+%TODO: 
+% cost of communciation is high 
+% amdahls law states that we are limited by the serializable portion of 
+% so we want to hide it as much as possible
+%
+
+MPI\_Alltoallv is also a blocking collective: when the routine is called, all communication must complete before control is returned to computation. This blocking behavior prevents the use of MPI\_Alltoallv in overlapping communication and computation within a distributed CPU environment. A distributed GPU environment can overlap MPI\_Alltoallv communication due to the non-blocking behavior of GPU commands (this is tested in Chapter~\ref{chap:multigpu_rbffd}). As of this writing, a new version of the MPI standard (v3.0) introduced MPI\_Ialltoallv, a non-blocking collective that would allow overlap on the CPU \cite{MPI}. MPI\_Ialltoallv is not considered here as popular MPI distributions did not yet offer MPI v3.0 compliant implementations.
 
 \begin{figure}
 \centering
@@ -350,8 +354,17 @@ MPI\_Alltoallv is a blocking collective. When the routine is called, all process
 \label{fig:mpi_isendirecv_visual}
 \end{figure}
 
-Figure~\ref{fig:mpi_isendirecv_visual} shows a true all-to-subset collective implemented with direct sends and receives between processes that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). Since processes strictly communicate with the subset of neighbors necessary, no zero-byte messages inflate communication times for large $p$. 
-The blocking version of this all-to-subset was employed in \cite{BolligFlyerErlebacher2012} for debugging purposes. Unfortunately, all sends and receives were serialized making it infeasible to target $p > 10$. In the data that follows we employ non-blocking sends and receives for concurrent connections to multiple processors. A number of steps are taken to tune communication in order to span RBF-FD across 1024 processors.
+Figure~\ref{fig:mpi_isendirecv_visual} shows a true all-to-subset collective implemented with direct sends and receives between processes that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). Processes strictly communicate with required neighbors, so no zero-byte messages inflate communication time. 
+A blocking version of this all-to-subset was employed in our first paper (\cite{BolligFlyerErlebacher2012}) for debugging purposes. MPI sends and receives were issued in a round-robin fashion. Unfortunately, the serialized connections made it infeasible to target $p > 10$. 
+
+\authnote{FINISH: }
+The original benchmarks from the paper are included in Appendix~\ref{app:paper1_benchmarks}. In an effort to improve performance and scaling of our implementation an MPI\_Alltoallv was employed. Appendix~\ref{app:keeneland_spear_alltoallv_benchmarks} shows the impact of the improved collective running on Keeneland and Spear. Both appendices consider the scaling of a distributed RK4 iteration. 
+
+In what follows the MPI\_Alltoallv implementation is taken as baseline for communication. Effort is then made to reduce communication times 
+
+ benchmark a simple distributed SpMV and tune communication. Improvements here map 
+
+In the data that follows we employ non-blocking sends and receives for concurrent connections to multiple processors. A number of steps are taken to tune communication in order to span RBF-FD across 1024 processors.
 
 
 \section{Scaling Results} 
@@ -597,6 +610,10 @@ As part of the future investigations we anticipate the need to consider the impa
 
 \chapter{Distributed GPU SpMV (incomplete)}
 \label{chap:multigpu_rbffd}
+
+
+\cite{Lawlor2009}
+
 
 Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
 
