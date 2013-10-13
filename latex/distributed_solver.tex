@@ -421,7 +421,7 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \end{figure}
 
 
- Based on Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils} the MPI\_Alltoallv weak scaling is poor. As $p$ grows, the total time grows at a super-linear rate. Figure~\ref{fig:weak_scaling_spmv_only_alltoallv_all_stencils}, which shows the SpMV time only, verifies that beyond the initial growth in time on a single compute node the SpMV is constant for all stencil sizes. That then implies the cost of communication must be reduced (or hidden). 
+ Based on Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils} the MPI\_Alltoallv weak scaling is poor. As $p$ grows, the total time grows at a discouraging rate. At $p=16$ the cost of communication the starts to grow super-linearly. Figure~\ref{fig:weak_scaling_spmv_only_alltoallv_all_stencils}, which shows the SpMV time only, verifies that beyond the initial growth in time on a single compute node the SpMV is constant for all stencil sizes. That then implies the cost of communication must be reduced (or hidden). 
 
 \begin{figure}
 \centering
@@ -449,7 +449,7 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \subsection{Improvements}
 
 
-Figure~\ref{fig:mpi_tuning} illustrates a progression of collectives tested in an effort to improve weak scaling. 
+Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in an effort to improve weak scaling. 
 
 Each tile of Figure~\ref{fig:mpi_tuning} shows a timeline for the distributed SpMV. Vertical bars separate the SpMV in focus from execution of the next and last SpMV. Our implementation does not assume a global barrier before starting the next iteration, so load balancing is essential to limit wait times between processors. Operations are concurrent from top to bottom within each tile, and the top-most operations are launched first.
 
@@ -501,7 +501,10 @@ Tuning occurred as follows for the $n=50$ node stencil case and $N_p=4000$ nodes
 \item MPI\_Irecv and MPI\_Isend are issued before computing the SpMV for set $\setCenters \backslash \setBoundary$. MPI\_Isend is non-blocking so the SpMV for $\setCenters \backslash \setBoundary$ starts before communication is complete. A barrier at the end of the first SpMV waits for communication to finish before launching the second SpMV on $\setBoundary$. This hides some cost of communication behind computation on the CPU (Figure~\ref{fig:overlap_cpu}). 
 \end{enumerate}
 
-A comparison of weak scaling performance for the sequence of on $n=50$ 
+The weak scaling improvement for each step is shown in Figure~\ref{fig:compare_weak_scaling_n50} for $n=50$ and $N_p=4000$ (regular grid).  
+
+Figure~\ref{fig:compare_strong_scaling_n50} for $N=4096000$ .  
+
 
 \begin{figure}
 \centering
