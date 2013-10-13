@@ -125,6 +125,8 @@ Performance of SpMV on GPU will not be optimal. Often one finds in literature ex
 %TODO: \cite{Kreuzer2012} in distributed GPU. 
 \cite{Vuduc2005} etc. 
 
+
+
 \section{Design Decisions}
 
 %TODO verify date of open source
@@ -414,7 +416,6 @@ In the time since the publication of \cite{BolligFlyerErlebacher2012} custom Ope
 \label{fig:sparse_format}
 \end{figure}
 
-
 Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants, and a number of variants on the ELL format that operate in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. The HYB format stores the bulk of a matrix in an ELL container and the excess non-zeros per row in a CSR format. HYB benefits from reduced storage and memory loads in the ELL, and maintains the generality of a CSR matrix. 
 
 \begin{figure}
@@ -428,6 +429,28 @@ GFLOPs calculated as:
 \begin{align}
 GFLOP/s = ^{N * n * 2} /_{t_ms} * 10^{-9}. 
 \end{align}
+
+
+\section{Spear}
+
+These benchmarks compare performance of a single SpMV executed on Spear. Each data point is the average over 10 executions. The GPU is primed by an iteration before benchmarking begins. 
+
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
+\caption{SpMV Performance of the ViennaCL CSR, COO and ELL formats versus the BOOST::uBLAS CSR format. }
+\label{fig:spear_vcl_gflops}
+\end{subfigure} 
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_speedup-eps-converted-to.pdf}
+\caption{Speedup relative to the BOOST::uBLAS CSR implementation on the CPU.}
+\label{fig:spear_vcl_speedup}
+\end{subfigure} 
+\caption{Single GPU SpMV performance for ViennaCL vs BOOST::uBLAS on the Spear cluster (FSU). }
+\end{figure}
 
 
 
@@ -461,38 +484,6 @@ At the onset of work with ViennaCL two things were apparent: 1) the library was 
 Due to the assumption that all stencils have equal size, the ELL format is preferred as the default. 
  
 
-
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_cpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:gflops_cpu_1proc_keeneland}
-\end{subfigure} 
-
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:gflops_gpu_1proc_oneWarp_keeneland}
-\end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:gflops_gpu_1proc_oneThread_keeneland}
-\end{subfigure} 
-
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:speedup_1proc_oneWarp_keeneland}
-\end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneThreadPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Keeneland}
-\label{fig:speedup_1proc_oneThread_keeneland}
-\end{subfigure} 
-\caption{Benchmarks from the Keeneland GPU cluster compare the average run-time of a single time-step of RK4 executed custom kernels.}
-\end{figure} 
 
 
 

@@ -1,35 +1,16 @@
 %!TEX root = karen.tex
-\chapter{Single GPU SpMV Data By Host}
 
-\section{Keeneland}
+\chapter{Keeneland Benchmarks}
+\label{app:keeneland_alltoallv_benchmarks}
+The data in this appendix was acquired on the Keeneland GPU cluster \cite{Vetter2011}. It is provided for comparison with \cite{BolligFlyerErlebacher2012}.
 
+\section{Keeneland Scaling with MPI\_Alltoallv}
 
-\section{Spear}
+The following data, acquired on Keeneland, demonstrates performance of our implementation with communication managed by an MPI\_alltoallv collective. The benchmarks test the cosine bell advection problem from Section~\ref{sec:cosine}. 
 
-These benchmarks compare performance of a single SpMV executed on Spear. Each data point is the average over 10 executions. The GPU is primed by an iteration before benchmarking begins. 
-
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
-\caption{SpMV Performance of the ViennaCL CSR, COO and ELL formats versus the BOOST::uBLAS CSR format. }
-\label{fig:spear_vcl_gflops}
-\end{subfigure} 
-\begin{subfigure}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_speedup-eps-converted-to.pdf}
-\caption{Speedup relative to the BOOST::uBLAS CSR implementation on the CPU.}
-\label{fig:spear_vcl_speedup}
-\end{subfigure} 
-\caption{Single GPU SpMV performance for ViennaCL vs BOOST::uBLAS on the Spear cluster (FSU). }
-\end{figure}
-
-
-
-\chapter{Impact of MPI\_Alltoallv on \cite{BolligFlyerErlebacher2012}}
-
-The following data, acquired on Keeneland, demonstrates performance of our implementation with communication managed by an MPI\_alltoallv collective. The test case considered is the cosine bell advection problem from Section~\ref{sec:cosine_bell}. 
+Figure~\ref{fig:alltoall_multicpu_scaling} shows the strong scalability of our method on Multiple CPUs. Ideal strong scaling is linear. This figure demonstrates that our method does scale linearly (almost super-linearly) as the number of CPUs increases. 
+%, so our prospect for spanning all CPUs on Keeneland is within reach for problem sizes large enough.
+The super-linear speedup is due to improved caching on processors as individual problem sizes decrease and the processors are able to keep a larger percentage of the problem within fast cache memory.
 
 \begin{figure}
 \centering
@@ -67,12 +48,8 @@ The following data, acquired on Keeneland, demonstrates performance of our imple
 \caption{Multi-GPU}
 \label{fig:alltoall_multigpu_costs}
 \end{subfigure} 
-\caption{Cost comparison of benchmark components on Keeneland. The cost of MPI communication is significantly reduced and allows further scaling. \authnote{TODO: Send/Recv legend to Alltoallv}}
+\caption{Cost comparison of benchmark components on Keeneland. The cost of MPI communication is significantly reduced and allows further scaling. The ``MPI Send/Recv" component represents the time for an MPI\_Alltoallv collective.}
 \end{figure} 
-
-Figure~\ref{fig:alltoall_multicpu_scaling} shows the strong scalability of our method on Multiple CPUs. Ideal strong scaling is linear. This figure demonstrates that our method does scale linearly (almost super-linearly) as the number of CPUs increases. 
-%, so our prospect for spanning all CPUs on Keeneland is within reach for problem sizes large enough.
-The super-linear speedup is due to improved caching on processors as individual problem sizes decrease and the processors are able to keep a larger percentage of the problem within fast cache memory.
 
 Figure~\ref{fig:alltoall_multigpu_vs_cpu_scaling}  shows the scaling of multiple GPUs vs 1 CPU. Ideally, this figure would be the product of the previous two figures since the GPUs are attached to CPUs in a one to one correspondence. However, we see from the sub-linear scaling that while the GPU accelerators are decreasing the time to compute solutions, there is less and less return of investment as the number of processors increase. Between this Figure and the previous, the only thing that differs is the hardware on which stencils are evaluated. The cost of communication stays the same as in the previous figure. But that means the communication consumes a increasing percentage of the iteration time, until is dominates. 
 Additionally, computing on the GPU requires transfer (additional communication) of data between CPU and GPU. 
@@ -82,10 +59,48 @@ Figure~\ref{fig:alltoall_multigpu_vs_gpu_scaling} shows the scalability of multi
 
 Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_costs} show the smaller percentage of time per iteration dedicated to communication compared to the figures in the paper. In the Figure~\ref{fig:alltoall_multigpu_costs}, the way the times bottom out indicates we are/have converged on the minimum time required to launch a GPU kernel, transfer to/from the GPU, and communicate the problem via MPI. To scale to more processors, a larger problem size is absolutely necessary.
 
+\section{Single GPU SpMV on Keeneland} 
 
 
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_cpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_cpu_1proc_keeneland}
+\end{subfigure} 
 
-\section{Spear Distributed SpMV with MPI\_Alltoallv} 
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_gpu_1proc_oneWarp_keeneland}
+\end{subfigure} 
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:speedup_1proc_oneWarp_keeneland}
+\end{subfigure} 
+
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_gpu_1proc_oneThread_keeneland}
+\end{subfigure}
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv/speedup_1proc_oneThreadPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:speedup_1proc_oneThread_keeneland}
+\end{subfigure} 
+\caption{Benchmarks from the Keeneland GPU cluster compare the average run-time of a single time-step of RK4 executed custom kernels.}
+\end{figure} 
+
+
+\chapter{Spear Benchmarks} 
+\label{app:spear_alltoallv_benchmarks}
+
+The data in this appendix was acquired on the FSU Spear cluster. It is provided for comparison with \cite{BolligFlyerErlebacher2012}.
+
+\section{Spear Scaling with MPI\_Alltoallv}
 
 \begin{figure}
 \centering
@@ -124,18 +139,18 @@ Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_c
 \caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
 \label{fig:alltoall_multigpu_vs_gpu_scaling}
 \end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiGPU_thread_costs-eps-converted-to.pdf}
-\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
-\label{fig:alltoall_multigpu_vs_gpu_scaling}
-\end{subfigure} 
+%\begin{subfigure}[t]{0.425\textwidth}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiGPU_thread_costs-eps-converted-to.pdf}
+%\caption{Multi-GPU strong scaling vs one GPU on Spear for one thread per stencil}
+%\label{fig:alltoall_multigpu_vs_gpu_scaling}
+%\end{subfigure} 
 \end{figure} 
 
 
 
 
-\section{Spear GPU SpMV}
+\section{Single GPU SpMV on Spear}
 
 These results were run on Spear. MPI communication is done with an MPI\_alltoallv collective. The test case is the vortex roll-up. 
 
@@ -148,7 +163,7 @@ These results were run on Spear. MPI communication is done with an MPI\_alltoall
 \end{subfigure} 
 
 \begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
@@ -157,13 +172,14 @@ These results were run on Spear. MPI communication is done with an MPI\_alltoall
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
+
 \begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
 \begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:alltoall_1proc_warp}
 \end{subfigure} 
