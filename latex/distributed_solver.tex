@@ -373,12 +373,18 @@ The scalings reveal different properties:
 \end{itemize}
  
 
-For both scalings we benchmark 4000 iterations RBF-FD derivative calculation. The input grid is assumed to be a 3D regular grid and various stencil sizes are tested. Weak scaling considers $N_p=4000$ per processor. Strong scaling considers $N=4096000$ (i.e., $N=160^3$) nodes. Timings are reported for total execution time for a distributed SpMV, as well as per-component times for computation and communication only.
+For both scalings we consider a simple idealized problem where four derivatives are computed over a regular grid in 3-D and used as the intermediate vectors for an RK4 time-step. At the end of each SpMV a communication collective synchronizes the local derivative vectors. At the end of one thousand iterations, each process computes the local norm of the latest vector and an MPI\_Reduce collects global norms for verification. Timings are reported for the distributed SpMV including MPI communication using the POSIX \emph{gettimeofday}.
+
+The input grid is assumed to be a 3D regular grid and various stencil sizes are tested. Weak scaling considers $N_p=4000$ per processor. Strong scaling considers $N=4096000$ (i.e., $N=160^3$) nodes. Timings are reported for total execution time for a distributed SpMV, as well as per-component times for computation and communication only.
+
+Verification details are not reported here since they are only significant to ensure that parallel results are consistent.
 
 
 The benchmark is run on the Itasca HPC cluster at the University of Minnesota (Minnesota Supercomputing Institute). Itasca has 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors. Each compute node has at least 24GB of RAM. Itasca has a total of 8,744 cores available for computing with a total usable memory size of 31.3 TB \cite{MSIItasca}. 
 
 Itasca's InfiniBand network topology is a 2-way fat-tree network. Each compute node, with 8 cores, is considered a \emph{leaf} of the fat-tree. Processes within a leaf communicate via shared memory. Groups of 16 nodes connect via QDR InfiniBand to \emph{leaf switches} at the second level of the tree. All leaf switches are in turn connected to two director nodes via 4x QDR InfiniBand. The topology exhibits 8:1 contention between nodes of the same leaf and additional 2:1 contention between leaf switches \cite{ItascaTuning}. Our implementation of RBF-FD does not detect or adjust to the topology, so network contention can have a pronounced effect on communication times.
+
+
 
 \subsection{Baseline: MPI\_Alltoallv}
 
@@ -498,12 +504,12 @@ Tuning occurred as follows for the $n=50$ node stencil case and $N_p=4000$ nodes
 \item The MPI\_Alltoallv is replaced by non-blocking MPI\_Isend/MPI\_Irecv (Figure~\ref{fig:isendirecv_cpu}).
 \item MPI\_Irecv is issued \emph{before} starting the SpMV to ensure MPI\_Isends have pending connections when ready (Figure~\ref{fig:preirecv_cpu}). Posting the non-blocking receives early helps hide some load balancing issues. 
 \item Based on the assumption that elements of $\setDepend$ are sorted contiguous by neighboring process, the entire decode process is skipped (Figure~\ref{fig:no_decode_cpu}). 
-\item MPI\_Irecv and MPI\_Isend are issued before computing the SpMV for set $\setCenters \backslash \setBoundary$. MPI\_Isend is non-blocking so the SpMV for $\setCenters \backslash \setBoundary$ starts before communication is complete. A barrier at the end of the first SpMV waits for communication to finish before launching the second SpMV on $\setBoundary$. This hides some cost of communication behind computation on the CPU (Figure~\ref{fig:overlap_cpu}). 
+\item MPI\_Irecv and MPI\_Isend are issued before computing the SpMV for set $\setCenters \backslash \setBoundary$. MPI\_Isend is non-blocking so the SpMV for $\setCenters \backslash \setBoundary$ starts before communication is complete. A barrier at the end of the first SpMV waits for communication to finish before launching the second SpMV on $\setBoundary$. This hides some cost of communication behind computation on the CPU (Figure~\ref{fig:overlap_cpu}). This collective is the basis for the collective used for distributed GPU computing (Chapter~\ref{chap:multigpu_rbffd})
 \end{enumerate}
 
-The weak scaling improvement for each step is shown in Figure~\ref{fig:compare_weak_scaling_n50} for $n=50$ and $N_p=4000$ (regular grid).  
+\noindent The weak scaling improvement for each step is shown in Figure~\ref{fig:compare_weak_scaling_n50} for $n=50$ and $N_p=4000$ (regular grid).  
 
-Figure~\ref{fig:compare_strong_scaling_n50} for $N=4096000$ .  
+Figure~\ref{fig:compare_strong_scaling_n50} compares weak scaling for the $N=4096000$ .  
 
 
 \begin{figure}
@@ -521,13 +527,6 @@ Figure~\ref{fig:compare_strong_scaling_n50} for $N=4096000$ .
 \end{figure}
 
 
-%
-%\begin{figure}
-%\centering
-%\includegraphics[width=0.48\textwidth]{performance_content/scaling/weak_scaling_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
-%\caption{Weak scaling comparison for various stencil sizes ($n=17, 31, 50, 101$) and $N_p = 4000$ on a regular grid with maximum resolution $N=4096000$ on Itasca.}
-%\label{fig:compare_weak_scaling_n50}
-%\end{figure}
 
 \begin{figure}
 \centering
@@ -572,13 +571,6 @@ Figure~\ref{fig:compare_strong_scaling_n50} for $N=4096000$ .
 \label{fig:weak_scaling_all_stencils}
 \end{figure}
 
-%#	performance_content/scaling/strong_scaling_4M_overlap_cpu_SpMV_and_comm_all_stencils.png
-%#	performance_content/scaling/strong_scaling_efficiency_4M_compare_SpMV_and_comm_n50.png
-%#	performance_content/scaling/strong_scaling_efficiency_4M_overlap_cpu_SpMV_and_comm_all_stencils.png
-%#	performance_content/scaling/strong_scaling_speedup_4M_compare_SpMV_and_comm_n50.png
-%#	performance_content/scaling/strong_scaling_speedup_4M_overlap_cpu_SpMV_and_comm_all_stencils.png
-
-
 
 
 Possible causes for the growth: 
@@ -589,35 +581,6 @@ Possible causes for the growth:
 \item Send and receive buffers are no properly aligned \authnote{see intel/IBM articles for proposed alignment benefits}. 
 \item Need to shuffle machine file for best use of topology
 \end{itemize}
-
-%TODO: 
-%TODO: In the case of distributed CPU, it is possible to overlap communication and computation with MPI\_Isend and MPI\_Irecv, but this was not tested.
-
-%TODO: overlapping comm and comp (Q\B) on MPI_Irecv->encode->MPI_Isend->Q\B->MPI_\Waitall->decode->B. 
-%TODO: encoding into a sendBuf
-%TODO: decoding out of recvBuf
-
-
-The performance scalability of the code depends on the problem size and the MPI collective. 
-
-To demonstrate the effectiveness of our decomposition and indexing, we perform scaling experiments. 
-
-Strong scaling tests the growth in time for a fixed total problem size, and a variable number of processors. 
-
-Weak scaling considers the amount of time for a fixed problem size per process and variable number of processors. That is to say, each processor has roughly the same amount of work, so as we scale to a large number of processors, changes in time will be the result of increased communication overhead. 
-
-
-To test and demonstrate scaling of our method, we consider an idealized regular grid in three dimensions. 
-
-verification here is only significant to ensure we are applying all weights. 
-We apply weights to calculate derivatives of a test function in X, Y, Z, and the Laplacian. 
-the grid is regular and 3D.
-We test strong scaling on a $N=160^3$ grid, and weak scaling with $N_p=4000$. This way at $p=1024$ processes we have weak scaling testing the full $N=160^3$ grid. 
-
-We consider a simple idealized problem where derivatives are computed over a regular grid generated in 3-D. The experiment computes the SpMV one thousand times. At the end of each SpMV the MPI\_Alltoallv collective is used to synchronize the local derivative vectors. After one thousand iterations, each process computes the local norm of the resulting vector and an MPI\_Reduce collective dra
-
-
-%Although our weak scaling results are promising, they also contain a problem. First, since we are subsampling a $160^3$ regular grid to get the first $N=p*4000$ nodes, many of the tests consider domains that are ``L" shaped and have odd partitions with limited connectivity.
 
 
 In order to manage expectations of parallel performance in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial:
