@@ -50,15 +50,6 @@ What is really important:
 		TODO:   benchmark viennacl with top GFLOPs (used tuned
 			parameters for SpMV tests on one GPU 
 
-	- Distributed
-		why
-			target all of clusters
-			scaling is important
-		how
-			tuned collective
-			zero-byte data transfer hurts
-			isend/irecv best
-		TODO: NONE
 
 	- Distributed GPU
 		why
@@ -116,5 +107,10 @@ What is really important:
 		TODO: 	Get convergence plot for Stokes with preconditioning
 			Get GMRES iter/s with Preconditioning added
 
+	- Appendices
+
+		TODO: Fix GFLOPs to be 24*N*n + 23*N or 16*N*n + 15*N
+
+		TODO: Insert figures and data for Anulus solves or 
 
 

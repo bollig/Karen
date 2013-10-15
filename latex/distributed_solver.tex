@@ -373,16 +373,16 @@ The scalings reveal different properties:
 \end{itemize}
  
 
-For both scalings we consider a simple idealized problem where four derivatives are computed over a regular grid in 3-D and used as the intermediate vectors for an RK4 time-step. At the end of each SpMV a communication collective synchronizes the local derivative vectors. At the end of one thousand iterations, each process computes the local norm of the latest vector and an MPI\_Reduce collects global norms for verification. Timings are reported for the distributed SpMV including MPI communication using the POSIX \emph{gettimeofday}.
+For both scalings a simple idealized problem is tested where four derivatives are computed over a regular grid in 3-D and used as the intermediate vectors for an RK4 time-step. At the end of each SpMV a communication collective synchronizes the local derivative vectors. At the end of one thousand iterations, each process computes the local norm of the latest vector and an MPI\_Reduce collects global norms for verification. Timings are reported for the distributed SpMV including MPI communication using \emph{gettimeofday}.
 
-The input grid is assumed to be a 3D regular grid and various stencil sizes are tested. Weak scaling considers $N_p=4000$ per processor. Strong scaling considers $N=4096000$ (i.e., $N=160^3$) nodes. Timings are reported for total execution time for a distributed SpMV, as well as per-component times for computation and communication only.
+Stencil sizes $n=17, 31, 50$ and $n=101$ are tested. Weak scaling is evaluated for $N_p=4000$ per processor. Strong scaling considers $N=4096000$ (i.e., $N=160^3$) nodes. Timings are reported for total execution time for a distributed SpMV, as well as per-component times for computation and communication only.
 
-Verification details are not reported here since they are only significant to ensure that parallel results are consistent.
+Verification details are not reported here since they are only significant in ensuring parallel results are consistent.
 
 
 The benchmark is run on the Itasca HPC cluster at the University of Minnesota (Minnesota Supercomputing Institute). Itasca has 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors. Each compute node has at least 24GB of RAM. Itasca has a total of 8,744 cores available for computing with a total usable memory size of 31.3 TB \cite{MSIItasca}. 
 
-Itasca's InfiniBand network topology is a 2-way fat-tree network. Each compute node, with 8 cores, is considered a \emph{leaf} of the fat-tree. Processes within a leaf communicate via shared memory. Groups of 16 nodes connect via QDR InfiniBand to \emph{leaf switches} at the second level of the tree. All leaf switches are in turn connected to two director nodes via 4x QDR InfiniBand. The topology exhibits 8:1 contention between nodes of the same leaf and additional 2:1 contention between leaf switches \cite{ItascaTuning}. Our implementation of RBF-FD does not detect or adjust to the topology, so network contention can have a pronounced effect on communication times.
+Itasca's InfiniBand network topology is a 2-way fat-tree network. Each compute node, with 8 cores, is considered a \emph{leaf} of the fat-tree. Processes within a leaf communicate via shared memory. Groups of 16 nodes connect via QDR InfiniBand to \emph{leaf switches} at the second level of the tree. All leaf switches are in turn connected to two director nodes via 4x QDR InfiniBand. The topology exhibits 8:1 contention between nodes of the same leaf and additional 2:1 contention between leaf switches \cite{ItascaTuning}. Our implementation of RBF-FD does not detect or adjust to network topology, so network contention can have a pronounced effect on communication times.
 
 
 
@@ -427,7 +427,7 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \end{figure}
 
 
- Based on Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils} the MPI\_Alltoallv weak scaling is poor. As $p$ grows, the total time grows at a discouraging rate. At $p=16$ the cost of communication the starts to grow super-linearly. Figure~\ref{fig:weak_scaling_spmv_only_alltoallv_all_stencils}, which shows the SpMV time only, verifies that beyond the initial growth in time on a single compute node the SpMV is constant for all stencil sizes. That then implies the cost of communication must be reduced (or hidden). 
+The data in Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils} shows MPI\_Alltoallv weak scaling is poor. As $p$ grows, the total time follows at a discouraging rate. Figure~\ref{fig:weak_scaling_spmv_only_alltoallv_all_stencils}, which presents the SpMV time only, verifies that beyond the initial growth in time on a single compute node the SpMV is constant for all stencil sizes. That then implies the cost of communication must be reduced (or hidden). 
 
 \begin{figure}
 \centering
@@ -455,9 +455,9 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \subsection{Improvements}
 
 
-Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in an effort to improve weak scaling. 
+Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in effort to flatten the weak scaling curves from Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils}. 
 
-Each tile of Figure~\ref{fig:mpi_tuning} shows a timeline for the distributed SpMV. Vertical bars separate the SpMV in focus from execution of the next and last SpMV. Our implementation does not assume a global barrier before starting the next iteration, so load balancing is essential to limit wait times between processors. Operations are concurrent from top to bottom within each tile, and the top-most operations are launched first.
+Each tile of Figure~\ref{fig:mpi_tuning} is a timeline for the distributed SpMV. Vertical bars separate the SpMV in focus from execution of the next and last SpMV. Our implementation does not assume a global barrier before starting the next iteration, so load balancing is essential to limit wait times between processors. Operations are concurrent from top to bottom within each tile, and the top-most operations are launched first.
 
 %The distributed GPU implementation in Chapter~\ref{chap:multigpu_rbffd} is based on the collective in Figure~\ref{fig:overlap_cpu}. 
 
@@ -501,31 +501,51 @@ Each tile of Figure~\ref{fig:mpi_tuning} shows a timeline for the distributed Sp
 Tuning occurred as follows for the $n=50$ node stencil case and $N_p=4000$ nodes per process:  
 \begin{enumerate} 
 \item The entire SpMV for $\setCenters$ is executed, followed by a blocking MPI\_Alltoallv collective (Figure~\ref{fig:alltoallv_cpu}). This is the baseline discussed above.
-\item The MPI\_Alltoallv is replaced by non-blocking MPI\_Isend/MPI\_Irecv (Figure~\ref{fig:isendirecv_cpu}).
+\item The MPI\_Alltoallv is replaced by non-blocking MPI\_Isend/MPI\_Irecv (Figure~\ref{fig:isendirecv_cpu}). This avoids unnecessary overhead in zero-byte message handling. 
 \item MPI\_Irecv is issued \emph{before} starting the SpMV to ensure MPI\_Isends have pending connections when ready (Figure~\ref{fig:preirecv_cpu}). Posting the non-blocking receives early helps hide some load balancing issues. 
 \item Based on the assumption that elements of $\setDepend$ are sorted contiguous by neighboring process, the entire decode process is skipped (Figure~\ref{fig:no_decode_cpu}). 
 \item MPI\_Irecv and MPI\_Isend are issued before computing the SpMV for set $\setCenters \backslash \setBoundary$. MPI\_Isend is non-blocking so the SpMV for $\setCenters \backslash \setBoundary$ starts before communication is complete. A barrier at the end of the first SpMV waits for communication to finish before launching the second SpMV on $\setBoundary$. This hides some cost of communication behind computation on the CPU (Figure~\ref{fig:overlap_cpu}). This collective is the basis for the collective used for distributed GPU computing (Chapter~\ref{chap:multigpu_rbffd})
 \end{enumerate}
 
-\noindent The weak scaling improvement for each step is shown in Figure~\ref{fig:compare_weak_scaling_n50} for $n=50$ and $N_p=4000$ (regular grid).  
+\noindent Weak scaling improvement is presented in Figure~\ref{fig:compare_weak_scaling_n50}. The gap between MPI\_Alltoallv (blue) and the basic MPI\_Isend/MPI\_Irecv (red) in Figure~\ref{fig:compare_weak_scaling_n50} nicely captures the substantial loss of time due to zero-byte message tests. Posting MPI\_Irecv before the SpMV (see the green line) shows moderate improvement for large $p$, and reflects that the load balancing of the test is getting worse. At $p=1024$ processes the overlapping CPU approach is 2.8x faster than the baseline. Although its scaling is not ideal, overlapping the SpMV and communication does represent a significant improvement over the original MPI\_Alltoallv. 
 
-Figure~\ref{fig:compare_strong_scaling_n50} compares weak scaling for the $N=4096000$ .  
+In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scaling for each of the collectives. Differences in curves are difficult to discern except for $p \leq 16$ and $p = 1024$. Starting with the latter case, observe that the trend of near linear scaling for the overlapping collective persists at $p=1024$ rather than bottoming-out in the fashion of MPI\_Alltoallv. For small $p$ the MPI\_Alltoallv is much better than MPI\_Isend/MPI\_Irecv variants. This is most likely due to the collective internally adjusting to network topology and process layout. Duplicating those optimizations for the overlapped CPU collective is part of future work. Until that is complete, RBF-FD on distributed CPUs should use the MPI\_Alltoallv collective for $p \leq 16$ and the overlapped MPI\_Isend/MPI\_Irecv in all other cases. 
+
+\subsection{All Stencil Summary}
+
+Figures~\ref{fig:compare_weak_scaling_all_stencils} and \ref{fig:compare_strong_scaling_all_stencils} considers the scaling overlapped communication and computation approach for various stencil sizes. Based on the 
+
+larger stencils implies more load imbalancing. Indeed
+
+
+
+By sampling the time between the start of the $\setCenters \backslash \setBoundary$ SpMV launch and the finish of the $\setBoundary$ SpMV finishes one gets the SpMV only time. Likewise the time between MPI\_Irecv and an MPI\_Waitall at the end of the $\setCenters \backslash \setBoundary$ SpMV gives the time spent in communication. Subtracting the two component times gives an idea of how much overlap hides communication. 
+
+A look at the per-component times (i.e., time only in SpMV vs time only in communication) is spent only on SpMV (i.e., ) versus the time in communication 
+
+Overall the overlapping collective hides the cost of communication for further scaling.  At 512 processes 10\% of execution time 
+For $p \leq 16$ the MPI\_Alltoallv is substantially better than MPI\_Isend/MPI\_Irecv variants. 
+
+Figures ... and ... present 
 
 
 \begin{figure}
 \centering
-\includegraphics[width=0.48\textwidth]{performance_content/scaling/weak_scaling_np4000_compare_SpMV_and_comm_n50.png}
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_np4000_compare_SpMV_and_comm_n50.png}
 \caption{Weak scaling comparison for $n=50$ and $N_p = 4000$ on a 3D regular grid with maximum resolution $N=4096000$ on Itasca.}
 \label{fig:compare_weak_scaling_n50}
-\end{figure}
-
-\begin{figure}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
 \centering
-\includegraphics[width=0.48\textwidth]{performance_content/scaling/strong_scaling_4M_compare_SpMV_and_comm_n50.png}
+\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_4M_compare_SpMV_and_comm_n50.png}
 \caption{Strong scaling comparison for $n=50$ and $N = 4096000$ on a 3D regular grid on Itasca.}
 \label{fig:compare_strong_scaling_n50}
+\end{subfigure}
+\caption{Weak and Strong Scaling Improvements}
 \end{figure}
-
 
 
 \begin{figure}
@@ -538,9 +558,9 @@ Figure~\ref{fig:compare_strong_scaling_n50} compares weak scaling for the $N=409
 \end{subfigure}
 \begin{subfigure}{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_efficiency_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
-\caption{Efficiency}
-\label{fig:compare_weak_scaling_efficiency_all_stencils}
+\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\caption{Scaling (All Stencils)}
+\label{fig:compare_strong_scaling_all_stencils}
 \end{subfigure}
 \caption{Weak scaling and efficiency comparison for various stencil sizes ($n=17, 31, 50, 101$) and $N_p = 4000$ on a regular grid with maximum resolution $N=4096000$ on Itasca. } 
 \label{fig:weak_scaling_all_stencils}
@@ -549,12 +569,7 @@ Figure~\ref{fig:compare_strong_scaling_n50} compares weak scaling for the $N=409
 
 \begin{figure}
 \centering
-\begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
-\caption{Scaling (All Stencils)}
-\label{fig:compare_strong_scaling_all_stencils}
-\end{subfigure}
+
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_speedup_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
@@ -563,10 +578,23 @@ Figure~\ref{fig:compare_strong_scaling_n50} compares weak scaling for the $N=409
 \end{subfigure}
 \begin{subfigure}{0.48\textwidth}
 \centering
+\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_comm_only_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\caption{Visible Communication ($\ ^{(t_{Comm} - t_{SpMV})}/_{t_p} $)}
+\label{fig:compare_strong_scaling_comm_only_all_stencils}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_efficiency_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\caption{Weak Scaling Efficiency $E_p = \ ^{t_1}/_{t_p}$}
+\label{fig:compare_weak_scaling_efficiency_all_stencils}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\centering
 \includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_efficiency_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
-\caption{Efficiency ($E_p = \ ^{t_{1}}/_{p*t_p} $)}
+\caption{Strong Scaling Efficiency ($E_p = \ ^{t_{1}}/_{p*t_p} $)}
 \label{fig:compare_strong_scaling_efficiency_all_stencils}
 \end{subfigure}
+
 \caption{Strong scaling comparison for various stencil sizes ($n=17, 31, 50, 101$) and $N_p = 4000$ on a regular grid with maximum resolution $N=4096000$ on Itasca. } 
 \label{fig:weak_scaling_all_stencils}
 \end{figure}
@@ -578,56 +606,22 @@ Possible causes for the growth:
 \item Insufficient workload per processor to hide cost of communication
 \item Processor workloads are not balanced. Similar to the comparison in \S~\ref{sec:load_balance}, we test the ratio of ghost node counts on $p=1024$ ($n=17$) and find  $\frac{\min N_r}{\max N_r} = 0.39$. The low ratio confirms suspicions that communication loads are imbalanced. 
 \item The underlying network fabric on Itasca limits communication scaling. The QDR-Inifiband network on Itasca is a two-way fat-tree with non-blocking communication in groups of 16 \authnote{nodes/cores?}. 
-\item Send and receive buffers are no properly aligned \authnote{see intel/IBM articles for proposed alignment benefits}. 
+\item Send and receive buffers may need to be properly padded to ideal message sizes.  \authnote{ref intel/IBM articles for proposed alignment benefits}. 
 \item Need to shuffle machine file for best use of topology
 \end{itemize}
-
-
-In order to manage expectations of parallel performance in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial:
-\begin{align}
-S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
-\end{align}
-where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Scaling to a very large number of processors may make the time in parallelizable portions of code vanish, but $T_s$ remains constant. In any distributed implementation communication is always included in estimate for $T_s$, so it is expected for  pertinent to choose an MPI collective with minimal overhead and latency. 
-
-As the number of processors grows, more messages enter the infiniband network, increasing communication times. 
-
-%TODO: copy down, encode, send/recv, decode, copy up
-
-
-\subsection{Basic Scaling (Keeneland)}
-
-
-%TODO: show evidence from paper (keeneland) on scaling as send/recv with blocking. 
-
-The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial scaling of our implementation for a distributed RK4 iteration using primitive blocking MPI\_Send/MPI\_Recv communication routines. The collective was a round-robin all-to-subset connection between processors, each taking a turn send data (0 or more bytes) to all other processes and otherwise waiting to receive data. Blocking communication was implemented for code verification. Data in \cite{BolligFlyerErlebacher2012} was acquired on the multi-GPU cluster named Keeneland \cite{Vetter2011}. The implementation demonstrated poor scaling behavior as blocking collectives serialized transmissions, and every process had to wait until the end of the collective to proceed. The objective in \cite{BolligFlyerErlebacher2012}, however, was not to present a well tuned distributed GPU implementation of RBF-FD. Instead we focused on the design decisions for partitioning, index mapping, etc. and verification of both single and distributed GPU implementations as inefficient as they were. 
-
-
-\subsubsection{MPI\_Alltoallv Keeneland}
-%TODO: non-blocking on keeneland
-With the distributed multi-CPU and mult-GPU implementations were verified we were able to focus our efforts on reducing the collective bottlenecks. The first step was to test an MPI\_Alltoallv on Keeneland. Results are as follows
-
-Scaling tests were performed on the unit sphere with the linear-in-$x$ partitioning. 
-
-
-
-\subsubsection{MPI\_Alltoallv Spear}
-Similar numbers are obtained on Spear, the multi-GPU cluster at FSU. Again, results are for strong scaling across 10 GPUs
-
-However, in the case of Spear it was found that the performance of the interconnect
-
-
-As an aside, some benchmark on Spear highlight the imbalanced workloads on processors. Excessive wait times on MPI collectives meant that processes were not entering communication stages at similar times. In response launched a new effort to load-balance and tune MPI for a large number of processes.
-
-At this point scaling the code allows us to reach a higher number of nodes. To confirm this  
-
-
-
-
-%To understand the impact of MPI on these benchmarks we calculate the average and aggregate collective bandwidths. The average bandwidth considers the MPI throughput from the perspective of one processor. 
 %
-%The aggregate bandwidth reveals when processes saturate the interconnects. 
+%
+%In order to manage expectations of parallel performance in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial:
+%\begin{align}
+%S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
+%\end{align}
+%where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Scaling to a very large number of processors may make the time in parallelizable portions of code vanish, but $T_s$ remains constant. In any distributed implementation communication is always included in estimate for $T_s$, so it is expected for  pertinent to choose an MPI collective with minimal overhead and latency. 
+%
+%
 
 
+%
+%As an aside, some benchmark on Spear highlight the imbalanced workloads on processors. Excessive wait times on MPI collectives meant that processes were not entering communication stages at similar times. In response launched a new effort to load-balance and tune MPI for a large number of processes.
 
 
 \section{Conclusion}
