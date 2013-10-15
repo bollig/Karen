@@ -390,7 +390,7 @@ Verification details are not reported here since they are only significant in en
 
 The benchmark is run on the Itasca HPC cluster at the University of Minnesota (Minnesota Supercomputing Institute). Itasca has 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors. Each compute node has at least 24GB of RAM. Itasca has a total of 8,744 cores available for computing with a total usable memory size of 31.3 TB \cite{MSIItasca}. Test cases are compiled with the Intel v2013.5 compiler (``icc") and the Intel provided MPI (``IMPI"). Optimization flag ``-O3" is used to enable auto-vectorization, loop unrolling, blocking, etc.
 
-Itasca's InfiniBand network topology is a 2-way fat-tree network. Each compute node, with 8 cores, is considered a \emph{leaf} of the fat-tree. Processes within a leaf communicate via shared memory. Groups of 16 nodes connect via QDR InfiniBand to \emph{leaf switches} at the second level of the tree. All leaf switches are in turn connected to two director nodes via 4x QDR InfiniBand. The topology exhibits 8:1 contention between nodes of the same leaf and additional 2:1 contention between leaf switches \cite{ItascaTuning}. Our implementation of RBF-FD does not detect or adjust to network topology, so network contention can have a pronounced effect on communication times.
+Itasca's InfiniBand network topology is a 2-way fat-tree network. Each compute node, with 8 cores, is considered a \emph{leaf} of the fat-tree. Processes within a leaf communicate via shared memory. Groups of 16 nodes connect via QDR InfiniBand to \emph{leaf switches} at the second level of the tree. All leaf switches are in turn connected to two director nodes via 4x QDR InfiniBand. The topology exhibits 8:1 contention between nodes of the same leaf and additional 2:1 contention between leaf switches \cite{ItascaTuning}. Our implementation of RBF-FD does not detect or adjust to network topology, so network contention may inflate communication times. Tuning for the network topology is reserved for future work. 
 
 
 
@@ -540,9 +540,9 @@ In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scal
 \caption{Weak and Strong Scaling Improvements}
 \end{figure}
 
-Figures~\ref{fig:compare_weak_scaling_all_stencils} and \ref{fig:compare_strong_scaling_all_stencils} consider the scaling for the overlapped communication and computation and various stencil sizes ($n=17,31,50$ and $n=101$ where the problem size fits on the system). 
+Figures~\ref{fig:compare_weak_scaling_all_stencils} and \ref{fig:compare_strong_scaling_all_stencils} demonstrate the scaling for the overlapped communication and computation and various stencil sizes ($n=17,31,50,101$). 
 
-Weak scaling in Figure~\ref{fig:compare_weak_scaling_all_stencils} shows that degradation in weak scaling starts at smaller $p$ as $n$ grows. This is attributed---at least in part---to the proportional increase in the number of ghost node dependencies per partition sent/received. Similar to the comparison in \S~\ref{sec:load_balance}, we test the ratio of ghost node counts on $p=1024$ ($n=17$) and find  $\frac{\min N_r}{\max N_r} = 0.39$. The low ratio points to imbalanced communication loads as the cause for communication increase. 
+Weak scaling in Figure~\ref{fig:compare_weak_scaling_all_stencils} shows that degradation in weak scaling starts at smaller $p$ as $n$ grows. This is attributed---at least in part---to the proportional increase in the number of ghost node dependencies per partition sent/received. Based on the comparison in \S~\ref{sec:load_balance}, the ratio of ghost node counts was found to be $\frac{\min N_r}{\max N_r} = 0.39$ for $p=1024$ ($n=17$). The low ratio points to imbalanced communication loads as one cause for communication increase. 
 
 
 \begin{figure}
@@ -572,9 +572,9 @@ Weak scaling in Figure~\ref{fig:compare_weak_scaling_all_stencils} shows that de
 \end{figure}
 
 
-Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in term of speedup: $S_p = \ ^{t_s}/_{t_p}$. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$.
+Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in term of speedup: $S_p = \ ^{t_1}/_{t_p}$ where $t_1$ is the serial time and $t_p$ is parallel time. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$.
 
-For comparison with related work we provide weak and strong scaling efficiencies in Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:compare_strong_scaling_efficiency_all_stencils}. 
+
 
 %By sampling the time between the start of the $\setCenters \backslash \setBoundary$ SpMV launch and the finish of the $\setBoundary$ SpMV kernel, one gets an approximation to $t_{SpMV}$, the total time spent computing the SpMV. Likewise the time between MPI\_Irecv and an MPI\_Waitall at the end of the $\setCenters \backslash \setBoundary$ SpMV gives the time spent in communication, $t_{Comm}$. Note that $t_{Comm}$ includes the encoding time. Figure~\ref{fig:compare_strong_scaling_comm_only_all_stencils} subtracts the $t_{Comm}$ and $t_{SpMV}$ to get an idea of what percentage of the original ti gives an idea of how much overlap hides communication. 
 %
@@ -598,6 +598,20 @@ For comparison with related work we provide weak and strong scaling efficiencies
 \label{fig:scaling_efficiency}
 \end{figure}
 
+
+For comparison with related work, and to assess how well the implementation utilizes hardware, we provide weak and strong scaling efficiencies in Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:compare_strong_scaling_efficiency_all_stencils}. Efficiency can have multiple definitions, but is always expressed as a percentage of linear scaling with 100\% as ideal. Lower percentages indicate under-utilization of parallelism due to communication overhead and other issues.  Weak Scaling Efficiency is calculated as: 
+\begin{align*}
+E_p = \ ^{t_1}/_{t_p} * 100\%
+\end{align*}
+where $t_1$ is the execution time on 1 processor and $t_p$ is the time on $p$ processors.
+Strong Scaling Efficiency is: 
+\begin{align*}
+E_p = \ ^{t_{1}}/_{(p*t_p)} * 100\%.
+\end{align*}
+Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:compare_strong_scaling_efficiency_all_stencils} show our distributed RBF-FD achieves about 30\% to 40\% parallel efficiency in strong and weak cases. 
+
+%TODO: Strong scaling efficiency for $p=128$ is at 33\% for $n=17$ and 37\% for $n=50$. A similar efficiency of 36\% was stated by the PetRBF implementation \cite{Yokota2010} for the Cray XT4. 
+
 \begin{figure}
 \centering
 \begin{subfigure}{0.48\textwidth}
@@ -616,18 +630,22 @@ For comparison with related work we provide weak and strong scaling efficiencies
 \label{fig:visible_comm}
 \end{figure}
 
-Visible communication is calculated as $t_{vis} = \ ^{(t_{Comm} - t_{SpMV (\setCenters \backslash\setBoundary)}}) /_{t_{Total}}$.
 
+Figures~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils} and \ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils}  quantify the overhead in communication for all weak and strong scaling test cases. Both figures show the percentage of \emph{visible communication time}, $t_{vis}$, during an iteration of the distributed SpMV. The visible time is defined as: 
+\begin{align*}
+t_{vis} = \ ^{(t_{Comm} - t_{SpMV 1}}) /_{t_{Total}}
+\end{align*}
+where $t_{Comm}$ is the subset of time between the first MPI\_Irecv post and the start of the first SpMV (for $\setCenters \backslash \setBoundary$). Any communication hidden by the first SpMV is subtracted off with $t_{SpMV 1}$.
 
+The local minima in  Figure~\ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils} reveal an optimal choice of $p$ by stencil size for overlapping communication and computation. Note that the minima at $p=8$ for $n=17$, and $p=32$ for $n=31$ and $50$ correspond to strong scaling efficiency peaks in Figure~\ref{fig:compare_strong_scaling_efficiency_all_stencils}.
 
-Possible causes for the growth: 
-\begin{itemize} 
-\item Insufficient workload per processor to hide cost of communication
-\item Processor workloads are not balanced. \item The underlying network fabric on Itasca limits communication scaling. The QDR-Inifiband network on Itasca is a two-way fat-tree with non-blocking communication in groups of 16 \authnote{nodes/cores?}. 
-\item Send and receive buffers may need to be properly padded to ideal message sizes.  \authnote{ref intel/IBM articles for proposed alignment benefits}. 
-\item Need to shuffle machine file for best use of topology
+ For weak scaling, the constant SpMV computation time (and overlap) means the linear growth in Figure~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils}  is purely growth in communication time with respect to $p$. Possible causes include (but are not limited to): 
+\begin{itemize}
+\item \emph{Worsening load balance}. As previously mentioned, METIS may be incapable of partitioning the domain optimally.
+\item \emph{Network contention}. As the number of processes scale the increasing network traffic is expected to slow down. 
+\item \emph{Improperly padded or aligned messages}. MPI, like any other software, operates most efficiently when data is properly aligned and messages have the right size. 
 \end{itemize}
-
+All three of these concerns will be investigated as part of future work. 
 
 %
 %As an aside, some benchmark on Spear highlight the imbalanced workloads on processors. Excessive wait times on MPI collectives meant that processes were not entering communication stages at similar times. In response launched a new effort to load-balance and tune MPI for a large number of processes.
