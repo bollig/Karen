@@ -44,6 +44,12 @@ solution values, etc. that are visible to each process, and establish index mapp
 
 This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. The discussion in this chapter applies to both multi-CPU and multi-GPU implementations of RBF-FD. Since each GPU is used as an accelerator, details of partitioning, local and global index mappings, and node ordering are managed on the CPU.  
 
+In order to manage expectations of how well the code will run in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial \cite{Shi2012}:
+\begin{align}
+S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
+\end{align}
+where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Amdahl's law reveals that scaling to a large number of processors, $p$, can make the time in parallelizable portions of code vanish, but $T_s$ is constant. Communication is always included in $T_s$, so it is pertinent to minimize the cost of communication for maximum gain. 
+
 We operate under the assumption that inter-process communication is managed by the \emph{Message Passing Interface (MPI)} \cite{MPI}. Detail on how communication collectives are used is included below in Section~\ref{sec:mpi_collectives}. We use the term \emph{MPI process} to refer to a process that occupies one CPU core and is associated with at most one GPU accelerator. MPI processes on multiple cores of the same CPU behave the same as processes on independent compute nodes in a cluster; the only difference being the fabric used for communication (i.e., fast shared memory versus a slower QDR Infiniband). MPI always uses the fastest interconnect possible to connect processes. 
 
 
@@ -377,7 +383,8 @@ For both scalings a simple idealized problem is tested where four derivatives ar
 
 Stencil sizes $n=17, 31, 50$ and $n=101$ are tested. Weak scaling is evaluated for $N_p=4000$ per processor. Strong scaling considers $N=4096000$ (i.e., $N=160^3$) nodes. Timings are reported for total execution time for a distributed SpMV, as well as per-component times for computation and communication only.
 
-Verification details are not reported here since they are only significant in ensuring parallel results are consistent.
+
+Verification details are not reported here since they are only significant in ensuring parallel results are consistent. 
 
 
 The benchmark is run on the Itasca HPC cluster at the University of Minnesota (Minnesota Supercomputing Institute). Itasca has 1,134HP ProLiant blade servers, each with two-socket, quad-core 2.8 GHz Intel Xeon processors. Each compute node has at least 24GB of RAM. Itasca has a total of 8,744 cores available for computing with a total usable memory size of 31.3 TB \cite{MSIItasca}. Test cases are compiled with the Intel v2013.5 compiler (``icc") and the Intel provided MPI (``IMPI"). Optimization flag ``-O3" is used to enable auto-vectorization, loop unrolling, blocking, etc.
@@ -532,7 +539,7 @@ In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scal
 \caption{Weak and Strong Scaling Improvements}
 \end{figure}
 
-Figures~\ref{fig:compare_weak_scaling_all_stencils} and \ref{fig:compare_strong_scaling_all_stencils} consider the scaling for the overlapped communication and computation and various stencil sizes ($n=17,31,50$ and $n=101$ where the problem size fits on the system). '
+Figures~\ref{fig:compare_weak_scaling_all_stencils} and \ref{fig:compare_strong_scaling_all_stencils} consider the scaling for the overlapped communication and computation and various stencil sizes ($n=17,31,50$ and $n=101$ where the problem size fits on the system). 
 
 Weak scaling in Figure~\ref{fig:compare_weak_scaling_all_stencils} shows that degradation in weak scaling starts at smaller $p$ as $n$ grows. This is attributed---at least in part---to the proportional increase in the number of ghost node dependencies per partition sent/received. Similar to the comparison in \S~\ref{sec:load_balance}, we test the ratio of ghost node counts on $p=1024$ ($n=17$) and find  $\frac{\min N_r}{\max N_r} = 0.39$. The low ratio points to imbalanced communication loads as the cause for communication increase. 
 
@@ -560,11 +567,11 @@ Weak scaling in Figure~\ref{fig:compare_weak_scaling_all_stencils} shows that de
 \centering
 \includegraphics[width=0.5\textwidth]{performance_content/scaling/strong_scaling_speedup_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
 \caption{Strong Scaling Speedup ($S_p = \ ^{t_{1}}/_{t_p}$)}
-\label{fig:compare_strong_scaling_efficiency_all_stencils}
+\label{fig:compare_strong_scaling_speedup_all_stencils}
 \end{figure}
 
 
-Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling, even though all three cases start tapering off toward the end. Figure~\ref{fig:compare_strong_scaling_efficiency_all_stencils} presents the strong scaling in term of speedup: $S_p = \ ^{t_s}/_{t_p}$. Here we see that after initial slow down due to MPI\_Isend/MPI\_Irecv the implementation scales linearly up to $p=256$.
+Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in term of speedup: $S_p = \ ^{t_s}/_{t_p}$. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$.
 
 For comparison with related work we provide weak and strong scaling efficiencies in Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:compare_strong_scaling_efficiency_all_stencils}. 
 
@@ -574,12 +581,6 @@ For comparison with related work we provide weak and strong scaling efficiencies
 
 \begin{figure}
 \centering
-%\begin{subfigure}{0.48\textwidth}
-%\centering
-%\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_comm_only_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
-%\caption{Visible Communication ($\ ^{(t_{Comm} - t_{SpMV})}/_{t_p} $)}
-%\label{fig:compare_strong_scaling_comm_only_all_stencils}
-%\end{subfigure}
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_efficiency_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
@@ -592,10 +593,29 @@ For comparison with related work we provide weak and strong scaling efficiencies
 \caption{Strong Scaling Efficiency ($E_p = \ ^{t_{1}}/_{p*t_p} $)}
 \label{fig:compare_strong_scaling_efficiency_all_stencils}
 \end{subfigure}
-
-\caption{Strong scaling comparison for various stencil sizes ($n=17, 31, 50, 101$) and $N_p = 4000$ on a regular grid with maximum resolution $N=4096000$ on Itasca. } 
-\label{fig:weak_scaling_all_stencils}
+\caption{Scaling efficiency for various stencil sizes ($n=17, 31, 50, 101$) on a regular grid with $N_p$ maximum resolution $N=4096000$ on Itasca. } 
+\label{fig:scaling_efficiency}
 \end{figure}
+
+\begin{figure}
+\centering
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_comm_only_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\caption{Weak Scaling}
+\label{fig:compare_weak_scaling_unoverlapped_comm_all_stencils}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_comm_only_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\caption{Strong Scaling}
+\label{fig:compare_strong_scaling_unoverlap_comm_all_stencils}
+\end{subfigure}
+\caption{Visible communication with respect to total SpMV Time. Lower is better.}
+\label{fig:visible_comm}
+\end{figure}
+
+Visible communication is calculated as $t_{vis} = \ ^{(t_{Comm} - t_{SpMV (\setCenters \backslash\setBoundary)}}) /_{t_{Total}}$.
 
 
 
@@ -606,15 +626,6 @@ Possible causes for the growth:
 \item Send and receive buffers may need to be properly padded to ideal message sizes.  \authnote{ref intel/IBM articles for proposed alignment benefits}. 
 \item Need to shuffle machine file for best use of topology
 \end{itemize}
-%
-%
-%In order to manage expectations of parallel performance in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial:
-%\begin{align}
-%S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
-%\end{align}
-%where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Scaling to a very large number of processors may make the time in parallelizable portions of code vanish, but $T_s$ remains constant. In any distributed implementation communication is always included in estimate for $T_s$, so it is expected for  pertinent to choose an MPI collective with minimal overhead and latency. 
-%
-%
 
 
 %
