@@ -13,24 +13,8 @@
 \fi
 
 
-\chapter{Distributed RBF-FD (incomplete)}
+\chapter{Distributed RBF-FD}
 \label{chap:distributed_rbffd}
-
-
-
-%TODO: related distributed 
-\authnote{related work}
-The power of hindsight reveals that RBF-FD can be implemented with any library designed for sparse matrix algebra. 
-
-Our implementation is unlikely to to compete well against a number of well established libraries that have seen decades of active development. 
- that PETSc, Hypre, Trilinos are all libraries/frameworks that we could have developed in, but none of them had GPU support. We continued with custom built code, but that decision required additional decisions from us. 
-
-\cite{Yokota2010}
-\cite{Yokota2012}
-\cite{Schubert2011} 
-
-%TODO: Similar Overlapping algorithm: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
- %Imbalanced computation can be the source of excessive delays as processors sit idle and wait for other processors to catch up. 
 
 Parallelizing applications in a distributed computing environment requires three
 design decisions \cite{Saad2003}: 
@@ -51,6 +35,24 @@ In order to manage expectations of how well the code will run in a distributed e
 S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
 \end{align}
 where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Amdahl's law reveals that scaling to a large number of processors, $p$, can make the time in parallelizable portions of code vanish, but $T_s$ is constant. Communication is always included in $T_s$, so it is pertinent to minimize the cost of communication for maximum gain. Our initial implementation of distributed RBF-FD on multiple CPUs and multiple GPUs (\cite{BolligFlyerErlebacher2012}) had an extremely high cost of communication, which limited parallel execution to only a dozen or so processes. This chapter details the design and tuning of a distributed RBF-FD implementation capable of scaling across more than a thousand processors. 
+
+
+
+
+%TODO: related distributed 
+\authnote{finish additional related work}
+The power of hindsight reveals that RBF-FD can be implemented with any library designed for sparse matrix algebra. 
+
+Our implementation is unlikely to to compete well against a number of well established libraries that have seen decades of active development. 
+ that PETSc, Hypre, Trilinos are all libraries/frameworks that we could have developed in, but none of them had GPU support. We continued with custom built code, but that decision required additional decisions from us. 
+
+\cite{Yokota2010}
+\cite{Yokota2012}
+\cite{Schubert2011} 
+
+%TODO: Similar Overlapping algorithm: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
+ %Imbalanced computation can be the source of excessive delays as processors sit idle and wait for other processors to catch up. 
+
 
 
 
@@ -642,7 +644,7 @@ The local minima in  Figure~\ref{fig:compare_strong_scaling_unoverlap_comm_all_s
  For weak scaling, the constant SpMV computation time (and overlap) means the linear growth in Figure~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils}  is purely growth in communication time with respect to $p$. Possible causes include (but are not limited to): 
 \begin{itemize}
 \item \emph{Worsening load balance}. As previously mentioned, METIS may be incapable of partitioning the domain optimally.
-\item \emph{Network contention}. As the number of processes scale the increasing network traffic is expected to slow down. 
+\item \emph{Network contention}. As the number of processes scale the increasing network traffic is expected to slow MPI globally.  
 \item \emph{Improperly padded or aligned messages}. MPI, like any other software, operates most efficiently when data is properly aligned and messages have the right size. 
 \end{itemize}
 All three of these concerns will be investigated as part of future work. 
@@ -653,18 +655,12 @@ All three of these concerns will be investigated as part of future work.
 
 \section{Conclusion}
 
-      Our approach is scalable, but still limited efficiency on a very large number of 
-		processors. 
+This chapter covered the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation was demonstrated to be scalable with 30\% to 40\% parallel efficiency on the Itasca HPC (CPU-only) cluster at the University of Minnesota given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
+
+A number of optimizations reduce communication times and increase scalability beyond the results in our first paper, \cite{BolligFlyerErlebacher2012}. Starting with an MPI\_Alltoallv collective the tuning effort ultimately lead to a scheme which overlaps communication and computation on the CPU. Chapter~\ref{chap:multigpu_rbffd} extends this collective to overlap with computation on GPUs. 
+
+Our implementation leverages METIS for general domain decomposition and load balancing. Individual processes do not require a full mapping between RBF nodes and CPUs. Instead, processes assemble and operate on local linear systems for their subdomains. Communication between processes is limited to nearest-neighbor or all-to-subset collectives based on the intersection of subdomains. 
 		
-Individual processes do not require the 
-		full mapping between RBF nodes and CPUs. 
-		
-Here scalable is used loosely as there are two types of scaling: weak and strong. Weak scaling implies the total problem size and processor count can increase. The performance scalability of the code depends on the problem size and the MPI collective. In Figure~\ref{fig:strong_scaling} the strong scaling of $N=10^6$ nodes is tested on Itasca, a supercomputer at the Minnesota Supercomputing Institute.   
-
-
-As part of the future investigations we anticipate the need to consider the impact of properly aligned communication buffers. Potentially a hierarchical communication pattern to fit the topology of the underlying fat-tree topology on Itasca. 
-
-
 
 
 
