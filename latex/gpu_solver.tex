@@ -41,7 +41,7 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 
 \begin{figure}
 \centering
-\includegraphics[width=0.9\textwidth]{gpu_content/nvidia_figures/floating-point-operations-per-second.png}
+\includegraphics[width=0.5\textwidth]{gpu_content/nvidia_figures/floating-point-operations-per-second.png}
 \caption{Floating-Point Operations per Second for the CPU and GPU (Image courtesy of NVidia \cite{CudaGuide2013})} 
 \label{fig:floating-point-operations-per-second}
 \end{figure}
@@ -49,7 +49,7 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 
 \begin{figure}
 \centering
-\includegraphics[width=0.9\textwidth]{gpu_content/nvidia_figures/memory-bandwidth.png}
+\includegraphics[width=0.5\textwidth]{gpu_content/nvidia_figures/memory-bandwidth.png}
 \caption{Memory Bandwidth for the CPU and GPU (Image courtesy of NVidia \cite{CudaGuide2013})} 
 \label{fig:memory-bandwidth}
 \end{figure}
@@ -58,16 +58,47 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 In the years since CUDA was released a vast number of libraries and language extensions have surfaced to leverage the GPU architecture for scientific computing. Developers can now use FORTRAN, Python, java and more. 
 
 
-\section{Managing Expectations for the GPU}
-Success stories abound with massive gains
 
-RBF-FD is embarrassingly parallel with stencils applied independently. Unfortunately, perfect concurrency does not always imply perfect performance. (SHOW RBF-FD benchmarks for Vortex and Cosine as an example of 1x and 2x SpMV on GPU; state that the generation GPU they were run on has a peak of xxx which means performance was xxx\% (dismal).).
 
 the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
 OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
 
 This transition was 
 followed closely by evolving programming languages. Today, GPUs can be leveraged from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, with new developments appearing every day. 
+
+
+
+\section{Test Environments}
+
+\begin{itemize}	
+\item Early testing was completed on the Keeneland GPU cluster. At the time Keeneland was in the Keeneland Initial Deployment System (KIDS) had 320 NVidia M2070 GPUs (Fermi). 240 CPUs. 6GB of memory. 
+\item The Spear cluster at FSU has 16x NVIDIA Tesla m2050 GPUs. 3GB of memory. 
+\item The Cascade cluster at the Minnesota Supercomputing Institute (UMN) has 32x NVidia M2070 GPUs. 8 nodes, 12 cores each with four GPUs attached to each. 6GB of memory each. In addition, Cascade has 8 NVidia Kepler K20 GPUs. 
+\end{itemize}
+
+\subsection{Managing Expectations for the GPU}
+\begin{figure} 
+\begin{subfigure}{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/spmv/roofline_m2050_m2070.eps}
+\caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 36 GFLOP/s.}
+\label{fig:roofline_k20}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/spmv/roofline_k20.eps}
+\caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 52 GFLOP/s.}
+\label{fig:roofline_k20}
+\end{subfigure}
+\caption{Roofline models manage expectations for maximum possible GFLOP/s based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $0.25$. }
+\end{figure}
+
+
+Success stories abound with massive gains
+
+RBF-FD is embarrassingly parallel with stencils applied independently. Unfortunately, perfect concurrency does not always imply perfect performance. %TODO: (SHOW RBF-FD benchmarks for Vortex and Cosine as an example of 1x and 2x SpMV on GPU; state that the generation GPU they were run on has a peak of xxx which means performance was xxx\% (dismal).).
+
+On the Fermi GPUs at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/s per card. On the K20 you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/s on the Fermi and 13 on the K20 (compared to the 2 GFLOP/s on Itasca). 
 
 
 
@@ -239,7 +270,7 @@ Based on \cite{Behr:2009, OpenCL:2009}, Figure~\ref{fig:opencl_memory} compares 
 
 \begin{figure}
 \centering
-\includegraphics[width=0.7\textwidth]{gpu_content/nvidia_figures/grid-of-thread-blocks.png}
+\includegraphics[width=0.5\textwidth]{gpu_content/nvidia_figures/grid-of-thread-blocks.png}
 \caption{Grid of Thread Blocks (Image courtesy of NVidia \cite{CudaGuide2013})} 
 \label{fig:grid-of-thread-blocks}
 \end{figure}
@@ -555,32 +586,6 @@ New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. 
 % When matrix is sparse, a direct LU decomposition causes fill-in on factorization. In some cases the fill-in can be minimal, but in general one must assume that fill in can turn the sparse matrix into a dense matrix. To invert and solve Equation~\ref{eq:implicit_eq}, use an iterative solver like GMRES. The GMRES algorithm (described further in Chapter~\ref{chap:applications} applies successive SpMVs along with other vector operations to converge on a solution. Due to the dominance of SpMV in GMRES, the performance of RBF-FD reduces once again to SpMV.
 
 
-
-\section{Test Environments}
-
-\begin{itemize}	
-\item Early testing was completed on the Keeneland GPU cluster. At the time Keeneland was in the Keeneland Initial Deployment System (KIDS) had 320 NVidia M2070 GPUs (Fermi). 240 CPUs. 6GB of memory. 
-\item The Spear cluster at FSU has 16x NVIDIA Tesla m2050 GPUs. 3GB of memory. 
-\item The Cascade cluster at the Minnesota Supercomputing Institute (UMN) has 32x NVidia M2070 GPUs. 8 nodes, 12 cores each with four GPUs attached to each. 6GB of memory each. In addition, Cascade has 8 NVidia Kepler K20 GPUs. 
-\end{itemize}
-
-\begin{figure} 
-\begin{subfigure}{0.5\textwidth}
-\centering
-\includegraphics[width=\textwidth]{../figures/spmv/roofline_m2050_m2070.eps}
-\caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 36 GFLOP/s.}
-\label{fig:roofline_k20}
-\end{subfigure}
-\begin{subfigure}{0.5\textwidth}
-\centering
-\includegraphics[width=\textwidth]{../figures/spmv/roofline_k20.eps}
-\caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 52 GFLOP/s.}
-\label{fig:roofline_k20}
-\end{subfigure}
-\caption{Roofline models manage expectations for maximum possible GFLOP/s based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $0.25$. }
-\end{figure}
-
-On the Fermi GPUs at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/s per card. On the K20 you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/s on the Fermi and 13 on the K20 (compared to the 2 GFLOP/s on Itasca). 
 
 \ifstandalone
 \bibliographystyle{plain}
