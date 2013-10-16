@@ -115,6 +115,28 @@ The data in this appendix was acquired on the FSU Spear cluster. It is provided 
 \centering
 \begin{subfigure}[t]{0.425\textwidth}
 \centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiCPU_costs-eps-converted-to.pdf}
+\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
+\label{fig:spear_alltoall_multigpu_vs_gpu_scaling}
+\end{subfigure} 
+\begin{subfigure}[t]{0.425\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiGPU_warp_costs-eps-converted-to.pdf}
+\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
+\label{fig:spear_alltoall_multigpu_vs_gpu_scaling}
+\end{subfigure} 
+%\begin{subfigure}[t]{0.425\textwidth}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiGPU_thread_costs-eps-converted-to.pdf}
+%\caption{Multi-GPU strong scaling vs one GPU on Spear for one thread per stencil}
+%\label{fig:alltoall_multigpu_vs_gpu_scaling}
+%\end{subfigure} 
+\end{figure} 
+
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.425\textwidth}
+\centering
 \includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1CPU_vs_NCPU-eps-converted-to.pdf}
 \caption{Multi-CPU strong scaling on Spear for one warp per stencil}
 \label{fig:spear_alltoall_multicpu_scaling}
@@ -132,29 +154,6 @@ The data in this appendix was acquired on the FSU Spear cluster. It is provided 
 \label{fig:spear_alltoall_multigpu_vs_gpu_scaling}
 \end{subfigure} 
 \caption{Distributed CPU and GPU scaling on the FSU Spear cluster.}
-\end{figure} 
-
-
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.425\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiCPU_costs-eps-converted-to.pdf}
-\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
-\label{fig:spear_alltoall_multigpu_vs_gpu_scaling}
-\end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiGPU_warp_costs-eps-converted-to.pdf}
-\caption{Multi-GPU strong scaling vs one GPU on Spear for one warp per stencil}
-\label{fig:spear_alltoall_multigpu_vs_gpu_scaling}
-\end{subfigure} 
-%\begin{subfigure}[t]{0.425\textwidth}
-%\centering
-%\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/multiGPU_thread_costs-eps-converted-to.pdf}
-%\caption{Multi-GPU strong scaling vs one GPU on Spear for one thread per stencil}
-%\label{fig:alltoall_multigpu_vs_gpu_scaling}
-%\end{subfigure} 
 \end{figure} 
 
 
@@ -182,7 +181,10 @@ These results were run on Spear. MPI communication is done with an MPI\_alltoall
 \caption{One warp per stencil kernel on one GPU in Spear}
 \label{fig:spear_alltoall_1proc_warp}
 \end{subfigure} 
+\end{figure} 
 
+\begin{figure}
+\centering
 \begin{subfigure}[t]{0.425\textwidth}
 \includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
 \caption{One warp per stencil kernel on one GPU in Spear}

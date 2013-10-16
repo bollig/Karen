@@ -83,7 +83,7 @@ u_{2}^{n+1} & = u_1^{n} \ \ \text{ on }\Gamma_{21},  \nonumber
 
 \noindent where $\Gamma_{ij}$ indicates overlap between subdomains and is read as the subset of subdomain $j$ required by subdomain $i$ (i.e., $\Gamma_{ij} = \Boundary_i \cap \Interior_j$). A Dirichlet boundary condition connects subdomains at the interfaces. Although not considered here, future investigations may find Robin-type conditions of interest due to their convergence accelerating properties in the context of Schwarz methods for elliptic PDEs (\cite{StCyr2007}). 
 
-Equation~\ref{eq:rasm_example} illustrates how nicely a PDE can be split in half, and then solved by independent processes. To enforce the Dirichlet conditions on $\Gamma_{ij}$, MPI transfers values $u_j^{n}$ across interfaces at each time-step. Note that as the number of subdomains increases additional constraints for $\Gamma_{ij}$ must be imposed on each subdomain. The worst case a partitioning for $p$ subdomains requires $p-1$ conditions (i.e., $\Gamma_{ij}$, for $i,j=1,2,...,p$ and $i \neq j$). Ideally each $\Interior_i$ should only overlap with a small number of neighboring subdomains to minimize MPI communication. 
+Equation~\ref{eq:rasm_example} illustrates how nicely a PDE can be split in half, and then solved by independent processes. To enforce the Dirichlet conditions on $\Gamma_{ij}$, MPI transfers values $u_j^{n}$ across interfaces at each time-step. Note that as the number of subdomains increases, additional constraints for $\Gamma_{ij}$ must be imposed on each subdomain. The worst case a partitioning for $p$ subdomains requires $p-1$ conditions (i.e., $\Gamma_{ij}$, for $i,j=1,2,...,p$ and $i \neq j$). Ideally each $\Interior_i$ should only overlap with a small number of neighboring subdomains to minimize MPI communication. 
 
 
 The continuous form of decomposition in Equation~\ref{eq:rasm_example} allows complete freedom in choosing how subdomains are actually partitioned. In this work we assume partitioning of the geometry on which the PDE is solved. Of particular interest here is how to partition the unit sphere, but the challenge of more general geometries is also kept in mind. 
@@ -112,11 +112,11 @@ overlap regions where ghost nodes reside. Due to stencil dependencies, the repre
 
 Linear partitioning is simple and easy to code. Each MPI process has at most two neighbors (left and right), so communication is straightforward. There are two concerns with this approach: 
 \begin{enumerate} 
-\item Scaling the number of processors can result in stencils spanning more than one narrow partitions in each direction. This introduces the need for complex communication collectives. 
-\item In the case of irregular geometries, the partitioning of near uniform node distributions may result imbalanced subdomains with unequal number of stencils.
+\item Scaling the number of processors can result in stencils spanning more than one narrow partitions in each direction. This introduces the need for complex communication collectives that go beyond just passing left and/or right.
+\item In the case of irregular geometries, the partitioning of near uniform node distributions may result in imbalanced subdomains with unequal number of stencils.
 \end{enumerate}
 
-Alternative sphere partitionings exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere, and assigns projected rectangular subdivisions to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. A complete list of options for partitioning the sphere are outside the scope of this work. %, but many involve recursive subdivisions based on simple geometric elements (i.e., triangle, rectangle, hexagon, etc.). 
+Alternative sphere partitionings exist. In atmospheric and geophysical communities for example, one often finds the cubed-sphere \cite{Ivan2011, Katta2012}, which transcribes a subdivided cube onto the sphere, and assigns projected rectangular subdivisions to individual processors. Another option is the icosahedral geodesic grid \cite{Randall2002}, which evenly balances the computational load by distributing equal sized geodesic triangles across processors. A complete list of options for partitioning the sphere is outside the scope of this work. %, but many involve recursive subdivisions based on simple geometric elements (i.e., triangle, rectangle, hexagon, etc.). 
 
 
 \subsection{Graph Partitioning with METIS}
@@ -128,7 +128,18 @@ S_p = \frac{(p-1) W_1 + W_2}{W_2} = 1 + (p-1)\frac{W_1}{W_2}.
 \end{align}
 The take-away from Equation~\ref{eq:load_balance} is that potential gains in parallelism are limited by the disproportionality of workloads. 
 
-To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms. Formally, graph partitioning algorithms attempt to solve the $k$-way partitioning problem \cite{Karypis1999}: given a graph $G = (V,E)$ with vertices ($V$) and any number of edges ($E$), partition $V$ into $k$ subsets, $V_1, V_2, ..., V_k$ such that $V_i \cap V_j = \emptyset$ for $i \neq j$, the size of each partition $|V_i| \approx \frac{N}{k}$, $\bigcup_i V_i = V$, and the number of edges whose incident vertices belong to different $V_i$ is minimized. In other words, we seek a partitioning that results in roughly equal sized subgraphs connected by as few edges as possible. In this case algorithms are applied to the adjacency graph produced by RBF-FD stencils (see \S~\ref{subsec:adjacency}).
+To ensure load balancing, one commonly turns to \emph{graph partitioning} algorithms. Formally, graph partitioning algorithms attempt to solve the $k$-way partitioning problem \cite{Karypis1999}: 
+
+\begin{quote} Given a graph $G = (V,E)$ with vertices ($V$) and any number of edges ($E$), partition $V$ into $k$ subsets, $V_1, V_2, ..., V_k$ such that 
+\begin{itemize} 
+\item $V_i \cap V_j = \emptyset$ for $i \neq j$,
+\item the size of each partition, $|V_i|$, is $|V_i| \approx \frac{N}{k}$, 
+\item $\bigcup_i V_i = V$,
+\item and the number of edges whose incident vertices belong to different $V_i$ is minimized.
+\end{itemize}
+\end{quote} 
+In other words, we seek a partitioning that results in roughly equal sized subgraphs connected by as few edges as possible. 
+In this case algorithms are applied to the adjacency graph produced by RBF-FD stencils (see \S~\ref{subsec:adjacency}).
 
 The output from graph partitioning algorithms are ideal for distributed applications for two reasons. First, partitions of roughly equal size ensure a balanced workload across processors. Second, edges crossing partitions correspond to ghost node dependencies, so minimizing those connections also ensures minimized data transfer via MPI. 
 
@@ -310,7 +321,7 @@ Figure~\ref{fig:decomp_spy} demonstrates the structure of a local DM on an MPI p
 \begin{center}
 \includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
 %\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
-\caption{Spy of the local DM on processor 3 of 4 from a METIS partitioning of $N=4096$ nodes with stencil size $n=31$ and stencils generated with Algorithm~\ref{alg:hash_stencils} ($hnx=100$). Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setBoundary$, and $\setDepend$. $\setDepend$ Stencils involved in MPI communications have been permuted to the bottom of the matrix. The split in $\setDepend$ indicates communication with two neighboring partitions. }
+\caption{Spy of the local DM on processor 3 of 4 from a METIS partitioning of $N=4096$ nodes with stencil size $n=31$ and stencils generated with Algorithm~\ref{alg:fixed_grid_query} ($hnx=100$). Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setBoundary$, and $\setDepend$. $\setDepend$ Stencils involved in MPI communications have been permuted to the bottom of the matrix. The split in $\setDepend$ indicates communication with two neighboring partitions. }
 \label{fig:decomp_spy}
 \end{center}
 \end{figure}
@@ -432,7 +443,7 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_commOnly.png} \caption{Communication Only (MPI\_Alltoallv)}
 \label{fig:strong_scaling_comm_only_alltoallv_all_stencils}
 \end{subfigure}
-\caption{Per-component benchmarks of strong scaling benchmarks for $N=4096000$ nodes. Communication time outweighs computation time for $p>128$ processes.  }
+\caption{Per-component benchmarks for strong scaling benchmarks on $N=4096000$ nodes. Communication time outweighs computation time for $p>128$ processes.  }
 \label{fig:per_component_strong_scaling_alltoallv}
 \end{figure}
 
