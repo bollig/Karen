@@ -693,15 +693,43 @@ Such throughput oriented architectures require developers to decompose problems 
 
 Similar approaches to overlapping communication and computation can be found in \cite{Schubert2011} and \cite{Thibault2009}.
 
-\begin{itemize} 
-\item Show no overlap scaling
-\item Show overlap scaling
-\item 
-\end{itemize}
-
 When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
 
+\section{Overlapping GPU}
 
+Overlapping communication and computation with the GPU is made possible with two levels of asynchronous commands: 
+\begin{itemize} 
+\item \emph{Non-blocking MPI}. The MPI\_Isend/MPI\_Irecv routines are used to post communication and immediately return the main thread to computation. 
+\item \emph{Asynchronous GPU Queues}. Two OpenCL queues are utilized to send commands to the GPU. 
+\end{itemize}
+
+ 
+\begin{figure} 
+\centering
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_Alltoallv_nooverlap.pdf}
+\caption{GPU and MPI\_Alltoallv (Non-Overlapping)}
+\label{fig:alltoallv_nooverlap_gpu}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_Alltoallv.pdf}
+\caption{GPU and MPI\_Alltoallv}
+\label{fig:alltoallv_gpu}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_IsendIrecv.pdf}
+\caption{GPU and MPI\_Isend/MPI\_Irecv}
+\label{fig:isendirecv_gpu}
+\end{subfigure}
+\caption{Overlapping GPU kernels with CPU managed communication. } 
+\label{fig:gpu_mpi_tuning}
+\end{figure}
+
+
+\section{Scaling}
 
 
 \subsection{Avoiding Copy-Out on CPU}
@@ -716,11 +744,15 @@ describe fermi's ability to schedule multiple kernels, what it means for our que
 
 
 \section{HPC Spear Cluster} 
-
+See Appendix for Spear data with MPI\_Alltoallv (no overlap). 
 \section{Keeneland}
 
 \subsection{Shared K20s}
+The new Kepler K20s allow both concurrent kernel execution and dynamic parallelism. Dynamic parallelism is a means of scheduling new kernel launches from within an exist kernel. In order to support this feature,
 
+K20s also support CUDA 5.5 which introduces MPI aware CUDA. The nvcc compiler now detects MPI calls and routes data movement directly from InfiniBand to the GPU memory rather than making a stop on the host memory. This is only possible with GPUDirect (direct memory addressing) and dynamic parallelism (to spawn an MPI process from a kernel). 
+
+Features like MPI-CUDA will are unlikely to be available in OpenCL in the future. NVidia is no longer leading or distributing the OpenCL libraries with their driver. NVidia only plans to support the OpenCL spec v1.1.
 
 
 \section{Future Work}
