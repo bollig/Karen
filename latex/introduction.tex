@@ -15,7 +15,7 @@
 \label{chap:introduction}
 
 A plethora of scientific problems can be expressed as a collection of partial differential equations defined for some domain. In order to solve these 
-problems, computational numerical methods are employed on a discretized version of the domain. Traditionally, numerical methods have been \emph{meshed methods}, in that they rely on some underlying grid/lattice to connect discretized points in a well-defined manner. More recently a new class of methods have surfaced, called \emph{meshfree methods}, which discard the requirement for connectivity and operate only on point clouds. Each class of methods offers numerous and, in many ways, complementary benefits. This work focuses on \emph{Radial Basis Function-generated Finite Differences (RBF-FD)}; a method that draws inspiration from both meshed and meshfree methods.
+problems, computational numerical methods are employed on some discretization of the domain. Traditionally, numerical methods have been \emph{meshed methods}, in that they rely on some underlying grid/lattice to connect discretized points in a well-defined manner. More recently a new class of methods have surfaced, called \emph{meshfree methods}, which discard the requirement for connectivity and operate only on point clouds. Each class of methods offers numerous and, in many ways, complementary benefits. This work focuses on \emph{Radial Basis Function-generated Finite Differences (RBF-FD)}; a method that draws inspiration from both meshed and meshfree methods.
 
 %\authnote{this paragraph does not fit well}
 %The first task in traditional meshed methods is to generate an
@@ -58,7 +58,7 @@ $r(\vx) = ||\vx-\vx_j||_2 = \sqrt{(x-x_j)^2 + (y-y_j)^2 + (z-z_j)^2}$. Examples 
 commonly used RBFs are shown in Figure~\ref{fig:rbfs} (for corresponding equations refer to Table~\ref{tbl:rbfs}). RBF
 methods are based on a superposition of translates of these
 radially symmetric functions, providing a linearly independent
-but non-orthogonal basis used to interpolate between nodes in
+but non-orthogonal basis to interpolate between nodes in
 $n$-dimensional space. 
 
 \begin{figure}[ht]
@@ -96,7 +96,7 @@ As ``meshless" methods, RBF methods excel at solving problems that require geome
 
 %TODO:  \cite{Wright2004, Wright2003, WrightFornberg06, Chandhini2007}. 
 To track the history of RBF methods, one must rewind to 1971 and R.L. Hardy's seminal research on interpolation with multi-quadric basis functions \cite{Hardy1971}. The transition from interpolation to RBF PDE methods dates back to 1990 \cite{Kansa1990a,Kansa1990b}. 
-RBF-FD was first introduced in concept in 2000 \cite{Tolstykh2000}, but it took another few years for the method to really get a start (\cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004}). Now a little over a decade old, the method is finally showing signs that it has the critical-mass following necessary for use in large-scale scientific models. At the onset of this work, most of the literature considered RBF-FD for problem sizes up to a few thousand nodes; at most into tens of thousands of nodes. Similar to most RBF methods, RBF-FD is predominantly implemented within small-scale, serial computing environments. The RBF community at-large continues to depend on MATLAB for investigation and extension development.
+The RBF-FD method was first introduced in concept in 2000 \cite{Tolstykh2000}, but it took another few years for the method to really get a start (\cite{Shu2003}, \cite{Tolstykh2003a}, \cite{Wright2003} and \cite{Cecil2004}). Now a little over a decade old, the method is finally showing signs that it has the critical-mass following necessary for use in large-scale scientific models. At the onset of this work, most of the literature considered RBF-FD for problem sizes up to a few thousand nodes; at most into tens of thousands of nodes. Similar to most RBF methods, RBF-FD is predominantly implemented within small-scale, serial computing environments. The RBF community at-large continues to depend on MATLAB for investigation and extension development.
 
 The goal of this dissertation is to scale RBF-FD solutions on high resolution meshes across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. As part of this push to HPC, leveraging \emph{Graphics Processing Units (GPUs)} for computation is considered critical. GPUs, introduced in Chapter~\ref{chap:gpu_rbffd}, are many-core accelerators capable of general purpose, embarrassingly parallel computations. Accelerators represent the latest trend in HPC, where compute nodes are commonly supplemented by one or more accessory boards for offloading compute intensive tasks. Our effort leads the way for RBF-FD applicationss in an age when compute nodes with attached accelerator boards are considered key to breaching the exa-scale computing barrier \cite{GPUandExascale2011}. 
 
@@ -199,6 +199,20 @@ Multi-GPU Jacobi iteration for Navier stokes flow in cavity \url{http://scholarw
 Thibault et al. have multiple works on Multi-GPU and overlapping comm and comp. 
 
 The latest version of PETSc includes GPU support. PETSc is a widely-used library for distributed sparse and dense matrix algebra. 
+
+\section{Major Contributions}
+
+Within this thesis readers should expect to find the following major contributions to the communities surrounding RBF methods, GPGPU, and HPC: 
+\begin{itemize} 
+\item The first implementation of RBF-FD on GPUs, with one and many GPU environments considered. 
+\begin{itemize} 
+\item Multiple GPU kernels are tested, including custom OpenCL kernels for RK4 time-stepping and 
+\end{itemize} 
+\item The first implementation of RBF-FD on multiple CPUs through the use of domain decomposition
+\item The first application of the Fixed-Grid neighbor query algorithm to generate stencils for RBF-FD. 
+\end{itemize}
+
+
 
 \ifstandalone
 %Bei direkter Übersetzung sollte gleich noch das Literaturverzeichnis rein.
