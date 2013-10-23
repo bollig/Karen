@@ -722,17 +722,15 @@ Overlapping communication and computation with the GPU is made possible with two
 \label{fig:gpu_mpi_tuning}
 \end{figure}
 
-
-\section{Scaling}
-
-
-\subsection{Avoiding Copy-Out on CPU}
-
 \section{Scaling}
 We scale the SpMV across the GPUs on Cascade.
 
-\subsection{Fermi}
-\subsection{Kepler}
+
+By comparing benchmarks from no overlap to the overlapped GPU case, I get speedup in using the overlapped solution. Any reduction in time is evidence of overlap. Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, with the expected un-overlap time we know the expected cost of communication and Can calculate the % reduction based on two samples  
+
+
+
+
 \subsection{Multiple Kernel Scheduling}
 describe fermi's ability to schedule multiple kernels, what it means for our queues. Do we need multiple queues, or just one that is non-blocking. How do we indicate we are done communicating if there is no queue to add markers to? 
 
