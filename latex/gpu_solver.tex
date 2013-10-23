@@ -516,9 +516,38 @@ At the onset of work with ViennaCL two things were apparent: 1) the library was 
 Due to the assumption that all stencils have equal size, the ELL format is preferred as the default. 
  
 
+\section{Cascade}
 
-
-
+\begin{figure} 
+\centering
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_cascade_m2070.png}
+\caption{GFLOP/s, NVidia M2070 GPU (Cascade)}
+\label{fig:ell_gflops_cascade_m2070}
+\end{subfigure}
+\quad
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_cascade_k20.png}
+\caption{GFLOP/s, NVidia K20 GPU (Cascade)}
+\label{fig:ell_gflops_cascade_k20}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_speedup_cascade_m2070.png}
+\caption{Speedup, NVidia M2070 GPU (Cascade) vs. CSR format on Intel Westmere (Intel Xeon X5675)}
+\label{fig:ell_speedup_cascade_m2070}
+\end{subfigure}
+\quad
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_speedup_cascade_k20.png}
+\caption{Speedup, NVidia K20 GPU (Cascade) vs. CSR format on Sandy-Bridge (E5-2670)}
+\label{fig:ell_speedup_cascade_k20}
+\end{subfigure}
+\caption{Performance comparison by stencil for ELL sparse matrix format.}
+\end{figure}
 
 \subsection{Intel Phi} 
 
