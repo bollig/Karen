@@ -708,15 +708,15 @@ Overlapping communication and computation with the GPU is made possible with two
 \centering
 \begin{subfigure}{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_Alltoallv_nooverlap.pdf}
-\caption{GPU and MPI\_Alltoallv (Non-Overlapping)}
-\label{fig:alltoallv_nooverlap_gpu}
+\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_IsendIrecv.pdf}
+\caption{GPU and MPI\_Isend/MPI\_Irecv (Non-Overlapping)}
+\label{fig:isendirecv_gpu}
 \end{subfigure}
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_OverlapGPU.pdf}
-\caption{GPU and MPI\_Isend/MPI\_Irecv}
-\label{fig:isendirecv_gpu}
+\caption{GPU and MPI\_Isend/MPI\_Irecv (Overlapping)}
+\label{fig:overlap_gpu}
 \end{subfigure}
 \caption{Overlapping GPU kernels with CPU managed communication. } 
 \label{fig:gpu_mpi_tuning}
@@ -726,9 +726,15 @@ Overlapping communication and computation with the GPU is made possible with two
 We scale the SpMV across the GPUs on Cascade.
 
 
-By comparing benchmarks from no overlap to the overlapped GPU case, I get speedup in using the overlapped solution. Any reduction in time is evidence of overlap. Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, with the expected un-overlap time we know the expected cost of communication and Can calculate the % reduction based on two samples  
+By comparing benchmarks from the unoverlapped and overlapped GPU cases, we get the speedup in using the overlapped solution. Any reduction in time is evidence of overlap. 
 
+Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, the time spent in non-SpMV related tasks (e.g., data transfer, encoding, and communication) is known from the unoverlapped case. Therefore, given the time for the overlapped SpMV case, we can calculate the amount of overlap by 
 
+\begin{align}
+t_{overlap} = t_{overlap} - (t_{comm} + t_{en} + t_{R} + t_{O}) \\
+t_{nooverlap, SpMV} - (t_{overlap, tot} - t_{overlap, non-SpMV})
+\end{align}
+% percent reduction is useful to tell overlap. e.g., if we reduce by 25% and the 
 
 
 \subsection{Multiple Kernel Scheduling}
