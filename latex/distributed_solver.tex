@@ -712,6 +712,7 @@ Overlapping communication and computation with the GPU is made possible with two
 \caption{GPU and MPI\_Isend/MPI\_Irecv (Non-Overlapping)}
 \label{fig:isendirecv_gpu}
 \end{subfigure}
+\quad
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_OverlapGPU.pdf}
@@ -765,7 +766,7 @@ Calculating the percentage reduction is useful to consider. The benchmarks are n
 
 \begin{table}[h]
 \centering
-\caption{GFLOP/sec achieved by the distributed ELL SpMV on Cascade's M2070 GPUs, with MPI communication overlapping two GPU kernels. The SpMV computes derivatives over a 3D regular grid of size $N=4096000$ nodes (i.e., $160^3$). Data reflects various combinations of stencil sizes, number of compute nodes and number of processes per node (PPN). Quantities in parentheses denote the speedup factors observed for the overlapping algorithm versus the non-overlapping approach. }
+\caption{GFLOP/sec achieved by the distributed ELL SpMV on Cascade's M2070 GPUs, with MPI communication overlapping two GPU kernels. The SpMV computes derivatives over a 3D regular grid of size $N=4096000$ nodes (i.e., $160^3$). Data reflects various combinations of stencil sizes, number of compute nodes and number of processes per node (PPN). Quantities in parentheses denote the speedup factors achieved by the overlapping algorithm over the non-overlapping approach for identical combinations of compute nodes, PPN, stencil size, etc. }
 \label{tbl:cascade_m2070_overlap}
 \begin{tabular}{c|c|c|c|c|c|c}
  \multicolumn{2}{c}{ } & \multicolumn{4}{|c|}{Observed GFLOP/sec (Speedup over Non-overlapped)} \\  \hline
@@ -775,10 +776,10 @@ Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 4   &   1   &   13.1 (1.9x)   &   25.1 (2.8x)   &   24.6 (2.4x)   &   25.2 (1.9)   \\
 8   &   1   &   24.5 (2.0x)   &   33.2 (2.3x)   &   41.2 (3.4x)   &   53.6 (2.3x)   \\ \hline
 1   &   2   &   11.3 (3.4x)   &   12.2 (3.0x)   &   12.1 (3.2x)   &   12.7 (3.0x)   \\
-2   &   2   &   13.0 (3.0x)   &   22.9 (4.2x)   &   23.1 (3.6x)   &   53.5 (6.6x)   \\
+2   &   2   &   13.0 (3.0x)   &   22.9 (4.2x)   &   23.1 (3.6x)   &   53.5 (\textbf{6.6x})   \\
 4   &   2   &   25.1 (2.3x)   &   37.8 (4.1x)   &   50.1 (5.0x)   &   24.5 (1.7x)   \\
 8   &   2   &   35.8 (2.2x)   &   38.3 (2.5x)   &   59.6 (2.7x)   &   87.6 (3.7x)   \\ \hline
-1   &   4   &   27.7 (8.5x)   &   22.5 (5.1x)   &   27.9 (5.4x)   &   24.4 (4.4x)   \\
+1   &   4   &   27.7 (\textbf{8.5x})   &   22.5 (\textbf{5.1x})   &   27.9 (\textbf{5.4x})   &   24.4 (4.4x)   \\
 2   &   4   &   14.1 (1.7x)   &   32.0 (4.2x)   &   37.2 (3.9x)   &   50.8 (4.6x)   \\
 4   &   4   &   19.6 (1.6x)   &   38.6 (3.0x)   &   57.0 (3.0x)   &   81.3 (4.5x)   \\
 8   &   4   &   50.9 (2.9x)   &   61.6 (2.2x)   &   88.8 (3.2x)   &   130.8 (3.5x)  
