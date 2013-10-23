@@ -564,29 +564,40 @@ This may be a limitation in METIS when partitioning domains for large $p$. If so
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_np4000_overlap_cpu_SpMV_and_comm_all_stencils.png}
-\caption{Weak Scaling (All Stencils)}
+\caption{Weak Scaling Time (All Stencils)}
 \label{fig:compare_weak_scaling_all_stencils}
 \end{subfigure}
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
-\caption{Strong Scaling (All Stencils)}
+\caption{Strong Scaling Time (All Stencils)}
 \label{fig:compare_strong_scaling_all_stencils}
 \end{subfigure}
 \caption{Weak and Strong scaling for various stencil sizes ($n=17, 31, 50, 101$). } 
 \label{fig:weak_scaling_all_stencils}
 \end{figure}
 
-
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth]{performance_content/scaling/strong_scaling_speedup_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_speedup_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
 \caption{Strong Scaling Speedup ($S_p = \ ^{t_{1}}/_{t_p}$)}
 \label{fig:compare_strong_scaling_speedup_all_stencils}
-\end{figure}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_gflops_4M_overlap_cpu_SpMV_and_comm_all_stencils.png}
+\caption{Strong Scaling GFLOP/sec \\ ($GFLOP/sec = (\ ^{N * n * 2}/_{t_p  (sec)}) * 10^{-9}$)}
+\label{fig:compare_strong_scaling_gflops_all_stencils}
+\end{subfigure}
+\caption{Strong Scaling}
+\label{fig:strong_scaling_factors}
+\end{figure} 
 
 
-Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$.
+Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The roughly 111 to 220 GFLOP/sec achieved on 1024 cores of Itasca is a far cry from peta-scale computing, but for the 
 
 
 
@@ -645,7 +656,7 @@ Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:comp
 \end{figure}
 
 
-Figures~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils} and \ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils}  quantify the overhead in communication for all weak and strong scaling test cases. Both figures show the percentage of \emph{visible communication time}, $t_{vis}$, during an iteration of the distributed SpMV. The visible time is defined as: 
+Figures~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils} and \ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils}  quantify the overhead in communication for all weak and strong scaling test cases. Both figures show the percentage of \emph{visible communication time}, $t_{Vis}$, during an iteration of the distributed SpMV. The visible time is defined as: 
 \begin{align*}
 t_{Vis} = \ ^{(t_{Comm} - t_{SpMV 1}}) /_{t_{Total}}
 \end{align*}
@@ -656,7 +667,7 @@ The local minima in  Figure~\ref{fig:compare_strong_scaling_unoverlap_comm_all_s
  For weak scaling, the constant SpMV computation time (and constant overlap) means the linear trend in Figure~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils}  is purely growth in communication time with respect to $p$. Possible causes include (but are not limited to): 
 \begin{itemize}
 \item \emph{Worsening load balance}. As previously mentioned, METIS may be incapable of partitioning the domain optimally.
-\item \emph{Network contention}. As the number of processes scale the increasing network traffic is expected to slow MPI globally.  
+\item \emph{Network contention}. As the number of processes scale, the increasing network traffic is expected to slow MPI globally.  
 \item \emph{Improperly padded or aligned messages}. MPI, like any other software, operates most efficiently when data is properly aligned and messages have the right size. 
 \end{itemize}
 All three of these concerns will be investigated as part of future work. 
@@ -727,7 +738,12 @@ Overlapping communication and computation with the GPU is made possible with two
 We scale the SpMV across the GPUs on Cascade.
 
 
-By comparing benchmarks from the unoverlapped and overlapped GPU cases, we get the speedup in using the overlapped solution. Any reduction in time is evidence of overlap. 
+By comparing benchmarks from the non-overlapped and overlapped GPU cases, we get the speedup: 
+\begin{align*} 
+S_p = \ ^{t_{non-overlapped}} /_{t_{overlapped}}
+\end{align*}
+
+in using the overlapped solution. Any reduction in time is evidence of overlap. 
 
 %Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, the time spent in non-SpMV related tasks (e.g., data transfer, encoding, and communication) is known from the unoverlapped case. Therefore, given the time for the overlapped SpMV case, we can calculate the amount of overlap as 
 
@@ -755,11 +771,15 @@ Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 \end{tabular} 
 \end{table}
  
-Greater than 4x speedup (bold-faced in Table~\ref{tbl:cascade_m2070_overlap}) is possible due to a design flaw on Cascade: each compute node has four attached GPUs connected to the host via shared I/O hub. Concurrent data transfers from multiple GPUs to host, or vice versa---as would occur while executing a synchronized, distributed SpMV---result in contention on the hub and serialization of transfers. The serialization effectively quadruples the cost in the case of 4 PPN. As an example, consider the communication time for the non-overlapping test case (including encoding the send buffer, executing the MPI collective and decoding data), which takes approximately 80 ms. The communication time for the same test case drops by a factor $\gt 4x$ to 18ms when overlapping communication and computation is employed. 
+Greater than 4x speedup (bold-faced in Table~\ref{tbl:cascade_m2070_overlap}) is possible due to a design flaw on Cascade: each compute node has four attached GPUs connected to the host via shared I/O hub. Concurrent data transfers from multiple GPUs to host, or vice versa---as would occur while executing a synchronized, distributed SpMV---result in contention on the hub and serialization of transfers. Serialization effectively quadruples the total cost in the case of 4 PPN. As an example, consider the time \emph{not} spent computing the SpMV for $n=50$, and one compute node with 4 PPN. The non-overlapping test case, takes approximately 80 ms. Of that, half the time is spent in communication
+
+The non-SpMV component includes encoding the send buffer, executing the MPI collective and GPU<->CPU transfers. 
+The communication time for the same test case drops by a factor $> 4x$ to 18ms when overlapping communication and computation is employed. 
 
 The time required to compute the SpMV for 1 node, 4 PPN without overlap (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$) is in the neighborhood of 50 ms. 
 
 
+Within each block of Table~\ref{tbl:cascade_m2070_overlap} we expect the GFLOP/sec to double by row. Obviously the strong scaling in the case of the GPU is not ideal, 
 
 
 \subsection{Multiple Kernel Scheduling}

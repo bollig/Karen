@@ -8,7 +8,7 @@
 %% 
 %% This is a generated file.
 %% 
-%% Copyright (c) 2010 by Bret Whissel
+%% Copyright (c) 2010-2013 by Bret Whissel
 %% 
 %% This file may be distributed and/or modified under the
 %% conditions of the LaTeX Project Public License, either
@@ -20,17 +20,21 @@
 %% and version 1.2 or later is part of all distributions of
 %% LaTeX version 1999/12/01 or later.
 %% 
+
 \NeedsTeXFormat{LaTeX2e}[2005/09/16]
 \ProvidesClass{fsuthesis}
-  [2011/08/23 v3.0.0
-    (FSU LaTeX document class for Thesis/Dissertations
+  [2013/10/10 v3.4.0
+    (FSU LaTeX document class for Theses/Dissertations
      maintained by Bret Whissel, bwhissel@fsu.edu)]
+
 \newif\if@hardcopy
 \newif\if@expanded
 \newif\ifch@pleaders
+\newif\ifc@pyright
 \DeclareOption{hardcopy}{\@hardcopytrue}
 \DeclareOption{expanded}{\@expandedtrue}
 \DeclareOption{chapterleaders}{\ch@pleaderstrue}
+\DeclareOption{copyright}{\c@pyrighttrue}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{report}}
 \ProcessOptions \relax
 \LoadClass{report}
@@ -53,8 +57,7 @@
 \addtolength{\topmargin}{-\headsep}
 \addtolength{\topmargin}{-\textheight}
 \addtolength{\topmargin}{-\footskip}
-\flushbottom
-\setlength{\textwidth}{6.0in}
+\setlength{\textwidth}{6.5in}
 \setlength{\@tempdima}{\paperwidth}
 \addtolength{\@tempdima}{-2in}
 \addtolength{\@tempdima}{-\textwidth}
@@ -64,7 +67,8 @@
 \newlength{\evenoddoffset}
 \setlength{\evenoddoffset}{0.25in}
 \if@hardcopy%
-  \AtBeginDocument{\addtolength{\oddsidemargin}{\evenoddoffset}}
+  \AtBeginDocument{\addtolength{\textwidth}{-\evenoddoffset}%
+    \addtolength{\oddsidemargin}{\evenoddoffset}}
   \if@twoside\@openrighttrue%
     \AtBeginDocument{\addtolength{\evensidemargin}{-\evenoddoffset}}
   \else
@@ -83,16 +87,16 @@
   \setlength{\adjbaselineskip}{0.5\baselineskip}%
   \def\blstretchiness{0pt plus.4pt minus.3pt}
   \def\smblstretchiness{0pt plus.3pt minus.2pt}
-  \let\f@normalsize=\normalsize%
-  \newcommand{\expandspacing}{\f@normalsize%
-    \addtolength{\baselineskip}{\adjbaselineskip}%
-    \addtolength{\baselineskip}{\blstretchiness}}%
-  \renewcommand{\normalsize}{\expandspacing}%
+  \let\FSU@onormalsize=\normalsize%
+  \newcommand{\expandspacing}{\FSU@onormalsize%
+     \addtolength{\baselineskip}{\adjbaselineskip}%
+     \addtolength{\baselineskip}{\blstretchiness}}%
+  \let\normalsize=\expandspacing%
   \newcommand{\afterheadadj}{\addvspace{-\adjbaselineskip}}%
   \let\f@olist=\list
   \def\list#1#2{%
     \f@olist{#1}{#2}
-    \ifnum \@listdepth=1
+    \ifnum\@listdepth=1
       \setlength{\baselineskip}{2.4\adjbaselineskip}
       \addtolength{\baselineskip}{\smblstretchiness}
     \fi
@@ -102,14 +106,24 @@
     \f@oendlist
     \ifnum\@listdepth=0 \normalsize \fi
   }
+  \let\f@overbat=\verbatim
+  \expandafter\let\expandafter\f@overbats
+    \expandafter=\csname endverbatim*\endcsname
+  \let\f@oendverb=\endverbatim
+  \def\verbatim{\par\FSU@onormalsize\f@overbat}
+  \def\endverbatim{\f@oendverb\afterheadadj}
+  \@namedef{verbatim*}{\par\FSU@onormalsize\@verbatim\@sxverbatim}
+  \expandafter\let\csname endverbatim*\endcsname =\endverbatim
 \else
   \let\expandspacing=\relax
-  \let\f@normalsize=\relax
+  \let\FSU@onormalsize=\relax
   \let\afterheadadj=\relax
   \let\f@olist=\list
   \let\f@oendlist=\endlist
 \fi
-\f@normalsize
+\FSU@onormalsize
+\newenvironment{singlespaced}
+  {\par\if@expanded\FSU@onormalsize\addvspace{\adjbaselineskip}\fi}{\par}
 \newif\if@hyperloaded
 \AtBeginDocument{\@ifpackageloaded{hyperref}
   {\@hyperloadedtrue}{\@hyperloadedfalse}}
@@ -151,7 +165,7 @@
 \ifpdf\if@hyperloaded\pdfbookmark[0]{Title Page}{MainTitlePage}\fi\fi
 \enlargethispage{\footskip}%
 \begin{center}%
-\f@normalsize THE FLORIDA STATE UNIVERSITY
+\FSU@onormalsize FLORIDA STATE UNIVERSITY
 \vskip\baselineskip
 \MakeUppercase{\@college}%
 \vfill
@@ -169,12 +183,16 @@ requirements for the degree of\\
 \@degree
 \vfill
 Degree Awarded:\\
-\@semester{} Semester, \@degreeyear\pagebreak[4]
+\@semester{} Semester, \@degreeyear%
+\vfill
+\ifc@pyright%
+  Copyright \copyright\ \@degreeyear\ \@author. All Rights Reserved.\fi%
+\pagebreak[4]
 \end{center}
 \end{titlepage}
 }
 \newlength{\commwidth}
-\setlength{\commwidth}{2.75in}
+\setlength{\commwidth}{3.75in}
 \newlength{\commskip}
 \setlength{\commskip}{0.5in plus0.25fil minus.3in}
 \gdef\@thecmems{}
@@ -182,20 +200,23 @@ Degree Awarded:\\
   \expandafter\gdef\expandafter\@thecmems\expandafter{%
     \@thecmems\vskip\commskip\makebox[\commwidth][l]{#1}\\
       \makebox[\commwidth][l]{#2}}}
-\newcommand{\makecommitteepage}{\f@normalsize\setcounter{page}{2}%
+\newcommand{\makecommitteepage}{\FSU@onormalsize\setcounter{page}{2}%
 \if@openright\cleardoublepage\else\clearpage\fi%
-{\addtolength{\baselineskip}{0.5\baselineskip}%
+{%\addtolength{\baselineskip}{0.5\baselineskip}%
 \setbox\@tempboxa=\hbox{\@author{} defended this
 \MakeLowercase{\@manuscripttype} on \mbox{\@defensedate}.}
 \ifdim\wd\@tempboxa>\textwidth\raggedright\noindent\unhbox\@tempboxa{} \else
   \noindent\unhbox\@tempboxa\par\fi
 \noindent The members of the supervisory committee were:\par}
-\vfil\begin{flushright}\vskip-\commskip\@thecmems\end{flushright}\vfil\vfil
+\vfil\begin{flushright}\vskip-\commskip%
+  \addtolength{\baselineskip}{0.4\baselineskip}\@thecmems\end{flushright}\vfil
 \vskip\baselineskip
-{\noindent The Graduate School has verified and approved the
+{%\addtolength{\baselineskip}{0.5\baselineskip}
+\noindent
+The Graduate School has verified and approved the
 above-named committee members, and certifies that the
 \MakeLowercase{\@manuscripttype} has been approved in accordance
-with the university requirements.\par}\pagebreak[4]}
+with university requirements.\par}\vfil\pagebreak[4]}
 \gdef\@subject{}
 \gdef\@keywords{}
 \newif\if@subject
@@ -223,43 +244,65 @@ with the university requirements.\par}\pagebreak[4]}
 \newcommand*{\listmusexname}{List of Musical Examples}
 \newcommand*{\listsymname}{List of Symbols}
 \newcommand*{\musexname}{Example}
+\newcommand*{\appendixtocname}{Appendix}
 \newenvironment{dedication}%
   {\if@openright\cleardoublepage\else\clearpage\fi\mbox{}\vfill}
   {\vfill\vfill\vskip1in\mbox{}\pagebreak[4]}
 \newenvironment{acknowledgments}%
   {\chapter*{\acknowledgename}\normalsize\afterheadadj}
-  {\clearpage\f@normalsize}
+  {\clearpage\FSU@onormalsize}
 \newenvironment{listofsymbols}
-  {\chapter*{\listsymname}\f@normalsize%
+  {\chapter*{\listsymname}\FSU@onormalsize%
    \addcontentsline{toc}{frontmatter}{\listsymname}}
   {\clearpage}
 \newenvironment{listofabbrevs}
-  {\chapter*{\listabbrevname}\f@normalsize%
+  {\chapter*{\listabbrevname}\FSU@onormalsize%
    \addcontentsline{toc}{frontmatter}{\listabbrevname}}
   {\clearpage}
 \renewenvironment{abstract}%
   {\chapter*{\abstractname}\normalsize\afterheadadj%
    \addcontentsline{toc}{frontmatter}{\abstractname}}
-  {\clearpage\f@normalsize}
+  {\clearpage\FSU@onormalsize}
+\newcount\listspenalty
+\listspenalty=200
+\def\@dottedtocline#1#2#3#4#5{%
+  \ifnum #1>\c@tocdepth \else
+    \vskip \z@ \@plus.2\p@
+    {\leftskip #2\relax \rightskip \@tocrmarg \parfillskip -\rightskip
+     \parindent #2\relax\@afterindenttrue
+     \interlinepenalty=\listspenalty
+     \leavevmode \@tempdima #3\relax
+     \advance\leftskip \@tempdima \null\nobreak\hskip -\leftskip
+     {#4}\nobreak \leaders\hbox{$\m@th
+        \mkern \@dotsep mu\hbox{.}\mkern \@dotsep
+        mu$}\hfill \nobreak
+     \hb@xt@\@pnumwidth{\hfil\normalfont \normalcolor #5}\par}%
+  \fi}
 \renewcommand{\tableofcontents}{
   \if@twocolumn\@restonecoltrue\onecolumn\else\@restonecolfalse\fi
   \chapter*{\contentsname
     \@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname}}%
   \ifpdf\if@hyperloaded\pdfbookmark[0]{Table of Contents}{contents}\fi\fi
-  \@starttoc{toc}%
-  \if@restonecol\twocolumn\fi
+  {\listspenalty=10000\@starttoc{toc}\if@restonecol\twocolumn\fi}%
 }
+\newif\iffront@dded
 \newcommand*\l@frontmatter{%
-  \addvspace{1ex}\addpenalty{-\@highpenalty}%
-  \@dottedtocline{0}{0pt}{0pt}}%
-\def\toclevel@frontmatter{0}
+  \iffront@dded\addvspace{1ex \@plus\p@}\else\front@ddedtrue\fi
+  \@dottedtocline{0}{0pt}{0pt}}
+\def\toclevel@frontmatter{1}
+\newif\ifb@ckadded
+\newcommand*\l@backmatter{%
+  \ifb@ckadded\addpenalty{\@highpenalty}\addvspace{1ex \@plus\p@}%
+    \addpenalty{\@highpenalty}%
+  \else\b@ckaddedtrue\addpenalty{0}\addvspace{1em \@plus\p@}\fi%
+  \@dottedtocline{0}{0pt}{0pt}}
+\def\toclevel@backmatter{0}
 \renewcommand*\l@figure{%
   \addvspace{10pt}%
   \@dottedtocline{0}{0pt}{3.2em}}
 \let\l@table\l@figure
-\newcommand{\list@fsomething}[2]{\f@normalsize%
-  \if@twocolumn\@restonecoltrue\onecolumn
-  \else\@restonecolfalse\fi
+\newcommand{\FSU@lofsomething}[2]{\FSU@onormalsize%
+  \if@twocolumn\@restonecoltrue\onecolumn\else\@restonecolfalse\fi
   \chapter*{#1}%
   \addvspace{-10pt}
   \addcontentsline{toc}{frontmatter}{#1}%
@@ -268,11 +311,11 @@ with the university requirements.\par}\pagebreak[4]}
   \if@restonecol\twocolumn\fi
 }
 \renewcommand{\listoftables}{%
-  \list@fsomething{\listtablename}{lot}}
+  \FSU@lofsomething{\listtablename}{lot}}
 \renewcommand{\listoffigures}{%
-  \list@fsomething{\listfigurename}{lof}}
+  \FSU@lofsomething{\listfigurename}{lof}}
 \newcommand{\listofmusex}{%
-  \list@fsomething{\listmusexname}{lom}}
+  \FSU@lofsomething{\listmusexname}{lom}}
 \let\l@musex\l@figure
 \newcounter{musex}[chapter]
 \renewcommand{\themusex}%
@@ -289,17 +332,23 @@ with the university requirements.\par}\pagebreak[4]}
 \newenvironment{musex*}%
   {\@dblfloat{musex}}
   {\end@dblfloat}
+\newskip{\refitemsep}
+\newskip{\refindent}
+{\FSU@onormalsize%
+\global\setlength{\refitemsep}{\baselineskip}
+\global\addtolength{\refitemsep}{0pt plus0.5pt minus0.2pt}}
+\setlength{\refindent}{2.5em}
 \newenvironment{references}
-  {\chapter*{\bibname}\f@normalsize%
+  {\chapter*{\bibname}\FSU@onormalsize%
    \addvspace{-\baselineskip} \@afterindenttrue%
-   \addcontentsline{toc}{frontmatter}{\bibname}%
-   \setlength{\leftskip}{1.5em}%
-   \setlength{\parindent}{-1.5em}%
-   \setlength{\parskip}{\baselineskip}}
+   \addcontentsline{toc}{backmatter}{\bibname}%
+   \setlength{\leftskip}{\refindent}%
+   \setlength{\parindent}{-\refindent}%
+   \setlength{\parskip}{\refitemsep}}
   {\clearpage}
 \renewenvironment{thebibliography}[1]
-     {\chapter*{\bibname}\f@normalsize%
-      \addcontentsline{toc}{frontmatter}{\bibname}%
+     {\chapter*{\bibname}\FSU@onormalsize%
+      \addcontentsline{toc}{backmatter}{\bibname}%
       \@mkboth{\MakeUppercase\bibname}{\MakeUppercase\bibname}%
       \f@olist{\@biblabel{\@arabic\c@enumiv}}%
          {\settowidth\labelwidth{\@biblabel{#1}}%
@@ -308,8 +357,8 @@ with the university requirements.\par}\pagebreak[4]}
           \@openbib@code
           \usecounter{enumiv}%
           \let\p@enumiv\@empty
-          \if@expanded
-            \addtolength{\itemsep}{0pt plus3pt minus1.5pt}\fi
+          \setlength{\itemsep}{\refitemsep}
+          \setlength{\parsep}{0pt}
           \renewcommand\theenumiv{\@arabic\c@enumiv}}%
       \sloppy
       \clubpenalty4000
@@ -319,13 +368,38 @@ with the university requirements.\par}\pagebreak[4]}
      {\def\@noitemerr
        {\@latex@warning{Empty `thebibliography' environment}}%
       \f@oendlist}
+\def\f@plainnat{%
+  \setlength{\bibsep}{\refitemsep}
+  \setlength{\bibhang}{\refindent}
+  \renewcommand\bibsection{\chapter*{\bibname}\FSU@onormalsize%
+     \addcontentsline{toc}{backmatter}{\bibname}%
+     \let\f@oldpre=\bibpreamble\let\f@oldpost=\bibpostamble%
+     \renewcommand\bibpreamble{\f@oldpre
+       \if@expanded\let\f@savenlist=\list\let\list=\f@olist\fi}%
+     \renewcommand\bibpostamble{%
+       \if@expanded\let\list=\f@savenlist\fi\f@oldpost}}}
+\def\f@apacite{%
+  \renewcommand{\bibliographytypesize}{\FSU@onormalsize%
+     \if@expanded\let\f@savenlist=\list\let\list=\f@olist\fi}%
+  \@ifpackageloaded{natbib}%
+    {\renewcommand\bibsection{\chapter*{\bibname}
+       \addcontentsline{toc}{backmatter}{\bibname}}
+     \setlength{\bibsep}{\refitemsep}%
+     \setlength{\bibhang}{\refindent}}%
+    {\setlength{\bibitemsep}{\refitemsep}%
+     \setlength{\bibleftmargin}{\refindent}%
+     \setlength{\bibindent}{-\refindent}%
+     \renewcommand{\st@rtbibchapter}{\chapter*{\bibname}%
+         \addcontentsline{toc}{backmatter}{\bibname}}}}
+\AtBeginDocument{\@ifpackageloaded{apacite}{\f@apacite}%
+  {\@ifpackageloaded{natbib}{\f@plainnat}{}}}
 \newenvironment{biosketch}
   {\chapter*{\biosketchname}\normalsize\afterheadadj%
-   \addcontentsline{toc}{frontmatter}{\biosketchname}}
-  {\clearpage\f@normalsize}
+   \addcontentsline{toc}{backmatter}{\biosketchname}}
+  {\clearpage\FSU@onormalsize}
 \newlength{\chapheadskip}
 \sbox\@tempboxa{\LARGE\bfseries CHAPTER}
-\setlength{\chapheadskip}{1in}
+\setlength{\chapheadskip}{0in}
 \addtolength{\chapheadskip}{-\ht\@tempboxa}
 \def\@makechapterhead#1{%
   \hrule height0pt depth0pt width0pt\vskip\chapheadskip%
@@ -365,6 +439,23 @@ with the university requirements.\par}\pagebreak[4]}
 \renewcommand{\subparagraph}[1]%
   {\@startsection{subparagraph}{5}{\parindent}%
     {0pt}{-0.5em}{\normalfont\itshape}{#1.}}
+\let\f@ldappendix=\appendix
+\gdef\appendix{\f@ldappendix
+  \if@hyperloaded\def\@currentHref{appendix.A}\fi
+  \addcontentsline{toc}{appendix}{\appendixtocname}}
+\newcommand*\l@appendix[2]{%
+  \ifnum \c@tocdepth >\m@ne
+    \addpenalty{-2000}\vskip 1.0em \@plus\p@%
+    \setlength\@tempdima{1.5em}%
+    \begingroup
+      \parindent \z@ \leavevmode \bfseries
+      \advance\leftskip\@tempdima \hskip -\leftskip
+      #1\nobreak\hfil \par
+      \penalty\@highpenalty\vskip -0.35em\penalty\@highpenalty
+    \endgroup
+  \fi}
+\def\toclevel@appendix{0}
+
 \newlength{\fcapindent}
 \setlength{\fcapindent}{2em}
 \setlength{\belowcaptionskip}{10\p@}
@@ -373,7 +464,7 @@ with the university requirements.\par}\pagebreak[4]}
   \sbox\@tempboxa{#1: #2}%
   \ifdim \wd\@tempboxa >\hsize
     {\advance\leftskip\fcapindent \rightskip=\leftskip\relax%
-     \f@normalsize%
+     \FSU@onormalsize%
      #1: #2\par}
   \else
     \global \@minipagefalse
