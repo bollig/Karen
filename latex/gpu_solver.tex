@@ -550,37 +550,72 @@ Due to the assumption that all stencils have equal size, the ELL format is prefe
 \end{figure}
 
 
+\begin{figure} 
+\centering
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_k20_n17.png}
+\caption{Stencil size $n=17$}
+\label{fig:gflops_cascade_k20_n17}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_k20_n31.png}
+\caption{Stencil size $n=31$}
+\label{fig:gflops_cascade_k20_n31}
+\end{subfigure}
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_k20_n50.png}
+\caption{Stencil size $n=50$}
+\label{fig:gflops_cascade_k20_n50}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_k20_n101.png}
+\caption{Stencil size $n=101$}
+\label{fig:gflops_cascade_k20_n101}
+\end{subfigure}
+\caption{Performance comparison of ViennaCL CSR, COO and ELL matrix formats on Cascade's NVidia K20 GPU versus the Boost::uBLAS CSR format on and Intel Sandy-Bridge CPU (Intel Xeon E5-2670).}
+\end{figure}
+
 
 \begin{figure} 
 \centering
-\begin{subfigure}{0.48\textwidth}
+\begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_cascade_m2070.png}
 \caption{GFLOP/s, NVidia M2070 GPU (Cascade)}
 \label{fig:ell_gflops_cascade_m2070}
 \end{subfigure}
 \quad
-\begin{subfigure}{0.48\textwidth}
+\begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_cascade_k20.png}
 \caption{GFLOP/s, NVidia K20 GPU (Cascade)}
 \label{fig:ell_gflops_cascade_k20}
 \end{subfigure}
-\begin{subfigure}{0.48\textwidth}
+\begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_speedup_cascade_m2070.png}
 \caption{Speedup, NVidia M2070 GPU (Cascade) vs. CSR format on Intel Westmere (Intel Xeon X5675)}
 \label{fig:ell_speedup_cascade_m2070}
 \end{subfigure}
 \quad
-\begin{subfigure}{0.48\textwidth}
+\begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_speedup_cascade_k20.png}
 \caption{Speedup, NVidia K20 GPU (Cascade) vs. CSR format on Sandy-Bridge (E5-2670)}
 \label{fig:ell_speedup_cascade_k20}
 \end{subfigure}
-\caption{Performance comparison by stencil for ELL sparse matrix format.}
+\caption{Comparison by stencil size for the ELL sparse matrix format.}
 \end{figure}
+
+
+
+
 
 \subsection{Intel Phi} 
 
@@ -594,6 +629,37 @@ consider the various sparse formats provided by CUSP and ViennaCL.
 
 %TODO later: \item All stencils with non-uniform size
 %TODO: What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
+
+\begin{figure} 
+\centering
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_intel_phi_n17.png}
+\caption{Stencil size $n=17$}
+\label{fig:gflops_cascade_intel_phi_n17}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_intel_phi_n31.png}
+\caption{Stencil size $n=31$}
+\label{fig:gflops_cascade_intel_phi_n31}
+\end{subfigure}
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_intel_phi_n50.png}
+\caption{Stencil size $n=50$}
+\label{fig:gflops_cascade_intel_phi_n50}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_intel_phi_n101.png}
+\caption{Stencil size $n=101$}
+\label{fig:gflops_cascade_intel_phi_n101}
+\end{subfigure}
+\caption{Performance comparison of ViennaCL CSR, COO and ELL matrix formats on Cascade's Intel Phi Accelerator, and the Boost::uBLAS CSR format on an Intel Sandy-Bridge CPU (Intel Xeon E5-2670). ViennaCL's kernels are optimized for NVidia GPUs, but function (albeit poorly) on the Intel Phi with the current release of Intel's OpenCL SDK (May, 2013). }
+\end{figure}
 
 
 
