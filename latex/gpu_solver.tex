@@ -463,28 +463,6 @@ GFLOP/s = ^{N * n * 2} /_{t_ms} * 10^{-9}.
 \end{align}
 
 
-\section{Spear}
-
-These benchmarks compare performance of a single SpMV executed on Spear. Each data point is the average over 10 executions. The GPU is primed by an iteration before benchmarking begins. 
-
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
-\caption{SpMV Performance of the ViennaCL CSR, COO and ELL formats versus the BOOST::uBLAS CSR format. \authnote{What $n$?}}
-\label{fig:spear_vcl_gflops}
-\end{subfigure} 
-\begin{subfigure}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_speedup-eps-converted-to.pdf}
-\caption{Speedup relative to the BOOST::uBLAS CSR implementation on the CPU.}
-\label{fig:spear_vcl_speedup}
-\end{subfigure} 
-\caption{Single GPU SpMV performance for ViennaCL vs BOOST::uBLAS on the Spear cluster (FSU). }
-\end{figure}
-
-
 
 %TODO: paralution
 Paralution is another library that provides sparse matrix containers, iterative solvers, preconditioners, etc. Paralution provides interfaces to plug into Deal.ii, OpenFOAM, and other packages, and runs on multi-core CPUs and GPUs. 
