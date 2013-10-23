@@ -520,6 +520,39 @@ Due to the assumption that all stencils have equal size, the ELL format is prefe
 
 \begin{figure} 
 \centering
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_m2070_n17.png}
+\caption{Stencil size $n=17$}
+\label{fig:gflops_cascade_m2070_n17}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_m2070_n31.png}
+\caption{Stencil size $n=31$}
+\label{fig:gflops_cascade_m2070_n31}
+\end{subfigure}
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_m2070_n50.png}
+\caption{Stencil size $n=50$}
+\label{fig:gflops_cascade_m2070_n50}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_m2070_n101.png}
+\caption{Stencil size $n=101$}
+\label{fig:gflops_cascade_m2070_n101}
+\end{subfigure}
+\caption{Performance comparison of CSR, COO and ELL matrix formats on Cascade's NVidia M2070 GPU and Intel Westmere CPU (Intel Xeon X5675).}
+\end{figure}
+
+
+
+\begin{figure} 
+\centering
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_cascade_m2070.png}
