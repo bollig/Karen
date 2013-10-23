@@ -695,7 +695,7 @@ Similar approaches to overlapping communication and computation can be found in 
 
 When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
 
-\section{Overlapping GPU}
+\section{Overlapping with the GPU}
 
 Overlapping communication and computation with the GPU is made possible with two levels of asynchronous commands: 
 \begin{itemize} 
@@ -728,14 +728,64 @@ We scale the SpMV across the GPUs on Cascade.
 
 By comparing benchmarks from the unoverlapped and overlapped GPU cases, we get the speedup in using the overlapped solution. Any reduction in time is evidence of overlap. 
 
-Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, the time spent in non-SpMV related tasks (e.g., data transfer, encoding, and communication) is known from the unoverlapped case. Therefore, given the time for the overlapped SpMV case, we can calculate the amount of overlap by 
+Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, the time spent in non-SpMV related tasks (e.g., data transfer, encoding, and communication) is known from the unoverlapped case. Therefore, given the time for the overlapped SpMV case, we can calculate the amount of overlap as 
 
-\begin{align}
-t_{overlap} = t_{overlap} - (t_{comm} + t_{en} + t_{R} + t_{O}) \\
-t_{nooverlap, SpMV} - (t_{overlap, tot} - t_{overlap, non-SpMV})
-\end{align}
-% percent reduction is useful to tell overlap. e.g., if we reduce by 25% and the 
+%
+%\begin{align}
+%t_{nooverlap, SpMV} - (t_{overlap, tot} - t_{overlap, nonSpMV}) \\
+%t_{overlap} = t_{overlap} - (t_{comm} + t_{en} + t_{R} + t_{O})  \\
+%(SpMV whole) - (SpMV2) \approx (SpMV1) \\
+%If (SpMV1) > (Comm + SpMV2) 
+%\end{align}
+%% percent reduction is useful to tell overlap. e.g., if we reduce by 25% and the 
+%
+%Right, so the time from the start of comm to the end of the SpMV2 should be 
+%
+%\begin{table}[h]
+%\centering
+%\caption{GFLOP/s observed for distributed ELL SpMV on Cascade's M2070 GPUs without overlapping communication and GPU kernels.}
+%\label{tbl:cascade_m2070_nooverlap}
+%\begin{tabular}{c|c|c|c|c|c|c}
+%Compute Nodes   &   PPN   &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
+%1   &   1   &   8.4   &   8.4   &   8.9   &      \\
+%2   &   1   &   6.1   &   6.8   &   6.4   &   7.6   \\
+%4   &   1   &   6.9   &   9.1   &   10.3   &   13.3   \\
+%8   &   1   &   12.1   &   14.6   &   12.1   &   23.0   \\ \hline
+%1   &   2   &   3.4   &   4.1   &   3.7   &   4.2   \\
+%2   &   2   &   4.4   &   5.4   &   6.5   &   8.1   \\
+%4   &   2   &   11.1   &   9.3   &   9.9   &   14.2   \\
+%8   &   2   &   15.9   &   15.4   &   22.2   &   23.9   \\ \hline
+%1   &   4   &   3.3   &   4.4   &   5.1   &   5.5   \\
+%2   &   4   &   8.3   &   7.6   &   9.5   &   11.0   \\
+%4   &   4   &   12.4   &   12.9   &   18.7   &   18.0   \\
+%8   &   4   &   17.4   &   28.4   &   28.0   &   37.4   
+%\end{tabular}
+%\end{table}
 
+
+\begin{table}[h]
+\centering
+\caption{GFLOP/sec achieved by the distributed ELL SpMV on Cascade's M2070 GPUs, with MPI communication overlapping two GPU kernels. The SpMV computes derivatives over a 3D regular grid of size $N=4096000$ nodes (i.e., $160^3$). Data reflects various combinations of stencil sizes, number of compute nodes and number of processes per node (PPN). Quantities in parentheses denote the speedup factors observed for the overlapping algorithm versus the non-overlapping approach. }
+\label{tbl:cascade_m2070_overlap}
+\begin{tabular}{c|c|c|c|c|c|c}
+ \multicolumn{2}{c}{ } & \multicolumn{4}{|c|}{Observed GFLOP/sec (Speedup over Non-overlapped)} \\  \hline
+Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
+1   &   1   &   8.5 (1.0x)   &   8.4 (1.0x)   &   13.2 (1.5x)   &      \\
+2   &   1   &   13.8 (2.3x)   &   13.0 (1.9x)   &   9.0 (1.4x)   &   13.5 (1.8)   \\
+4   &   1   &   13.1 (1.9x)   &   25.1 (2.8x)   &   24.6 (2.4x)   &   25.2 (1.9)   \\
+8   &   1   &   24.5 (2.0x)   &   33.2 (2.3x)   &   41.2 (3.4x)   &   53.6 (2.3x)   \\ \hline
+1   &   2   &   11.3 (3.4x)   &   12.2 (3.0x)   &   12.1 (3.2x)   &   12.7 (3.0x)   \\
+2   &   2   &   13.0 (3.0x)   &   22.9 (4.2x)   &   23.1 (3.6x)   &   53.5 (6.6x)   \\
+4   &   2   &   25.1 (2.3x)   &   37.8 (4.1x)   &   50.1 (5.0x)   &   24.5 (1.7x)   \\
+8   &   2   &   35.8 (2.2x)   &   38.3 (2.5x)   &   59.6 (2.7x)   &   87.6 (3.7x)   \\ \hline
+1   &   4   &   27.7 (8.5x)   &   22.5 (5.1x)   &   27.9 (5.4x)   &   24.4 (4.4x)   \\
+2   &   4   &   14.1 (1.7x)   &   32.0 (4.2x)   &   37.2 (3.9x)   &   50.8 (4.6x)   \\
+4   &   4   &   19.6 (1.6x)   &   38.6 (3.0x)   &   57.0 (3.0x)   &   81.3 (4.5x)   \\
+8   &   4   &   50.9 (2.9x)   &   61.6 (2.2x)   &   88.8 (3.2x)   &   130.8 (3.5x)  
+\end{tabular} 
+\end{table}
+
+%1.0	1.0	1.5	#DIV/0!%2.3	1.9	1.4	1.8%1.9	2.8	2.4	1.9%2.0	2.3	3.4	2.3%3.4	3.0	3.2	3.0%3.0	4.2	3.6	6.6%2.3	4.1	5.0	1.7%2.2	2.5	2.7	3.7%8.5	5.1	5.4	4.4%1.7	4.2	3.9	4.6%1.6	3.0	3.0	4.5%2.9	2.2	3.2	3.5
 
 \subsection{Multiple Kernel Scheduling}
 describe fermi's ability to schedule multiple kernels, what it means for our queues. Do we need multiple queues, or just one that is non-blocking. How do we indicate we are done communicating if there is no queue to add markers to? 
