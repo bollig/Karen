@@ -1,0 +1,3 @@
+~/Karen/keeneland_benchmarks/vortex_rollup_on_sphere/keeneland_vortex_multi_proc
+
+Assumes GFLOPs = 16*N*n + 15*N 
