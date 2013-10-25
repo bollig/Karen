@@ -1,3 +1,7 @@
+~/Karen/keeneland_benchmarks/cosine_bell/alltoall
+
+
+
 These results were run on Keeneland. The changes to MPI communication are the result of changing from blocking communication (MPI_send/MPI_recv) to non-blocking communication (MPI_alltoall).
 
 speedup_1proc_oneWarpPerStencil.eps shows that our GPU kernel is not much different than in the paper. I have a list of optimizations I'm going through, but this test case focuses on improving the communication. 

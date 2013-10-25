@@ -404,7 +404,9 @@ y &= \sqrt{2}\sin{\theta}
 \subsubsection{Convergence}
 
 %TODO: convergence for Stokes
-As the problem size $N$ increases, we expect the approximation to the solution to converge on the order of $\sqrt{n}$ where $n$ is the choice of stencil size. Figure~\ref{fig:convergence} demonstrates the convergence of our solution with respect to $\sqrt{N}$ for stencil sizes $n=31$, $101$ \authnote{update when figure is complete}. 
+As the problem size $N$ increases, we expect the approximation to the solution to converge on the order of $\sqrt{n}$ where $n$ is the choice of stencil size. %Figure~\ref{fig:convergence} demonstrates the convergence of our solution with respect to $\sqrt{N}$ for stencil sizes $n=31$, $101$ 
+
+\authnote{Finish convergence plot}. 
 
 
 
@@ -440,24 +442,27 @@ We also find that a large Krylov subspace must be saved. GMRES converges best wh
 %\end{algorithm}
 
 \section{GMRES Results}
+%TODO: generate results today
 
-We want to express benchmarks in terms of the number of GMRES iterations per second, and the number of iterations required to converge. Readers wont care what percentage of peak we are getting, just how fast we get to the solution. 
+%We want to express benchmarks in terms of the number of GMRES iterations per second, and the number of iterations required to converge. Readers wont 
+%care what percentage of peak we are getting, just how fast we get to the solution. 
 
-\begin{itemize} 
-\item One GPU
-\begin{itemize} 
-	\item {\color{blue} Convergence for stokes steady}  
-	\item {\color{blue} GMRES iteration plot (assuming 1e-8 and restart=60)} 
-\end{itemize} 
-\item Multi-GPU
-	\begin{itemize} 
-		\item Number of iterations without constraints
-		\item Number of iterations with constraints
-		\item GMRES iteration plot
-		\item plot: number of GMRES iterations per second w.r.t. number of processors
-	\end{itemize} 
-\end{itemize} 
 
+%\begin{itemize} 
+%\item One GPU
+%\begin{itemize} 
+%	\item {\color{blue} Convergence for stokes steady}  
+%	\item {\color{blue} GMRES iteration plot (assuming 1e-8 and restart=60)} 
+%\end{itemize} 
+%\item Multi-GPU
+%	\begin{itemize} 
+%		\item Number of iterations without constraints
+%		\item Number of iterations with constraints
+%		\item GMRES iteration plot
+%		\item plot: number of GMRES iterations per second w.r.t. number of processors
+%	\end{itemize} 
+%\end{itemize} 
+%
 
 %
 %TODO: State that the conditions under which a problem is solved determines how quickly it will converge. For example, nodes too close together on delaunay meshes cause higher condition numbers and require more iterations. Proper choice of preconditioners can dramatically reduce the number of iterations required to converge. Although preconditioners incur an additional cost in preprocessing and at each iteration of the solver, the potential number of iterations they save 
