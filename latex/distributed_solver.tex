@@ -532,7 +532,7 @@ In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scal
 
 For small $p$ the MPI\_Alltoallv is up to 2x faster than MPI\_Isend/MPI\_Irecv variants. For $p\leq8$ it is safe to assume MPI\_Alltoallv makes better use of local shared memory to communicate within the same node. Beyond $p=8$, the collective most likely improves on MPI\_Isend/MPI\_Irecv by optimally packing messages or even breaking large messages into smaller pieces. Its also possible to some extent for the collective to adjust to the network topology. Duplicating those optimizations for the overlapped CPU collective is left for future work. Until then, RBF-FD in distributed CPU environments like Itasca should assume the use of MPI\_Alltoallv collective for $p \leq 16$ and the overlapped MPI\_Isend/MPI\_Irecv in all other cases. 
 
-\subsection{All Stencil Summary}
+\subsection{All Stencils Summary}
 
 
 
@@ -597,7 +597,7 @@ This may be a limitation in METIS when partitioning domains for large $p$. If so
 \end{figure} 
 
 
-Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The roughly 111 to 220 GFLOP/sec achieved on 1024 cores of Itasca is a far cry from peta-scale computing, but for the 
+Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The roughly 110 to 220 GFLOP/sec achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory bound SpMV. 
 
 
 
@@ -742,7 +742,6 @@ By comparing benchmarks from the non-overlapped and overlapped GPU cases, we get
 \begin{align*} 
 S_p = \ ^{t_{non-overlapped}} /_{t_{overlapped}}
 \end{align*}
-
 in using the overlapped solution. Any reduction in time is evidence of overlap. 
 
 %Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, the time spent in non-SpMV related tasks (e.g., data transfer, encoding, and communication) is known from the unoverlapped case. Therefore, given the time for the overlapped SpMV case, we can calculate the amount of overlap as 
@@ -770,16 +769,15 @@ Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 8   &   4   &   50.9 (2.9x)   &   61.6 (2.2x)   &   88.8 (3.2x)   &   130.8 (3.5x)  
 \end{tabular} 
 \end{table}
- 
-Greater than 4x speedup (bold-faced in Table~\ref{tbl:cascade_m2070_overlap}) is possible due to a design flaw on Cascade: each compute node has four attached GPUs connected to the host via shared I/O hub. Concurrent data transfers from multiple GPUs to host, or vice versa---as would occur while executing a synchronized, distributed SpMV---result in contention on the hub and serialization of transfers. Serialization effectively quadruples the total cost in the case of 4 PPN. As an example, consider the time \emph{not} spent computing the SpMV for $n=50$, and one compute node with 4 PPN. The non-overlapping test case, takes approximately 80 ms. Of that, half the time is spent in communication
 
-The non-SpMV component includes encoding the send buffer, executing the MPI collective and GPU<->CPU transfers. 
-The communication time for the same test case drops by a factor $> 4x$ to 18ms when overlapping communication and computation is employed. 
+The total time required to compute the distributed SpMV for 1 node and 4 PPN is observed in the neighborhood of 80 ms for $n=50$ and the non-overlapping algorithm (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$). Of those 80 ms, approximately 60 ms is spent performing non-computation tasks such as transferring from GPU down to CPU, encoding and sending data via MPI and then transferring back up to the GPU. The remaining 20 ms is all dedicated to performing the SpMV.
 
-The time required to compute the SpMV for 1 node, 4 PPN without overlap (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$) is in the neighborhood of 50 ms. 
+By introducing the overlapped GPU kernels, the total time for the distributed SpMV for $n=50$ (1 node, 4 PPN) drops to approximately 15 ms---25\% less than the SpMV-only portion of the non-overlapped approach. Since the non-computation tasks amount to only 12 ms in the overlapped case, our first conclusion is that overlapping hides 100\% of communication for the cases tested in Table~\ref{tbl:cascade_m2070_overlap}, as well as the entire SpMV for $\setBoundary$. 
+
+Within each block of Table~\ref{tbl:cascade_m2070_overlap} we expect the GFLOP/sec to double by row. Obviously the strong scaling in the case of the GPU is not ideal when executing more than one PPN. However, for $n=50$ and 1 PPN we see super but on only 32 GPUs, and impeded by the I/O hub bottleneck, we manage to achieve 130 GFLOP/sec for $n=101$. Compare this to the GFLOP/sec scaling results on Itasca in Figure~\ref{fig:compare_strong_scaling_gflops_all_stencils} where 130 GFLOP/sec requires approximately 
 
 
-Within each block of Table~\ref{tbl:cascade_m2070_overlap} we expect the GFLOP/sec to double by row. Obviously the strong scaling in the case of the GPU is not ideal, 
+Greater than 4x speedup (bold-faced in Table~\ref{tbl:cascade_m2070_overlap}) is possible due to a design flaw on Cascade: each compute node has four attached GPUs connected to the host via a shared I/O hub. Concurrent data transfers from multiple GPUs to host, or vice versa---as would occur while executing a synchronized, distributed SpMV---result in contention on the hub and serialization of transfers. Serialization effectively quadruples the total run-time for 4 PPN. By overlapping communication and computation we notice two effects: a) contention disappears (or is at least hidden by computation), and b) 
 
 
 \subsection{Multiple Kernel Scheduling}
