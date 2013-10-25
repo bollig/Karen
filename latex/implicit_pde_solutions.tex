@@ -20,7 +20,7 @@ where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar press
 
 
 
-This article introduces the first (to our knowledge) parallel approach to solve the steady-state equations on the surface of the unit sphere with the Radial Basis Function-generated Finite Differences (RBF-FD) method. Building on our work in \cite{bolligFlyerErlebacher2011}, which parallelized explicit RBF-FD advection, our goal is to integrate both explicit and implicit components within a larger transient flow model. 
+This article introduces the first (to our knowledge) parallel approach to solve the steady-state equations on the surface of the unit sphere with the Radial Basis Function-generated Finite Differences (RBF-FD) method. Building on our work in \cite{BolligFlyerErlebacher2012}, which parallelized explicit RBF-FD advection, our goal is to integrate both explicit and implicit components within a larger transient flow model. 
 
 
 For decades, the demand for fast and accurate numerical solutions in fluid flow has lead to a plethora of computational methods for various geometries, discretizations and dimensions.  On the sphere in $\R^3$ popular discretizations include the standard latitude-longitude grid, cubed-sphere \cite{NairTransport05}, yin-yang overlapping grid \cite{Kameyama2008a}, icosahedral grid \cite{Randall2002} and centroidal voronoi tessellations \cite{Du2006}. Associate with each discretization is a mesh---specific to the choice of numerical method---that indicates connectivity of nodes for differentiation.
@@ -44,7 +44,7 @@ Until now, most of the focus in RBF-FD has been on explicit methods. However, ma
 %\end{itemize} 
 
 Our goal is to demonstrate to the geosciences that RBF-FD can function well on
-both hyperbolic and elliptic problems. In \cite{bolligFlyerErlebacher2011} we
+both hyperbolic and elliptic problems. In \cite{BolligFlyerErlebacher2012} we
 introduced a multi-GPU implementation of RBF-FD and demonstrated the method's
 strong ability to stably advect solid bodies on the sphere. In this paper we
 continue toward the goal of RBF-FD solutions for fluid flow problems with a
@@ -53,7 +53,7 @@ not a paramount issue.
 
 Related work on RBF methods targeting the GPU is quite limited. Schmidt et al.
 \cite{Schmidt2009b} solve an implicit system for a global RBF method using
-Accelerys Jacket in Matlab. Our work in \cite{Bollig2011} introduced the first
+Accelerys Jacket in Matlab. Our work in \cite{BolligFlyerErlebacher2012} introduced the first
 parallel implementation of RBF-FD for explicit advection capable of spanning
 multiple CPUs as well as multiple GPUs. 
 
@@ -74,7 +74,7 @@ Within this paper we implement a preconditioned GMRES method for RBF-FD on multi
 Parallel GMRES
 \begin{itemize} 
 	\item CPU only: PETSc \cite{Yokota2010}, Hypre \cite{Wildemann2009} 
-	\item Parallel GMRES on single GPU available in ViennaCL \cite{Rupp2010} and CUSP \cite{Cusp2010}
+	\item Parallel GMRES on single GPU available in ViennaCL \cite{Rupp2010} and CUSP \cite{Cusp2012}
 	\item Parallel GMRES on Multiple GPUs \cite{Bahi2011}
 	\item Reduced Communication with increased computation \cite{Dekker2000}
 \end{itemize} 
@@ -114,7 +114,8 @@ The GMRES algorithm was introduced in 1986 by Saad and Schultz \cite{Saad1986}. 
 At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. %TODO: \authnote{significance of orthogonalization}. 
 
 %TODO: variants in orthogonalization steps and variants in preconditioners, actual iterations, restarts etc. 
-Variants of GMRES exist that utilize unique orthogonalization steps. The motivation behind alternative Arnoldi processes is to save both memory and operation counts. In some cases stability of the GMRES iterations can also be improved \cite{FindRef}. Saad \cite{Saad1986} introduced a practical implementation of the GMRES method based on Given's rotations to compute an implicit QR factorization. The Given's based algorithm is part of libraries like CUSP \cite{Cusp2010} and CULA Sparse \cite{CULASparse}; ViennaCL implements the Householder reflection algorithm. 
+Variants of GMRES exist that utilize unique orthogonalization steps. The motivation behind alternative Arnoldi processes is to save both memory and operation counts. %In some cases stability of the GMRES iterations can also be improved \cite{FindRef}. 
+Saad \cite{Saad1986} introduced a practical implementation of the GMRES method based on Given's rotations to compute an implicit QR factorization. The Given's based algorithm is part of libraries like CUSP \cite{Cusp2012} and CULA Sparse \cite{CULA}; ViennaCL implements the Householder reflection algorithm. 
 
 The Given's rotation algorithm is easier to parallelize than Householder, which led to the addition of an alternate GMRES algorithm with restarts under ViennaCL. 
 
@@ -267,7 +268,7 @@ On the surface of the unit sphere the radial term vanishes, so we are left with:
 \begin{align}
 \Laplacian    \equiv \LaplaceBeltrami . 
 \end{align}
-The following RBF operator from \cite{WrightFlyerYuen10}---Equation (20) can be applied to the RHS of Equation~\ref{eq:rbffd_weights} to generate Laplace-Beltrami RBF-FD weights: 
+The following RBF operator from \cite{WrightFlyerYuen10}---Equation (20) can be applied to the RHS of Equation~\ref{eq:rbffd_weight_system} to generate Laplace-Beltrami RBF-FD weights: 
 \begin{align} 
 \LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{}{r} + \frac{4-3r^2}{r} \pd{}{r} \right],
 \end{align} 
@@ -296,7 +297,7 @@ where $\mathbf{x}$ is the unit normal at the stencil center, and
 %)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} \\
 %& = \begin{pmatrix} x \vx^T \vx_k - x_k \\ y \vx^T \vx_k -  y_k \\ z \vx^T \vx_k -z_k \end{pmatrix} \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} 
 % \end{align}
-\cite{FlyerWright09, FlyerLehto11} show that with a little manipulation weights can be directly computed with these operators for Equation~\ref{eq:rbffd_weights}: 
+\cite{FlyerWright09, FlyerLehto11} show that with a little manipulation weights can be directly computed with these operators for Equation~\ref{eq:rbffd_weight_system}: 
 %\begin{align} 
 %P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{d(\vx_k - \vx)} \pd{\phi(d(\vx_k - \vx))}{d} |_{\vx=\vx_j} \\
 %P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{d(\vx_k - \vx)} \pd{\phi(d(\vx_k - \vx))}{d} |_{\vx=\vx_j} \\
@@ -400,8 +401,8 @@ y &= \sqrt{2}\sin{\theta}
 
 \subsubsection{Convergence}
 
-
-As the problem size $N$ increases, we expect the approximation to the solution to converge on the order of $\sqrt{n}$ where $n$ is the choice of stencil size. Figure~\ref{fig:convergence} demonstrates the convergence of our solution with respect to $\sqrt{N}$ for stencil sizes $n=31$,$101$ \authnote{update when figure is complete}. 
+%TODO: convergence for Stokes
+As the problem size $N$ increases, we expect the approximation to the solution to converge on the order of $\sqrt{n}$ where $n$ is the choice of stencil size. Figure~\ref{fig:convergence} demonstrates the convergence of our solution with respect to $\sqrt{N}$ for stencil sizes $n=31$, $101$ \authnote{update when figure is complete}. 
 
 
 

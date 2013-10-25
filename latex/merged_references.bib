@@ -2,12 +2,124 @@
 %% http://bibdesk.sourceforge.net/
 
 
-%% Created for Evan Bollig at 2013-10-15 16:49:36 -0500 
+%% Created for Evan Bollig at 2013-10-24 23:49:38 -0500 
 
 
 %% Saved with string encoding Unicode (UTF-8) 
 
 
+
+@misc{Wildemann2009,
+	Abstract = {This report compares parallel preconditioners for 3D Stokes 
+ow. Its motivation lies in Amphi3D, a diffuse interface algorithm simulating three dimensional interfacial
+dynamics of complex fluids, the parallelization of which has to date been ineffective due to the lack of an efficient parallel preconditioner. The approach taken
+here is to evaluate the Block Jacobi, Parallel ILU and Sparse approximate inverse parallel preconditioners on the reduced problem of Stokes flow for a small range of Reynolds numbers. Although surprisingly good results are achieved without preconditioning, it is the sparse approximate inverse preconditioner that delivers the most promising results.},
+	Author = {A. {Wildeman}},
+	Date-Added = {2013-10-25 04:49:32 +0000},
+	Date-Modified = {2013-10-25 04:49:38 +0000},
+	Month = {August},
+	Title = {Parallel Preconditioners for Stokes Flow},
+	Url = {http://essay.utwente.nl/59249/},
+	Year = {2009},
+	Bdsk-Url-1 = {http://essay.utwente.nl/59249/}}
+
+@inproceedings{HYPRE,
+	Acmid = {653635},
+	Address = {London, UK, UK},
+	Author = {Falgout, Robert D. and Yang, Ulrike Meier},
+	Booktitle = {Proceedings of the International Conference on Computational Science-Part III},
+	Date-Added = {2013-10-25 04:47:31 +0000},
+	Date-Modified = {2013-10-25 04:47:36 +0000},
+	Isbn = {3-540-43594-8},
+	Numpages = {10},
+	Pages = {632--641},
+	Publisher = {Springer-Verlag},
+	Series = {ICCS '02},
+	Title = {hypre: A Library of High Performance Preconditioners},
+	Url = {http://dl.acm.org/citation.cfm?id=645459.653635},
+	Year = {2002},
+	Bdsk-Url-1 = {http://dl.acm.org/citation.cfm?id=645459.653635}}
+
+@proceeding{CULA,
+	Abstract = {The modern graphics processing unit (GPU) found in many standard personal computers is a highly parallel math processor capable of nearly 1 TFLOPS peak throughput at a cost similar to a high-end CPU and an excellent FLOPS/watt ratio. High-level linear algebra operations are computationally intense, often requiring O(N3) operations and would seem a natural fit for the processing power of the GPU. Our work is on CULA, a GPU accelerated implementation of linear algebra routines. We present results from factorizations such as LU decomposition, singular value decomposition and QR decomposition along with applications like system solution and least squares. The GPU execution model featured by NVIDIA GPUs based on CUDA demands very strong parallelism, requiring between hundreds and thousands of simultaneous operations to achieve high performance. Some constructs from linear algebra map extremely well to the GPU and others map poorly. CPUs, on the other hand, do well at smaller order parallelism and perform acceptably during low-parallelism code segments. Our work addresses this via hybrid a processing model, in which the CPU and GPU work simultaneously to produce results. In many cases, this is accomplished by allowing each platform to do the work it performs most naturally.},
+	Author = {Humphrey, John R. and Price, Daniel K. and Spagnoli, Kyle E. and Paolini, Aaron L. and Kelmelis, Eric J.},
+	Date-Added = {2013-10-25 04:46:14 +0000},
+	Date-Modified = {2013-10-25 04:46:18 +0000},
+	Doi = {10.1117/12.850538},
+	Journal = {Proc. SPIE},
+	Pages = {770502-770502-7},
+	Title = {CULA: hybrid GPU accelerated linear algebra routines},
+	Url = {http://dx.doi.org/10.1117/12.850538},
+	Volume = {7705},
+	Year = {2010},
+	Bdsk-Url-1 = {http://dx.doi.org/10.1117/12.850538}}
+
+@article{Williams2009,
+	Acmid = {1498785},
+	Address = {New York, NY, USA},
+	Author = {Williams, Samuel and Waterman, Andrew and Patterson, David},
+	Date-Added = {2013-10-25 04:44:40 +0000},
+	Date-Modified = {2013-10-25 04:44:45 +0000},
+	Doi = {10.1145/1498765.1498785},
+	Issn = {0001-0782},
+	Issue_Date = {April 2009},
+	Journal = {Commun. ACM},
+	Month = apr,
+	Number = {4},
+	Numpages = {12},
+	Pages = {65--76},
+	Publisher = {ACM},
+	Title = {Roofline: an insightful visual performance model for multicore architectures},
+	Url = {http://doi.acm.org/10.1145/1498765.1498785},
+	Volume = {52},
+	Year = {2009},
+	Bdsk-Url-1 = {http://doi.acm.org/10.1145/1498765.1498785},
+	Bdsk-Url-2 = {http://dx.doi.org/10.1145/1498765.1498785}}
+
+@misc{Openmp08,
+	Author = {{OpenMP Architecture Review Board}},
+	Date-Added = {2013-10-25 04:40:02 +0000},
+	Date-Modified = {2013-10-25 04:40:07 +0000},
+	Month = may,
+	Title = {{OpenMP} Application Program Interface Version 3.0},
+	Url = {\url{http://www.openmp.org/mp-documents/spec30.pdf}},
+	Year = 2008,
+	Bdsk-Url-1 = {http://www.openmp.org/mp-documents/spec30.pdf}}
+
+@manual{CudaGuide2013,
+	Date-Added = {2013-10-25 04:37:14 +0000},
+	Date-Modified = {2013-10-25 04:37:14 +0000},
+	Howpublished = {http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html},
+	Month = {July},
+	Organization = {NVidia},
+	Short = {CUDA},
+	Title = {{CUDA C Programming Guide}},
+	Url = {http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html},
+	Year = {2013},
+	Bdsk-Url-1 = {http://developer.download.nvidia.com/compute/cuda/1%5C_0/NVIDIA%5C_CUDA%5C_Programming%5C_Guide%5C_1.0.pdf},
+	Bdsk-Url-2 = {http://developer.download.nvidia.com/compute/cuda/1_1/NVIDIA_CUDA_Programming_Guide_1.1.pdf}}
+
+@article{BLAS,
+	Acmid = {355847},
+	Address = {New York, NY, USA},
+	Author = {Lawson, C. L. and Hanson, R. J. and Kincaid, D. R. and Krogh, F. T.},
+	Date-Added = {2013-10-25 04:30:57 +0000},
+	Date-Modified = {2013-10-25 04:31:00 +0000},
+	Doi = {10.1145/355841.355847},
+	Issn = {0098-3500},
+	Issue_Date = {Sept. 1979},
+	Journal = {ACM Trans. Math. Softw.},
+	Month = sep,
+	Number = {3},
+	Numpages = {16},
+	Pages = {308--323},
+	Publisher = {ACM},
+	Title = {Basic Linear Algebra Subprograms for Fortran Usage},
+	Url = {http://doi.acm.org/10.1145/355841.355847},
+	Volume = {5},
+	Year = {1979},
+	Bdsk-Url-1 = {http://doi.acm.org/10.1145/355841.355847},
+	Bdsk-Url-2 = {http://dx.doi.org/10.1145/355841.355847}}
 
 @article{Shi2012,
 	Address = {Los Alamitos, CA, USA},
@@ -172,15 +284,15 @@
 	Title = {An Introduction to CUDA-Aware MPI},
 	Year = {2013}}
 
-@manual{CudaGuide2013,
+@manual{CudaToolkitDoc,
 	Date-Added = {2013-09-13 20:23:45 +0000},
-	Date-Modified = {2013-09-13 20:25:37 +0000},
-	Howpublished = {http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html},
-	Month = {July},
+	Date-Modified = {2013-10-25 04:37:47 +0000},
+	Howpublished = {http://docs.nvidia.com/cuda/index.html},
+	Month = {Oct},
 	Organization = {NVidia},
 	Short = {CUDA},
-	Title = {{CUDA C Programming Guide}},
-	Url = {http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html},
+	Title = {{CUDA Toolkit Documentation}},
+	Url = {http://docs.nvidia.com/cuda/index.html},
 	Year = {2013},
 	Bdsk-Url-1 = {http://developer.download.nvidia.com/compute/cuda/1%5C_0/NVIDIA%5C_CUDA%5C_Programming%5C_Guide%5C_1.0.pdf},
 	Bdsk-Url-2 = {http://developer.download.nvidia.com/compute/cuda/1_1/NVIDIA_CUDA_Programming_Guide_1.1.pdf}}

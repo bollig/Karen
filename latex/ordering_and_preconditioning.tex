@@ -547,7 +547,7 @@ The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Eq
 \end{table}
 
 
-The last row of Table~\ref{tbl:orderings}, the 4-node $Z$-curve, is a special case of bit interleaving. The 4-node Z is similar in theory to a standard $Z$-order, except when coordinates are dilated an extra extra zero per bit is requested, as though the dilation were operating in the next higher dimension. Then, using the operators provided in Table~\ref{tbl:orderings} to interleave bits results in the following pattern:
+The last row of Table~\ref{tbl:orderings}, the 4-node $Z$-curve, is a special case of bit interleaving. The 4-node Z is similar in theory to a standard $Z$-order, except that an extra zero per bit is requested when coordinates are dilated as though the process were operating in the next higher dimension. Then, using the operators provided in Table~\ref{tbl:orderings} to interleave bits results in the following pattern:
 \begin{align}
 interleave_{4node}(X,Y) = \{x_5x_4y_5y_4x_3x_2y_3y_2x_1x_0y_1y_0\}.
 \end{align}
@@ -628,7 +628,7 @@ In similar fashion, Figure~\ref{fig:ordering_impact_cvt} provides the six orderi
 
 While bandwidth is significant, the end-goal of reordering is to improve the benchmark for SpMV. Consider Table~\ref{tbl:ordering_impact}, which lists ordering impact on $N=10^6$ CVT nodes on the unit sphere with $n=50$ and $h_n=160$ (i.e., the optimal $h_n$ found in Figure~\ref{fig:cvt_hn_speedup}). 
 %Bandwidths on the first row reveal the raster-/IJK-order is again second only to RCM for bandwidth. 
-The first row of Table~\ref{tbl:ordering_impact} provides bandwidths by order, and the second shows the speedup gained in the SpMV versus the benchmark for raster-ordering. In this case, the RCM has both the lowest bandwidth and highest yield in the benchmark with a 9\% improvement (5.06x faster than $k$-D Tree). Surprisingly the $Z$- and $X$-orderings are not far behind RCM even with 80--120x wider bandwidths. 
+The first row of Table~\ref{tbl:ordering_impact} provides bandwidths by order, and the second shows the speedup gained in the SpMV versus the benchmark for raster-ordering. In this case, the RCM has both the lowest bandwidth and highest yield in the benchmark with a 9\% improvement (5.06x faster than $k$-D Tree). Surprisingly the $Z$- and $X$-orderings are not far behind RCM even with 80x--120x wider bandwidths. 
 %TODO: more? 
 
 \begin{figure}
@@ -692,7 +692,7 @@ The C++ fixed-grid stencil generator defaults to the Raster-/IJK-order due to it
 %TODO: Similar conclusions are drawn by the authors of \cite{MellorCrummey2001}, who found that reordering nodes via RCM and space filling curves offer similar benefits in terms of reduced TLB misses and better cache coherency. 
 
 
-Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. No known investigations consider RBF-FD on moving nodes, but such research could prove local refinements  (e.g., \cite{FlyerLehto10}) should find the fixed-grid method significantly relevant. Future work in this direction would easily justify a GPU implementation following \cite{Krog2010,Green2010,Johnson2011, Goswami2010}. 
+Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. No known investigations consider RBF-FD on moving nodes (e.g., for adaptive node refinement like \cite{FlyerLehto10}), although such research should find the fixed-grid method significantly relevant. Future work in this direction would easily justify a GPU implementation following \cite{Krog2010,Green2010,Johnson2011, Goswami2010}. 
 
 It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} developed operators to directly transform floating point coordinates into $Z$-orderings. The MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}) includes a test of those operators, although the investigation is incomplete. Preliminary results are shown in Figure~\ref{fig:float_z_results}. A set of nodes are distributed in $[0,20]^2$ with $dx = 1.0$ ($dy = dx$) in Figure~\ref{fig:connor_works}. Node coordinates are floating point representations of integer values, and the curve drawn shows the successful reproduction of a Z-ordering over the nodes. In Figure~\ref{fig:connor_works2}, the same nodes are scaled to $dx = 3.0$ (i.e., still integer representations). A number of 3-node Z's appear at coordinates that are multiples of powers of two, but that  is an anticipated flaw in the algorithm. The implementation fails when nodes are scaled to non-integer coordinates with $dx = 0.3$ (Figure~\ref{fig:connor_fails}) and $dx=0.05$ (Figure~\ref{fig:connor_fails2}). 
 

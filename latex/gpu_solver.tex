@@ -264,9 +264,9 @@ Sharing information across multiprocessors is possible in \textit{global device 
 %contents for 
 %later use with an associated penalty in efficiency \cite{CudaGuide:2008}. 
 
-Under OpenCL, the equivalent to CUDA local memory is called \textit{private memory} and is also reserved read-only per work-item in global device memory. CUDA's shared memory is labeled \textit{local memory} and shared by threads of a work-group. The CUDA texture and constant caches are known as \textit{Global/Constant Cache}, and similar to CUDA, exist outside of developer control. OpenCL refers to \textit{global memory} and \textit{constant memory} when referring to read/write and read-only sections of CUDA's global device memory (respectively). Finally, CUDA textures are equivalent to OpenCL \textit{buffers} (1D arrays) or \textit{images} (2D/3D arrays) \cite{OpenCL:2009}.
+Under OpenCL, the equivalent to CUDA local memory is called \textit{private memory} and is also reserved read-only per work-item in global device memory. CUDA's shared memory is labeled \textit{local memory} and shared by threads of a work-group. The CUDA texture and constant caches are known as \textit{Global/Constant Cache}, and similar to CUDA, exist outside of developer control. OpenCL refers to \textit{global memory} and \textit{constant memory} when referring to read/write and read-only sections of CUDA's global device memory (respectively). Finally, CUDA textures are equivalent to OpenCL \textit{buffers} (1D arrays) or \textit{images} (2D/3D arrays) \cite{OpenCL2009}.
 
-Based on \cite{Behr:2009, OpenCL:2009}, Figure~\ref{fig:opencl_memory} compares the underlying implementation of the OpenCL memory hierarchy on GPUs and CPUs. Notably, on current CPUs most of the memory is reserved in System RAM, whereas the hierarchy naturally fits on the deep memory hierarchy of the GPU. 
+Based on \cite{Behr2009, OpenCL2009}, Figure~\ref{fig:opencl_memory} compares the underlying implementation of the OpenCL memory hierarchy on GPUs and CPUs. Notably, on current CPUs most of the memory is reserved in System RAM, whereas the hierarchy naturally fits on the deep memory hierarchy of the GPU. 
 
 
 \begin{figure}
@@ -286,7 +286,7 @@ Provide details and simple example of how asynchronous queueing can be used.
 Need a figure showing the overlapping comm and comp in a general process with the wait points marked. 
 
 The two level parallelization can even be extended to three level parallelism
-with pThreads or OpenMP \cite{NVidia_multi-gpu_example}. While OpenCL provides
+with pThreads or OpenMP (see code samples attached to \cite{CudaToolkitDoc}). While OpenCL provides
 the means to target parallelism on either multi-core CPUs or many-core GPUs, it
 does not allow a parallel kernel on one hardware interact with a parallel kernel
 on the another. That is to say, an OpenCL kernel on the CPU cannot launch
@@ -320,7 +320,7 @@ time-stepping as sparse matrix operations. This opened new possibilities for
 optimization and allowed us to forego hand optimization and fine-tuning of GPU
 kernels. With all of the effort put into optimizing sparse operations within
 libraries like CUSP \cite{Bell2009}, ViennaCL \cite{Rupp2010} and even the
-NVidia provided CUSPARSE \cite{CUSPARSE}, formulating the problem in terms of
+NVidia provided CUSPARSE \cite{CudaToolkitDoc}, formulating the problem in terms of
 sparse matrix operations allows us to quickly prototype on the GPU and leverage
 all of the optimizations available within the third party libraries. 
 
@@ -479,7 +479,7 @@ To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sp
 %TODO: what motivated the switch
 The library includes a variety of sparse matrix formats, solvers, preconditioners, etc. Dense and sparse containers simplify targeting the GPU. 
 
-At the onset of work with ViennaCL two things were apparent: 1) the library was incredibly powerful but limited to square matrices; and 2) the library had no support for distributed computing. Our implementation of RBF-FD (\cite{BolligRBFFDGPU}) required rectangular matrices resulting from domain decomposition. The enhancements to the API have since been added to the main branch of ViennaCL. 
+At the onset of work with ViennaCL two things were apparent: 1) the library was incredibly powerful but limited to square matrices; and 2) the library had no support for distributed computing. Our implementation of RBF-FD (\cite{BolligRBFFDCode}) required rectangular matrices resulting from domain decomposition. The enhancements to the API have since been added to the main branch of ViennaCL. 
 
 
 %TODO: CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}

@@ -117,12 +117,11 @@ As in the problem of RBF scattered data interpolation, $ \vc = \{c_j\} $ is the 
 Under the assumption that $\mathcal{L}$ is a linear operator, one can collocate the differential equation. Alternatively, individual derivative operators can be expressed as linear combinations of the unknowns $u_j$ (leading to the RBF-FD methods). 
 In all cases, a linear system of equations arises, with different degrees of sparsity, dependent on the chosen basis functions and how the various constraints are enforced.  While $\phi_j(x)$ is restricted to RBFs in this context, note that spectral methods, finite-element or spectral-element methods can be formulated in similar fashion with alternative basis functions.  Of course, $u$ can be a vector of unknown variables ($\vc$ then becomes a matrix). 
 
-Table~\ref{tbl:rbfcolloctypes} classifies references according to their choice of collocation method and RBF 
-interpolation type. 
 There are three main categories of RBF interpolation listed in Table~\ref{tbl:interp_types}. The first is \emph{Global} in the case that a single, large ($N\times N$) and 
 dense matrix corresponding to globally supported RBFs is inverted; second, \emph{Compact} if compactly supported RBFs are used to 
 produce a single, large, but \emph{sparse} matrix; and third, \emph{Local} if compactly supported RBFs are used to produce many small but 
-dense matrices with one corresponding to each collocation point. In all three cases the matrices are symmetric and with the correct choice of RBF they are at least conditionally positive definite. The final row of Table~\ref{tbl:rbfcolloctypes} considers literature on the RBF-FD method and is discussed in depth in Chapter~\ref{chap:rbffd_method}.
+dense matrices with one corresponding to each collocation point. In all three cases the matrices are symmetric and with the correct choice of RBF they are at least conditionally positive definite. Table~\ref{tbl:rbfcolloctypes} classifies references according to their choice of collocation method and RBF 
+interpolation type.  The final row of Table~\ref{tbl:rbfcolloctypes} considers literature on the RBF-FD method and is discussed in depth in Chapter~\ref{chap:rbffd_method}.
 
 \begin{table}[t]
    \centering
