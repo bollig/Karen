@@ -320,7 +320,7 @@ Due to the lack of boundary conditions on the sphere, the family of solutions th
 
 %TODO: null-space *of the solution*? or null-space of the equation?
 One way to close the null-space of the solution is to augment Equation~\ref{eq:stokes_constant_viscosity} with the following constraints: 
-\begin{align}
+\begin{multline}
 \left(\begin{array}{cccc:cccc}  
 -\eta \Laplacian & 0 & 0 & \pd{}{x_1} & 1_{N \times 1} & 0 & 0 & 0 \\ 
 0 & -\eta \Laplacian & 0 & \pd{}{x_2} & 0 & 1_{N \times 1} & 0 & 0\\ 
@@ -333,9 +333,10 @@ One way to close the null-space of the solution is to augment Equation~\ref{eq:s
 0 & 0 & 0 & 1_{1 \times N} & \\
 \end{array} \right) \left(\begin{array}{c} 
 u_1 \\ u_2 \\ u_3 \\ p \\ \hdashline c_1 \\ c_2 \\ c_3 \\ c_4
-\end{array} \right) = \frac{RaT}{\sqrt{x_1^2 + x_2^2 + x_3^2}}\begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ 0 \\ \hdashline \int_\Omega u_1 \partial\Omega \\ \int_\Omega u_2 \partial\Omega \\ \int_\Omega u_3 \partial\Omega \\ \int_\Omega p \partial\Omega \end{pmatrix}.
+\end{array} \right) \\
+ = \frac{RaT}{\sqrt{x_1^2 + x_2^2 + x_3^2}}\begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ 0 \\ \hdashline \int_\Omega u_1 \partial\Omega \\ \int_\Omega u_2 \partial\Omega \\ \int_\Omega u_3 \partial\Omega \\ \int_\Omega p \partial\Omega \end{pmatrix}.
 \label{eq:stokes_system_with_constraints}
-\end{align}
+\end{multline}
 %TODO explain this in text: \authnote{Need the integral of my manufactured solution on the RHS. $\ell_1$ norm does not converge to 0, so it will screw solve with constraints}
 where the subscript on $1_{N \times 1}$ indicates a $N \times 1$ vector of ones. These constraints add the unknowns $(c_1, c_2, c_3, c_4)$, which should solve to be zero. The four rows on the bottom require that the solution satisfy the integral over the domain for each solution component. In combination with the four added columns, the constraints indicate that the solution components must satisfy integrals using the same constant value. This is only possible if the constants are zero. The added constraints are not physically significant, but are chosen to satisfy the system algebraicly. Of course when solving Equation~\ref{eq:stokes_system_with_constraints} with GMRES, the constraints help increase the rate of convergence. 
 
