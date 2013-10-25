@@ -118,10 +118,6 @@ With CPUs tending toward many cores, and the once special purpose, many-core GPU
 
 %Home computers, smart-phones and other devices containing many- or multi-core compute units internally have driven the generalization of the accelerator language to provide a unified approach to targeting any available hardware. 
 
- Already, today, CPUs are tending toward many core architectures. Simultaneously, the once specialized many-core GPUs now offer general purpose functionality. New architectures like the AMD Fusion \cite{AMDFusion} join CPU and GPU on the same chip proving that 
-, and It is easy to see that soon the CPU and GPU will meet somewhere in the middle as general purpose many-core architectures. OpenCL is an attempt to standardize programming before this intersection occurs. 
-TODO: clean. ATI, INTEL, NVIDIA all have units. 
-
 \section{Sparse Matrix Libraries}
 
 One thing missing from the original release of CUDA was sparse matrix algebra support. 
@@ -266,7 +262,7 @@ Sharing information across multiprocessors is possible in \textit{global device 
 
 Under OpenCL, the equivalent to CUDA local memory is called \textit{private memory} and is also reserved read-only per work-item in global device memory. CUDA's shared memory is labeled \textit{local memory} and shared by threads of a work-group. The CUDA texture and constant caches are known as \textit{Global/Constant Cache}, and similar to CUDA, exist outside of developer control. OpenCL refers to \textit{global memory} and \textit{constant memory} when referring to read/write and read-only sections of CUDA's global device memory (respectively). Finally, CUDA textures are equivalent to OpenCL \textit{buffers} (1D arrays) or \textit{images} (2D/3D arrays) \cite{OpenCL2009}.
 
-Based on \cite{Behr2009, OpenCL2009}, Figure~\ref{fig:opencl_memory} compares the underlying implementation of the OpenCL memory hierarchy on GPUs and CPUs. Notably, on current CPUs most of the memory is reserved in System RAM, whereas the hierarchy naturally fits on the deep memory hierarchy of the GPU. 
+%Based on \cite{Behr2009, OpenCL2009}, Figure~\ref{fig:opencl_memory} compares the underlying implementation of the OpenCL memory hierarchy on GPUs and CPUs. Notably, on current CPUs most of the memory is reserved in System RAM, whereas the hierarchy naturally fits on the deep memory hierarchy of the GPU. 
 
 
 \begin{figure}
@@ -377,19 +373,6 @@ All the computation on the GPU is performed in 8-byte double precision.
 
 
 
-\subsection{Complexity of Custom Kernels (For Keeneland and Spear Benchmarks)}
-
-An SpMV requires $N * n * 2$ floating point operations due to the 2 operations, multiply and add, required when applying $N$ dot-products of size $n$. An iteration of RK4 requires four evaluations of the function $F(t,\vu)$, whose operation count varies by application, plus $7*N$ operations (four additions and three multiplications) per time-step. 
-
-In Figure~\ref{fig:cosine_keeneland} the function $F(t,\vu)$ performs three independent SpMVs and two AXPY operations ($2*N$ each) for a total of $6*N*n + 4*N$ operations. Thus the total operation count for a single RK4 iteration would be: $24*N*n +23*N$. 
-In the case of the Vortex Roll-up kernel, only two SpMVs and one AXPY are required which drops the total operation count to: $16*N*n + 15*N$. 
-
-The GFLOP/sec is computed as 
-\begin{align}
-GFLOP/sec = 10^{-9} * Operations / t_{RK4}
-\end{align}
-
-
 
 \subsubsection{Naive Approach: One thread per stencil}
 
@@ -450,12 +433,12 @@ In the time since the publication of \cite{BolligFlyerErlebacher2012} custom Ope
 
 Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants, and a number of variants on the ELL format that operate in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. The HYB format stores the bulk of a matrix in an ELL container and the excess non-zeros per row in a CSR format. HYB benefits from reduced storage and memory loads in the ELL, and maintains the generality of a CSR matrix. 
 
-\begin{figure}
-\centering
-\includegraphics[width=0.5\textwidth]{../figures/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
-\caption{Single GPU ViennaCL SpMV throughput (GFLOPs) compared to Boost::uBLAS CSR. Stencil size $n=50$ for all cases.}
-\label{fig:spmv_vcl_gflops}
-\end{figure}
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.5\textwidth]{../figures/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
+%\caption{Single GPU ViennaCL SpMV throughput (GFLOPs) compared to Boost::uBLAS CSR. Stencil size $n=50$ for all cases.}
+%\label{fig:spmv_vcl_gflops}
+%\end{figure}
 
 GFLOPs calculated as: 
 \begin{align}
@@ -676,19 +659,6 @@ The latest version of OpenMP (v4.0) introduces pragmas for offloading computatio
 %Hardware architecture%•	Memory layout%•	Processing cores%•	Trends in hardware since 2006 (additions and benfits)%Optimization%•	SpMV memory layout%•	Scheduling threads%•	Reductions%OpenCL%•	Why? %o	Cross platform support%o	Asynchronous Queuing with Dependencies%•	Implementations details%o	Kernel%o	Work-Item%o	Work-Group%o	NDRange%o	Queue%o	Etc.%•	How does it compare to CUDA? Phi%•	Latest trends%o	Phi: bind against MKL for optimized CPU and MIC%o	CUDA-MPI%o	CUDA Sub-Kernel calls%o	CUDA uptake %•	E.g., Matlab (MEX compiled kernel wrappers)%Conclusions on GPGPU%•	Benefits are good%o	Cheap to purchase < $1K%o	superior performance 1.2 TFLOPs possible in one card%o	was a trending technology (major uptake in supercomputing and national labs)%•	Downsides were varied%•	Overall Impression is that%o	Uptake was wide-spread for research projects%o	Focus was on determining limits of the hardware%•	Many studies focused on optimization of primitives which allow general use in applications such as RBF-FD without recreating the wheel when it comes to optimal algorithms. Allows researchers to concentrate on other investigations into application, preconditioning, data analysis, etc.%Newcomers to the field are interested USING gpgpu applications, rather than writing them  
 
 
-\section{On the Future of GPU Computing}
-
-The question, however, is frequently asked: is GPU computing a buzzword that will die out, or is it here to stay? 
-
-Fine tuning of kernels is the way of the past. Anyone fine tuning kernels will be operating at a lower level, attempting to optimize library routines underlying large scale codes. The fine tuning can ultimately be replaced by auto-tuned kernels (e.g., see work in ViennaCL to auto-tune similar to libATLAS). 
-
-Already this is seen in attempts to port applications to the GPU in so-called ``minimally invasive" fashion. 
-
-So the short answer is: yes. And it is from this assumption that we proceed with our efforts to target the GPU with RBF-FD. However, we have made a few predictions on the future of GPUs and these predictions guided our efforts to port RBFs onto GPUs. 
-
-First, we are proponents for OpenCL over CUDA. Although CUDA has a large following due to its early release, we believe in functional portability of code enabled by OpenCL over the performance provided by CUDA. 
-
-New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. Dynamic parallelism provides the ability to generate new levels of parallelism on the GPU rather than return to the CPU.  Dynamic parallelism also leads to stream priority features which allow kernels to preemptively execute out of order based on priority and dependencies. Such a feature is powerful for MPI support where the GPU can continue processing kernels while waiting on MPI communication to complete. 
 %TODO: put somewhere else
 % When matrix is sparse, a direct LU decomposition causes fill-in on factorization. In some cases the fill-in can be minimal, but in general one must assume that fill in can turn the sparse matrix into a dense matrix. To invert and solve Equation~\ref{eq:implicit_eq}, use an iterative solver like GMRES. The GMRES algorithm (described further in Chapter~\ref{chap:applications} applies successive SpMVs along with other vector operations to converge on a solution. Due to the dominance of SpMV in GMRES, the performance of RBF-FD reduces once again to SpMV.
 

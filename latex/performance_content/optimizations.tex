@@ -14,6 +14,18 @@ This appendix provides new data from Keeneland for direct comparison with \cite{
 
 \section{Single GPU SpMV on Keeneland} 
 
+%TODO: cleanup this section
+\authnote{FIX UP}
+
+An SpMV requires $N * n * 2$ floating point operations due to the 2 operations, multiply and add, required when applying $N$ dot-products of size $n$. An iteration of RK4 requires four evaluations of the function $F(t,\vu)$, whose operation count varies by application, plus $7*N$ operations (four additions and three multiplications) per time-step. 
+
+In Figures~\ref{fig:gflops_cpu_1proc_keeneland}, \ref{fig:gflops_gpu_1proc_oneWarp_keeneland} and \ref{fig:gflops_gpu_1proc_oneThread_keeneland}, the function $F(t,\vu)$ performs three independent SpMVs and two AXPY operations ($2*N$ each) for a total of $6*N*n + 4*N$ operations. Thus the total operation count for a single RK4 iteration would be: $24*N*n +23*N$. 
+In the case of the Vortex Roll-up kernel, only two SpMVs and one AXPY are required which drops the total operation count to: $16*N*n + 15*N$. 
+
+The GFLOP/sec is computed as 
+\begin{align}
+GFLOP/sec = 10^{-9} * Operations / t_{RK4}
+\end{align}
 
 \begin{figure}
 \centering
@@ -101,6 +113,8 @@ Figure~\ref{fig:alltoall_multigpu_vs_gpu_scaling} shows the scalability of multi
 
 
 Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_costs} show the smaller percentage of time per iteration dedicated to communication compared to the figures in the paper. In the Figure~\ref{fig:alltoall_multigpu_costs}, the way the times bottom out indicates we are/have converged on the minimum time required to launch a GPU kernel, transfer to/from the GPU, and communicate the problem via MPI. To scale to more processors, a larger problem size is absolutely necessary.
+
+
 
 
 

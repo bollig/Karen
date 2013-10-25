@@ -20,3 +20,24 @@ This work leads to a number of additional investigations:
 %\item FV are typically low-order. what is the trade-off in complexity between methods. For a much higher-order RBF-FD if it is not conservative, how many iterations is it accurate consistent with the low-order FV? l
 %\end{itemize}
 %\end{itemize}
+
+
+\section{On the Future of GPU Computing}
+
+%TODO: Move this to the conclusions chapter
+%  addresss this as: 
+%   Future of GPU is with CUDA and vendor specific features. 
+%   AMD, Intel are trying to compete, but NVidia has the market and new entrants should stick with CUDA. 
+
+
+%The question, however, is frequently asked: is GPU computing a buzzword that will die out, or is it here to stay? 
+%
+%Fine tuning of kernels is the way of the past. Anyone fine tuning kernels will be operating at a lower level, attempting to optimize library routines underlying large scale codes. The fine tuning can ultimately be replaced by auto-tuned kernels (e.g., see work in ViennaCL to auto-tune similar to libATLAS). 
+%
+%Already this is seen in attempts to port applications to the GPU in so-called ``minimally invasive" fashion. 
+%
+%So the short answer is: yes. And it is from this assumption that we proceed with our efforts to target the GPU with RBF-FD. However, we have made a few predictions on the future of GPUs and these predictions guided our efforts to port RBFs onto GPUs. 
+%
+%First, we are proponents for OpenCL over CUDA. Although CUDA has a large following due to its early release, we believe in functional portability of code enabled by OpenCL over the performance provided by CUDA. 
+
+New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. Dynamic parallelism provides the ability to generate new levels of parallelism on the GPU rather than return to the CPU.  Dynamic parallelism also leads to stream priority features which allow kernels to preemptively execute out of order based on priority and dependencies. Such a feature is powerful for MPI support where the GPU can continue processing kernels while waiting on MPI communication to complete. 
