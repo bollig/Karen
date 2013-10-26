@@ -99,7 +99,7 @@ Success stories abound with massive gains
 
 RBF-FD is embarrassingly parallel with stencils applied independently. Unfortunately, perfect concurrency does not always imply perfect performance. %TODO: (SHOW RBF-FD benchmarks for Vortex and Cosine as an example of 1x and 2x SpMV on GPU; state that the generation GPU they were run on has a peak of xxx which means performance was xxx\% (dismal).).
 
-On the Fermi GPUs at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/s per card. On the K20 you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/s on the Fermi and 13 on the K20 (compared to the 2 GFLOP/s on Itasca). 
+On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/s per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/s on the Fermi and 13 on the K20 (compared to the 2 GFLOP/s on Itasca). 
 
 
 
@@ -212,8 +212,11 @@ Our dedication to OpenCL is a hedged bet that the future architectures will merg
 While the nomenclature used in this paper is typically associated with CUDA programming, the names \textit{thread} and \textit{warp} are used to clearly illustrate kernel execution in context of the NVidia specific hardware used in tests. OpenCL assumes a lowest common denominator of hardware capabilities to provide functional portability. However, intimate knowledge of hardware allows for better understanding of performance and optimization on a target architecture. For example, OpenCL assumes all target architectures are capable at some level of SIMD (Single Instruction Multiple Data) execution, but CUDA architectures allow for Single Instruction Multiple Thread (SIMT). SIMT is similar to traditional SIMD, but while SIMD immediately serializes on divergent operations, SIMT allows for a limited amount of divergence without serialization. 
 
 At the hardware level, a \textit{thread} executes instructions on the GPU. On Fermi level GPUs, groups of 32 threads are referred to as \textit{warps}. A warp is the unit of threads executed concurrently on a single \textit{multi-processor}. 
-In OpenCL (i.e., software), a collection of hardware threads performing the same instructions are referred to as a \textit{work-group} of \textit{work-items}. Work-groups execute as a collection of warps constrained to the same multiprocessor. Multiple work-groups of matching dimension are grouped into an \textit{NDRange}. The \textit{kernel} provides a master set of instructions
+In OpenCL (i.e., software), a collection of hardware threads performing the same instructions are referred to as a \textit{work-group} of \textit{work-items}. Work-groups execute as a collection of warps constrained to the same multiprocessor. Multiple work-groups of matching dimension are grouped into an \textit{NDRange}. Figure~\ref{fig:grid-of-thread-blocks} shows how threads/work-items are grouped into NDRanges. The \textit{kernel} provides a master set of instructions
 for all threads in an NDRange \cite{OpenCL2009}. 
+
+%TODO: fix image
+\authnote{Replace grid of thread blocks with ndrange of work-items}
 
 
 NVidia GPUs have a tiered memory hierarchy related to the grouping of threads described above. 
@@ -424,6 +427,8 @@ As part of future work on optimization, we will consider a parallel reduction in
 
 In the time since the publication of \cite{BolligFlyerErlebacher2012} custom OpenCL kernels have been dropped in favor of a library called ViennaCL. 
 
+Sparse formats supported by ViennaCL are shown in Figure~\ref{fig:sparse_format}.
+
 \begin{figure}
 \centering
 \includegraphics[width=0.9\textwidth]{gpu_content/omnigraffle/SparseStorage.pdf}
@@ -479,35 +484,37 @@ Due to the assumption that all stencils have equal size, the ELL format is prefe
 
 \section{Cascade}
 
+The actual observed GFLOP/sec achieved on Cascade's M2070 GPUs with the ViennaCL package is shown in Figure~\ref{fig:gflops_cascade_m2070}. Figure~\ref{fig:gflops_cascade_k20} provides achieved GFLOP/sec for Cascade's K20 GPUs.  
 \begin{figure} 
 \centering
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_m2070_n17.png}
 \caption{Stencil size $n=17$}
-\label{fig:gflops_cascade_m2070_n17}
+%\label{fig:gflops_cascade_m2070_n17}
 \end{subfigure}
 \quad
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_m2070_n31.png}
 \caption{Stencil size $n=31$}
-\label{fig:gflops_cascade_m2070_n31}
+%\label{fig:gflops_cascade_m2070_n31}
 \end{subfigure}
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_m2070_n50.png}
 \caption{Stencil size $n=50$}
-\label{fig:gflops_cascade_m2070_n50}
+%\label{fig:gflops_cascade_m2070_n50}
 \end{subfigure}
 \quad
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_m2070_n101.png}
 \caption{Stencil size $n=101$}
-\label{fig:gflops_cascade_m2070_n101}
+%\label{fig:gflops_cascade_m2070_n101}
 \end{subfigure}
 \caption{Performance comparison of CSR, COO and ELL matrix formats on Cascade's NVidia M2070 GPU and Intel Westmere CPU (Intel Xeon X5675).}
+\label{fig:gflops_cascade_m2070}
 \end{figure}
 
 
@@ -517,31 +524,34 @@ Due to the assumption that all stencils have equal size, the ELL format is prefe
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_k20_n17.png}
 \caption{Stencil size $n=17$}
-\label{fig:gflops_cascade_k20_n17}
+%\label{fig:gflops_cascade_k20_n17}
 \end{subfigure}
 \quad
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_k20_n31.png}
 \caption{Stencil size $n=31$}
-\label{fig:gflops_cascade_k20_n31}
+%\label{fig:gflops_cascade_k20_n31}
 \end{subfigure}
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_k20_n50.png}
 \caption{Stencil size $n=50$}
-\label{fig:gflops_cascade_k20_n50}
+%\label{fig:gflops_cascade_k20_n50}
 \end{subfigure}
 \quad
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_k20_n101.png}
 \caption{Stencil size $n=101$}
-\label{fig:gflops_cascade_k20_n101}
+%\label{fig:gflops_cascade_k20_n101}
 \end{subfigure}
 \caption{Performance comparison of ViennaCL CSR, COO and ELL matrix formats on Cascade's NVidia K20 GPU versus the Boost::uBLAS CSR format on and Intel Sandy-Bridge CPU (Intel Xeon E5-2670).}
+\label{fig:gflops_cascade_k20}
 \end{figure}
 
+
+Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} summarize the best achieved GFLOP/s (in all cases the ELL format) for each stencil size on the M2070's and K20's respectively. Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20} show the achieved speedup each GPU gained over their respective Westmere and Sandy-Bridge CPUs. In the case of the K20, Figure~\ref{fig:ell_speedup_cascade_k20} shows that the Sandy-Bridge architecture is closing the divide between CPUs and GPUs, although an order of magnitude difference in the GFLOP/s still exists.
 
 \begin{figure} 
 \centering
@@ -591,35 +601,39 @@ consider the various sparse formats provided by CUSP and ViennaCL.
 %TODO later: \item All stencils with non-uniform size
 %TODO: What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
 
+
+Figure~\ref{fig:gflops_cascade_intel_phi} is provided for comparison with Figures~\ref{fig:gflops_cascade_m2070} and \ref{fig:gflops_cascade_k20}. This stresses the point that although OpenCL offers functional portability, performance portability is still limited. 
+
 \begin{figure} 
 \centering
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_intel_phi_n17.png}
 \caption{Stencil size $n=17$}
-\label{fig:gflops_cascade_intel_phi_n17}
+%\label{fig:gflops_cascade_intel_phi_n17}
 \end{subfigure}
 \quad
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_intel_phi_n31.png}
 \caption{Stencil size $n=31$}
-\label{fig:gflops_cascade_intel_phi_n31}
+%\label{fig:gflops_cascade_intel_phi_n31}
 \end{subfigure}
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_intel_phi_n50.png}
 \caption{Stencil size $n=50$}
-\label{fig:gflops_cascade_intel_phi_n50}
+%\label{fig:gflops_cascade_intel_phi_n50}
 \end{subfigure}
 \quad
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/gflops_cascade_intel_phi_n101.png}
 \caption{Stencil size $n=101$}
-\label{fig:gflops_cascade_intel_phi_n101}
+%\label{fig:gflops_cascade_intel_phi_n101}
 \end{subfigure}
 \caption{Performance comparison of ViennaCL CSR, COO and ELL matrix formats on Cascade's Intel Phi Accelerator, and the Boost::uBLAS CSR format on an Intel Sandy-Bridge CPU (Intel Xeon E5-2670). ViennaCL's kernels are optimized for NVidia GPUs, but function (albeit poorly) on the Intel Phi with the current release of Intel's OpenCL SDK (May, 2013). }
+\label{fig:gflops_cascade_intel_phi}
 \end{figure}
 
 

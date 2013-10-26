@@ -443,11 +443,11 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \label{fig:strong_scaling_comm_only_alltoallv_all_stencils}
 \end{subfigure}
 \caption{Per-component benchmarks for strong scaling benchmarks on $N=4096000$ nodes. Communication time outweighs computation time for $p>128$ processes.  }
-\label{fig:per_component_strong_scaling_alltoallv}
+%\label{fig:per_component_strong_scaling_alltoallv}
 \end{figure}
 
 
-The data in Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils} shows MPI\_Alltoallv weak scaling is poor. As $p$ grows, the total time follows at a discouraging rate. Figure~\ref{fig:weak_scaling_spmv_only_alltoallv_all_stencils}, which presents the SpMV (computation) time only, verifies that beyond the initial contention on a single compute node, the SpMV is constant for all stencil sizes. That then implies the cost of communication could be reduced (or hidden). 
+The data in Figure~\ref{fig:weak_scaling_alltoallv_all_stencils} shows MPI\_Alltoallv weak scaling is poor. As $p$ grows, the total time follows at a discouraging rate. Figure~\ref{fig:weak_scaling_spmv_only_alltoallv_all_stencils}, which presents the SpMV (computation) time only, verifies that beyond the initial contention on a single compute node, the SpMV is constant for all stencil sizes. That then implies the cost of communication could be reduced (or hidden). 
 
 \begin{figure}
 \centering
@@ -476,7 +476,7 @@ The data in Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils} shows
 \subsection{Improvements}
 
 
-Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in effort to flatten the weak scaling curves from Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils}. Each tile of Figure~\ref{fig:mpi_tuning} is a timeline for the distributed SpMV. Vertical bars separate the SpMV in focus from execution of the next and last SpMV. Our implementation does not assume a global barrier before starting the next iteration, so load balancing is essential to limit wait times between processors. Operations are concurrent from top to bottom within each tile, and the top-most operations are launched first.
+Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in effort to flatten the weak scaling curves from Figure~\ref{fig:weak_scaling_alltoallv_all_stencils}. Each tile of Figure~\ref{fig:mpi_tuning} is a timeline for the distributed SpMV. Vertical bars separate the SpMV in focus from execution of the next and last SpMV. Our implementation does not assume a global barrier before starting the next iteration, so load balancing is essential to limit wait times between processors. Operations are concurrent from top to bottom within each tile, and the top-most operations are launched first.
 
 %The distributed GPU implementation in Chapter~\ref{chap:multigpu_rbffd} is based on the collective in Figure~\ref{fig:overlap_cpu}. 
 
@@ -594,11 +594,11 @@ This may be a limitation in METIS when partitioning domains for large $p$. If so
 \label{fig:compare_strong_scaling_gflops_all_stencils}
 \end{subfigure}
 \caption{Strong Scaling}
-\label{fig:strong_scaling_factors}
+%\label{fig:strong_scaling_factors}
 \end{figure} 
 
 
-Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The roughly 110 to 220 GFLOP/sec achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory bound SpMV. 
+Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The roughly 110 to 220 GFLOP/sec achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory bound SpMV. 
 
 
 
@@ -621,7 +621,7 @@ Figure~\ref{fig:compare_weak_scaling_all_stencils} demonstrates fair strong scal
 \label{fig:compare_strong_scaling_efficiency_all_stencils}
 \end{subfigure}
 \caption{Scaling efficiency for various stencil sizes ($n=17, 31, 50, 101$) on a regular grid with $N_p$ maximum resolution $N=4096000$ on Itasca. } 
-\label{fig:scaling_efficiency}
+%\label{fig:scaling_efficiency}
 \end{figure}
 
 
