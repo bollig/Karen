@@ -23,9 +23,9 @@ In Figures~\ref{fig:gflops_cpu_1proc_keeneland}, \ref{fig:gflops_gpu_1proc_oneWa
 In the case of the Vortex Roll-up kernel, only two SpMVs and one AXPY are required which would drop the total operation count to: $16*N*n + 15*N$. 
 
 The GFLOP/sec is computed as 
-\begin{align}
+\begin{align*}
 GFLOP/sec = 10^{-9} * Operations / t_{RK4}
-\end{align}
+\end{align*}
 
 \begin{figure}
 \centering

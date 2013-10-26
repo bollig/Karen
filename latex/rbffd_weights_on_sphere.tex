@@ -146,7 +146,7 @@ The plateau on convergence in Figure~\ref{fig:direct_vs_indirect_relative_error}
 
 Figure~\ref{fig:direct_vs_indirect_unsigned_diff} considers the unsigned difference in relative $\ell_2$ errors: $| \text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}} |$. The results confirm that indirect weight approximations for the constrained first derivative are as good (or bad) as using direct weights. The absolute value of the differences shows over six digits of agreement in accuracy for the first derivative. In the case of $\LaplaceBeltrami{}$, the indirect approach is significantly less accurate with only one or two digits of agreement in many cases. Fortunately, as $N$ grows the indirect and direct approximations converge. 
 
-In conclusion, the results in Figures~\ref{fig:direct_vs_indirect_relative_error} -- \ref{fig:direct_vs_indirect_unsigned_diff} confirm that indirectly assembling RBF-FD weights can function well in terms of convergence, with similar rates as directly computed weights. Test results for the $\LaplaceBeltrami{}$ operator show that higher order operators assembled from simple Cartesian gradient DMs may lose an order of magnitude accuracy in approximation, and require twice as many grid points to recover the solution produced by directly computed RBF-FD weights. 
+In conclusion, the results in Figures~\ref{fig:direct_vs_indirect_relative_error} and \ref{fig:direct_vs_indirect_unsigned_diff} confirm that indirectly assembling RBF-FD weights can function well in terms of convergence, with similar rates as directly computed weights. Test results for the $\LaplaceBeltrami{}$ operator show that higher order operators assembled from simple Cartesian gradient DMs may lose an order of magnitude accuracy in approximation, and require twice as many grid points to recover the solution produced by directly computed RBF-FD weights. 
 
 
 %\begin{figure}
@@ -177,7 +177,7 @@ In conclusion, the results in Figures~\ref{fig:direct_vs_indirect_relative_error
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/abs_diff_of_rel_l2_errors-eps-converted-to.pdf}
 	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$}
 	\end{subfigure}
-		\caption{Unsigned differences of relative $\ell_{2}$ errors in differentiation between Direct and Indirect weights.}
+		\caption{Unsigned differences of relative $\ell_{2}$ differentiation errors for Direct and Indirect weights.}
 		\label{fig:direct_vs_indirect_unsigned_diff}
 \end{figure}
 

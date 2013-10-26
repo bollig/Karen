@@ -37,8 +37,7 @@ z & = & \rho \sin \theta.
 
 
 \section{Vortex Rollup}
-\label{sec:numerical_validation}
-\label{sec:vortex_rollup}
+%\label{sec:vortex_rollup}
 
 The first test case demonstrates vortex roll-up of a fluid on the surface of a unit sphere. An angular velocity field causes the initial condition to spin into two diametrically opposed but stationary vortices.
 
@@ -87,7 +86,7 @@ where $D_{\Delta^{k}}$ is the differentiation matrix for the $k$-th power Laplac
 The scaling parameter $\gamma_c$ and the order of hyperviscosity $k$ are given in
 Table~\ref{tbl:vortex_hv_params}. The parameters are tuned for the MD node sets. Since the values of $\gamma_c$ and $k$ vary based on the eigenvalues/conditioning of $D_\lambda$, switching to an icosahedral or spherical CVT requires additional tuning. Changes to the stencil size or the function for $\epsilon$ also require tuning. 
 
-The parameters $\gamma_c$ and $k$ are obtained via trial-and-error parameter searching on $N=4096$ nodes. The goal when choosing parameters is to push all eigenvalues to the left half-plane, and then tweak $\gamma_c$ up or down to condense the eigenvalues as near to the imaginary axis as possible. We first choose $k$ to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. This effectively pushes eigenvalues to the left half of the complex plane.  We then try to adjust $\gamma_c$ to get eigenvalues condensed as near to the imaginary axis as possible. As a rule of thumb we try to keep the range of filtered real parts within twice the width of the unfiltered range, so hyperviscosity does not cause excessive diffusion in the solution. Figure \ref{fig:vortex_eigs_hv} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, from no hyperviscosity in Equation~\ref{eq:vortex_matrix_form} to the hyperviscosity modified DM in Equation~\ref{eq:vortex_matrix_form_w_hv}. 
+The parameters $\gamma_c$ and $k$ are obtained via trial-and-error parameter searching on $N=4096$ nodes. The goal when choosing parameters is to push all eigenvalues to the left half-plane, and then tweak $\gamma_c$ up or down to condense the eigenvalues as near to the imaginary axis as possible. We first choose $k$ to damp the higher spurious eigenmodes of $\text{diag}(\omega(\theta)) D_\lambda$ while leaving the lower physical modes that can be resolved by the stencil intact. This effectively pushes eigenvalues to the left half of the complex plane.  We then try to adjust $\gamma_c$ to get eigenvalues condensed as near to the imaginary axis as possible. As a rule of thumb we try to keep the range of filtered real parts within twice the width of the unfiltered range, so hyperviscosity does not cause excessive diffusion in the solution. Figure \ref{fig:vortex_eigs} shows the effect of hyperviscosity on the eigenvalues of the DM, $-diag(\omega(\theta)) D_\lambda$, from no hyperviscosity in Equation~\ref{eq:vortex_matrix_form} (Figure~\ref{fig:vortex_eigs_nohv}) to the hyperviscosity modified DM in Equation~\ref{eq:vortex_matrix_form_w_hv} (Figure~\ref{fig:vortex_eigs_hv}). 
 
 
 The RBF shape parameter, $\epsilon$, is expressed as a function of $N$ based on work in \cite{FlyerLehto11}. If we let $(\kappa_A)_j$ be the condition number of the interpolation matrix in Equation~\ref{eq:rbffd_weight_system} for the $j^{th}$ stencil, then we seek an $\epsilon$ such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ grows. For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b, and the examples in Section~\ref{sec:epsilon_contours}). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
@@ -124,11 +123,11 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 	\label{fig:vortex_eigs_hv}
 \end{subfigure}
 \caption{Eigenvalues of $\text{diag}(\omega(\theta)) D_\lambda$ for the vortex roll-up test case for $N=4096$ nodes, stencil size $n=101$ and $\epsilon = 3.5$. }
-\label{fig:eig_vortex}
+\label{fig:vortex_eigs}
 \end{center}
 \end{figure}
 
-Figure~\ref{fig:vortex_t10} shows the initial condition for Equation~\ref{eq:vortex} and the solution at $t = 10$, on $N=10201$ nodes, with stencil size $n=50$. This resolution is sufficient to properly capture the vortices at $t=10$, but lower resolutions would suffer approximation errors associated with insufficient grid resolution. 
+Figure~\ref{fig:vortex_t10} shows the initial condition for Equation~\ref{eq:vortex} (Figure~\ref{fig:vortex_initial}) and the solution at $t = 10$ (Figure~\ref{fig:vortex_approx}), on $N=10201$ nodes, with stencil size $n=50$. This resolution is sufficient to properly capture the vortices at $t=10$ (Figure~\ref{fig:vortex_relerr}), but lower resolutions would suffer approximation errors associated with insufficient grid resolution. 
 For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ error convergence study presented in Figure~\ref{fig:conv_plot_vortex}. The time step $\Delta t = 0.05$ for all resolutions. 
 
 Based on Figure~\ref{fig:conv_plot_vortex_nohv}, which shows the convergence without the hyperviscosity filter on eigenvalues, we see that only one test case reflects the unstable eigenvalues present in the DM. In a stroke of luck the unstable modes are small enough that the solution at $t=3$ is not impacted, but as $t$ increases the instabilities begin to dominate. Figure~\ref{fig:conv_plot_vortex_hv} demonstrates the convergence of vortex roll-up with hyperviscosity included. The solution errors are slightly higher than Figure~\ref{fig:conv_plot_vortex_hv}, but the instabilities have vanished. 
@@ -151,7 +150,7 @@ Based on Figure~\ref{fig:conv_plot_vortex_nohv}, which shows the convergence wit
 \begin{subfigure}[b]{0.49\textwidth}
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/vortex_rollup/vortexRelativeError-eps-converted-to.pdf}
-	\caption{Relative Absolute Error}
+	\caption{Relative $\ell_2$ Error}
 	\label{fig:vortex_relerr}
 \end{subfigure}
 \caption{Vortex roll-up solution at time $t=10$ using RBF-FD with $N=10,201$ and $n=50$ point stencil. Normalized $\ell_2$ error of solution at $t=10$ is $1.25(10^{-2})$. }
@@ -246,12 +245,12 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 	\centering
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/eigs_N4096_n101_noHV_SCALED_color.pdf}
 	\caption{No Hyperviscosity}
-	\label{fig:cosine_eigs_nohv}
+	%\label{fig:cosine_eigs_nohv}
 \end{subfigure}
 \begin{subfigure}[t]{0.45\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/paper1/cosine_bell/eigs_HV_N4096_n101_k8_gamma5e_m2_SCALED_color.pdf}
 	\caption{With Hyperviscosity ($k=8$ and $\gamma_c = 5*10^{-2}$)}
-	\label{fig:cosine_eigs_hv}
+	%\label{fig:cosine_eigs_hv}
 \end{subfigure}
 \caption{Eigenvalues of Equation~\ref{eq:cosine_with_hyperviscosity} for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.}
 \label{fig:eig_cosine}

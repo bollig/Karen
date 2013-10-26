@@ -141,20 +141,20 @@ Algorithm~\ref{alg:gmres} presents the basic Left-preconditioned GMRES algorithm
     \State $\beta = ||r_0||_2$			\Comment{{\color{blue} MPI\_Allreduce($<r_0,r_0>$)}}
     \State $v_1 = r_0 / \beta$ 
 
-	\For {$j=1$ to $k$} \label{alg:gmres_rotation_loop_start} 
+	\For {$j=1$ to $k$} %\label{alg:gmres_rotation_loop_start} 
 			\State $w_j = M^{-1} A v_j$   
 			\Comment{{\color{blue} MPI\_Alltoallv($w_j$)}}
-			\For {$i = 1$ to $j$}\label{alg:gmres_inner_loop_start}
+			\For {$i = 1$ to $j$} %\label{alg:gmres_inner_loop_start}
 				\State $h_{i,j} = <w_j, v_i>$ \Comment{{\color{blue} MPI\_Allreduce }}
 				\State $w_j = w_j - h_{i,j} v_i$
-			\EndFor \label{alg:gmres_inner_loop_stop}
+			\EndFor %\label{alg:gmres_inner_loop_stop}
 			\State $h_{j+1, j}  = ||w_j||_2$		\Comment{{\color{blue} MPI\_Allreduce}}
 			\State $v_{j+1} = w_j / h_{j+1,j}$		
-	\EndFor\label{alg:gmres_rotation_loop_stop} 
+	\EndFor %\label{alg:gmres_rotation_loop_stop} 
 
 			\State Set $V_k = [v_1, \cdots, v_k]$ and $\bar{H}_k = (h_{i,j})$ an upper Hesssenberg matrix of order $(m+1)\times m$
-			\State \label{alg:gmres_least_squares} Solve a least-square problem of size $m$: $\min_{y \in \R^k} ||\beta e_1 - \bar{H}_k y||_2$	
-			\State $x_k = x_0 + V_k y_k$ \label{alg:gmes_residual_norm}
+			\State Solve a least-square problem of size $m$: $\min_{y \in \R^k} ||\beta e_1 - \bar{H}_k y||_2$ %\label{alg:gmres_least_squares} 	
+			\State $x_k = x_0 + V_k y_k$ %\label{alg:gmes_residual_norm}
 
 	\If { $||M^{-1}(b-Ax_k)||_2  < \varepsilon$ }
 		\State $convergence = true$
@@ -206,6 +206,7 @@ Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving ou
 		\caption{Grouped by Solution Component}
 		\label{fig:original_stokes_dm}
 	\end{subfigure}
+	\quad
 	\begin{subfigure}[b]{0.4\textwidth}
 		\centering
 		\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_ReorderedStokes.pdf} 
@@ -218,6 +219,7 @@ Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving ou
 		\caption{Grouped Submatrix $(10:50) \times (10:50)$}
 		\label{fig:original_stokes_zoom_dm}
 	\end{subfigure}
+	\quad
 	\begin{subfigure}[b]{0.4\textwidth}
 		\centering
 	\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_ReorderedStokes_10to50.pdf} 
@@ -251,20 +253,20 @@ u_1 \\ u_2 \\ u_3 \\ p
 \end{pmatrix} = \frac{RaT}{\sqrt{x_1^2 + x_2^2 + x_3^2}}\begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ 0\end{pmatrix}.
 \label{eq:stokes_constant_viscosity}
 \end{align}
-where the $\Laplacian$ operator in spherical polar coordinates for $\mathbb{R}^3$ is: 
-\begin{align} 
-\Laplacian = \underbrace{\frac{1}{\hat{r}} \pd{}{\hat{r}} \left( \hat{r}^{2} \pd{}{\hat{r}}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{\hat{r}^2} \Delta_{S}}_{\mathsf{angular}}.
-\end{align}
+where we recall from Chapter~\ref{chap:rbffd_method} that the $\Laplacian$ operator in spherical polar coordinates for $\mathbb{R}^3$ is: 
+\begin{align*} 
+\Laplacian = \underbrace{\frac{1}{\hat{r}} \pd{}{\hat{r}} \left( \hat{r}^{2} \pd{}{\hat{r}}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{\hat{r}^2} \Delta_{S}}_{\mathsf{angular}}. %\label{eq:laplacian_as_radial_angular}
+\end{align*}
 Here $\LaplaceBeltrami$ is the Laplace-Beltrami operator---i.e., the Laplacian constrained to the surface of the sphere with radius $\hat{r}$. This form nicely illustrates the components of the $\Laplacian$ corresonding to the radial and angular terms. 
 
 On the surface of the unit sphere the radial term vanishes, so we are left with:
-\begin{align}
+\begin{align*}
 \Laplacian    \equiv \LaplaceBeltrami . 
-\end{align}
-The following RBF operator from \cite{WrightFlyerYuen10}---Equation (20) can be applied to the RHS of Equation~\ref{eq:rbffd_weight_system} to generate Laplace-Beltrami RBF-FD weights: 
-\begin{align} 
+\end{align*}
+The RBF operator from \cite{WrightFlyerYuen10}---Equation (20)---is applied to the RHS of Equation~\ref{eq:rbffd_weight_system} to generate Laplace-Beltrami RBF-FD weights: 
+\begin{align*} 
 \LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{}{r} + \frac{4-3r^2}{r} \pd{}{r} \right],
-\end{align} 
+\end{align*} 
 where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
 
 
@@ -290,17 +292,17 @@ where $\mathbf{x}$ is the unit normal at the stencil center, and
 %)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} \\
 %& = \begin{pmatrix} x \vx^T \vx_k - x_k \\ y \vx^T \vx_k -  y_k \\ z \vx^T \vx_k -z_k \end{pmatrix} \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} 
 % \end{align}
-\cite{FlyerWright09, FlyerLehto11} show that with a little manipulation weights can be directly computed with these operators for Equation~\ref{eq:rbffd_weight_system}: 
+\cite{FlyerWright09, FlyerLehto11} show that with a little manipulation, the weights can be directly computed with these operators: 
 %\begin{align} 
 %P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{d(\vx_k - \vx)} \pd{\phi(d(\vx_k - \vx))}{d} |_{\vx=\vx_j} \\
 %P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{d(\vx_k - \vx)} \pd{\phi(d(\vx_k - \vx))}{d} |_{\vx=\vx_j} \\
 %P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{d(\vx_k - \vx)} \pd{\phi(d(\vx_k - \vx))}{d} |_{\vx=\vx_j}
 %\end{align}
-\begin{align} 
+\begin{align*} 
 P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{r} \pd{}{r} |_{\vx=\vx_j} \\
 P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{r} \pd{}{r} |_{\vx=\vx_j} \\
 P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r} \pd{}{r} |_{\vx=\vx_j}
-\end{align}
+\end{align*}
 
 
 \subsection{Constraints} 
@@ -341,17 +343,17 @@ We also investigate the use of GMRES without constraints. This increases the num
 \subsection{Manufactured Solution}
 
 To verify our implementation, we manufacture a solution that satisfies the continuity equation. Using the identity
-\begin{align} 
+\begin{align*} 
 \div (\curl g(\vx)) = 0,
-\end{align} 
+\end{align*} 
 for any function $g(\vx)$, we can easily manufacture a solution by choosing some vector function $g(\vx)$, projecting it onto the sphere via $P_x g(x)$ and applying the curl projection, $Q_x$: 
-\begin{align} 
+\begin{align*} 
 Q_x = \begin{bmatrix} 0 & -x_3 & x_2 \\ x_3 & 0 & -x_1 \\ -x_2 & x_1 & 0 \end{bmatrix}.
-\end{align} 
+\end{align*} 
 Then, a manufactured solution that satisfies both momentum and continuity conditions on the surface of the sphere is given by: 
-\begin{align} 
+\begin{align*} 
 \vu = Q_x (g(\vx))
-\end{align} 
+\end{align*} 
 
 Typically, on the surface of the sphere, the projection operator from Equation~\ref{eq:gradient_projection} must be applied to an arbitrary $g(\vx)$. 
 Here, we choose the components of $g(\vx)$ to be various spherical harmonics in Cartesian coordinates. Spherical harmonics nicely satisfy $P_x Y_l^m = Y_l^m$. Consequently, the entire application of $P_x$ is neglected. 
