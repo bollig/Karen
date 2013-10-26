@@ -181,7 +181,7 @@ $p$ & Partitioning & Total ($\frac{\min N_p}{\max N_p}$) &  Interior ($\frac{\mi
 %\begin{table}
 %\centering
 %\caption{Load balance comparison by partitioning for $N=10201$ MD-nodes on the unit sphere with stencil size $n=31$. A ratio of $1$ is ideal.}
-%\label{tbl:load_balance}
+%\label{tbl:load_balance_with_worst_case}
 %\begin{tabular}{c|c|c|c|c|c|c|c}
 %& $p$ & Total ($\frac{\min N_p}{\max N_p}$) &  Interior ($\frac{\min N_i}{\max N_i}$) & Ghost Nodes ($\frac{\min N_r}{\max N_r}$) & $\max(\frac{N_r}{N_p}) * 100\%$ \\ \hline
 %\multirow{2}{*}{4} & Linear & 0.863 & 0.997 & 0.482 & 26.7\% \\
@@ -453,8 +453,9 @@ The data in Figure~\ref{fig:weak_scaling_comm_only_alltoallv_all_stencils} shows
 \centering
 \begin{subfigure}{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv.png}\caption{Weak Scaling}
-\label{fig:weak_scaling_comm_only_alltoallv_all_stencils}
+\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv.png}
+\caption{Weak Scaling}
+\label{fig:weak_scaling_alltoallv_all_stencils}
 \end{subfigure}
 %\begin{subfigure}{0.48\textwidth}
 %\centering

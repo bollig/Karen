@@ -397,29 +397,6 @@ Regular grid and icosahedral sphere test cases in Figure~\ref{fig:spmv_impact_rg
 \end{figure}
 
 
-%
-%\begin{figure}
-%\centering
-%\includegraphics[width=9.5cm]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_speedup.png}
-%\includegraphics[width=\textwidth]{../figures/stencils/sphere_subsets_1m_stencil_gen_time.png}
-%\caption{Querying the $n=50$ nearest neighbors on a regular grid up to $N=160^3$ demonstrates the significant gains achieved by our spatially binned neighbor query. While KDTree queries grow as $O(N log N)$}
-%\label{fig:hash_results}
-%\end{figure}
-%
-%\begin{figure}
-%\centering
-%\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_stencil_gen_speedup.png}
-%\includegraphics[width=7.5cm]{../figures/stencils/sphere_subsets_1m_spmv_speedup.png}
-%\caption{Generating stencils for increasing subsets of the $N=10^6$ CVT nodes mesh.}
-%\label{fig:hash_results}
-%\end{figure}
-
-
-
-
-
-
-
 \section{Alternative Orderings}
 
 As previously mentioned, the choice of space filling curve influences the sparsity pattern of differentiation matrices, which in turn impacts cache effects. The use of $Z$-ordering (Figure~\ref{fig:space_filling_curves}) for potential benefits on memory access is a common recommendation in fixed-grid methods (see e.g., the suggestions by \cite{Johnson2011,Green2010,Krog2010} and implementations in \cite{Goswami2010, MellorCrummey2001}). Under raster-ordering, cells are traversed with priority on one dimension. The resulting layout only has adjacent cells along that one dimension consecutive in memory. Other approaches, like $Z$-ordering, traverse cells by alternating dimensions/directions and increase locality of data in multiple dimensions. 
@@ -722,36 +699,6 @@ At this time, investigation into floating point Z-ordering is on hold as there i
 \caption{Preliminary results from $Z$-ordering nodes based on  (double precision) floating point node coordinates (following algorithm in \cite{Connor2009}). Our implementation functions well on integer coordinates when nodes are floating point representations of integers separated by $dx = 1$ (a). Increasing $dx$ extends some edges to 3-node Z's, but is mostly correct (b). The implementation fails when nodes are not representations of integers (c) and (d).}
 \label{fig:float_z_results}
 \end{figure}
-
-
-%
-%\begin{figure}
-%\centering
-%\begin{subfigure}{0.45\textwidth}
-%\centering
-%\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/originalorder_regulargrid-eps-converted-to.pdf}
-%\caption{Original Node Distribution}
-%\end{subfigure}
-%\begin{subfigure}{0.45\textwidth}
-%\centering
-%\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/overlay_regulargrid-eps-converted-to.pdf}
-%\caption{Fixed-grid cells sorted by $Z$-order}
-%\end{subfigure}
-%\begin{subfigure}{0.45\textwidth}
-%\centering
-%\includegraphics[width=\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
-%\caption{Example Stencil $n=31$}
-%\end{subfigure}
-%\caption{In order: a) node ordering test cases; b) original ordering of regular grid (raster); c) coarse grid overlay for hash functions ($hnx = 6$); d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
-%\end{figure}
-
-%\begin{figure}
-%\centering
-%\includegraphics[width=0.45\textwidth]{rbffd_methods_content/hashing/stencil_regulargrid-eps-converted-to.pdf}
-%\caption{A simple example illustrates the use of a fixed-grid with $h_n = 6$ for $N=18^3$ regular nodes.  d) example stencil ($n=31$) spanning multiple Z's; e) spy of DM after orderings. }
-%\label{fig:orderings}
-%\end{figure}
-
 
 
 \ifstandalone

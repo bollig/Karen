@@ -237,15 +237,6 @@ We solve the PDE on the surface of the sphere as an example for one and multiple
 
 %TODO: Boundary conditions detract from the accuracy of RBF-FD and introduce other issues such as Runge phenomena \cite{RBFRungePaper}, so we first verify the solution without boundaries. Also, this section 
 
-%Viscous Stokes flow is described by the governing equations
-%	\begin{align}
-%\div{\vu} & = 0 \ \ \ \ \ \ \ \ \ \ \ \ \ \textsl{(Continuity)} \label{eq:stokes_continuity} \\
-%\div{[\eta(\grad{\vu} + (\grad{\vu})^T)]} + Ra T \hat{r} & = \grad{p} \ \ \ \ \ \ \ \ \ \ \textsl{(Momentum)} \label{eq:stokes_momentum} \\
-%\pd{T}{t} + (\vu \cdot \grad) T & = \Laplacian T \ \ \ \ \ \ \ \ \textsl{(Energy)}\label{eq:stokes_energy}
-%\end{align}
-%where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar pressure-field respectively, $\eta$ is the viscosity tensor, $Ra$ is the non-dimensional Rayleigh number, and $T$ is the temperature profile. The focus of this paper is on the the implicit solve for Stokes flow, which amounts to the steady-state problem described by Equations~\ref{eq:stokes_continuity} and \ref{eq:stokes_momentum}. See \cite{Wright2010} for discussion of RBFs applied to the transient problem. 
-
-
 %TODO: \authnote{ Need to reference work that solves problem in two steps and justify our approach to solve in one step. Golub paper might be good for this. Or the Stoke preconditioners paper. SIMPLE method?  }
 
 Assuming $\eta$ is a constant (i.e., $\grad\eta = 0$), our system simplifies to
@@ -262,7 +253,7 @@ u_1 \\ u_2 \\ u_3 \\ p
 \end{align}
 where the $\Laplacian$ operator in spherical polar coordinates for $\mathbb{R}^3$ is: 
 \begin{align} 
-\Laplacian = \underbrace{\frac{1}{\hat{r}} \pd{}{\hat{r}} \left( \hat{r}^{2} \pd{}{\hat{r}}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{\hat{r}^2} \Delta_{S}}_{\mathsf{angular}}. %\label{eq:laplacian_in_spherical}
+\Laplacian = \underbrace{\frac{1}{\hat{r}} \pd{}{\hat{r}} \left( \hat{r}^{2} \pd{}{\hat{r}}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{\hat{r}^2} \Delta_{S}}_{\mathsf{angular}}.
 \end{align}
 Here $\LaplaceBeltrami$ is the Laplace-Beltrami operator---i.e., the Laplacian constrained to the surface of the sphere with radius $\hat{r}$. This form nicely illustrates the components of the $\Laplacian$ corresonding to the radial and angular terms. 
 
@@ -285,7 +276,7 @@ P = I - \mathbf{x} \mathbf{x}^T =  \begin{pmatrix}
 -x_1 x_2 & (1-x_2^2) & -x_2 x_3 \\ 
 -x_1 x_3 & -x_2 x_3 & (1-x_3^2) 
 \end{pmatrix} = \begin{pmatrix} P_{x_1} \\ P_{x_2} \\ P_{x_3} \end{pmatrix}
-\label{eq:project_gradient}
+\label{eq:gradient_projection}
 \end{align}
 where $\mathbf{x}$ is the unit normal at the stencil center, and 
 %
@@ -362,7 +353,7 @@ Then, a manufactured solution that satisfies both momentum and continuity condit
 \vu = Q_x (g(\vx))
 \end{align} 
 
-Typically, on the surface of the sphere, the projection operator from Equation~\ref{eq:project_gradient} must be applied to an arbitrary $g(\vx)$. 
+Typically, on the surface of the sphere, the projection operator from Equation~\ref{eq:gradient_projection} must be applied to an arbitrary $g(\vx)$. 
 Here, we choose the components of $g(\vx)$ to be various spherical harmonics in Cartesian coordinates. Spherical harmonics nicely satisfy $P_x Y_l^m = Y_l^m$. Consequently, the entire application of $P_x$ is neglected. 
 
 %TODO: figure showing spherical harmonics 
@@ -433,7 +424,7 @@ We also find that a large Krylov subspace must be saved. GMRES converges best wh
 %TODO: add ILU algorithm
 %\begin{algorithm}                     
 %\caption{Incomplete LU Factorization with Zero Fill-in (ILU0)}         
-%\label{alg:gmres}                        
+%\label{alg:ilu0}                        
 %\begin{algorithmic}[1]                  
 %    \For i = 0
 %    \State $a_{i,i} = a_{i,i} / a_{i,i}$
