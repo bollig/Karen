@@ -156,7 +156,7 @@ Fixed grid methods also make use of \emph{space filling curves}. Space filling c
 At a high level, fixed-grid methods have the following construction steps \cite{Krog2010}:
 \begin{enumerate}
 \item Subdivide the domain with the overlay grid.
-\item For each node, identify the containing cell coordinates.
+\item For each node, identify the containing cell coordinates (Equation~\ref{eq:cell_hash}).
 \item For each node, use the cell coordinates as input to a spatial hash function (i.e., a space-filling curve).
 \item Sort the nodes according to their spatial hash.
 \end{enumerate}
@@ -304,7 +304,7 @@ Prior to the 2012 improvements, the C++ implementation was over 130x faster for 
 \centering
 \includegraphics[width=\textwidth]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
 \caption{3-D Regular Grid with stencil size $n=50$}
-\label{fig:sten_query_a}
+%\label{fig:sten_query_a}
 \end{subfigure}
 \begin{subfigure}{9.5cm}
 \centering
@@ -448,9 +448,9 @@ Bit-interleaving zips bits from two or more integers into one. For example, give
 \begin{align}
 X &= \{x_3x_2x_1x_0\} \nonumber \\
 Y &= \{y_3y_2y_1y_0\} ,\nonumber \\
-interleave(X,Y) & = \{x_3y_3x_2y_2x_1y_1x_0y_0\}.
+interleave(X,Y) & = \{x_3y_3x_2y_2x_1y_1x_0y_0\}. \label{eq:interleave_2d}
 \end{align}
-Including a third value, $Z$, results in the following: 
+Including a third coordinate, $Z$, results in the following: 
 \begin{align*}
 interleave(X,Y,Z) & = \{x_3y_3z_3x_2y_2z_3x_1y_1z_3x_0y_0z_3\}.
 \end{align*}
@@ -503,7 +503,7 @@ Level ($i$) & \multicolumn{2}{ c | }{Mask ($M_i$)} & Shift ($S_i$) \\
 %At the end of Equation~\ref{eq:dilate}, the completely dilated integer is stored in $X_5$ with only one caveat: d
 It is possible to lose bits in translation when dilating values that require greater than $\left\lfloor ^b/_d \right\rfloor$ bits. That means, in the case of 32-bits, any input to Equation~\ref{eq:dilate} must be representable in 16-bits or less (i.e., $X_0 \leq 65535 $) for 2-D, and 10-bits or less (i.e., $X_0 \leq 1023$) for 3-D. Note that these limits then become the maximum resolution possible for $h_n$ in the fixed-grid method. 
 
-With dilation available, the process for 2-D bit-interleaving reduces to:
+With dilation available, the process for 2-D bit-interleaving (Equation~\ref{eq:interleave_2d}) reduces to:
 \begin{align}
 (d_x, d_y) = (dilate(X), dilate(Y)) \nonumber \\
 interleave(X,Y) = (d_x \ll 1) \mid d_y. 
@@ -548,9 +548,9 @@ The $X$- and $U$- orders shown in Figure~\ref{fig:orderings} also result from Eq
 
 
 The last row of Table~\ref{tbl:orderings}, the 4-node $Z$-curve, is a special case of bit interleaving. The 4-node Z is similar in theory to a standard $Z$-order, except that an extra zero per bit is requested when coordinates are dilated as though the process were operating in the next higher dimension. Then, using the operators provided in Table~\ref{tbl:orderings} to interleave bits results in the following pattern:
-\begin{align}
+\begin{align*}
 interleave_{4node}(X,Y) = \{x_5x_4y_5y_4x_3x_2y_3y_2x_1x_0y_1y_0\}.
-\end{align}
+\end{align*}
 By reserving two bits for each dimension, the 4-node $Z$-curve is able to traverse up to four nodes in the $Y$ direction before taking its first step in the $X$ direction. 
 
 %TODO: why was each curve chosen? 
@@ -568,15 +568,15 @@ The purpose of reordering nodes/cells is to improve memory access patterns. If c
 
 
 As a measure of how well condensed non-zeros are, the \emph{bandwidth} of a matrix, $A$, is defined as (\cite{Cuthill1969, LiuSherman1976}): 
-\begin{align}
+\begin{align*}
 bw(A) = \max\{|i - j| + 1 : A_{i,j} \neq 0\}.
-\end{align}
+\end{align*}
 The bandwidth simply counts the number of super- and sub-diagonals---i.e., diagonals above and below the main diagonal---that contain at least one non-zero. Incrementing by one accounts for a non-zero main diagonal. The lower the bandwidth, the better. 
 
 For any matrix, $A$, a permutation, $P$, can be constructed such that 
-\begin{align}
+\begin{align*}
 P A P^T
-\end{align}
+\end{align*}
 reorders the matrix and reduces the bandwidth of $A$. A variety of \emph{bandwidth reduction} algorithms exist with unique approaches for the construction of $P$ (see e.g., \cite{Gibbs1976, LiuSherman1976, MellorCrummey2001}).  In contrast to the space filling curves discussed above, bandwidth reduction algorithms are applied \emph{after} stencils are generated in order to operate on the differentiation matrix and corresponding adjacency graph. 
 
 The effect pre- and post-multiplying $A$ by $P$ is equivalent to reindexing nodes and and updating all stencil connections to the new numbering. In practice, rather than construct a full permutation matrix $P$, which has exactly one 1 per row and per column, it is common to represent $P$ as a vector where each entry indicates the column location of the 1. In that case the vector elements reference the original node ordering, and the indices of those elements provide the new ordering. 

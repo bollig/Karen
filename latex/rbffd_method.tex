@@ -200,7 +200,7 @@ Thus far, all cases of collocation and interpolation mentioned have assumed glob
 \end{cases}
 \label{eqn:csrbf}
 \end{equation}
-where a cut-off radius is defined past which the RBF (in this case $\varphi(r)$) has no influence on the interpolant. Note that the radius can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved with smaller memory requirements \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} lists the complexity as dominated by $O(N)$ for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate provided by their choice of general sparse solver package. A multi-level CSRBF method, introduced by Fasshauer \cite{Fasshauer2007}, collocates solutions over multiple grid refinements to achieve reduced $O(N)$ complexity, but the method is plagued by poor convergence. It is also worth noting that in the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
+where a cut-off radius, $r$, is defined past which the RBF (in this case $\varphi(r)$) has no influence on the interpolant. Note that the radius in Equation~\ref{eqn:csrbf} can be scaled to fit a desired support. Methods that leverage CSRBFs produce a global interpolation matrix that is \emph{sparse} and therefore results in a system that is more efficiently assembled and solved with smaller memory requirements \cite{Fasshauer2007}. The actual complexity estimate of the CSRBF method depends on the sparsity of the problem as well as the ordering of the assembled system. Assuming $n \ll N$ where $n$ represents the number of nodes in support, \cite{Zhang2004} lists the complexity as dominated by $O(N)$ for properly structured systems within MATLAB, and the investigation in \cite{Morse2005} found $O(N^{1.5})$ consistent with the estimate provided by their choice of general sparse solver package. A multi-level CSRBF method, introduced by Fasshauer \cite{Fasshauer2007}, collocates solutions over multiple grid refinements to achieve reduced $O(N)$ complexity, but the method is plagued by poor convergence. It is also worth noting that in the context of CSRBFs, analogues to Kansa's method and Fasshauer's method are known by the names \emph{radial point interpolation method (RPIM)} \cite{Wang2002} and \emph{radial point interpolation collocation method (RPICM)} \cite{Liu2005}, respectively. A more thorough survey of CSRBF history can be found in \cite{Fasshauer2007,Iske2004}.
 
 CSRBFs have attracted a lot of attention in applications. For example, in the field of dynamic surface and image deformation, compact support allows for local transformations which do not induce global deformation (see e.g., \cite{Yang2008, Lin2009, Correa2007}). 
 
@@ -483,15 +483,15 @@ careful inspection of the index $i$ in Equations~\ref{eqn:kansa_interior} and \r
 %DONE: in most cases nodes are constant
 
 The extension of global collocation to traditional pseudo-spectral form was introduced by Fasshauer in \cite{Fasshauer2006}. Dubbed RBF-PS, the method utilizes the same logic from Kansa's and Fasshauer's collocation methods to form matrix $A_{\diffop{}}$ (i.e., $A_\diffop{}$ can be either Equation~\ref{eqn:kansa_method} or \ref{eqn:fasshauer_method}). However, RBF-PS subtly assumes the solution, $u(x)$, is only required at collocation points (i.e., $\{x_i\} = \{x_c\}$) \cite{Fasshauer2006, Fasshauer2007}. Then, extending Equation~\ref{eqn:solve_u}, RBF-PS gives:
-\begin{eqnarray}
+\begin{eqnarray*}
 u(x) & = & \left( B A^{-1}_\diffop{} \right) \left( \begin{array}{cc}  f \\ 0  \end{array} \right) \nonumber \\
-& = & D^T_{\diffop{}} \left( \begin{array}{cc}  f \\ 0  \end{array} \right) \label{eq:rbf-ps}.
-\end{eqnarray}
+& = & D^T_{\diffop{}} \left( \begin{array}{cc}  f \\ 0  \end{array} \right). 
+\end{eqnarray*}
 where $D_\diffop{}$ is a discrete differentiation matrix (DM) for the operator $\diffop{}$.
 Here, $D_\diffop{}$ is independent of the function $f(x)$ and is assembled by solving the system: 
-\begin{eqnarray}
+\begin{eqnarray*}
 D_{\diffop{}} & = & A^{-T}_{\diffop{}} B^T
-\end{eqnarray}
+\end{eqnarray*}
 An LU-decomposition ($O(N^3)$) in preprocessing with forward- and back-solves ($O(N^2)$) are fitting to efficiently solve the multiple RHS system\cite{WrightFlyerYuen10,Fasshauer2007}. 
 
 Since matrix $D_{\diffop{}}$ is independent of functions $u(x)$ and $f(x)$, the matrix requires update only if the RBF centers move---a compelling benefit for time-dependent problems on stationary nodes. The complexity of RBF-PS for time-dependent solutions is then reduced to a matrix-vector multiply ($O(N^2)$) for each time-step. In contrast, classic RBF collocation methods also construct LU factors of $A_{\diffop{}}^{-1}$ in preprocessing, but delay application of forward- and back-solves to acquire time-dependent weighting coefficients at each time-step. This is then followed by the pre-multiply of $B$ (i.e., additional $O(N^2)$) to complete the time-step.
@@ -514,7 +514,7 @@ u^{(k)}_\phi(x_i) & = & \sum_{j(k)=1}^{N_{I}}  c_j^{(k)} \diffop{\phi_j(x_i)} + 
 where $N_{S}$ represents the number of points that defines the local stencil; $N$ is possibly a function of the cut-off radius in the RBF, $N_{I}$ is the number of interior stencil points (those points of the stencil that lie in the interior of $\Omega$). The index $j$ is a function of the stencil center $k$ allowing the system to include a local neighborhood of stencil points.
 
 This results in a linear system with similar structure to the global collocation problem, but the dimensions are much smaller:
-\begin{eqnarray}
+\begin{eqnarray*}
 \underbrace{\left[ \begin{array}{c c c} 
 	\phi_{\diffop{}\diffop{}} & \phi_{\diffop{}\boundop{}} & P_\diffop{} \\
 	\phi_{\boundop{}\diffop{}} & \phi_{\boundop{}\boundop{}} & P_\boundop{} \\
@@ -529,8 +529,8 @@ This results in a linear system with similar structure to the global collocation
 							0
 							 \end{array}
 						 \right) 
-	\label{eqn:local_method}
-\end{eqnarray}
+	%\label{eqn:local_method}
+\end{eqnarray*}
 Solving this system gives an interpolant locally defined around the stencil center. Note that approximating the PDE solution $u(x)$ requires finding the stencil center nearest $x$, then using the local interpolant for that stencil. Since interpolation is local (i.e., $c_j^{(k)}$'s are unique to each RBF center), reconstructing the derivatives with Equation~\ref{eqn:solve_uxx} is limited to an inner product for each center rather than the matrix-vector grouping possible with global RBFs.  
 %In the event that a point lies on the perpendicular bisector between two stencils, one of them can be arbitrarily selected. 
 This approach decomposes the problem into smaller and more manageable parts. However, because the interpolants are local, there is no notion of global continuity/smoothness of the solution. 
@@ -589,7 +589,9 @@ where $\diffop{u}$ again represents a differential operator on $u(x)$ (e.g., $\d
 		\includegraphics[width=1.0\textwidth]{../figures/chapter1/preview_stencils_example.png}
 		\caption{A 13 node RBF-FD stencil of randomly distributed nodes. The stencil centered at the green square contains the 12 nearest neighbors contained within the minimum covering circle drawn in purple.}
 		\label{fig:stencil_example_random}
-	\end{subfigure}\ \ \begin{subfigure}[m]{0.35\textwidth}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[m]{0.35\textwidth}
 		\centering
 		\includegraphics[width=1.0\textwidth]{../figures/chapter1/RBFFD_single-eps-converted-to.pdf}
 		\caption{A 75 node RBF-FD stencil with blue (negative) and red (positive) differentiation weights to approximate advective operator at the square. Stencils weights indicated by scale of disk radii. (Image courtesy of Bengt Fornberg and Natasha Flyer)}
@@ -750,7 +752,7 @@ Best practices dictate that the DMs be stored in some type of compressed sparse 
 \label{fig:undirected_graph}
 \end{subfigure}
 \caption{Simple adjacency graphs and their corresponding matrices. Edges connecting nodes of RBF-FD stencils produce a directed adjacency matrix.}
-\label{fig:adjacency_matrix}
+%\label{fig:adjacency_matrix}
 \end{center}
 \end{figure}
 
@@ -773,7 +775,7 @@ In the course of this work a variety of operators are tested to solve PDEs. This
 The following are used in subsequent derviatives:
 \begin{align}
 \frac{1}{r}\d{}{r}\phi(r) & = -2 \epsilon^2 \phi(r) \label{eq:dphi_dr} \\
-\pdd{\phi}{r} & = \epsilon^2(-2 + 4(\epsilon r)^2)\phi(r)
+\pdd{\phi}{r} & = \epsilon^2(-2 + 4(\epsilon r)^2)\phi(r) \label{eq:dphi2_dr2}
 \end{align}
 
 
@@ -794,6 +796,7 @@ Fasshauer \cite{Fasshauer2007} provides the general form of $\nabla^2$ in 2D as:
 \begin{align*}
 \nabla^2 = \pdd{}{r}\phi(r) + \frac{1}{r}\pd{}{r} \phi(r) 
 \end{align*}
+which depends on Equation~\ref{eq:dphi_dr} and \ref{eq:dphi2_dr2}. 
 For Gaussian RBFs in particular we have the following operators:
 \begin{itemize}
 \item 1D: $$\nabla^2 = \epsilon^2 (-2 + 4 (\epsilon r)^2) \phi(r)$$
@@ -847,14 +850,14 @@ which all fit $\nabla^2 = \pdd{}{r}\phi(r) + \frac{d - 1}{r}\pd{}{r} \phi(r)$ fo
 
 The $\Laplacian$ operator can be represented in spherical polar coordinates for $\mathbb{R}^3$ as: 
 \begin{align*} 
-\Laplacian = \underbrace{\frac{1}{r} \pd{}{r} \left( r^{2} \pd{}{r}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{r^2} \Delta_{S}}_{\mathsf{angular}} , \label{eq:laplacian_in_spherical}
+\Laplacian = \underbrace{\frac{1}{r} \pd{}{r} \left( r^{2} \pd{}{r}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{r^2} \Delta_{S}}_{\mathsf{angular}} , %\label{eq:laplacian_in_spherical}
 \end{align*}
 where $\LaplaceBeltrami$ is the Laplace-Beltrami operator---i.e., the Laplacian operator constrained to the surface of the sphere. This form nicely illustrates the separation of components into radial and angular terms. 
 
 In the case of PDEs solved on the unit sphere, there is no radial term, resulting in:
-\begin{align}
+\begin{align*}
 \Laplacian  \equiv \LaplaceBeltrami.
-\end{align}
+\end{align*}
 Although this originated in the spherical coordinate system, \cite{WrightFlyerYuen10} gives the Laplace-Beltrami operator as
 \begin{align*} 
 \LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{\phi}{r} + \frac{4-3r^2}{r} \pd{\phi}{r} \right],
@@ -922,10 +925,10 @@ through RBF-FD, has eigenvalues
 Stabilization of the RBF-FD method is achieved through the application of a hyperviscosity filter 
 to Equation~(\ref{eqconv}) \cite{FornbergLehto11}. By using Gaussian 
  RBFs, $\phi(r) = e^{-(\epsilon r)^2}$, the hyperviscosity (a high order Laplacian operator) simplifies to
-\begin{equation}
+\begin{equation*}
 \Delta^{k}\phi(r) = \epsilon^{2k} p_k(r) \phi(r)
-\label{eqn:gaussian_hv}
-\end{equation}
+%\label{eqn:gaussian_hv}
+\end{equation*}
 where $k$ is the order of the Laplacian and  $p_k(r)$ are multiples of generalized Laguerre polynomials that
 are generated recursively (\cite{FornbergLehto11}):
 \begin{align*}
@@ -974,11 +977,11 @@ The Preprocessing phase encompasses tasks such as grid setup/generation, stencil
 \textbf{Preprocessing:}
 \begin{algorithmic}[0]                   
     \State $\{x\}_{j=1}^N$ = GenerateGrid()
-   	\For {$j = 1$ to $N$} \label{alg:stencil_gen} 
+   	\For {$j = 1$ to $N$} %\label{alg:stencil_gen} 
    	    \State Stencil $\{S_{j,i}\}_{i=1}^{n}$ = QueryNeighbors($x_j$)
    	\EndFor
     \State $\{x\}_{j=1}^{N_p} = $ DecomposeDomain($D_{\diffop{}}$, $\{x\}_{j=1}^N$)
-    \For {$j = 1$ to $N_p$} \label{alg:weight_calc} 
+    \For {$j = 1$ to $N_p$} %\label{alg:weight_calc} 
    	    \State $\{w_{j,i}\}_{i=1}^{n} = $ SolveForWeights($\{S_j\}$)
    	    \State $D_{\diffop{}}^{(j)} = $ AssembleDM($\{w_j\}$)     
     \EndFor
