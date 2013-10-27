@@ -19,13 +19,10 @@ This appendix provides new data from Keeneland for direct comparison with \cite{
 
 An SpMV requires $N * n * 2$ floating point operations due to the 2 operations, multiply and add, required when applying $N$ dot-products of size $n$. An iteration of RK4 requires four evaluations of the function $F(t,\vu)$, whose operation count varies by application, plus $7*N$ operations (four additions and three multiplications) per time-step. 
 
-In Figures~\ref{fig:gflops_cpu_1proc_keeneland}, \ref{fig:gflops_gpu_1proc_oneWarp_keeneland} and \ref{fig:gflops_gpu_1proc_oneThread_keeneland}, the function $F(t,\vu)$ performs three independent SpMVs and two AXPY operations ($2*N$ each) for a total of $6*N*n + 4*N$ operations. Thus the total operation count for a single RK4 iteration would be: $24*N*n +23*N$. 
-In the case of the Vortex Roll-up kernel, only two SpMVs and one AXPY are required which would drop the total operation count to: $16*N*n + 15*N$. 
+In Figures~\ref{fig:gflops_cpu_1proc_keeneland}, \ref{fig:gflops_gpu_1proc_oneWarp_keeneland} and \ref{fig:gflops_gpu_1proc_oneThread_keeneland}, each function evaluation in the RK4 performs three independent SpMVs and two AXPY operations ($2*N$ each) for a total of $6*N*n + 4*N$ operations. Thus the total operation count for a single RK4 iteration is estimated at: $24*N*n +23*N$. 
+For Vortex Roll-up, only two SpMVs and one AXPY are required, which drops the total operation count to: $16*N*n + 15*N$. 
 
-The GFLOP/sec is computed as 
-\begin{align*}
-GFLOP/sec = 10^{-9} * Operations / t_{RK4}
-\end{align*}
+Figure~\ref{fig:gflops_cpu_1proc_keeneland} provides the GFLOP/sec for Cosine Bell Advection on the Keeneland GPU cluster for a single CPU running the nested loop evaluation, optimized with auto-vectorization and auto-blocking provided by the Intel compiler. Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland} and \ref{fig:gflops_gpu_1proc_oneThread_keeneland} show the GFLOP/sec achieved by our custom GPU kernels running on the M2070 GPUs. The corresponding speedups achieved in each case over the CPU is provided in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland} and \ref{fig:speedup_1proc_oneThread_keeneland}. 
 
 \begin{figure}
 \centering
@@ -125,6 +122,9 @@ The data in this appendix was acquired on the FSU Spear cluster. It is provided 
 
 \section{Spear Scaling with MPI\_Alltoallv}
 
+Although the Spear cluster is not identical to Keeneland, it runs similar GPU hardware allowing for direct comparison
+
+
 \begin{figure}
 \centering
 \begin{subfigure}[t]{0.425\textwidth}
@@ -177,11 +177,13 @@ The data in this appendix was acquired on the FSU Spear cluster. It is provided 
 
 These results were run on Spear. MPI communication is done with an MPI\_alltoallv collective. The test case is the vortex roll-up. 
 
+Figure~\ref{fig:spear_alltoall_1proc_warp} 
+
 \begin{figure}
 \centering
 \begin{subfigure}[t]{0.425\textwidth}
 \includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_cpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Spear}
+\caption{One warp per stencil kernel on one GPU in Spear \authnote{TODO: update} }
 \label{fig:spear_alltoall_1proc_warp}
 \end{subfigure} 
 
