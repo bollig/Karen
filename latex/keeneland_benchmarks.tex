@@ -23,17 +23,16 @@ The benchmarks provided here replace the serialized sends and receives with an M
 Unfortunately, shortly after the transition from KIDs to KFS our research allocation expired leaving scaling benchmarks for greater than 10 GPUs untested. The tuning efforts in Chapters~\ref{chap:distributed_rbffd} and \ref{chap:multigpu_rbffd} that provided load balancing and added overlapping communication and computation were completed too late to test on Keeneland. 
 
 
-\section{Cosine Bell Advection on Keeneland} 
+\section{Single GPU Performance} 
 
-Here we consider the performance of a full RK4 iteration for the Cosine Bell Advection test case in \S~\ref{sec:cosine_bell}. As discussed in Chapter~\ref{chap:gpu_rbffd}, a regular SpMV involves $(2Nn)$ FLOPs. Intermediate evaluations in the RK4 time-step (i.e., the steps $k_{1 ... 4}$ in Equation~\ref{eqn:rk4}) perform three SpMV operations: one for each $D_{\theta}$, $D_{\lambda}$ and $D_{hv}$, plus another seven vector operations to scale and join derivatives ($5N$) and prep the input for the subsequent evaluation ($2N$). The cost of evaluating an intermediate step is therefore estimated at $(6Nn + 7N)$ FLOPs. In that case, the four evaluations of an RK4 Cosine Bell iteration, plus an additional $5N$ FLOPs overhead to combine intermediate solutions totals to: $(24Nn + 33N)$ FLOPs. 
+In \cite{BolligFlyerErlebacher2012} only speedup plots are provided to demonstrate improvement by the GPU over the CPU. For better analysis, data is presented here in both GFLOP/sec and speedup form. 
+
+Consider the performance of a full RK4 iteration for the Cosine Bell Advection test case in \S~\ref{sec:cosine_bell}. As discussed in Chapter~\ref{chap:gpu_rbffd}, a regular SpMV involves $(2Nn)$ FLOPs. Intermediate evaluations in the RK4 time-step (i.e., the steps $k_{1 ... 4}$ in Equation~\ref{eqn:rk4}) perform three SpMV operations: one for each $D_{\theta}$, $D_{\lambda}$ and $D_{hv}$, plus another seven vector operations to scale and join derivatives ($5N$) and prep the input for the subsequent evaluation ($2N$). The cost of evaluating an intermediate step is therefore estimated at $(6Nn + 7N)$ FLOPs. In that case, the four evaluations of an RK4 Cosine Bell iteration, plus an additional $5N$ FLOPs overhead to combine intermediate solutions totals to: $(24Nn + 33N)$ FLOPs. 
 
 The Vortex Roll-Up from \S~\ref{sec:cosine_bell} computes only two SpMVs per intermediate evaluation of the RK4 time-step for a cost of $(4Nn + 5N)$. Following the same logic for the RK4 iteration we arrive at the total estimate: $(16Nn + 25N)$ FLOPs. 
 
-Figure~\ref{fig:gflops_cpu_1proc_keeneland} provides the average GFLOP/sec observed for a single time-step of Cosine Bell Advection (Figure~\ref{fig:gflops_cpu_1proc_keeneland_cosine}) and Vortex Roll-Up (Figure~\ref{fig:gflops_cpu_1proc_keeneland_vortex}) on a single CPU of Keeneland. In both cases the CPU runs a simple nested loop to perform the SpMV on data packed in CSR format. The Intel compiler applies auto-vectorization, auto-blocking and other strategies to the nested loop based on the ``-O2" compiler flag. 
+Using the FLOP estimate for each case, Figure~\ref{fig:gflops_cpu_1proc_keeneland} provides the average GFLOP/sec observed for a single time-step of Cosine Bell Advection (Figure~\ref{fig:gflops_cpu_1proc_keeneland_cosine}) and Vortex Roll-Up (Figure~\ref{fig:gflops_cpu_1proc_keeneland_vortex}) on a single CPU in Keeneland. The average time is calculated over 10000 time-steps. In both cases the CPU performs the SpMV operation by running a simple nested loop on data packed in CSR format. The Intel compiler applies auto-vectorization, auto-blocking and other strategies to the nested loop based on the ``-O2" compiler flag. 
 
-Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland_cosine} and \ref{fig:gflops_gpu_1proc_oneWarp_keeneland_vortex} show the GFLOP/sec achieved by operating one warp per stencil in our custom GPU kernels on the M2070 GPUs. The corresponding speedups achieved over the CPU is provided in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland_cosine} and \ref{fig:speedup_1proc_oneWarp_keeneland_cosine}. 
-
-In similar fashion the GFLOP/sec achieved by operating one thread per stencil in our custom GPU kernels is shown in figure Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland_cosine} (Cosine Bell) and \ref{fig:gflops_gpu_1proc_oneWarp_keeneland_vortex} (Vortex Roll-Up). Speedups over the CPU for the thread approach are given in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland_cosine} and \ref{fig:speedup_1proc_oneWarp_keeneland_cosine}. 
 
 \begin{figure}
 \centering
@@ -52,7 +51,12 @@ In similar fashion the GFLOP/sec achieved by operating one thread per stencil in
 \label{fig:gflops_cpu_1proc_keeneland_vortex}
 \end{subfigure}
 \caption{GFLOP/sec on one CPU (1 core) of the Keeneland GPU cluster.}
+\label{fig:gflops_cpu_1proc_keeneland}
 \end{figure}
+
+Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland_cosine} and \ref{fig:gflops_gpu_1proc_oneWarp_keeneland_vortex} show the GFLOP/sec achieved by operating one warp per stencil in our custom GPU kernels on the M2070 GPUs. The corresponding speedups achieved over the CPU is provided in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland_cosine} and \ref{fig:speedup_1proc_oneWarp_keeneland_vortex}. Due to its higher operation count, the Cosine Bell Advection is able to achieve over 2.75 GFLOP/sec for $n=101$, nearly double the Vortex Roll-Up case. Also, by operating as warps dedicated to each stencil, the OpenCL kernel nicely maintains a consistent GFLOP/sec in all cases. 
+
+%TODO: warp allows us to predict performance of stencil size
 
 \begin{figure}
 \centering
@@ -79,8 +83,11 @@ In similar fashion the GFLOP/sec achieved by operating one thread per stencil in
 \caption{Speedup versus one CPU (Vortex Roll-Up)}
 \label{fig:speedup_1proc_oneWarp_keeneland_vortex}
 \end{subfigure} 
-\caption{GFLOP/sec and Speedup observed on one GPU (M2070) of the Keeneland GPU cluster for Cosine Bell Advection and Vortex Roll-Up computed via the ``Warp Per Stencil" kernel.}
+\caption{GFLOP/sec and Speedup observed on one GPU (M2070) of the Keeneland GPU cluster for Cosine Bell Advection and Vortex Roll-Up when operating by ``One Warp Per Stencil" within the RK4 kernel.}
 \end{figure} 
+
+In similar fashion the GFLOP/sec achieved by operating one thread per stencil is demonstrated in Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland_cosine} (Cosine Bell) and \ref{fig:gflops_gpu_1proc_oneThread_keeneland_vortex} (Vortex Roll-Up). Speedups over the CPU for the thread approach are given in Figures~\ref{fig:speedup_1proc_oneThread_keeneland_cosine} and \ref{fig:speedup_1proc_oneThread_keeneland_cosine}. 
+
 
 \begin{figure}
 \centering
@@ -107,15 +114,19 @@ In similar fashion the GFLOP/sec achieved by operating one thread per stencil in
 \caption{Speedup (Vortex Roll-Up)}
 \label{fig:speedup_1proc_oneThread_keeneland}
 \end{subfigure} 
-\caption{GFLOP/sec and Speedup observed on one GPU (M2070) of the Keeneland GPU cluster for Cosine Bell Advection with with a "One Thread Per Stencil" kernel.}
+\caption{GFLOP/sec and Speedup observed on one GPU (M2070) of the Keeneland GPU cluster when operating by ``One Thread Per Stencil" within the RK4 kernel.}
 \end{figure} 
 
-
+The data in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland} and \ref{fig:speedup_1proc_oneThread_keeneland} reveals two things: 
+\begin{enumerate} 
+\item For stencils of size $n < 32$, operating with perfect concurrency across stencils (i.e., operating one thread per stencil) allows us to achieve the highest GFLOP/sec. Unfortunately, this approach is unpredictable and z
+\item 
+\end{enumerate}
 
 
 \section{Keeneland Scaling with MPI\_Alltoallv}
 
-The following data demonstrates performance of the implementation with an MPI\_alltoallv collective. The benchmarks test the cosine bell advection from Section~\ref{sec:cosine_bell}. 
+The following data demonstrates performance of the implementation with an MPI\_alltoallv collective. These benchmarks consider the cosine bell advection from Section~\ref{sec:cosine_bell}. 
 
 Figure~\ref{fig:alltoall_multicpu_scaling} shows the strong scalability of our method on multiple CPUs. This figure demonstrates that our method does scale linearly (almost super-linearly) as the number of CPUs increases. 
 %, so our prospect for spanning all CPUs on Keeneland is within reach for problem sizes large enough.
