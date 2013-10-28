@@ -54,7 +54,7 @@ Using the FLOP estimate for each case, Figure~\ref{fig:gflops_cpu_1proc_keenelan
 \label{fig:gflops_cpu_1proc_keeneland}
 \end{figure}
 
-Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland_cosine} and \ref{fig:gflops_gpu_1proc_oneWarp_keeneland_vortex} show the GFLOP/sec achieved by operating one warp per stencil in our custom GPU kernels on the M2070 GPUs. The corresponding speedups achieved over the CPU is provided in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland_cosine} and \ref{fig:speedup_1proc_oneWarp_keeneland_vortex}. Due to its higher operation count, the Cosine Bell Advection is able to achieve over 2.75 GFLOP/sec for $n=101$, nearly double the Vortex Roll-Up case. Also, by operating as warps dedicated to each stencil, the OpenCL kernel nicely maintains a consistent GFLOP/sec in all cases. 
+Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland_cosine} and \ref{fig:gflops_gpu_1proc_oneWarp_keeneland_vortex} show the GFLOP/sec achieved by operating one warp per stencil in our custom GPU kernels on the M2070 GPUs. Once again the data is packed in a CSR format. The corresponding speedups achieved over the CPU is provided in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland_cosine} and \ref{fig:speedup_1proc_oneWarp_keeneland_vortex}. Due to its higher operation count, the Cosine Bell Advection is able to achieve over 2.75 GFLOP/sec for $n=101$, nearly double the Vortex Roll-Up case. Also, by operating as warps dedicated to each stencil, the OpenCL kernel nicely maintains a consistent GFLOP/sec in all cases. 
 
 %TODO: warp allows us to predict performance of stencil size
 
@@ -84,6 +84,7 @@ Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland_cosine} and \ref{fig:gflops_g
 \label{fig:speedup_1proc_oneWarp_keeneland_vortex}
 \end{subfigure} 
 \caption{GFLOP/sec and Speedup observed on one GPU (M2070) of the Keeneland GPU cluster for Cosine Bell Advection and Vortex Roll-Up when operating by ``One Warp Per Stencil" within the RK4 kernel.}
+\label{fig:1proc_oneWarp_keeneland}
 \end{figure} 
 
 In similar fashion the GFLOP/sec achieved by operating one thread per stencil is demonstrated in Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland_cosine} (Cosine Bell) and \ref{fig:gflops_gpu_1proc_oneThread_keeneland_vortex} (Vortex Roll-Up). Speedups over the CPU for the thread approach are given in Figures~\ref{fig:speedup_1proc_oneThread_keeneland_cosine} and \ref{fig:speedup_1proc_oneThread_keeneland_cosine}. 
@@ -115,13 +116,16 @@ In similar fashion the GFLOP/sec achieved by operating one thread per stencil is
 \label{fig:speedup_1proc_oneThread_keeneland}
 \end{subfigure} 
 \caption{GFLOP/sec and Speedup observed on one GPU (M2070) of the Keeneland GPU cluster when operating by ``One Thread Per Stencil" within the RK4 kernel.}
+\label{fig:1proc_oneThread_keeneland}
 \end{figure} 
 
-The data in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland} and \ref{fig:speedup_1proc_oneThread_keeneland} reveals two things: 
+Based on data in Figures~\ref{fig:1proc_oneWarp_keeneland} and \ref{fig:1proc_oneThread_keeneland} we observe: 
 \begin{enumerate} 
-\item For stencils of size $n < 32$, operating with perfect concurrency across stencils (i.e., operating one thread per stencil) allows us to achieve the highest GFLOP/sec. Unfortunately, this approach is unpredictable and z
-\item 
+\item For stencils of size $n < 32$, operating with perfect concurrency across stencils (i.e., operating one thread per stencil) allows for the highest GFLOP/sec by stencil size. Unfortunately, this approach achieves nearly equivalent GFLOP/sec across all stencil sizes, which emphasizes its limited applicability and diminishing returns. The achieved GFLOP/sec is also less predictable than the warp counterpart. 
+\item Operating by warp has surprisingly predictable performance. Each curve grows slightly as $N$ scales, but the most significant factor impacting GFLOP/sec is the stencil size.
+\item The additional operations for the third SpMV in cosine bell advection (Figure~\ref{fig:speedup_1proc_oneWarp_keeneland_cosine}) also contribute significantly to the achieved throughput. This is to be expected as the RBF-FD (SpMV) is a memory bound problem, and the GPU work-items sit idle waiting for data to reach them. The added complexity of another SpMV makes use of cached data for the vector and is easily computed long before the idle time finishes. 
 \end{enumerate}
+These observations lead to the conclusion, that although operating one thread per stencil is an option, under most circumstances operating by a warp on stencils is preferred. We also note that the demonstrated performance of the ELL matrix format in Chapter~\ref{chap:gpu_rbffd} is far superior to the data shown here. As such, effort to further tune these two kernels was diverted to continuing investigations with the help of the ViennaCL ELL matrix. 
 
 
 \section{Keeneland Scaling with MPI\_Alltoallv}
@@ -137,21 +141,22 @@ The super-linear speedup is due to improved caching on processors as individual 
 \begin{subfigure}[t]{0.425\textwidth}
 \centering
 \includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv_cosine/speedup_1CPU_vs_NCPU.pdf}
-\caption{Multi-CPU strong scaling on Keeneland for one warp per stencil. Problem size is sufficiently large to hide latency in MPI communication.}
+\caption{Multi-CPU strong scaling. The problem size is sufficiently large to hide latency in MPI communication.}
 \label{fig:alltoall_multicpu_scaling}
 \end{subfigure} 
 \begin{subfigure}[t]{0.425\textwidth}
 \centering
 \includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv_cosine/speedup_1CPU_vs_NGPU_WarpPerStencil.pdf}
-\caption{Multi-GPU strong scaling vs one CPU on Keeneland for one warp per stencil}
+\caption{Multi-GPU strong scaling vs one CPU}
 \label{fig:alltoall_multigpu_vs_cpu_scaling}
 \end{subfigure} 
 \begin{subfigure}[t]{0.425\textwidth}
 \centering
 \includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv_cosine/speedup_1GPU_vs_NGPU_WarpPerStencil.pdf}
-\caption{Multi-GPU strong scaling vs one GPU on Keeneland for one warp per stencil}
+\caption{Multi-GPU strong scaling vs one GPU}
 \label{fig:alltoall_multigpu_vs_gpu_scaling}
 \end{subfigure} 
+\caption{Multi-CPU and Multi-GPU strong scaling on Keeneland for the ``One Warp per Stencil" RK4 implementation}
 \end{figure}
 
 \begin{figure}
@@ -168,16 +173,17 @@ The super-linear speedup is due to improved caching on processors as individual 
 \caption{Multi-GPU}
 \label{fig:alltoall_multigpu_costs}
 \end{subfigure} 
-\caption{Cost comparison of benchmark components on Keeneland. The cost of MPI communication is significantly reduced and allows further scaling. The ``MPI Send/Recv" component represents the time for an MPI\_Alltoallv collective.}
+\caption{Cost comparison of benchmark components on Keeneland. The cost of MPI communication is significantly reduced and allows further scaling. When the GPU accelerates computation, the non-parallelizable time for MPI\_Alltoallv and data transfers between GPU and CPU quickly become the dominant factors.}
 \end{figure} 
 
-Figure~\ref{fig:alltoall_multigpu_vs_cpu_scaling}  shows the scaling of multiple GPUs vs 1 CPU. Ideally, this figure would be the product of the previous two figures since the GPUs are attached to CPUs in a one to one correspondence. However, we see from the sub-linear scaling that while the GPU accelerators are decreasing the time to compute solutions, there is less and less return of investment as the number of processors increase. Between this Figure and the previous, the only thing that differs is the hardware on which stencils are evaluated. The cost of communication stays the same as in the previous figure. But that means the communication consumes a increasing percentage of the iteration time, until is dominates. 
-Additionally, computing on the GPU requires transfer (additional communication) of data between CPU and GPU. 
+Figure~\ref{fig:alltoall_multigpu_vs_cpu_scaling}  shows the scaling of multiple GPUs vs 1 CPU. Ideally, this figure would be the product of Figures~\ref{fig:alltoall_multicpu_scaling} and \ref{fig:gflops_gpu_1proc_oneWarp_keeneland_vortex} since the GPUs are attached to CPUs in a one to one correspondence. However, the sub-linear scaling is quickly tapering off. In this case the cost of MPI communication is the same as in the previous figure. Operating on the GPU has two effects: a) the fraction of computation in the iteration is reduced, which means MPI communication dominates faster; and b) the GPU adds the cost of data transfers between host and device further exacerbating the situation. 
 
 Figure~\ref{fig:alltoall_multigpu_vs_gpu_scaling} shows the scalability of multiple GPUs vs 1 GPU. Here we see a sub-linear behavior for all cases. This is attributed to both the cost of transfer between CPUs and GPUs and the decreasing problem size as number of processors increases, which underutilizes the GPUs. 
 
 
-Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_costs} show the smaller percentage of time per iteration dedicated to communication compared to the figures in the paper. In the Figure~\ref{fig:alltoall_multigpu_costs}, the way the times bottom out indicates we are/have converged on the minimum time required to launch a GPU kernel, transfer to/from the GPU, and communicate the problem via MPI. To scale to more processors, a larger problem size is absolutely necessary.
+Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_costs} show a great reduction in time per iteration dedicated to communication compared to the figures in \cite{BolligFlyerErlebacher2012}. In the Figure~\ref{fig:alltoall_multigpu_costs}, the way the times bottom out indicates the iteration is converged on the minimum time required to launch a GPU kernel, transfer to/from the GPU, and communicate the problem via MPI. To scale to more processors, a larger problem size is absolutely necessary. 
+
+Leveraging the overlapping communication and computation algorithm from Chapter~\ref{chap:multigpu_rbffd} would hide some/all of the cost in communication, but it also reduces the computation time. 
 
 
 
