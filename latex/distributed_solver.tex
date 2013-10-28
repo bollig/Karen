@@ -691,8 +691,16 @@ Our implementation leverages METIS for general domain decomposition and load bal
 \chapter{Distributed GPU SpMV (incomplete)}
 \label{chap:multigpu_rbffd}
 
+Recent advances in distributed (multi-)GPU computing involve NVidia's GPU Direct technology. GPU Direct allows hardware like the PCI-e bus to directly access memory on the GPU device. CUDA V5.5 adds full support for MPI applications 
 
-\cite{Lawlor2009}
+
+
+Lawlor \cite{Lawlor2009} wraps a subset of MPI collectives, memory copies between GPU and CPU, and---to some extent---callbacks to GPU kernels behind a simplified API called cudaMPI. Although the concept of cudaMPI is good for minimally invasive design, the library only provides a handful of  a limited subset of MPI  a for overlapping communication and computation.  
+
+OpenCL does not support must be explicitly copied to the CPU 
+
+
+
 %TODO: \cite{Goeddeke2009} \cite{Erez2007}
 
 Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
@@ -709,7 +717,7 @@ When operating on multiple GPUs we avoid the copy-out or decode phase by requiri
 
 \section{Overlapping with the GPU}
 
-Overlapping communication and computation with the GPU is made possible with two levels of asynchronous commands: 
+Overlapping communication and GPU computation is enabled by two levels of asynchronous commands: 
 \begin{itemize} 
 \item \emph{Non-blocking MPI}. The MPI\_Isend/MPI\_Irecv routines are used to post communication and immediately return the main thread to computation. 
 \item \emph{Asynchronous GPU Queues}. Two OpenCL queues are utilized to send commands to the GPU. 
@@ -735,7 +743,20 @@ Overlapping communication and computation with the GPU is made possible with two
 \label{fig:gpu_mpi_tuning}
 \end{figure}
 
-\section{Scaling}
+
+
+
+\section{Distributed GPU Performance}
+
+
+\subsection{Non-Overlapping Multi-GPU Results} 
+
+See Appendices~\ref{app:keeneland_alltoallv_benchmarks} and \ref{app:spear_alltoallv_benchmarks} for scaling benchmarks from the non-ViennaCL multi-GPU implementation. Appendix~\ref{app:keeneland_alltoallv_benchmarks} demonstrates the scalability of an iteration of RK4 as applied in \S~\ref{sec:cosine_bell} on the Keeneland GPU cluster---the benchmark assumes three SpMV operations per intermediate evaluation of the RK4 time-step. Appendix~\ref{app:spear_alltoallv_benchmarks} is similar, but considers only two SpMV operations per evaluation corresponding to the test case in \S~\ref{sec:vortex_rollup}. In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
+
+Benchmarks
+
+
+\subsection{Overlapping Results}
 We scale the SpMV across the GPUs on Cascade.
 
 
@@ -756,7 +777,7 @@ If speedup greater than $p = (Compute Nodes * PPN)$ is achieved
 \begin{tabular}{c|c|c|c|c|c|c}
  \multicolumn{2}{c}{ } & \multicolumn{4}{|c|}{Observed GFLOP/sec (Speedup over Non-overlapped)} \\  \hline
 Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
-1   &   1   &   8.5 (1.0x)   &   8.4 (1.0x)   &   9.0 (1.0x)   &      \\
+1   &   1   &   8.5 (1.0x)   &   8.4 (1.0x)   &   9.0 (1.0x)   &  --    \\
 2   &   1   &   13.8 (2.3x)   &   13.0 (1.9x)   &   13.1 (2.0x)   &   13.5 (1.8)   \\
 4   &   1   &   13.1 (1.9x)   &   25.1 (2.8x)   &   24.6 (2.4x)   &   25.2 (1.9)   \\
 8   &   1   &   24.5 (2.0x)   &   33.2 (2.3x)   &   41.2 (3.4x)   &   53.6 (2.3x)   \\ \hline
@@ -781,21 +802,9 @@ Within each block of Table~\ref{tbl:cascade_m2070_overlap} we expect the GFLOP/s
 Greater than 4x speedup (bold-faced in Table~\ref{tbl:cascade_m2070_overlap}) is possible due to a design flaw on Cascade: each compute node has four attached GPUs connected to the host via a shared I/O hub. Concurrent data transfers from multiple GPUs to host, or vice versa---as would occur while executing a synchronized, distributed SpMV---result in contention on the hub and serialization of transfers. Serialization effectively quadruples the total run-time for 4 PPN. By overlapping communication and computation we notice two effects: a) contention disappears (or is at least hidden by computation), and b) 
 
 
-\subsection{Multiple Kernel Scheduling}
+\section{Multiple Kernel Scheduling}
 describe fermi's ability to schedule multiple kernels, what it means for our queues. 
 %Do we need multiple queues, or just one that is non-blocking. How do we indicate we are done communicating if there is no queue to add markers to? 
-
-
-\section{HPC Spear Cluster} 
-See Appendix for Spear data with MPI\_Alltoallv (no overlap). 
-\section{Keeneland}
-
-\subsection{Shared K20s}
-The new Kepler K20s allow both concurrent kernel execution and dynamic parallelism. Dynamic parallelism is a means of scheduling new kernel launches from within an exist kernel. In order to support this feature,
-
-K20s also support CUDA 5.5 which introduces MPI aware CUDA. The nvcc compiler now detects MPI calls and routes data movement directly from InfiniBand to the GPU memory rather than making a stop on the host memory. This is only possible with GPUDirect (direct memory addressing) and dynamic parallelism (to spawn an MPI process from a kernel). 
-
-Features like MPI-CUDA will are unlikely to be available in OpenCL in the future. NVidia is no longer leading or distributing the OpenCL libraries with their driver. NVidia only plans to support the OpenCL spec v1.1.
 
 
 \section{Future Work}
@@ -804,6 +813,11 @@ One of the problems with choosing to work in OpenCL is the fact that the standar
 
 Take for example GPUDirect, a technology introduced first CUDA v3.1 for NVidia hardware. GPUDirect allows direct access to GPU memory addresses from various sources including other GPUs. The technology allows GPUs to bypass copies to host memory en-route to another GPU on the same compute node. Combine GPUDirect with the new MPI aware features in CUDA v5.0 and data can pass directly from a GPU onto the infiniband fabric and up to another GPU \cite{NvidiaGPUMPI}. This type of feature may never be available in OpenCL. 
 
+The new Kepler K20s allow both concurrent kernel execution and dynamic parallelism. Dynamic parallelism is a means of scheduling new kernel launches from within an exist kernel. In order to support this feature,
+
+K20s also support CUDA 5.5 which introduces MPI aware CUDA. The nvcc compiler now detects MPI calls and routes data movement directly from InfiniBand to the GPU memory rather than making a stop on the host memory. This is only possible with GPUDirect (direct memory addressing) and dynamic parallelism (to spawn an MPI process from a kernel). 
+
+Features like MPI-CUDA will are unlikely to be available in OpenCL in the future. NVidia is no longer leading or distributing the OpenCL libraries with their driver. NVidia only plans to support the OpenCL spec v1.1.
 
 
 
