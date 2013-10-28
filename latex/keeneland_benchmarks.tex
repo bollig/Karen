@@ -3,26 +3,25 @@
 \chapter{Keeneland Benchmarks}
 \label{app:keeneland_alltoallv_benchmarks}
 
-The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial scaling of the implementation for a distributed RK4 iteration using primitive blocking MPI\_Send/MPI\_Recv communication routines. The collective was a round-robin all-to-subset connection between processors, each taking a turn to send data (0 or more bytes) or otherwise wait to receive data. Blocking communication was implemented for code verification, and the linear-in-$x$ partitioning was employed. Benchmarks in \cite{BolligFlyerErlebacher2012} were acquired on the multi-GPU cluster named Keeneland \cite{Vetter2011}. 
+The benchmarks in our first paper (\cite{BolligFlyerErlebacher2012}) demonstrated the initial scaling of the implementation for a distributed RK4 iteration using primitive blocking MPI\_Send/MPI\_Recv communication routines. The collective was a round-robin all-to-subset connection between processors, each taking a turn to send data (0 or more bytes) or otherwise wait to receive data. Blocking communication was implemented for code verification, and the linear-in-$x$ partitioning was employed. Benchmarks in \cite{BolligFlyerErlebacher2012} were acquired on the multi-GPU cluster named Keeneland (\cite{Vetter2011}). 
 
 The implementation demonstrated poor scaling behavior as blocking collectives serialized transmissions, and every process had to wait until the end of the collective to proceed. The objective in \cite{BolligFlyerErlebacher2012}, however, was not to present a well tuned distributed GPU implementation of RBF-FD. Instead we focused on the design decisions for partitioning, index mapping, etc. and verification of both single and distributed GPU implementations as inefficient as they were. 
 
 
-This appendix provides new data from Keeneland for direct comparison with \cite{BolligFlyerErlebacher2012}.
+This appendix provides new data from Keeneland for direct comparison with \cite{BolligFlyerErlebacher2012}. All data in this Appendix was acquired prior to the 2012 upgrade from the Keeneland Initial Delivery System (KIDS) to the Keeneland Full Scale system (KFS). As such, benchmarks were gathered on NVidia M2070 GPUs (150 GByte/sec bandwidth), rather than the newer M2090 GPUs (177 GByte/sec bandwidth) \cite{M2090}. 
 
 %was similarly acquired on the Keeneland GPU cluster but tests the MPI\_Alltoallv collective. It is provided for comparison with \cite{BolligFlyerErlebacher2012}.
 
-\section{Single GPU SpMV on Keeneland} 
+\section{Cosine Bell Advection on Keeneland} 
 
-%TODO: cleanup this section
-\authnote{FIX UP}
+This section considers the performance of a full RK4 iteration for the Cosine Bell Advection test case in \S~\ref{sec:cosine_bell}. As discussed in Chapter~\ref{chap:gpu_rbffd}, a regular SpMV involves $(2Nn)$ FLOPs. Intermediate steps of the RK4 (i.e., the evaluations of $F(t,\vu)$) perform three SpMV operations: one for each $D_{\theta}$, $D_{\lambda}$ and $D_{hv}$, plus four vector operations to join SpMV results and prepare the input for the next intermediate step. The cost of an intermediate step is therefore estimated at $(6Nn + 4N)$ FLOPs. In that case, the Cosine Bell RK4 iteration with four intermediate steps plus another $5N$ FLOP overhead to combine intermediate solutions totals to approximately $(24Nn + 23N)$ FLOPs. 
 
-An SpMV requires $N * n * 2$ floating point operations due to the 2 operations, multiply and add, required when applying $N$ dot-products of size $n$. An iteration of RK4 requires four evaluations of the function $F(t,\vu)$, whose operation count varies by application, plus $7*N$ operations (four additions and three multiplications) per time-step. 
-
-In Figures~\ref{fig:gflops_cpu_1proc_keeneland}, \ref{fig:gflops_gpu_1proc_oneWarp_keeneland} and \ref{fig:gflops_gpu_1proc_oneThread_keeneland}, each function evaluation in the RK4 performs three independent SpMVs and two AXPY operations ($2*N$ each) for a total of $6*N*n + 4*N$ operations. Thus the total operation count for a single RK4 iteration is estimated at: $24*N*n +23*N$. 
+Figures~\ref{fig:gflops_cpu_1proc_keeneland}, \ref{fig:gflops_gpu_1proc_oneWarp_keeneland} and \ref{fig:gflops_gpu_1proc_oneThread_keeneland}, each function evaluation in the RK4 performs three independent SpMVs and two AXPY operations ($2*N$ each) for a total of $6*N*n + 4*N$ operations. Thus the total operation count for a single RK4 iteration is estimated at: $24*N*n +23*N$. 
 For Vortex Roll-up, only two SpMVs and one AXPY are required, which drops the total operation count to: $16*N*n + 15*N$. 
 
 Figure~\ref{fig:gflops_cpu_1proc_keeneland} provides the GFLOP/sec for Cosine Bell Advection on the Keeneland GPU cluster for a single CPU running the nested loop evaluation, optimized with auto-vectorization and auto-blocking provided by the Intel compiler. Figure~\ref{fig:gflops_gpu_1proc_oneWarp_keeneland} and \ref{fig:gflops_gpu_1proc_oneThread_keeneland} show the GFLOP/sec achieved by our custom GPU kernels running on the M2070 GPUs. The corresponding speedups achieved in each case over the CPU is provided in Figures~\ref{fig:speedup_1proc_oneWarp_keeneland} and \ref{fig:speedup_1proc_oneThread_keeneland}. 
+
+
 
 \begin{figure}
 \centering
@@ -42,6 +41,11 @@ Figure~\ref{fig:gflops_cpu_1proc_keeneland} provides the GFLOP/sec for Cosine Be
 \caption{One warp per stencil kernel on one GPU in Keeneland}
 \label{fig:speedup_1proc_oneWarp_keeneland}
 \end{subfigure} 
+\caption{Cosine Bell Advection benchmarks from the Keeneland GPU cluster compare the average run-time of a single time-step of RK4 with three SpMVs per intermediate time-step evaluation.}
+\end{figure} 
+
+\begin{figure}
+\centering
 \begin{subfigure}[t]{0.425\textwidth}
 \includegraphics[width=\textwidth]{../figures/keeneland_results/alltoallv_cosine/gflops_gpu_1proc_oneThreadPerStencil.pdf}
 \caption{One warp per stencil kernel on one GPU in Keeneland}
@@ -53,8 +57,43 @@ Figure~\ref{fig:gflops_cpu_1proc_keeneland} provides the GFLOP/sec for Cosine Be
 \caption{One warp per stencil kernel on one GPU in Keeneland}
 \label{fig:speedup_1proc_oneThread_keeneland}
 \end{subfigure} 
-\caption{Benchmarks from the Keeneland GPU cluster compare the average run-time of a single time-step of RK4 executed custom kernels.}
+\caption{Cosine Bell Advection benchmarks from the Keeneland GPU cluster compare the average run-time of a single time-step of RK4 with three SpMVs per intermediate time-step evaluation.}
 \end{figure} 
+
+\section{Vortex Roll-Up on Keeneland} 
+
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=\textwidth]{../figures/keeneland_results/alltoallv_vortex/gflops_cpu_1proc_oneWarpPerStencil.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_cpu_1proc_keeneland}
+\end{subfigure} \\
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=\textwidth]{../figures/keeneland_results/alltoallv_vortex/gflops_gpu_1proc_oneWarpPerStencil.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_gpu_1proc_oneWarp_keeneland}
+\end{subfigure} 
+\quad
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=\textwidth]{../figures/keeneland_results/alltoallv_vortex/speedup_1proc_oneWarpPerStencil.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:speedup_1proc_oneWarp_keeneland}
+\end{subfigure} 
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=\textwidth]{../figures/keeneland_results/alltoallv_vortex/gflops_gpu_1proc_oneThreadPerStencil.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:gflops_gpu_1proc_oneThread_keeneland}
+\end{subfigure}
+\quad
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=\textwidth]{../figures/keeneland_results/alltoallv_vortex/speedup_1proc_oneThreadPerStencil.pdf}
+\caption{One warp per stencil kernel on one GPU in Keeneland}
+\label{fig:speedup_1proc_oneThread_keeneland}
+\end{subfigure} 
+\caption{Vortex Roll-up benchmarks from Keeneland compare the average run-time of a single time-step of RK4 with two SpMVs per intermediate time-step.}
+\end{figure} 
+
 
 \section{Keeneland Scaling with MPI\_Alltoallv}
 

@@ -5,6 +5,69 @@
 
 The data in this appendix was acquired on the FSU Spear cluster. It is provided for comparison with \cite{BolligFlyerErlebacher2012}.
 
+
+\section{Single GPU SpMV on Spear}
+
+These results were run on Spear. MPI communication is done with an MPI\_alltoallv collective. The test case is the vortex roll-up. 
+
+Figure~\ref{fig:spear_alltoall_1proc_warp} 
+
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_cpu_1proc_oneWarpPerStencil.pdf}
+\caption{One warp per stencil kernel on one GPU in Spear \authnote{TODO: update} }
+\label{fig:spear_alltoall_1proc_warp}
+\end{subfigure} 
+
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneWarpPerStencil.pdf}
+\caption{One warp per stencil kernel on one GPU in Spear}
+\label{fig:spear_alltoall_1proc_warp}
+\end{subfigure} 
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneThreadPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Spear}
+\label{fig:spear_alltoall_1proc_warp}
+\end{subfigure} 
+\end{figure} 
+
+\begin{figure}
+\centering
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneThreadPerStencil.pdf}
+\caption{One warp per stencil kernel on one GPU in Spear}
+\label{fig:spaer_alltoall_1proc_warp}
+\end{subfigure} 
+\begin{subfigure}[t]{0.425\textwidth}
+\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
+\caption{One warp per stencil kernel on one GPU in Spear}
+\label{fig:spear_alltoall_1proc_warp}
+\end{subfigure} 
+\end{figure}
+%
+%\section{ViennaCL}
+%
+%These benchmarks compare performance of a single SpMV executed on Spear. Each data point is the average over 10 executions. The GPU is primed by an iteration before benchmarking begins. 
+%
+%\begin{figure}
+%\centering
+%\begin{subfigure}[t]{0.48\textwidth}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
+%\caption{SpMV Performance of the ViennaCL CSR, COO and ELL formats versus the BOOST::uBLAS CSR format.}
+%\label{fig:spear_vcl_gflops}
+%\end{subfigure} 
+%\begin{subfigure}[t]{0.48\textwidth}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_speedup-eps-converted-to.pdf}
+%\caption{Speedup relative to the BOOST::uBLAS CSR implementation on the CPU.}
+%\label{fig:spear_vcl_speedup}
+%\end{subfigure} 
+%\caption{Single GPU SpMV performance for ViennaCL vs BOOST::uBLAS on the Spear cluster (FSU) for $n=50$. }
+%\end{figure}
+
+
 \section{Spear Scaling with MPI\_Alltoallv}
 
 Although the Spear cluster is not identical to Keeneland, it runs similar GPU hardware allowing for direct comparison
@@ -56,66 +119,5 @@ Although the Spear cluster is not identical to Keeneland, it runs similar GPU ha
 \end{subfigure} 
 \end{figure} 
 
-
-\section{Single GPU SpMV on Spear}
-
-These results were run on Spear. MPI communication is done with an MPI\_alltoallv collective. The test case is the vortex roll-up. 
-
-Figure~\ref{fig:spear_alltoall_1proc_warp} 
-
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_cpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Spear \authnote{TODO: update} }
-\label{fig:spear_alltoall_1proc_warp}
-\end{subfigure} 
-
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Spear}
-\label{fig:spear_alltoall_1proc_warp}
-\end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneThreadPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Spear}
-\label{fig:spear_alltoall_1proc_warp}
-\end{subfigure} 
-\end{figure} 
-
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/gflops_gpu_1proc_oneThreadPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Spear}
-\label{fig:spaer_alltoall_1proc_warp}
-\end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/vortex/speedup_1proc_oneWarpPerStencil-eps-converted-to.pdf}
-\caption{One warp per stencil kernel on one GPU in Spear}
-\label{fig:spear_alltoall_1proc_warp}
-\end{subfigure} 
-\end{figure}
-
-\section{ViennaCL}
-
-These benchmarks compare performance of a single SpMV executed on Spear. Each data point is the average over 10 executions. The GPU is primed by an iteration before benchmarking begins. 
-
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
-\caption{SpMV Performance of the ViennaCL CSR, COO and ELL formats versus the BOOST::uBLAS CSR format.}
-\label{fig:spear_vcl_gflops}
-\end{subfigure} 
-\begin{subfigure}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/spear_results/spmv/spmv_vcl_speedup-eps-converted-to.pdf}
-\caption{Speedup relative to the BOOST::uBLAS CSR implementation on the CPU.}
-\label{fig:spear_vcl_speedup}
-\end{subfigure} 
-\caption{Single GPU SpMV performance for ViennaCL vs BOOST::uBLAS on the Spear cluster (FSU) for $n=50$. }
-\end{figure}
 
 
