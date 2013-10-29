@@ -525,9 +525,10 @@ Tuning occurred as follows for the $n=50$ node stencil case and $N_p=4000$ nodes
 \item Based on the assumption that elements of $\setDepend$ are sorted contiguous by neighboring process, the entire decode process is skipped (Figure~\ref{fig:no_decode_cpu}). 
 \item MPI\_Irecv and MPI\_Isend are issued before computing the SpMV for set $\setCenters \backslash \setBoundary$. MPI\_Isend is non-blocking so the SpMV for $\setCenters \backslash \setBoundary$ starts before communication is complete. A barrier at the end of the first SpMV waits for communication to finish before launching the second SpMV on $\setBoundary$. This hides some cost of communication behind computation on the CPU (Figure~\ref{fig:overlap_cpu}). This collective is the basis for distributed GPU computing approach in Chapter~\ref{chap:multigpu_rbffd}.
 \end{enumerate}
-
 \noindent Weak scaling for each case is presented in Figure~\ref{fig:compare_weak_scaling_n50}. The gap between MPI\_Alltoallv (blue) and the basic MPI\_Isend/MPI\_Irecv (red) in Figure~\ref{fig:compare_weak_scaling_n50} nicely captures the substantial loss of time due to zero-byte message tests. Posting MPI\_Irecv before the SpMV (see the green line) shows moderate improvement for large $p$, and reflects that the load balancing of the test is getting worse. At $p=1024$ processes the overlapping CPU approach is 2.8x faster than the baseline. Although its scaling is not ideal, overlapping the SpMV and communication does represent a significant improvement over the original MPI\_Alltoallv. %At $p=1024$ the overlapped communication and computation is 
-%TODO: what percentage overlapped? diff the comm time and SpMV1 time.
+
+
+Our overlapped SpMV approach is similar in concept to the ``hybrid vector mode with naive overlap" adopted by Schubert et al. \cite{Schubert2011}. However, whereas Schubert et al. consider a two-level parallelism with each MPI process splitting into a number of OpenMP threads, our implementation is limited to a single CPU thread per MPI process. The comparison is bit surprising. Data provided in \cite{Schubert2011} suggest that the vector mode with naive overlap actually scales worse than the case when no overlap is used. Contrary to this, Figure~\ref{fig:compare_weak_scaling_n50} indicates that splitting the SpMV improves scaling compared to a non-overlapped approach. In the case of Schubert et al., their data shows better scaling for a non-overlapped 
 
 In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scaling for each of the collectives. Differences in curves are difficult to discern except for $p \leq 16$ and $p = 1024$. Starting with the latter case, observe that the trend of near linear scaling for the overlapping collective persists at $p=1024$ rather than bottoming-out in the fashion of MPI\_Alltoallv. 
 
@@ -598,7 +599,7 @@ This may be a limitation in METIS when partitioning domains for large $p$. If so
 \end{figure} 
 
 
-Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The roughly 110 to 220 GFLOP/sec achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory bound SpMV. 
+Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The 110 GLFOP/sec (n=17) to 220 GFLOP/sec (n=50) achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory bound SpMV. 
 
 
 
@@ -663,7 +664,7 @@ t_{Vis} = \ ^{(t_{Comm} - t_{SpMV 1}}) /_{t_{Total}}
 \end{align*}
 where $t_{Vis}$ is the subset of time between the first MPI\_Irecv post and the start of the first SpMV (for $\setCenters \backslash \setBoundary$). Any communication hidden by the first SpMV is subtracted off $t_{Comm}$ with $t_{SpMV 1}$, the time spent computing.
 
-The local minima in  Figure~\ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils} reveal an optimal choice of $p$ by stencil size for overlapping communication and computation. Note that the minima at $p=8$ for $n=17$, and $p=32$ for $n=31$ and $50$ correspond to strong scaling efficiency peaks in Figure~\ref{fig:compare_strong_scaling_efficiency_all_stencils}.
+The local minima in  Figure~\ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils} reveal an optimal choice of $p$ by stencil size for overlapping communication and computation. Note that the minima at $p=8$ for $n=17$, and $p=32$ for $n=31$ and $50$ correspond to strong scaling efficiency peaks in Figure~\ref{fig:compare_strong_scaling_efficiency_all_stencils}. Remarkably, we observe at those minima up to 80\% of the communication time is hidden. 
 
  For weak scaling, the constant SpMV computation time (and constant overlap) means the linear trend in Figure~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils}  is purely growth in communication time with respect to $p$. Possible causes include (but are not limited to): 
 \begin{itemize}

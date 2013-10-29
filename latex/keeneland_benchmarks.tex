@@ -130,11 +130,32 @@ These observations lead to the conclusion, that although operating one thread pe
 
 \section{Keeneland Scaling with MPI\_Alltoallv}
 
-The following data demonstrates performance of the implementation with an MPI\_alltoallv collective. These benchmarks consider the cosine bell advection from Section~\ref{sec:cosine_bell}. 
+The following data demonstrates performance of the implementation with an MPI\_alltoallv collective. These benchmarks consider the cosine bell advection from Section~\ref{sec:cosine_bell} with $N=27556$ nodes. 
+
+For comparison to results in Chapter~\ref{chap:multigpu_rbffd} we provide actual GFLOP/sec achieved on Keeneland in Figure~\ref{fig:alltoall_gflops}. 
+
+
+\begin{figure} 
+\centering
+\begin{subfigure}[t]{0.425\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv_cosine/gflops_1CPU_vs_NCPU.pdf}
+\caption{Multi-CPU strong scaling GFLOP/sec.}
+%\label{fig:alltoall_gflops_cpu}
+\end{subfigure} 
+\begin{subfigure}[t]{0.425\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv_cosine/gflops_1GPU_vs_NGPU_WarpPerStencil.pdf}
+\caption{Multi-GPU GFLOP/sec}
+%\label{fig:alltoall_gflops_gpu}
+\end{subfigure} 
+\caption{GFLOP/sec achieved on Keeneland with a non-overlapping MPI\_Alltoallv communication}
+\label{fig:alltoall_gflops}
+\end{figure}
 
 Figure~\ref{fig:alltoall_multicpu_scaling} shows the strong scalability of our method on multiple CPUs. This figure demonstrates that our method does scale linearly (almost super-linearly) as the number of CPUs increases. 
 %, so our prospect for spanning all CPUs on Keeneland is within reach for problem sizes large enough.
-The super-linear speedup is due to improved caching on processors as individual problem sizes decrease and the processors are able to keep a larger percentage of the problem within fast cache memory.
+The nice speedup is due to improved caching on processors that results as individual problem sizes decrease and the processors are able to keep a larger percentage of the problem within fast cache memory. 
 
 \begin{figure}
 \centering
@@ -150,14 +171,16 @@ The super-linear speedup is due to improved caching on processors as individual 
 \caption{Multi-GPU strong scaling vs one CPU}
 \label{fig:alltoall_multigpu_vs_cpu_scaling}
 \end{subfigure} 
-\begin{subfigure}[t]{0.425\textwidth}
-\centering
-\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv_cosine/speedup_1GPU_vs_NGPU_WarpPerStencil.pdf}
-\caption{Multi-GPU strong scaling vs one GPU}
-\label{fig:alltoall_multigpu_vs_gpu_scaling}
-\end{subfigure} 
-\caption{Multi-CPU and Multi-GPU strong scaling on Keeneland for the ``One Warp per Stencil" RK4 implementation}
+%\begin{subfigure}[t]{0.425\textwidth}
+%\centering
+%\includegraphics[width=1.0\textwidth]{../figures/keeneland_results/alltoallv_cosine/speedup_1GPU_vs_NGPU_WarpPerStencil.pdf}
+%\caption{Multi-GPU strong scaling vs one GPU}
+%\label{fig:alltoall_multigpu_vs_gpu_scaling}
+%\end{subfigure} 
+\caption{Multi-CPU and Multi-GPU strong scaling on Keeneland for the ``One Warp per Stencil" RK4 implementation applied to the $N=27556$ MD node set.}
 \end{figure}
+
+
 
 \begin{figure}
 \centering
@@ -173,18 +196,17 @@ The super-linear speedup is due to improved caching on processors as individual 
 \caption{Multi-GPU}
 \label{fig:alltoall_multigpu_costs}
 \end{subfigure} 
-\caption{Cost comparison of benchmark components on Keeneland. The cost of MPI communication is significantly reduced and allows further scaling. When the GPU accelerates computation, the non-parallelizable time for MPI\_Alltoallv and data transfers between GPU and CPU quickly become the dominant factors.}
+\caption{Cost comparison of benchmark components on Keeneland. When the GPU accelerates computation, the non-parallelizable time for MPI\_Alltoallv and data transfers between GPU and CPU quickly become the dominant factors.}
 \end{figure} 
 
-Figure~\ref{fig:alltoall_multigpu_vs_cpu_scaling}  shows the scaling of multiple GPUs vs 1 CPU. Ideally, this figure would be the product of Figures~\ref{fig:alltoall_multicpu_scaling} and \ref{fig:gflops_gpu_1proc_oneWarp_keeneland_vortex} since the GPUs are attached to CPUs in a one to one correspondence. However, the sub-linear scaling is quickly tapering off. In this case the cost of MPI communication is the same as in the previous figure. Operating on the GPU has two effects: a) the fraction of computation in the iteration is reduced, which means MPI communication dominates faster; and b) the GPU adds the cost of data transfers between host and device further exacerbating the situation. 
 
-Figure~\ref{fig:alltoall_multigpu_vs_gpu_scaling} shows the scalability of multiple GPUs vs 1 GPU. Here we see a sub-linear behavior for all cases. This is attributed to both the cost of transfer between CPUs and GPUs and the decreasing problem size as number of processors increases, which underutilizes the GPUs. 
+Figure~\ref{fig:alltoall_multigpu_vs_cpu_scaling}  shows the scaling of multiple GPUs vs 1 CPU. Ideally, this figure would be the product of Figures~\ref{fig:alltoall_multicpu_scaling} and \ref{fig:gflops_gpu_1proc_oneWarp_keeneland_vortex} (at $N=27556$) since the GPUs are attached to CPUs in a one to one correspondence. Unfortunately, gains quickly diminish. Operating on the GPU impacts scaling in two ways: a) the fraction of time spent in computation during an iteration is reduced, which means MPI communication dominates faster; and b) the GPU adds the cost of data transfers between host and device, which further exacerbates the situation. 
 
+%Figure~\ref{fig:alltoall_multigpu_vs_gpu_scaling} shows the scalability of multiple GPUs vs 1 GPU. The data captures the rate at which communication time (including the data transfers) overtakes computation, resulting in underutilized GPUs. 
 
-Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_costs} show a great reduction in time per iteration dedicated to communication compared to the figures in \cite{BolligFlyerErlebacher2012}. In the Figure~\ref{fig:alltoall_multigpu_costs}, the way the times bottom out indicates the iteration is converged on the minimum time required to launch a GPU kernel, transfer to/from the GPU, and communicate the problem via MPI. To scale to more processors, a larger problem size is absolutely necessary. 
+Figure~\ref{fig:alltoall_multicpu_costs} and Figure~\ref{fig:alltoall_multigpu_costs} show the per-component time spent in communication, transfer and computation. The data reflects a significant reduction in the communication cost compared to the results published in \cite{BolligFlyerErlebacher2012}, Figure 18. However, Figure~\ref{fig:alltoall_multigpu_costs} shows that even with the more efficient MPI\_Alltoallv collective, the time spent outside of computation (i.e., outside ``RK4 Eval+Advance") is amplified to about 25\% of the total iteration time for $p=4$ GPUs. The transfer time to the GPU nearly doubles the cost of communication. 
 
-Leveraging the overlapping communication and computation algorithm from Chapter~\ref{chap:multigpu_rbffd} would hide some/all of the cost in communication, but it also reduces the computation time. 
-
+Based on this data from Keeneland it is clear that the multi-GPU implementation with the MPI\_Alltoallv collective offers very little gain in comparison to the multi-CPU implementation. To scale to more GPUs, a larger problem size is absolutely necessary, but that alone is not sufficient: communication and transfer times need to be cut. This is answered (to a limited extent) by the work in Chapter~\ref{chap:multigpu_rbffd}.
 
 
 %I am generating another set of figures that demonstrate the scaling when we overlap communication and computation. MPI collectives do not allow overlap, but the asynchronous GPU kernel launches do. Therefore, I expect:
