@@ -142,27 +142,26 @@ Parallel implementations of RBF methods rely on \emph{domain decomposition}. Dep
 
 This work leverages a domain decomposition; although, not for the purpose of conditioning. Instead, subdomains are distributed across multiple compute nodes and solved simultaneously. MPI communicates data dependencies across subdomain boundaries. Our implementation of RBF-FD is demonstrated to scale across more than a thousand CPU cores of an HPC cluster. In addition to high scalability for distributed computing, our novel implementation offloads computation to the GPU with an algorithm that overlaps communication and computation. This combination of multi-CPU and multi-GPU parallelism is unmatched in related work within the RBF-FD community. In fact, the multi-GPU aspect sets this work apart from the entire class of RBF methods. 
 
-In what follows, we classify a number of related works according to the type of parallelism they exhibit. 
+In what follows, we classify a number of related works according to the type of parallelism they exhibit. This section follows closely with Table~\ref{tbl:parallel_rbf_refs}
 
 
 
 \begin{table}
     \centering
     \caption{Classification of references by numerical method and parallelization strategy.}
-    \begin{tabular}{L{0.15\textwidth}|C{0.1\textwidth}|C{0.1\textwidth}|C{0.1\textwidth}|C{0.1\textwidth}|C{0.1\textwidth}|C{0.1\textwidth}|}
+    \label{tbl:parallel_rbf_refs}
+    \begin{tabular}{L{0.125\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|}
          % Use a star or cross to denote OpenMP + MPI. 
-                                    & \multicolumn{2}{C{0.2\textwidth}|}{Multi-CPU Only} & \multicolumn{2}{C{0.2\textwidth}|}{Single GPU Only} & \multicolumn{2}{C{0.2\textwidth}|}{Multi-GPU ($\star$:CUDA,$\dag$:OpenCL)} \\ \cline{2-7}
-                                    & OpenMP & MPI & CUDA & OpenCL & Non-overlapped & Overlapped   \\ \hline
-             RBF-FD                 &     &      &      &      &  \cite{BolligFlyerErlebacher2012}$^\dag$ &  \\ \hline
-             RBF PDE Meth.  &  \cite{Kosec2008}   & \cite{Divo2007,Yokota2010} & \cite{Schmidt2009a} & -- &  &  \\ \hline
-             Non-PDE RBF Meth.    &     &       &       &      &      &      \\ \hline
-             Non-RBF PDE Meth.    &     &       &       &      &      &      \\ \hline
+                                    & \multicolumn{2}{C{0.2\textwidth}|}{Multi-CPU} & \multicolumn{3}{C{0.3\textwidth}|}{Single GPU} & \multicolumn{2}{C{0.2\textwidth}|}{Multi-GPU ($\star$:Non-overlapped, $\dag$:Overlapped)} \\ \cline{2-8}
+                                    & OpenMP     & MPI     & CUDA     & OpenCL     & Other     & CUDA     & OpenCL   \\ \hline
+             RBF-FD                 &            &         &          &            &            &          & \cite{BolligFlyerErlebacher2012}$^{\star,\dag}$  \\ \hline
+             RBF PDE Methods  &  \cite{Kosec2008}   & \cite{Divo2007,Yokota2010} & \cite{Schmidt2009a} &    &   &   &  \\ \hline
+             Non-PDE RBF Methods    &             &        &  \cite{Cuomo2013,Cuntz2007}  &   &  \cite{Corrigan2005,Weiler2005,Carr2003,Brandstetter2008}  &      &      \\ \hline
+             Non-RBF PDE Methods    &     &       &       &      &      &     &  \\ \hline
     \end{tabular}
 \end{table}
 
-\subsection{Multi-Core/Multi-CPU Only}
-
-\subsubsection{OpenMP}
+\subsection{Multi-CPU}
 
 Kosec and \v{S}arler \cite{Kosec2008} have the only known (to our knowledge) OpenMP implementation for RBF methods. The authors parallelize coupled heat transfer 
 and fluid flow problems on a single workstation. 
@@ -170,53 +169,35 @@ The application involves the local RBF collocation method, explicit time-steppin
 factor of 1.85x over serial execution was achieved by executing on two CPU cores; no further 
 results from scaling tests were provided. 
 
-\subsubsection{MPI}
-
 In 2007, Divo and Kassab \cite{Divo2007} used a domain decomposition method with artificial 
 subdomain boundaries for their implementation of a local collocation method \cite{Divo2007}. 
 The subdomains are processed independently, with derivative values 
 at artificial boundary points averaged to maintain global consistency of physical values. Their implementation 
 was designed for a 36 node cluster, but benchmarks and scalability tests are not provided.
 
-Perhaps the most competitive parallel implementation of RBFs is the PetRBF branch of PETSc \cite{Yokota2010}. The authors of PetRBF have implemented a highly scalable, efficient RBF interpolation method based on compact RBFs (i.e., they operate on sparse matrices). The authors demonstrate efficient weak scaling of PetRBF across 1024 processes on a Blue Gene/L, and strong scaling up to 128 processes on the same hardware. On the Blue Gene/L, PetRBF is demonstrated to achieve an impressive 74\% parallel weak scaling efficiency on 1024 processes (operating on over 50 million points), and 84\% strong scaling efficiency for 128 processes. Strong scaling was also tested on a Cray XT4, where strong scaling tops out at 36\% for 128 processes, a respectable number---and similar to observed results for our own code on for the same number of processes (see Chapter~\ref{chap:distributed_rbffd}).  
+Perhaps the most competitive parallel implementation of an RBF method is the PetRBF branch of PETSc \cite{Yokota2010}. The authors of PetRBF have implemented a highly scalable, efficient RBF interpolation method based on compact RBFs (i.e., they operate on sparse matrices). The authors demonstrate efficient weak scaling of PetRBF across 1024 processes on a Blue Gene/L, and strong scaling up to 128 processes on the same hardware. On the Blue Gene/L, PetRBF is demonstrated to achieve an impressive 74\% parallel weak scaling efficiency on 1024 processes (operating on over 50 million points), and 84\% strong scaling efficiency for 128 processes. Strong scaling was also tested on a Cray XT4, where strong scaling tops out at 36\% for 128 processes, a respectable number---and similar to observed results for our own code on for the same number of processes (see Chapter~\ref{chap:distributed_rbffd}).  
 
 
 Stevens et al. \cite{Stevens2009a} mention a parallel implementation under development, but no document is available at this time. 
 
 
 
-\subsection{Single GPU Only} 
+\subsection{Single GPU} 
 
+Related work on RBFs and GPUs is sparse. Aside from our own investigations, no known efforts have applied the GPU to RBF-FD. 
 
-
-
-
-\subsubsection{RBF-FD Single-GPU Methods} 
-
-\subsubsection{RBF Single-GPU Methods}
-
-Related work on RBFs and GPUs is sparse. In 2009, Schmidt et al. \cite{Schmidt2009a, Schmidt2009b} implemented a global RBF method for Tsunami simulation on the GPU using the AccelerEyes Jacket \cite{JacketGuide2009} add-on for MATLAB. Jacket provides a MATLAB interface to data structures and routines that internally call to the NVidia CUDA API. Their model was based on a single large dense matrix solve, and with the help of Jacket the authors were able to achieve approximately 7x speedup over the standard MATLAB solution on the then current generation of the MacBook Pro laptop. The authors compared the laptop CPU (processor details not specified) to the built-in NVidia GeForce 8600M GT GPU. Schmidt et al.'s implementation was the first contribution to the RBF community to leverage accelerators. The results were significant and promising, but no further contributions were made on the topic. 
+In 2009, Schmidt et al. \cite{Schmidt2009a, Schmidt2009b} implemented a global RBF method for Tsunami simulation on the GPU using the AccelerEyes Jacket \cite{JacketGuide2009} add-on for MATLAB. Jacket provides a MATLAB interface to data structures and routines that internally call to the NVidia CUDA API. Their model was based on a single large dense matrix solve, and with the help of Jacket the authors were able to achieve approximately 7x speedup over the standard MATLAB solution on the then current generation of the MacBook Pro laptop. The authors compared the laptop CPU (processor details not specified) to the built-in NVidia GeForce 8600M GT GPU. Schmidt et al.'s implementation was the first contribution to the RBF community to leverage accelerators. The results were significant and promising, but no further contributions were made on the topic. 
 
 While both Schmidt et al.'s method and the method presented here are based on RBFs, the two problems are only distantly related when it comes to implementation on the GPU. Dense matrix operations have a high computational complexity, are considered ideal (or near to) by linear algebra libraries like BLAS \cite{BLAS} and LAPACK \cite{Lapack1999}, and were demonstrated to fit well on GPUs from the onset of General Purpose GPU (GPGPU) Computing. In fact, NVidia included CUBLAS \cite{CudaToolkitDoc} (a GPU based BLAS library for their hardware) with their initial public release of the game-changing CUDA development kit in 2006. In stark contrast to this, sparse matrix operations have minimal computational complexity and are less than ideal for the GPU.
 
-
-Earlier this year (2013), Cuomo et al. \cite{Cuomo2013} implemented RBF-interpolation on the GPU for surface reconstruction. Their implementation utilizes PetRBF \cite{Yokota2010}, and new built-in extensions that allow GPU access within PETSc. PETSc internally wraps the CUSP project \cite{Cusp2012} for sparse matrix algebra on the GPU. With the help of these libraries, Cuomo et al. solve and apply sparse interpolation systems on the GPU for up to three million nodes on an NVidia Fermi C1060 GPU (4GB). They compare results to a single core CPU implementation on an Intel i7-940 CPU and demonstrate that the GPU accelerate their solutions between 6x and 25x. Unfortunately, the authors do not show evidence of scaling the interpolation across multiple GPUs; so while evidence exists that PetRBF now has full GPU support, it remains to be seen how well the code can scale in GPU mode. 
-
-
-\subsubsection{Non-RBF Single-GPU Methods}
-
-
 A number of investigations combine RBFs and GPUs outside the PDE community, including visualization \cite{Cuntz2007,Weiler2005},  surface reconstruction \cite{Corrigan2005,Carr2003}, and neural networks \cite{Brandstetter2008}.
+
+Earlier this year (2013), Cuomo et al. \cite{Cuomo2013} implemented RBF-interpolation on the GPU for surface reconstruction. Their implementation utilizes PetRBF \cite{Yokota2010}, and new built-in extensions that allow GPU access within PETSc. PETSc internally wraps the CUSP project \cite{Cusp2012} for sparse matrix algebra on the GPU. With the help of these libraries, Cuomo et al. solve and apply sparse interpolation systems on the GPU for up to three million nodes on an NVidia Fermi C1060 GPU (4GB). They compare results to a single core CPU implementation on an Intel i7-940 CPU and demonstrate that the GPU accelerate their solutions between 6x and 25x. Unfortunately, the authors do not show any evidence of running the interpolation on multiple GPUs. Therefore, while evidence exists that PetRBF now has full GPU support, it remains its scalability is an open question. 
 
 
 
 \subsection{Multi-GPU}
 
-\subsubsection{RBF-FD Multi-GPU Methods} 
-
-\subsubsection{RBF Multi-GPU Methods}
- 
-\subsubsection{Non-RBF Multi-GPU Methods}
  
 Multi-GPU Jacobi iteration for Navier stokes flow in cavity \url{http://scholarworks.boisestate.edu/cgi/viewcontent.cgi?article=1003&context=mecheng_facpubs}
 
