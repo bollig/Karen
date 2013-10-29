@@ -72,9 +72,9 @@ $$
 $$
 where now the system is completely free of singularities at the poles \cite{FlyerWright09}. 
 
-We note that the expression $\cos{(\frac{\pi}{2})}$ evaluates on some systems to a very small number rather than zero (e.g., $6.1(10^{-17}$) on the Keeneland system with the GNU gcc compiler). The small value in turn allows $\frac{1}{\cos{\theta}}$ to evaluate to a large value (e.g., $1.6(10^{16})$) rather than ``inf" or ``NaN". A large value allows the cosine terms to cancel in double precision, whereas an ``inf'' or ``NaN'' would corrupt the numerics. Rather than avoid placing nodes at the poles, or assuming the machine will numerically cancel the singularities, it is preferred to use operators \ref{eq:dm_lambda}, \ref{eq:dm_theta} on the RHS of Equation~\ref{eq:rbffd_weight_system} to compute RBF-FD weights. 
+We note that the expression $\cos{(\frac{\pi}{2})}$ evaluates on some systems to a very small value rather than zero (e.g., $6.1(10^{-17})$ on the Keeneland system with the GNU gcc compiler). The small value in turn causes $\frac{1}{\cos{\theta}}$ to result in a large value (e.g., $1.6(10^{16})$) rather than ``inf" or ``NaN". An ``inf'' or ``NaN'' would corrupt the numerics, but the large value allows terms to cancel in double precision. Rather than avoid placing nodes at the poles, or assume singularities cancel numerically, it is preferred to use operators \ref{eq:dm_lambda} and \ref{eq:dm_theta} to analytically cancel singularities when computing RBF-FD weights. 
 
-Also, canceling the cosine analytically causes the conditioning of the system to change slightly. The hyperviscosity parameters provided in Chapter~\ref{chap:applications} also function well for this case; however, their impact on the eigenvalue distributions is noticeably stronger resulting in a larger spread of eigenvalues in the left half-plane. 
+We observe that the latter approach causes the conditioning of the system to change slightly. The hyperviscosity parameters provided in Chapter~\ref{chap:applications} function well in both cases. However, their impact on the eigenvalue distributions in the case of analytic cancellation is noticeably stronger and results in a larger spread of eigenvalues in the left half-plane. 
 %
 %\ifstandalone
 %\bibliographystyle{plain}

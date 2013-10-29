@@ -3,11 +3,11 @@
 \chapter{Keeneland Benchmarks}
 \label{app:keeneland_alltoallv_benchmarks}
 
-This appendix provides new data from Keeneland, a supercomputing cluster designed with 240 twelve-core Intel Xeon 5660 (2.80GHz) CPUs, 12MB cache per core shared between twelve cores, 24GB system memory, and 360 NVidia M2070 GPUs with 6GB of device memory and 14 multiprocessors each \cite{Vetter2011}.  A high level layout of the Keeneland system is presented in Figure~\ref{fig:keeneland}. The system was designed with its 240 CPUs partitioned into sets of two CPUs per compute node, four nodes per chassis, and six chassis per rack. An InfiniBand QDR Network handles inter-node communication. In addition to the dual CPUs, each node has three NVidia M2070 Fermi class GPUs.
+This appendix provides new data from Keeneland, a supercomputing cluster designed with 240 six-core Intel Xeon 5660 (2.80GHz) CPUs with HyperThreading (HT) enabled (x2 threads per core), 12MB cache per core shared on chip, 24GB system memory, and 360 NVidia M2070 GPUs with 6GB of device memory and 14 multiprocessors each \cite{Vetter2011}.  A high level layout of the Keeneland system is presented in Figure~\ref{fig:keeneland}. The system was designed with its 240 CPUs partitioned into sets of two CPUs per compute node, four nodes per chassis, and six chassis per rack. An InfiniBand QDR Network handles inter-node communication. In addition to the dual CPUs, each node has three NVidia M2070 Fermi class GPUs.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth]{../figures/paper1/figures/omnigraffle/Keeneland.pdf}
+\includegraphics[width=0.5\textwidth]{../figures/omnigraffle/Keeneland.pdf}
 \caption{The Keeneland Initial Delivery System (KIDS), a multi-GPU cluster with 360 GPUs and 240 CPUs capable of 201 TFLOP/sec.}
 \label{fig:keeneland}
 \end{figure}
