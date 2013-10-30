@@ -21,6 +21,47 @@ This work leads to a number of additional investigations:
 %\end{itemize}
 %\end{itemize}
 
+\authnote{BEGIN: reformat this and draw conclusions. repeat what I have concluding each chapter}
+Within this document readers should expect to find the following major contributions: 
+\begin{enumerate} 
+\item The first ever application of a fixed-grid neighbor query algorithm (popularized by distantly related particle methods) to generate stencils for RBF-FD. 
+\begin{itemize} 
+\item Performance comparison with the RBF community favorite, $k$-D Tree, shows that the lower complexity fixed-grid method is able to achieve up to 2.5x speedup over the former method on randomly distributed nodes. 
+\item The fixed-grid method is also shown to accelerate RBF-FD time-step performance by up to 5x due spatial locality of node information in memory and improved cache effects.
+\end{itemize} 
+\item Integer dilation and bit interleaving are introduced to the RBF community at large to construct a number of space-filling curve variants in 2-D and 3-D. The curves reorder cells of the fixed-grid algorithm on the prospect of additional cache hits for derivative calculations. 
+\begin{itemize} 
+\item A comparison of the variants to the result of the well-known Reverse Cuthill-McKee (RCM) algorithm concludes that RCM remains the better option for reordering and matrix bandwidth minimization.
+\end{itemize} 
+\item The design and tuning of the only known implementation of the RBF-FD method to scale across multiple compute nodes of a supercomputing cluster.
+\begin{itemize} 
+\item Our home-grown implementation divides computation with a Restricted Additive Schwarz (RAS) domain decomposition in a first-of-its-kind application to RBF-FD. % (note: other RBF methods have already encountered RAS decomposition \cite{Yokota2010}). 
+\item As part of the tuning process described herein, balanced workloads are achieved through the use of the METIS graph partitioning algorithm \cite{Karypis1999}.  
+\item A number of steps are taken to improve communication collectives in the CPU-only implementation. The resulting algorithm splits derivative calculation into two steps and overlaps communication with computation. We observe that up to 80\% of the cost in communication can be hidden in some cases. 
+\item Scaling benchmarks up to 1024 processes (divided into 8 processes per node) and a grid resolution of $N=160^3$ vertices (i.e., 4.1 million) prove that the implementation scales well in both a strong and weak sense. 
+\end{itemize} 
+\item The design and tuning of the only known single- and multi-GPU implementation of RBF-FD. Also, ours is the only known investigation in the broader RBF community to target multiple GPUs (\cite{Schmidt2009a,Cuomo2013} are single-GPU). 
+\begin{itemize} 
+\item Our first paper (\cite{BolligFlyerErlebacher2012}) introduced a set of custom OpenCL kernels for RBF-FD time-stepping of hyperbolic PDEs with an explicit RK4 scheme (up to 10 GPUs). 
+\item Here, the performance per GPU is tuned by choosing an alternative sparse matrix representation. The investigation reveals that the Ellpack (ELL) structure provided by the ViennaCL library \cite{Rupp2010} is a great fit for RBF-FD differentiation matrices, with over 4x faster performance than the original compressed-row storage (CSR). %On one GPU (NVidia M2070) our implementation performs at approximately 8 GFLOP/sec. 
+\item The multi-GPU implementation is extended to a novel overlapping algorithm that naturally derives from our distributed CPU optimizations. Non-blocking MPI collectives plus two asynchronous OpenCL queues amortize the cost of data transfer between CPU and GPU, MPI communication, and in some cases a substantial amount of computation. Iterations of the resulting implementation achieve an average of 3x better strong scaling compared to a non-overlapping equivalent. 
+\end{itemize} 
+\end{enumerate}
+Of lesser significance we also: 
+\begin{enumerate}
+\item Verify our explicit solvers against two well studied hyperbolic PDEs (Vortex Roll-up \cite{NairTransport05, NairJablonowski08} and Cosine Bell Advection \cite{JakobChien1995}).
+\begin{itemize} 
+\item Convergence studies confirm that hyperviscosity (\cite{Fornberg2011b}) stabilizes solutions.
+\item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size
+\end{itemize}
+\item Implement a distributed multi-GPU preconditioned GMRES within ViennaCL for implicit RBF-FD solutions.
+\begin{itemize} 
+\item A divergence-free field is constructed as the manufactured solution for a simplified version of Stokes flow constrained to the unit sphere. 
+\item A CPU-only preconditioner (Incomplete LU with Zero Fill-in) is implemented to test impact on GMRES convergence rates 
+\end{itemize}
+\item Provide preliminary benchmarks evaluating the performance of RBF-FD on the Intel Phi Architecture. 
+\end{enumerate}
+\authnote{END}
 
 \section{On the Future of GPU Computing}
 
