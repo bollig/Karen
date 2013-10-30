@@ -306,7 +306,7 @@ $\setProvide$ is copied off the GPU and into CPU memory as one contiguous memory
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/MatrixDecompositionSets_RBF-FD_Bowed.pdf} 
-\caption{Decomposition for one processor selects a subset of rows from the DM. Blocks corresponding to node sets $\setCenters \backslash \setBoundary$, $\setProvide$, and $\setDepend$ are labeled for clarity. The subdomain/partition is outlined by dashed lines.}
+\caption{Decomposition for one processor selects a subset of rows from the DM. Blocks corresponding to node sets $\setCenters \backslash \setBoundary$, $\setBoundary \backslash \setProvide$, $\setProvide$, and $\setDepend$ are labeled for clarity. The subdomain/partition is outlined by dashed lines.}
 \label{fig:decomp_matrix_view}
 \end{center}
 \end{figure}
@@ -512,7 +512,7 @@ Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in ef
 \caption{Overlapping SpMV and Communication}
 \label{fig:overlap_cpu}
 \end{subfigure}
-\caption{MPI tuning steps to scale from 10 processors in \cite{BolligFlyerErlebacher2012} to 1024 processors here. Each horizontal timeline indicates the order of operations for a single distributed SpMV (i.e., between vertical bars). } 
+\caption{MPI tuning steps to scale from 10 processors in \cite{BolligFlyerErlebacher2012} to 1024 processors here. Each horizontal timeline indicates the order of operations for a single distributed SpMV (i.e., between vertical bars). Task block sizes are not drawn to scale. } 
 \label{fig:mpi_tuning}
 \end{figure}
 
