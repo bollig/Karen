@@ -406,6 +406,8 @@ As the problem size $N$ increases, we expect the approximation to the solution t
 
 \section{Preconditioning} 
 
+%\cite{Divo2005} studied ILU for global collocation 
+
 GMRES is slow to converge when used without a preconditioner. 
 
 The differentation matrix produced by RBF-FD is asymmetric, non-positive definite, and non-diagonally dominant. Thus, many of the popular choices for preconditioning provided by CUSP and ViennaCL do not apply. 
