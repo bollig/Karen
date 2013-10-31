@@ -966,53 +966,54 @@ Tuned parameters for hyperviscosity are provided in Chapter~\ref{chap:applicatio
 
 \section{RBF-FD Implementation for Time-dependent PDEs}
 
-This section considers at a high level how one leverages RBF-FD to solve PDEs. To simplify in the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: preprocessing and application. The same processes would be The complexity of each phase can vary based the algorithms utilized for each task. 
+This section considers at a high level how one leverages RBF-FD to solve PDEs. To simplify in the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: preprocessing and application. The complexity for each phase can vary based on the algorithms utilized in each task. 
 
-The Preprocessing phase encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output the phase produces one or more DMs. Note that Preprocessing is a one time cost: grids, stencils, and DMs can be loaded from disk on subsequent runs to effectively bypass the all cost in this phase. 
+The Preprocessing Phase encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output this phase produces one or more DMs. Note that preprocessing is a one time cost: grids, stencils, and DMs can be loaded from disk on subsequent runs. 
 
 \begin{algorithm}                      
 \caption{A High-Level View of RBF-FD}          
 \label{alg:rbffd_high_level}                           
-\textbf{Preprocessing:}
+\textbf{Preprocessing Phase:}
 \begin{algorithmic}[0]                   
-    \State $\{x\}_{j=1}^N$ = GenerateGrid()
+    \State $\{x\}_{j=1}^N$ = {\sc GenerateGrid}()
    	\For {$j = 1$ to $N$} %\label{alg:stencil_gen} 
-   	    \State Stencil $\{S_{j,i}\}_{i=1}^{n}$ = QueryNeighbors($x_j$)
+   	    \State Stencil $\{S_{j,i}\}_{i=1}^{n}$ = {\sc QueryNeighbors}($x_j$)
    	\EndFor
-    \State $\{x\}_{j=1}^{N_p} = $ DecomposeDomain($D_{\diffop{}}$, $\{x\}_{j=1}^N$)
+    \State $\{x\}_{j=1}^{N_p} = $ {\sc DecomposeDomain}($D_{\diffop{}}$, $\{x\}_{j=1}^N$)
     \For {$j = 1$ to $N_p$} %\label{alg:weight_calc} 
-   	    \State $\{w_{j,i}\}_{i=1}^{n} = $ SolveForWeights($\{S_j\}$)
-   	    \State $D_{\diffop{}}^{(j)} = $ AssembleDM($\{w_j\}$)     
+   	    \State $\{w_{j,i}\}_{i=1}^{n} = $ {\sc SolveForWeights}($\{S_j\}$)
+   	    \State $D_{\diffop{}}^{(j)} = $ {\sc AssembleDM}($\{w_j\}$)     
     \EndFor
     \algstore{myalg}    % Store the algorithm number count
 \end{algorithmic}
-\textbf{Application:}
+\textbf{Application Phase:}
 \begin{algorithmic}[1] 
 \algrestore{myalg}      % continue to count from store line
     \State $t = t_{min}$                
     \While{ $t < t_{max}$ }
-        \State $\{u'\} =$ SolvePDE($D_{\diffop{}}$, $\{u\}$)
-        \State $\{u\} =$ UpdateSolution($\{u\}$, $\{u'\}$, $\Delta t$)
+        \State $\{u'\} =$ {\sc SolvePDE}($D_{\diffop{}}$, $\{u\}$)
+        \State $\{u\} =$ {\sc UpdateSolution}($\{u\}$, $\{u'\}$, $\Delta t$)
         \State $t$ += $\Delta t$
     \EndWhile
 \end{algorithmic}
 \end{algorithm}
 
-The algorithm loads/generates a grid. RBF-FD requires only node coordinates, and in some cases an indication of whether nodes are on a boundary. Information on mesh edges/connectivity is optional, but could be used to bypass stencil generation. The QueryNeighbors step forms stencils and constructs a directed adjacency matrix that indicates the connectivity of stencils. Either the grid or the adjacency matrix can be partitioned (see Chapter~\ref{chap:distributed_rbffd}) for distribution across multiple processors in the DecomposeDomain step. Finally, one or more processors operate independently to compute weights and assemble local DMs. The assumption in this work is that grids do not evolve in time, so DMs remain constant for the duration of the phase 2 (Application). In the event of moving nodes, weight calculation and DM assembly would move into the loop in the second phase. 
+The algorithm loads/generates a grid. RBF-FD requires only node coordinates, and in some cases an indication of whether nodes are on a boundary. Information on mesh edges/connectivity is optional, but could be used to bypass stencil generation. The \textsc{QueryNeighbors} step forms stencils and constructs a directed adjacency matrix that indicates the connectivity of stencils. Either the grid or the adjacency matrix can be partitioned (see Chapter~\ref{chap:distributed_rbffd}) for distribution across multiple processors in the \textsc{DecomposeDomain} step. Finally, one or more processors operate independently to compute weights and assemble local DMs. The assumption in this work is that grids do not evolve in time, so DMs remain constant for the duration of phase 2 (Application). In the event of moving nodes, weight calculation and DM assembly would move into the loop in the second phase. 
 
 
 
-Constructed DMs are applied to solve a PDE either explicitly (e.g., Equation~\ref{eq:explicit_dm}) or implicitly (e.g., Equation~\ref{eq:implicit_dm}). In the case of time-dependent PDEs, RBF-FD is applied the same as any classical FD method with a time-stepping scheme (represented by UpdateSolution). Examples of valid time-schemes include Runge-Kutta, Adams-Bashforth, and Crank Nicholson methods among many others. Based on the choice of time-scheme, one frequently needs multiple iterations through SolvePDE to assemble intermediate solutions that are weighted and combined in the the UpdateSolution step.
+Constructed DMs are applied to solve a PDE either explicitly (e.g., Equation~\ref{eq:explicit_dm}) or implicitly (e.g., Equation~\ref{eq:implicit_dm}). In the case of time-dependent PDEs, RBF-FD is applied the same as any classical FD method with a time-stepping scheme (represented by \textsc{UpdateSolution}). Examples of valid time-schemes include Runge-Kutta, Adams-Bashforth, and Crank Nicholson methods among many others. Based on the choice of time-scheme, one frequently needs multiple iterations through \textsc{SolvePDE} to assemble intermediate solutions that are weighted and combined in the \textsc{UpdateSolution} step.
 
 %TODO: add refs for RBF-FD uses of these schemes. 
 %TODO: add CFL ref
 
-Generally the performance of RBF-FD hinges on the cost of SolvePDE. This is especially true for time-dependent PDEs where an increase in grid resolution results in proportional increase in the number time-steps required to satisfy the CFL condition. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact performance SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, smaller required grid size, and faster convergence.
+Generally the performance of RBF-FD hinges on the cost of \textsc{SolvePDE}. This is especially true for time-dependent PDEs where the CFL condition relates the number of required time-steps to the spacing between nodes. As the problem size grows, smaller time-steps must be taken in order to maintain stability. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact performance SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, coarser grid, and faster convergence.
+
 
 \section{Grids} 
 
 
-RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can impact accuracy of the method. The only restriction from the method is that coincident nodes should not be connected. This functional portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for other methods. 
+RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can not only impact accuracy of the method, but stability as well. The only restriction from the method is that coincident nodes should not be connected. This functional portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for other methods. 
 %\begin{itemize} 
 %\item scattered nodes
 %
@@ -1032,7 +1033,7 @@ This work verifies and benchmarks RBF-FD on the following grids, which are avail
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 
-\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in multiple dimensions are simple to generate. Additionally, refinements---for scaling benchmarks and convergence tests---are direct subsamples. 
+\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in multiple dimensions are simple to generate. Additionally, refinements---for scaling benchmarks and convergence tests---are direct subsets. 
 
 In theory, RBF-FD functions the same whether nodes are uniformly spaced or random. However, regular grids do not fully exercise advantages that RBF-FD has over other methods with its ability to operate on scattered nodes. For this reason regular grids are only used here for benchmarking purposes and range in size from $N=10^3$ to $N=160^3 =$ 4,096,000 nodes. 
 
@@ -1040,7 +1041,7 @@ In theory, RBF-FD functions the same whether nodes are uniformly spaced or rando
 
 \subsubsection{Maximum Determinant Nodes}
 
-Chapter~\ref{chap:applications} applies RBF-FD to solve PDEs on the unit sphere. For consistency with respect to related investigations (e.g., \cite{Fornberg2009a, Fornberg2007,FornbergLehto11}), the the Maximum Determinant (MD) node sets \cite{Womersley2001, Sloan2003} are chosen. 
+Chapter~\ref{chap:applications} applies RBF-FD to solve PDEs on the unit sphere. For consistency with respect to related investigations (e.g., \cite{Fornberg2009a, Fornberg2007,FornbergLehto11}), the Maximum Determinant (MD) node sets \cite{Womersley2001, Sloan2003} are chosen. 
 
 MD node sets were originally utilized by the RBF community due to their success in spherical harmonics interpolation \cite{Fornberg2007}. For spherical harmonics, the seemingly irregular node distributions achieve an order of magnitude higher accuracy compared to regular looking node distributions (i.e., minimum energy nodes) \cite{Womersley2001}. In similar fashion, RBF methods have been shown to benefit from a subtle irregularity in node locations on the sphere due to the tendency in RBF interpolation to reproduce spherical harmonics interpolants when $\epsilon \rightarrow 0$ \cite{Fornberg2007}. 
 
@@ -1052,6 +1053,8 @@ MD node sets were originally utilized by the RBF community due to their success 
 \end{figure}
 
 The MD node files are available for download on the authors' web site \cite{WomersleySloanMDNodes}, and range in size from $N=4$ up to N=27,556 nodes on the sphere. Figure~\ref{fig:md_nodes} plots the $N=4096$ node set to illustrate the irregularity in distribution. Node sets greater than N=27,556 are not available. Unlike regular grids, each MD node set is a refinement of the sphere, but not a subdivision, so extending beyond N=27,556 nodes would require complete regeneration.
+
+%GORDON: How does this show irregularity? You are not referring to the virtual boundaries, but to the flat region in the center? It is hard to see the irregularities due to the curvature of the sphere. You could have created histrams of nearest neighbor distance or 2nd neighbor distance. I did this in 3D for the work I am doing on random 3D generation with Bengt and Natasha. Bengt gave me the idea. I have a Python implemenation.
 
 %The process of generating new MD node sets greater than $N=27,556$ nodes would require recomputing the entire distribution. 
 
@@ -1082,26 +1085,27 @@ In most large-scale applications, the iteration in SCVT generation is a probabil
 
 Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. On the left, the full sphere; on the right, a close-up of the same node set. The close-up perspective clearly demonstrates the random artifacts/scarring of irregularly distributed nodes. For benchmarking purposes we use node sets N=100,000, N=500,000 and N=1,000,000 courtesy of Geoff Womeldorff and the SCVT library in \cite{Womeldorff2008}. 
 
-%
-%% TODO: wanted to test without the presence of boundary conditions 
-%% TODO: other grids tested boundary conditions
-%
-%While not discussed in detail in this work, various attempts to leverage Centroidal Voronoi Tessellations have been made in our investigation of RBF-FD. Figures~\ref{fig:cvt_other} were used to generate other complex geometries such as the 3D sphere shell, 2D annulus, ellipse and ellipsoid, 
-%
+%GORDON: How long does convergence take with the largest grid you have (say one million)? {will need to contact Geoff about that}
+
+
+
 
 \section{On Choosing the Right $\epsilon$} 
 \label{sec:epsilon_contours}
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
-If solving for RBF-Direct weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system} directly), one must balance the choice of $\epsilon$ to avoid ill-conditioning but achieve a reasonable accuracy for the weights. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). 
-%TODO{Get RBF-QR and RBF-GA papers for refs} 
-No fool-proof method exists for RBF-Direct---the ``optimal" (in most cases this reads: ``most acceptable") value of $\epsilon$ depends on the node distribution and varies by application. 
+If solving for RBF-Direct weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system} directly), one must balance the choice of $\epsilon$ against ill-conditioning to achieve a reasonable accuracy for the weights. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). 
+No foolproof method exists for RBF-Direct---the ``optimal" (in most cases this reads: ``most acceptable") value of $\epsilon$ depends on the node distribution and varies by application. 
+
+%GORDON: On large problems that are expensive, how is epsilon chosen? You might not have the $$ to do long, expensive test runs. 
+% Where is kappabar = 1/N … first defined? Same without the bar. Defined where?
+% Use computer font for cond()
 
 This work utilizes a moderately reliable method, proposed in \cite{FlyerLehto11}, for choosing $\epsilon$ as a function of the grid resolution, $N$, and the desired mean condition number for Equation~\ref{eq:rbffd_weight_system}, $\bar{\kappa}_A = \frac{1}{N} \sum_{i=1}^N(\kappa_A)$. %Here $\kappa_A$ is the condition number of the interpolation matrix from Equation~\ref{eq:rbffd_weight_system}. 
 
 The tiles of Figure~\ref{fig:epsilon_contours} illustrate a number of contours generated in MATLAB. Each contour is numbered according to $\log_{10}\bar{\kappa}_A$. Data was generated by uniformly sampling parameter spaces on $\epsilon$ and $\sqrt{N}$ for the MD node-sets. For each $\sqrt{N} = \{40, ..., 100\}$, in steps of 10, the code makes a sweep through $\epsilon = \{1, ..., 10\}$ in steps of 0.5 and assembles $N$ RBF-FD interpolation matrices. A call to MATLAB's ``cond()" routine evaluates $\kappa_A$ for each matrix. The resulting values of $\bar{\kappa}_A$ produce remarkably linear contours, with slopes that fan out from the $\epsilon$ axis. Note that $\kappa_A$ depends on the stencil size, $n$, as evidenced by shifting contour fans for $n=20, 40, 60, 80,$ and $100$. The simultaneous increase in slope and decreasing separation between contours leaves little ``wiggle" room in guessing $\epsilon$ under RBF-Direct. 
 
-Regression slope and intercept parameters ($c_1$ and $c_2$) are superimposed in Figure~\ref{fig:epsilon_contours} to aid others in choosing $\epsilon$ in new applications. These parameters reproduce contours as $\epsilon(\sqrt{N}) = c_1 \sqrt{N} - c_2$.  The authors of \cite{FlyerLehto11} find condition numbers on the order $10^{10}$ to $10^{12}$ to function well for competitive accuracy compared to other methods in literature; the method begins to degrade on large grids (i.e., $N > 1e5$). Similar observations are made in Chapter~\ref{chap:applications}. 
+Regression slope and intercept parameters ($c_1$ and $c_2$) are superimposed in Figure~\ref{fig:epsilon_contours} to aid others in choosing $\epsilon$ in new applications. These parameters reproduce contours as $\epsilon(\sqrt{N}) = c_1 \sqrt{N} - c_2$.  The authors of \cite{FlyerLehto11} find condition numbers on the order $10^{10}$ to $10^{12}$ to function well for competitive accuracy compared to other methods in the literature; the method begins to degrade on large grids (i.e., $N > 1e5$). Similar observations are made in Chapter~\ref{chap:applications}. 
 
 %In light of the objective to scale RBF-FD to large problem sizes fitting for HPC, the observations in \cite{FlyerLehto11} and Chapter~\ref{chap:applications} regarding resolution limits 
 Stable weight algorithms like Contour-Pad\'{e} \cite{Wright2003}, RBF-QR \cite{Fornberg2007, Fornberg2011a, Davydov2011}, and RBF-GA \cite{Fornberg2012} can allow RBF-FD to scale beyond the limits of RBF-Direct and will be included in future investigation. 

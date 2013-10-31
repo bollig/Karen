@@ -73,7 +73,7 @@ followed closely by evolving programming languages. Today, GPUs can be leveraged
 
 \begin{itemize}	
 \item Early testing was completed on the Keeneland GPU cluster. At the time Keeneland was in the Keeneland Initial Deployment System (KIDS) had 320 NVidia M2070 GPUs (Fermi). 240 CPUs. 6GB of memory. 
-\item The Spear cluster at FSU has 16x NVIDIA Tesla m2050 GPUs. 3GB of memory. 
+%\item The Spear cluster at FSU has 16x NVIDIA Tesla m2050 GPUs. 3GB of memory. 
 \item The Cascade cluster at the Minnesota Supercomputing Institute (UMN) has 32x NVidia M2070 GPUs. 8 nodes, 12 cores each with four GPUs attached to each. 6GB of memory each. In addition, Cascade has 8 NVidia Kepler K20 GPUs. 
 \end{itemize}
 
@@ -101,61 +101,61 @@ RBF-FD is embarrassingly parallel with stencils applied independently. Unfortuna
 
 On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/s per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/s on the Fermi and 13 on the K20 (compared to the 2 GFLOP/s on Itasca). 
 
-
-\begin{verbatim}
-"__kernel void vec_mul(\n"
-"          __global const unsigned int * row_indices,\n"
-"          __global const unsigned int * column_indices, \n"
-"          __global const float * elements,\n"
-"          __global const float * vector,  \n"
-"          __global float * result,\n"
-"          unsigned int size) \n"
-"{ \n"
-"  for (unsigned int row = get_global_id(0); row < size; row += get_global_size(0))\n"
-"  {\n"
-"    float dot_prod = 0.0f;\n"
-"    unsigned int row_end = row_indices[row+1];\n"
-"    for (unsigned int i = row_indices[row]; i < row_end; ++i)\n"
-"      dot_prod += elements[i] * vector[column_indices[i]];\n"
-"    result[row] = dot_prod;\n"
-"  }\n"
-"}\n"
-\end{verbatim}
-
-\begin{verbatim}
-"__kernel void vec_mul(\n"
-"    const __global int* coords,\n"
-"    const __global float* elements,\n"
-"    const __global const float * vector,\n"
-"    __global float * result,\n"
-"    const unsigned int row_num,\n"
-"    const unsigned int col_num,\n"
-"    const unsigned int internal_row_num,\n"
-"    const unsigned int items_per_row,\n"
-"    const unsigned int aligned_items_per_row\n"
-"    )\n"
-"{\n"
-"    uint glb_id = get_global_id(0);\n"
-"    uint glb_sz = get_global_size(0);\n"
-"    for(uint row_id = glb_id; row_id < row_num; row_id += glb_sz)\n"
-"    {\n"
-"        float sum = 0;\n"
-"        \n"
-"        uint offset = row_id;\n"
-"        for(uint item_id = 0; item_id < items_per_row; item_id++, offset += internal_row_num)\n"
-"        {\n"
-"            float val = elements[offset];\n"
-"            if(val != 0.0f)\n"
-"            {\n"
-"                int col = coords[offset];    \n"
-"                sum += (vector[col] * val);\n"
-"            }\n"
-"            \n"
-"        }\n"
-"        result[row_id] = sum;\n"
-"    }\n"
-"}\n"
-\end{verbatim}
+%
+%\begin{verbatim}
+%"__kernel void vec_mul(\n"
+%"          __global const unsigned int * row_indices,\n"
+%"          __global const unsigned int * column_indices, \n"
+%"          __global const float * elements,\n"
+%"          __global const float * vector,  \n"
+%"          __global float * result,\n"
+%"          unsigned int size) \n"
+%"{ \n"
+%"  for (unsigned int row = get_global_id(0); row < size; row += get_global_size(0))\n"
+%"  {\n"
+%"    float dot_prod = 0.0f;\n"
+%"    unsigned int row_end = row_indices[row+1];\n"
+%"    for (unsigned int i = row_indices[row]; i < row_end; ++i)\n"
+%"      dot_prod += elements[i] * vector[column_indices[i]];\n"
+%"    result[row] = dot_prod;\n"
+%"  }\n"
+%"}\n"
+%\end{verbatim}
+%
+%\begin{verbatim}
+%"__kernel void vec_mul(\n"
+%"    const __global int* coords,\n"
+%"    const __global float* elements,\n"
+%"    const __global const float * vector,\n"
+%"    __global float * result,\n"
+%"    const unsigned int row_num,\n"
+%"    const unsigned int col_num,\n"
+%"    const unsigned int internal_row_num,\n"
+%"    const unsigned int items_per_row,\n"
+%"    const unsigned int aligned_items_per_row\n"
+%"    )\n"
+%"{\n"
+%"    uint glb_id = get_global_id(0);\n"
+%"    uint glb_sz = get_global_size(0);\n"
+%"    for(uint row_id = glb_id; row_id < row_num; row_id += glb_sz)\n"
+%"    {\n"
+%"        float sum = 0;\n"
+%"        \n"
+%"        uint offset = row_id;\n"
+%"        for(uint item_id = 0; item_id < items_per_row; item_id++, offset += internal_row_num)\n"
+%"        {\n"
+%"            float val = elements[offset];\n"
+%"            if(val != 0.0f)\n"
+%"            {\n"
+%"                int col = coords[offset];    \n"
+%"                sum += (vector[col] * val);\n"
+%"            }\n"
+%"            \n"
+%"        }\n"
+%"        result[row_id] = sum;\n"
+%"    }\n"
+%"}\n"
+%\end{verbatim}
 
 
 
