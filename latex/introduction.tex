@@ -211,11 +211,9 @@ Aside from our own investigations, no known efforts apply the GPU to the RBF-FD 
 
 \subsection{Non-RBF Methods} 
 
-\authnote{Need to expand on this section} 
+A number of GPU implementations unrelated to RBF methods can provide context for the relevancy of our research.
 
-A number of multi-GPU implementations unrelated to RBF methods can provide context for the relevancy of our research.
-
-%First, a single-GPU finite-volume implementation is introduced by Corrigan et al. in \cite{Corrigan2009} to solve 3D incompressible fluid problems on an unstructured grid. Within their GPU kernels, each element of the unstructured mesh is operated on by a single thread---this design is equivalent to our ``one thread per stencil" test case in Chapter~\ref{chap:gpu_rbffd}. The author's effort to operate on unstructured grids posed a challenge, in that the unstructured elements with random ordering caused considerable slow-down on the GPU due to non-coalesced memory loads. In response to this, Corrigan et al. reorder their meshes with a fixed-grid method similar to our approach in Chapter~\ref{chap:stencils}.
+For example, a single-GPU finite-volume implementation introduced by Corrigan et al. in \cite{Corrigan2009} solves 3D incompressible fluid problems on an unstructured grid. Within their GPU kernels, each element of the unstructured mesh is operated on by a single thread---this design is equivalent to our ``one thread per stencil" test case in Chapter~\ref{chap:gpu_rbffd}. We find that operating with a full warp per stencil is more efficient for stencils $n > 32$. The author's effort to operate on unstructured grids also posed a challenge in that the unstructured elements with random ordering caused considerable slow-down due to non-coalesced memory loads. In response to this, Corrigan et al. reorder their meshes with a fixed-grid method similar to our approach in Chapter~\ref{chap:stencils}. 
 
 One of the earliest multi-GPU implementations, presented in a series of articles \cite{Goeddeke2007, Goeddeke2008a, Goeddeke2008b, Goeddeke2009a} by G\"{o}ddeke et al. introduced
 a GPU enhanced version of the pre-existing parallel (MPI) multigrid finite element package, FEAST. In \cite{Goeddeke2007} the authors integrated 
@@ -225,22 +223,25 @@ single GPU each.  Since the accelerated routines were implemented below the orig
 \cite{Goeddeke2008a} that existing applications built on top of the original FEAST could benefit without code modifications when 
 the 
 new package, FEASTGPU, was substituted. \cite{Goeddeke2008b} compared performance of single-,  double- and 
-mixed-precision calculation within FEASTGPU. \cite{Goeddeke2009a} applied FEASTGPU to nonlinear Navier-Stokes 
+mixed-precision calculation within FEASTGPU. The authors then applied FEASTGPU to nonlinear Navier-Stokes 
 problems and 
 found the minimally invasive approach had limited impact on performance in the new setting where computational work was no longer  
-concentrated in GPU-accelerated tasks. 
-
-At roughly the same time other efforts around the world started targeting multi-GPU clusters, opting first for non-overlapped communication only to realize the necessity for overlap in order to increase parallel efficiency. 
-For example, Phillips et al. \cite{Phillips2009} draw this conclusion based on scaling of their finite-volume method for compressible flow equations on an irregular structured grid on eight quad-core workstations with a total of 32 GPUs. 
-Thibault et al. \cite{Thibault2009} also note the need for overlap when modeling 3D incompressible fluids with finite differencing on structured grids and multiple GPUs. Their solutions to the lid-driven cavity problem are based on a Jacobi iteration. 
+concentrated in GPU-accelerated tasks \cite{Goeddeke2009a}. 
 
 
-Komatitsch et al. \cite{Komatitsch2009,Komatitsch2010b,Komatitsch2010a} demonstrated overlapping communication and computation on GPUs within the SPECFEM3D package. With the help of non-blocking MPI communication and a sufficiently large problem, roughly 90\% of communication time can be hidden. 
+At roughly the same time a number of other efforts around the world started targeting multi-GPU clusters. Many (e.g., \cite{Phillips2009, Thibault2009, Komatitsch2009}) opted to first for non-overlapped communication, only to realize the necessity for overlap in order to increase parallel efficiency. The challenges in multi-GPU computing are: a) to hide transfer latency for memory copies between CPU and GPU (and vice-versa), and b) to shrink the visible communication time, which appears significantly larger against the GPU accelerated computation.
+Phillips et al. draw this conclusion based on scaling of their finite-volume method for compressible flow equations on an irregular structured grid on eight quad-core workstations with a total of 32 GPUs. 
+Thibault et al. \cite{Thibault2009} also note the need when modeling 3D incompressible fluids with finite differences on structured grids and a Jacobi iteration. %Their solutions to the lid-driven cavity problem are based on
+
+Komatitsch et al. \cite{Komatitsch2009} 
+
+The authors then demonstrate overlapping communication and computation within the SPECFEM3D package in \cite{Komatitsch2010b,Komatitsch2010a}. With the help of non-blocking MPI communication and a sufficiently large problem, roughly 90\% of communication time can be hidden. 
 
 Phillips and Fatica overlap communication and computation in \cite{Phillips2010} while solving the Himeno benchmark, a test specifically designed to compare performance of processors based on a memory bound application (in this case the 3-D Poisson problem in generalized coordinates).  
 
 
 Most recently, the latest version of PETSc now includes GPU support \cite{Minden2010,YokotaGPU2010}. PETSc is a widely-used library for distributed sparse and dense matrix algebra, with proven scalability on many supercomputing clusters. A large number of libraries like \authnote{examples} depend on PETSc internally for computation. 
+
 
 
 %Meshed methods have received a large amount of attention from the GPU community. For example, Bolz et al. \cite{Bolz2003} implemented conjugate gradient and multigrid kernels for 2D FD incompressible fluid simulation using FD on a single GPU.  More recently, a single GPU, multigrid finite-difference based solver was applied to 3D compressible fluid flow (Euler equations) by Elsen et al. \cite{Elsen2008}.
