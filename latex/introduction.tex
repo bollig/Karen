@@ -138,12 +138,10 @@ The layout of this document is as follows. This chapter continues with a survey 
 
 \section{Related Works: Parallel/Distributed PDE Methods} 
 
-With the large following gained since the inception RBF methods 
-1970s, making it impossible to exhaustively list all 
-applications, advances and related methods. Rather, in this section we concentrate specifically on RBFs applied to PDEs, and branch out to additional topics where necessary. 
+With the large following that RBF methods have gained since their inception in the 1970s, it is impossible to exhaustively list all 
+applications, advances and related methods. Rather, this section concentrates specifically on RBFs applied to PDEs, and branches out to additional topics where necessary. %A detailed look at RBF PDE methods can be found in Chapter~\ref{chap:background}.
 
-Table~\ref{tbl:parallel_rbf_refs} provides a number of related works classified according to the type of parallelism they exhibit. The table presents investigations from both inside and outside the RBF community partitioned into one of three types of parallelism: multi-CPU, single GPU, and multi-GPU. Initial classifications are refined by parallel language/standard employed. 
-
+Table~\ref{tbl:parallel_rbf_refs} provides a number of related works classified according to the type of parallelism they exhibit. The table presents investigations from both inside and outside the RBF community partitioned into one of three types: multi-CPU, single GPU, and multi-GPU. Initial classifications are refined by parallel language/standard employed. The multi-CPU class includes any investigations that are parallelized by OpenMP, MPI, or the combination of the two, but do not include details of GPU computing. If GPUs (one or more) are used, then we categorize based on the GPU language: CUDA, OpenCL, or ``Other". The ``Other" category lumps together all languages pre-dating CUDA, including shader-based languages (e.g., GLSL, HLSL, Cg), and early streaming languages (e.g., Brook+, Sh/RapidMind). Multi-GPU implementations match each GPU with a CPU which managed communication. Communication can be overlapped, implying that the GPU continues computing on a local problem while the CPU waits on data, or non-overlapped if both the GPU and CPU wait. 
 
 Parallel implementations of RBF methods rely on \emph{domain decomposition}. Depending on the implementation, domain decomposition not only accelerates solution procedures, but can decrease the ill-conditioning that plague all global RBF methods (\cite{Divo2007}). The ill-conditioning is reduced if each domain is treated as a separate RBF domain, and the boundary update is treated separately. Domain decomposition methods for RBFs were introduced by Beatson et al. \cite{Beatson2000}. Their work provided a solution to solve problem sizes into the millions of nodes.
 
@@ -153,14 +151,14 @@ This work leverages a domain decomposition; although, not for the purpose of con
     \centering
     \caption{Classification of references by numerical method and parallelization strategy.}
     \label{tbl:parallel_rbf_refs}
-    \begin{tabular}{L{0.11\textwidth}|C{0.1\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.09\textwidth}|C{0.125\textwidth}|}
+    \begin{tabular}{L{0.11\textwidth}||C{0.1\textwidth}|C{0.08\textwidth}||C{0.08\textwidth}|C{0.09\textwidth}|C{0.08\textwidth}||C{0.1\textwidth}|C{0.125\textwidth}||}
          % Use a star or cross to denote OpenMP + MPI. 
-                                    & \multicolumn{2}{C{0.2\textwidth}|}{Multi-CPU ($^\star$:MPI+OpenMP)} & \multicolumn{3}{C{0.3\textwidth}|}{Single GPU} & \multicolumn{2}{C{0.2\textwidth}|}{Multi-GPU ($^\dag$:Non-overlapped, $^\ddag$:Overlapped)} \\ \cline{2-8}
+                                    & \multicolumn{2}{C{0.2\textwidth}||}{Multi-CPU ($^\star$:MPI+OpenMP)} & \multicolumn{3}{C{0.3\textwidth}||}{Single GPU} & \multicolumn{2}{C{0.23\textwidth}||}{Multi-GPU ($^\dag$:Non-overlapped, $^\ddag$:Overlapped)} \\ \cline{2-8}
                                     & OpenMP & MPI & CUDA     & OpenCL     & Other     & CUDA     & OpenCL   \\ \hline
              RBF-FD                 &            &         &          &            &            &          & \cite{BolligFlyerErlebacher2012}$^{\dag}$ \mbox{[This Work]$^{\ddag}$}  \\ \hline
              RBF PDE Methods  &  \cite{Kosec2008}   & \cite{Divo2005, Divo2007, Ingber2003,Ingber2004,Yokota2010} & \cite{Schmidt2009a,Schmidt2009b,Gumerov2007a, Gumerov2007b} &    &   &   &  \\ \hline
-             Non-PDE RBF Methods    &         &    \cite{Strey2003}$^{\star}$      &  \cite{Cuomo2013,Cuntz2007}  &   &  \cite{Corrigan2005,Weiler2005,Carr2003,Brandstetter2008}  &   &      \\ \hline
-             Non-RBF PDE Methods    &     &   \cite{Schubert2011}$^{\star}$    &         &      &      &   \cite{Goeddeke2007,Goeddeke2008a,Goeddeke2009a, Goeddeke2008b, Thibault2009, Phillips2009, Corrigan2009, Minden2010, YokotaGPU2010}$^{\dag}$ &  \\ \hline
+             Non-PDE RBF Methods    &         &    \cite{Strey2003}$^{\star}$      &  \cite{Cuomo2013,Cuntz2007}  &   &  \cite{Corrigan2005,Weiler2005,Carr2003,Brandstetter2008}  &   &      \\ \hline \hline
+             Non-RBF PDE Methods    &     &   \cite{Schubert2011}$^{\star}$    &  \cite{Corrigan2009}  &      &      &   \cite{Goeddeke2007,Goeddeke2008a,Goeddeke2009a, Goeddeke2008b, Thibault2009, Phillips2009,Komatitsch2009}$^{\dag}$ \cite{Minden2010, YokotaGPU2010, Phillips2010,Komatitsch2010b,Komatitsch2010a}$^\ddag$ &  \\ \hline
     \end{tabular}
 \end{table}
 
@@ -174,7 +172,7 @@ results from scaling tests were provided.
 
 The performance and scaling of a parallel RBF neural network is tested on a SunFire 6800 SMP by Strey \cite{Strey2003}. Scaling benchmarks for OpenMP, MPI, and MPI+OpenMP versions of his code demonstrate the performance up to 12 of the 24 CPUs within the system.
 
-Global RBF collocation method is parallelized in \cite{Ingber2003,Ingber2004} using a Schwarz Neumann-Neumann domain decomposition method to solve 3-D diffusion equations. In both cases the authors utilize MPI for communication and provide only coarse grained scaling data for 8, 27 and 64 nodes. 
+Global RBF collocation method is parallelized in \cite{Ingber2003,Ingber2004} with a Schwarz Neumann-Neumann domain decomposition method to solve 3-D diffusion equations. In both cases the authors utilize MPI for communication and provide only coarse grained scaling data at 8, 27 and 64 nodes. 
  
  
 Divo and Kassab \cite{Divo2005} develop a domain decomposition method with artificial 
@@ -193,7 +191,7 @@ Stevens et al. \cite{Stevens2009a} mention a parallel implementation under devel
 \subsection{RBF Methods on GPUs}
 
 
-While much work on RBFs has been done on GPUs, most of it relates to visualization (e.g., \cite{Cuntz2007, Weiler2005}),  surface reconstruction (e.g., \cite{Corrigan2005,Carr2003}), and neural networks (e.g., \cite{Brandstetter2008}). Of these, only \cite{Cuntz2007} uses a modern GPGPU langauge (CUDA), the rest rely on shader languages (i.e., GLSL, HLSL, etc) denoted as ``Other" in Table~\ref{tbl:parallel_rbf_refs}.
+While a number of related works consider RBFs on GPUs, most of the investigations relate to visualization (e.g., \cite{Cuntz2007, Weiler2005}),  surface reconstruction (e.g., \cite{Corrigan2005,Carr2003}), and neural networks (e.g., \cite{Brandstetter2008}). Of these, only \cite{Cuntz2007} uses a modern GPGPU langauge (CUDA), the rest rely on shader languages (i.e., GLSL, HLSL, etc) denoted as ``Other" in Table~\ref{tbl:parallel_rbf_refs}.
 
 The only known applications of GPUs to solve PDEs with RBFs are found in \cite{Gumerov2007a, Gumerov2007b} and \cite{Schmidt2009a, Schmidt2009b}. 
 
@@ -203,29 +201,24 @@ Their codes were written in MATLAB and leveraged the AccelerEyes Jacket \cite{Ja
 In \cite{Gumerov2007a, Gumerov2007b}, Gumerov et al. designed a library of FORTRAN wrappers around CUDA that interface with existing code. The wrappers allow existing code bases to leverage GPUs with minimal modification. Wrapping the cuFFT (an FFTW implementation for the GPU \cite{CudaGuide2011}) and cuBLAS libraries the authors present accelerated implementations of both a pseudo-spectral plasma turbulence problem (nonlinear PDE), and a Fast Multipole Method that depends internally on an iterative solution to RBF interpolation. Their Fast Multipole Method is only distantly related to RBF PDE methods discussed in Chapter~\ref{chap:background}. On top of this, the implementation again depends on dense matrix algebra.
 
 
-While our method and \cite{Schmidt2009a,Schmidt2009b,Gumerov2007a, Gumerov2007b} are all based on RBFs, the problems are only distantly related on the GPU. Our work relies on sparse matrix operations, while the others operate on dense matrices. Dense matrix operations have a high computational complexity and are compute-bound problems that can fully utilize the hardware. They are considered ideal (or near to) by linear algebra libraries like BLAS \cite{BLAS} and LAPACK \cite{Lapack1999}, and were demonstrated to fit well on GPUs in the early days of computer graphics, long before NVidia provided the efficient cuBLAS library \cite{CudaToolkitDoc}---a BLAS substitute on the GPU---with the initial public release of CUDA in 2006. In stark contrast to this, sparse problems have much lower computational complexity and are bandwidth-bound. Getting good performance on sparse problems requires an entirely different set of rules. 
+While our method and \cite{Schmidt2009a,Schmidt2009b,Gumerov2007a, Gumerov2007b} are all based on RBFs, the problems are only distantly related on the GPU. Our work relies on sparse matrix operations, while the others operate on dense matrices. Dense matrix operations have a high computational complexity and are compute-bound problems that can fully utilize the hardware. They are considered ideal (or near to) by linear algebra libraries like BLAS \cite{BLAS} and LAPACK \cite{Lapack1999}, and were demonstrated to fit well on GPUs in the early days of computer graphics, long before NVidia provided the efficient cuBLAS library \cite{CudaToolkitDoc}---a BLAS substitute on the GPU---in the initial public release of CUDA in 2006. In stark contrast to this, sparse problems have much lower computational complexity and are memory bandwidth-bound. Getting good performance on sparse problems requires an entirely different set of rules. 
 
-Earlier this year (2013), Cuomo et al. \cite{Cuomo2013} implemented RBF-interpolation on the GPU for surface reconstruction. Their is based on an extension of PetRBF \cite{Yokota2010}, and new built-in back-ends that allow GPU access within PETSc (\cite{Minden2010}). PETSc now internally wraps both the CUSP \cite{Cusp2012} (CUDA) and ViennaCL \cite{Rupp2010,Rupp2010a} (OpenCL) projects for sparse matrix algebra on the GPU. With the help of the CUSP backend, Cuomo et al. solve and apply sparse interpolation systems on the GPU for up to three million nodes on an NVidia Fermi C1060 GPU (4GB). They compare results to a single core CPU implementation on an Intel i7-940 CPU and demonstrate that the GPU accelerate their solutions between 6x and 25x. Unfortunately, the authors do not show any evidence of running the interpolation on multiple GPUs. Therefore, while evidence exists that PetRBF now has full GPU support, its scalability remains an open question. 
+Earlier this year (2013), Cuomo et al. \cite{Cuomo2013} implemented RBF-interpolation on the GPU for surface reconstruction. Their work is based on an extension of PetRBF \cite{Yokota2010}, and new built-in back-ends that allow GPU access within PETSc (\cite{Minden2010}). PETSc now internally wraps both the CUSP \cite{Cusp2012} (CUDA) and ViennaCL \cite{Rupp2010,Rupp2010a} (OpenCL) projects for sparse matrix algebra on the GPU. With the help of the CUSP backend, Cuomo et al. solve and apply sparse interpolation systems on the GPU for up to three million nodes on an NVidia Fermi C1060 GPU (4GB). They compare results to a single core CPU implementation on an Intel i7-940 CPU and demonstrate that the GPU accelerate their solutions between 6x and 25x. Unfortunately, the authors do not show any evidence of scaling the interpolation to multiple GPUs. Therefore, while evidence exists that PetRBF now has full GPU support, its scalability remains an open question. 
 
 
-Aside from our own investigations, no known efforts have applied the GPU to the RBF-FD method. 
+Aside from our own investigations, no known efforts apply the GPU to the RBF-FD method. 
 
 
 \subsection{Non-RBF Methods} 
 
-To provide a sense of context in which this project developed, we now turn to non-RBF related work on multi-CPU and multi-GPU. 
+\authnote{Need to expand on this section} 
 
-In many cases competition may appear to be more sophisticated. All related work was based on existing code bases that were optimized \authnote{complete}
+A number of multi-GPU implementations unrelated to RBF methods can provide context for the relevancy of our research.
 
+%First, a single-GPU finite-volume implementation is introduced by Corrigan et al. in \cite{Corrigan2009} to solve 3D incompressible fluid problems on an unstructured grid. Within their GPU kernels, each element of the unstructured mesh is operated on by a single thread---this design is equivalent to our ``one thread per stencil" test case in Chapter~\ref{chap:gpu_rbffd}. The author's effort to operate on unstructured grids posed a challenge, in that the unstructured elements with random ordering caused considerable slow-down on the GPU due to non-coalesced memory loads. In response to this, Corrigan et al. reorder their meshes with a fixed-grid method similar to our approach in Chapter~\ref{chap:stencils}.
 
-Meshed methods have received a large amount of attention from the GPU community. For example, Bolz et al. \cite{Bolz2003} implemented conjugate gradient and multigrid kernels for 2D FD incompressible fluid simulation using FD on a single GPU.  More recently, a single GPU, multigrid finite-difference based solver was applied to 3D compressible fluid flow (Euler equations) by Elsen et al. \cite{Elsen2008}.
-
-Thibault et al. \cite{Thibault2009} considered 3D incompressible fluid simulation on structured grids with finite-differencing on multiple GPUs. Their solutions to the lid-driven cavity problem are based on a Jacobi iteration. \authnote{overlap}
-
-A finite-volume implementation of the 3D incompressible fluid problem on multiple GPUs was given by Corrigan et al. \cite{Corrigan2009}. Phillips et al. \cite{Phillips2009} solved the compressible flow equations on an irregular structured grid with finite-volume using multiple GPUs across multiple nodes (eight quad-core workstations with a total of 32 GPUs). 
-
-A series of articles \cite{Goeddeke2007, Goeddeke2008a, Goeddeke2008b, Goeddeke2009a}, G\"{o}ddeke et al. presented 
-a GPU enhanced version of the parallel multigrid finite element package, FEAST. In \cite{Goeddeke2007} the authors integrated 
+One of the earliest multi-GPU implementations, presented in a series of articles \cite{Goeddeke2007, Goeddeke2008a, Goeddeke2008b, Goeddeke2009a} by G\"{o}ddeke et al. introduced
+a GPU enhanced version of the pre-existing parallel (MPI) multigrid finite element package, FEAST. In \cite{Goeddeke2007} the authors integrated 
 GPUs in a minimally invasive fashion (e.g., farming out local multigrid tasks to the GPU) and considered the weak scalability (i.e., 
 increasing the number of co-processors while keeping the problem size fixed on each processor) on up to 160 compute nodes with a 
 single GPU each.  Since the accelerated routines were implemented below the original FEAST API, it was demonstrated in 
@@ -237,10 +230,20 @@ problems and
 found the minimally invasive approach had limited impact on performance in the new setting where computational work was no longer  
 concentrated in GPU-accelerated tasks. 
 
-More recently, the latest version of PETSc now includes GPU support. PETSc is a widely-used library for distributed sparse and dense matrix algebra. Many large solvers 
+At roughly the same time other efforts around the world started targeting multi-GPU clusters, opting first for non-overlapped communication only to realize the necessity for overlap in order to increase parallel efficiency. 
+For example, Phillips et al. \cite{Phillips2009} draw this conclusion based on scaling of their finite-volume method for compressible flow equations on an irregular structured grid on eight quad-core workstations with a total of 32 GPUs. 
+Thibault et al. \cite{Thibault2009} also note the need for overlap when modeling 3D incompressible fluids with finite differencing on structured grids and multiple GPUs. Their solutions to the lid-driven cavity problem are based on a Jacobi iteration. 
 
-In \cite{YokotaGPU2010} the authors \authnote{verify if this is overlapped. I think they have overlapped computation due to FMM properties, but the GPU is used in true offload mode. Does overlap hide latency in GPU mem copy?)}
 
+Komatitsch et al. \cite{Komatitsch2009,Komatitsch2010b,Komatitsch2010a} demonstrated overlapping communication and computation on GPUs within the SPECFEM3D package. With the help of non-blocking MPI communication and a sufficiently large problem, roughly 90\% of communication time can be hidden. 
+
+Phillips and Fatica overlap communication and computation in \cite{Phillips2010} while solving the Himeno benchmark, a test specifically designed to compare performance of processors based on a memory bound application (in this case the 3-D Poisson problem in generalized coordinates).  
+
+
+Most recently, the latest version of PETSc now includes GPU support \cite{Minden2010,YokotaGPU2010}. PETSc is a widely-used library for distributed sparse and dense matrix algebra, with proven scalability on many supercomputing clusters. A large number of libraries like \authnote{examples} depend on PETSc internally for computation. 
+
+
+%Meshed methods have received a large amount of attention from the GPU community. For example, Bolz et al. \cite{Bolz2003} implemented conjugate gradient and multigrid kernels for 2D FD incompressible fluid simulation using FD on a single GPU.  More recently, a single GPU, multigrid finite-difference based solver was applied to 3D compressible fluid flow (Euler equations) by Elsen et al. \cite{Elsen2008}.
 
 
 \section{Major Contributions}
