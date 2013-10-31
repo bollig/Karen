@@ -30,10 +30,10 @@ Power constraints make further frequency scaling on CPUs almost impossible, whic
 GPUs originated as dedicated hardware for video games and computer graphics. 
 Due to the inherent task parallelism in computer graphics  (e.g., for rasterization), early GPU designers adopted a many-core strategy for hardware, which persists today. Computer graphics traditionally involved simple operations, so the majority of transistors on a GPU are dedicated to computation in vector pipelines with limited control for logic. The earliest GPUs had static rendering pipelines with fixed functions. In contrast to this, CPUs have always focused on fast serial and scalar operations. This means they allocate less transistors to computation in order to free space for the needs of advanced logic tasks like branching, caching, etc. \cite{Owens2007,CudaGuide2013}. Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (Courtesy of NVidia, \cite{CudaGuide2013}) illustrates the difference between CPUs and GPUs at a high level. The high density of Arithmetic Logic Units (ALUs) with simple control and caching units is signature of GPUs. 
 
-Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like platform. Prior to 2006, the GPU had already evolved away from fixed-function pipelines and into limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with substantial effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Harris2005,Owens2007}).
-GPUs, far ahead in the many-core arena, only required a bit of flexibility in control and logic to compete against the CPU for general purpose computing.  
+Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like platform. Prior to 2006, the GPU had already evolved away from fixed-function pipelines and into limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with substantial effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Trendall2000,Jansen2007,Harris2005,Owens2007}).
+GPUs, miles ahead in the many-core arena, only required a bit of flexibility in control and logic to compete against the CPU for general purpose computing.  
 
-The release of NVidia's CUDA architecture and software stack at the end of 2006, deprecated those tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program \cite{CudaGuide2013}. The monumental new CUDA hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public. 
+The release of NVidia's CUDA architecture and software stack \cite{CudaGuide2013} at the end of 2006, deprecated the need for tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program. The monumental new hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public. 
 
 
 The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/s) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/s for a single GPU has sky-rocketed and consistently leads CPUs by a full order of magnitude. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than CPUs \cite{CudaGuide2013}. Figure~\ref{fig:memory-bandwidth} (courtesy of NVidia; \cite{CudaGuide2013}) compares the evolving memory bandwidth for NVidia and Intel. 
@@ -100,6 +100,62 @@ Success stories abound with massive gains
 RBF-FD is embarrassingly parallel with stencils applied independently. Unfortunately, perfect concurrency does not always imply perfect performance. %TODO: (SHOW RBF-FD benchmarks for Vortex and Cosine as an example of 1x and 2x SpMV on GPU; state that the generation GPU they were run on has a peak of xxx which means performance was xxx\% (dismal).).
 
 On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/s per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/s on the Fermi and 13 on the K20 (compared to the 2 GFLOP/s on Itasca). 
+
+
+\begin{verbatim}
+"__kernel void vec_mul(\n"
+"          __global const unsigned int * row_indices,\n"
+"          __global const unsigned int * column_indices, \n"
+"          __global const float * elements,\n"
+"          __global const float * vector,  \n"
+"          __global float * result,\n"
+"          unsigned int size) \n"
+"{ \n"
+"  for (unsigned int row = get_global_id(0); row < size; row += get_global_size(0))\n"
+"  {\n"
+"    float dot_prod = 0.0f;\n"
+"    unsigned int row_end = row_indices[row+1];\n"
+"    for (unsigned int i = row_indices[row]; i < row_end; ++i)\n"
+"      dot_prod += elements[i] * vector[column_indices[i]];\n"
+"    result[row] = dot_prod;\n"
+"  }\n"
+"}\n"
+\end{verbatim}
+
+\begin{verbatim}
+"__kernel void vec_mul(\n"
+"    const __global int* coords,\n"
+"    const __global float* elements,\n"
+"    const __global const float * vector,\n"
+"    __global float * result,\n"
+"    const unsigned int row_num,\n"
+"    const unsigned int col_num,\n"
+"    const unsigned int internal_row_num,\n"
+"    const unsigned int items_per_row,\n"
+"    const unsigned int aligned_items_per_row\n"
+"    )\n"
+"{\n"
+"    uint glb_id = get_global_id(0);\n"
+"    uint glb_sz = get_global_size(0);\n"
+"    for(uint row_id = glb_id; row_id < row_num; row_id += glb_sz)\n"
+"    {\n"
+"        float sum = 0;\n"
+"        \n"
+"        uint offset = row_id;\n"
+"        for(uint item_id = 0; item_id < items_per_row; item_id++, offset += internal_row_num)\n"
+"        {\n"
+"            float val = elements[offset];\n"
+"            if(val != 0.0f)\n"
+"            {\n"
+"                int col = coords[offset];    \n"
+"                sum += (vector[col] * val);\n"
+"            }\n"
+"            \n"
+"        }\n"
+"        result[row_id] = sum;\n"
+"    }\n"
+"}\n"
+\end{verbatim}
 
 
 

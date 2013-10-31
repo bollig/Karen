@@ -953,13 +953,12 @@ the equation solved takes the form
 \label{eq:evaluation_with_hyperviscosity}
 \end{equation}
 where $\diffop$ is the PDE operator, and $H$ is the hyperviscosity filter operator.
-Applying hyperviscosity shifts all the eigenvalues of $L$ (the discrete form of $\diffop{}$) to the left half of the complex plane. 
+Applying hyperviscosity shifts all the eigenvalues of $L$ (the discrete form of $\diffop{}$). With the correct sign and careful choice of scaling, hyperviscosity is able to shift all eigenvalues to the left half of the complex plane. 
 This shift is controlled by $k$, the order of the Laplacian, and a scaling parameter $\gamma_c$, defined by
 \begin{equation*}	
 H = \gamma \Delta^{k} = \gamma_c N^{-k} \Delta^{k}.
 \end{equation*}
-It was found in \cite{FlyerLehto11}, and verified in our own application, that $\gamma = \gamma_c N^{-k}$  provides stability and good accuracy 
-%for all values of $N$ considered here. 
+It was found in \cite{FlyerLehto11}, and verified in our own application, that $\gamma = \gamma_c N^{-k}$  provides stability and good accuracy  
 as a function of $N$ on the unit sphere. It also ensures that the viscosity vanishes as $N\rightarrow\infty$ \cite{FlyerLehto11}.
 In general, the larger the stencil size, the higher the order of the Laplacian required as a filter.  This is attributed to the fact that, for convective operators, larger stencils treat a wider range of modes accurately. As a result, the hyperviscosity operator should preserve as much of that range as possible. The parameter $\gamma_c$ must also be chosen with care and its sign depends on $k$ (for $k$ even, $\gamma_c$ will be negative and for $k$ odd, it will be positive). If $\gamma_c$ is too large, the eigenvalues move outside the stability domain of our time-stepping scheme and/or eigenvalues corresponding to lower physical modes are not left intact, reducing the accuracy of our approximation. If $\gamma_c$ is too small, eigenvalues remain in the right half-plane \cite{FornbergLehto11,FlyerLehto11}.
 
