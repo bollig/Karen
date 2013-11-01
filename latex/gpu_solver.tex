@@ -56,28 +56,32 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 \caption{Performance comparison for Graphics Processing Units (GPUs).}
 \end{figure}
 
-In the years since CUDA was released a vast number of libraries and language extensions have surfaced to leverage the GPU architecture for scientific computing. Developers can now use FORTRAN, Python, java and more. 
+In the years since CUDA was released a vast number of libraries and language extensions have surfaced to leverage the GPU architecture for scientific computing.  
 
 
 
+%TODO verify date of open source
+In 2012 NVidia open sourced CUDA to lower level virtual machine. This opened the possibility of directly compiling other languages like Python (Anaconda) to build kernels directly within the Python language for CUDA. 
 
-the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
-OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
+GPUs support single and double precision. RBF-FD certainly requires double precision at the moment. Solving for the weights in single precision might work, but the lower precision would not be able to handle the ill-conditioned system. Projecting double precision weights into single precision results in weights that sum to $\approx 10^{-4}$, a poor approximation to zero. 
+%
+%the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
+%OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
+%
+%This transition was 
+%followed closely by evolving programming languages. Today, GPUs can be leveraged from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, with new developments appearing every day. 
 
-This transition was 
-followed closely by evolving programming languages. Today, GPUs can be leveraged from C/C++, FORTRAN, Java, Python, MATLAB, and more. The list seems endless, with new developments appearing every day. 
 
 
+%\section{Test Environments}
+%
+%\begin{itemize}	
+%\item Early testing was completed on the Keeneland GPU cluster. At the time Keeneland was in the Keeneland Initial Deployment System (KIDS) had 320 NVidia M2070 GPUs (Fermi). 240 CPUs. 6GB of memory. 
+%%\item The Spear cluster at FSU has 16x NVIDIA Tesla m2050 GPUs. 3GB of memory. 
+%\item The Cascade cluster at the Minnesota Supercomputing Institute (UMN) has 32x NVidia M2070 GPUs. 8 nodes, 12 cores each with four GPUs attached to each. 6GB of memory each. In addition, Cascade has 8 NVidia Kepler K20 GPUs. 
+%\end{itemize}
 
-\section{Test Environments}
-
-\begin{itemize}	
-\item Early testing was completed on the Keeneland GPU cluster. At the time Keeneland was in the Keeneland Initial Deployment System (KIDS) had 320 NVidia M2070 GPUs (Fermi). 240 CPUs. 6GB of memory. 
-%\item The Spear cluster at FSU has 16x NVIDIA Tesla m2050 GPUs. 3GB of memory. 
-\item The Cascade cluster at the Minnesota Supercomputing Institute (UMN) has 32x NVidia M2070 GPUs. 8 nodes, 12 cores each with four GPUs attached to each. 6GB of memory each. In addition, Cascade has 8 NVidia Kepler K20 GPUs. 
-\end{itemize}
-
-\subsection{Managing Expectations for the GPU}
+\section{Managing Expectations for the GPU}
 \begin{figure} 
 \begin{subfigure}{0.5\textwidth}
 \centering
@@ -95,7 +99,7 @@ followed closely by evolving programming languages. Today, GPUs can be leveraged
 \end{figure}
 
 
-Success stories abound with massive gains
+Success stories abound on the GPU citing massive gains. However, many like \cite{Phillips2009} appear to be impossible
 
 RBF-FD is embarrassingly parallel with stencils applied independently. Unfortunately, perfect concurrency does not always imply perfect performance. %TODO: (SHOW RBF-FD benchmarks for Vortex and Cosine as an example of 1x and 2x SpMV on GPU; state that the generation GPU they were run on has a peak of xxx which means performance was xxx\% (dismal).).
 
@@ -204,19 +208,13 @@ Performance of SpMV on GPU will not be optimal. Often one finds in literature ex
 
 
 
+
 %TODO: ALL SPMV related work.
 \cite{Bell2009} 
 %TODO: \cite{Kreuzer2012} in distributed GPU. 
 \cite{Vuduc2005} etc. 
 
 
-
-\section{Design Decisions}
-
-%TODO verify date of open source
-In 2012 NVidia open sourced CUDA to lower level virtual machine. This opened the possibility of directly compiling other languages like Python (Anaconda) to build kernels directly within the Python language for CUDA. 
-
-GPUs support single and double precision. RBF-FD certainly requires double precision at the moment. Solving for the weights in single precision might work, but the lower precision would not be able to handle the ill-conditioned system. Projecting double precision weights into single precision results in weights that sum to $\approx 10^{-4}$, a poor approximation to zero. 
 
 
 \section{Performance}

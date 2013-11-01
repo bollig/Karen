@@ -2,26 +2,16 @@
 \label{chap:conclusions}
 
 
-\section{Future Work}
 
-This work leads to a number of additional investigations:
-\begin{itemize}
-\item Transitioning away from RBF-FD specific OpenCL kernels and into the higher level matrix algebra library ViennaCL reveals new optimizations for SpMV, possible only when treating the sparse matrix from a higher level. There are a number of alternatives for SpMV that target various matrix features (e.g., jagged diagonal, blocked ELL, etc). New investigation will determine the which, if any, alternatives can benefit RBF-FD. 
+Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation achieves 30\% to 40\% parallel efficiency on 128 processors of the Itasca HPC cluster (CPU-only) at the University of Minnesota when given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
 
-\item ViennaCL has support for multiple backends, including the Intel Phi. Initial experiments result in performance $\frac{1}{10}$th as fast as the K20 GPU. Those results are: a) limited by a beta driver for OpenCL on Intel Phi; and b) using OpenCL kernels intended for the GPU architecture. Continued investigations are targeting features (language, vector instructions, etc.) of the Phi. 
-\item To improve the accuracy of RBF-FD weights, an experimental RBF-GA implementation was started. The initial exposure to the algorithm leaves the impression that the change of basis on the RHS is a nuisance. In effort to bypass the difficulty in deriving new RHS expressions, we plan to assemble complex DMs using DMs of lower (i.e., first-) order operators.
-\end{itemize}
+Our implementation leverages METIS for general domain decomposition and load balancing. Individual processes do not require a full mapping between RBF nodes and CPUs. Instead, processes assemble and operate on local linear systems for their subdomains. Communication between processes is limited to nearest-neighbor or all-to-subset collectives based on the intersection of subdomains. 
 
-%Unanswered Questions: 
-%\begin{itemize} 
-%\item If RBF-FD is higher order accurate than FV, why would anyone opt for FV?
-%\begin{itemize} 
-%\item the conservative form FV is preferred in physical science since it does not allow loss of (what? mass/energy/???)
-%\item FV are typically low-order. what is the trade-off in complexity between methods. For a much higher-order RBF-FD if it is not conservative, how many iterations is it accurate consistent with the low-order FV? l
-%\end{itemize}
-%\end{itemize}
+A number of tuning steps reduce communication times and increase scalability beyond the results in our first paper, \cite{BolligFlyerErlebacher2012}. Starting with an MPI\_Alltoallv collective, the tuning effort ultimately leads to a scheme which overlaps communication and computation on the CPU. Chapter~\ref{chap:multigpu_rbffd} extends this collective to overlap with computation on GPUs. 
 
-\authnote{BEGIN: reformat this and draw conclusions. repeat what I have concluding each chapter}
+
+
+
 Within this document readers should expect to find the following major contributions: 
 \begin{enumerate} 
 \item The first ever application of a fixed-grid neighbor query algorithm (popularized by distantly related particle methods) to generate stencils for RBF-FD. 
@@ -61,14 +51,6 @@ Of lesser significance we also:
 \end{itemize}
 \item Provide preliminary benchmarks evaluating the performance of RBF-FD on the Intel Phi Architecture. 
 \end{enumerate}
-\authnote{END}
-
-\section{On the Future of GPU Computing}
-
-%TODO: Move this to the conclusions chapter
-%  addresss this as: 
-%   Future of GPU is with CUDA and vendor specific features. 
-%   AMD, Intel are trying to compete, but NVidia has the market and new entrants should stick with CUDA. 
 
 
 %The question, however, is frequently asked: is GPU computing a buzzword that will die out, or is it here to stay? 
@@ -81,11 +63,20 @@ Of lesser significance we also:
 %
 %First, we are proponents for OpenCL over CUDA. Although CUDA has a large following due to its early release, we believe in functional portability of code enabled by OpenCL over the performance provided by CUDA. 
 
-New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. Dynamic parallelism provides the ability to generate new levels of parallelism on the GPU rather than return to the CPU.  Dynamic parallelism also leads to stream priority features which allow kernels to preemptively execute out of order based on priority and dependencies. Such a feature is powerful for MPI support where the GPU can continue processing kernels while waiting on MPI communication to complete. 
+\section{Future Work}
 
 
-\section{Other Future Work}
-In Section~\ref{sec:epsilon_contours} we mention the need for stable methods to solve for weights. We have partially implemented the RBF-GA method from \cite{Fornberg2012} 
+This work led to a number of additional investigations:
+\begin{itemize}
+\item There are a number of alternatives for SpMV that target various matrix features (e.g., BELL, SELL, SELL-T, etc.). New investigation will determine the which, if any, alternatives can benefit RBF-FD. 
+
+\item ViennaCL has support for multiple backends, including the Intel Phi. Initial experiments result in performance $\frac{1}{10}$th as fast as the K20 GPU. Those results are: a) limited by a beta driver for OpenCL on Intel Phi; and b) using OpenCL kernels intended for the GPU architecture. Continued investigations are targeting features (language, vector instructions, etc.) of the Phi. 
+\item To improve the accuracy of RBF-FD weights, 
+\item 
+New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. Dynamic parallelism allows GPU kernels to spawn new kernels directly on the GPU without returning to the CPU. It provides stream priority features which allow kernels to preemptively execute out of order based on priority and dependencies. Such a feature is powerful for MPI support where the GPU can continue processing kernels while waiting on MPI communication to complete. 
+\item In Section~\ref{sec:epsilon_contours} we mention the need for stable methods to solve for weights. We have partially implemented the RBF-GA method from \cite{Fornberg2012}.  Initial exposure to the algorithm leaves the impression that the change of basis on the RHS is a nuisance. In effort to bypass the difficulty in deriving new RHS expressions, we plan to assemble complex DMs using DMs of lower (i.e., first-) order operators.
+
+\end{itemize}
 
 
 

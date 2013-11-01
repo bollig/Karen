@@ -233,15 +233,15 @@ At roughly the same time a number of other efforts around the world started targ
 Phillips et al. draw this conclusion based on scaling of their finite-volume method for compressible flow equations on an irregular structured grid on eight quad-core workstations with a total of 32 GPUs. 
 Thibault et al. \cite{Thibault2009} also note the need when modeling 3D incompressible fluids with finite differences on structured grids and a Jacobi iteration. %Their solutions to the lid-driven cavity problem are based on
 
-Komatitsch et al. \cite{Komatitsch2009} ported an MPI+OpenMP spectral element code named SPECFEM to the GPU. As the 2003 recipient of the Gordon Bell award, SPECFEM had already undergone a plethora of  fine tuning
+In another series of articles, Komatitsch et al. \cite{Komatitsch2009, Komatitsch2010b,Komatitsch2010a} ported a well tuned spectral element code named SPECFEM to the GPU. The code was initially offloaded in \cite{Komatitsch2009} and demonstrated up to 25x speedup over a serial CPU version. In \cite{Komatitsch2010b,Komatitsch2010a} the authors span computation across GPU clusters. Aided by non-blocking MPI communication and a sufficiently large problem, roughly 90\% of communication time is demonstrated to be hidden during weak scaling tests. 
 
-The authors then demonstrate overlapping communication and computation within the SPECFEM3D package in \cite{Komatitsch2010b,Komatitsch2010a}. Aided by non-blocking MPI communication and a sufficiently large problem, roughly 90\% of communication time is demonstrated to be hidden during weak scaling tests. 
+
+ %As the 2003 recipient of the Gordon Bell award, SPECFEM had already undergone a plethora of  fine tuning
 
 Phillips and Fatica overlap communication and computation in \cite{Phillips2010} while solving the Himeno benchmark, a test specifically designed to compare performance of processors based on a memory bound application (in this case the 3-D Poisson problem in generalized coordinates).  
 
 
-Most recently, the latest version of PETSc now includes GPU support \cite{Minden2010,YokotaGPU2010}. PETSc is a widely-used library for distributed sparse and dense matrix algebra, with proven scalability on many supercomputing clusters. A large number of libraries like \authnote{examples} depend on PETSc internally for computation. 
-
+Most recently, the PETSc library gained GPU support \cite{Minden2010,YokotaGPU2010}. PETSc is a widely-used library with proven scalability on many supercomputing clusters that provides distributed sparse and dense matrix algebra, Krylov solvers, and preconditioners. 
 
 
 %Meshed methods have received a large amount of attention from the GPU community. For example, Bolz et al. \cite{Bolz2003} implemented conjugate gradient and multigrid kernels for 2D FD incompressible fluid simulation using FD on a single GPU.  More recently, a single GPU, multigrid finite-difference based solver was applied to 3D compressible fluid flow (Euler equations) by Elsen et al. \cite{Elsen2008}.
