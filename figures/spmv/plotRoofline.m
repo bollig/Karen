@@ -26,7 +26,7 @@ plot(log2(X2), log2(Z),'b-', 'LineWidth', 5);
 t2 = text(max(log2(X2))-2,log2(G)+0.275,label2,'FontSize', 18);
 hold off; 
 %axis([min(log2(X1)) max(log2(X2)) min(log2(Y)) nextpow2(G)]);
-axis([min(log2(X1)) max(log2(X2)) min(log2(Y)) 11]);
+axis([min(log2(X1)) max(log2(X2)) 0 11]);
 
 xt = get(gca, 'XTick');
 yt = get(gca, 'YTick');
