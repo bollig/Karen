@@ -88,7 +88,7 @@ Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-
 %The homogeneity of the cluster is lost when 
 %computing on with GPUs (see Table~\ref{tbl:acm_gpus}).  
 %With each Tesla C1060 capable of roughly 933 GFLOPS in single precision, the peak performance of ACM in multi-core 
-%compute mode is about 16 TFLOPS. Double precision is reduced to roughly 78 GFLOPS on the 
+%compute mode is about 16 TFLOP/sec. Double precision is reduced to roughly 78 GFLOPS on the 
 %C1060s \cite{TeslaSpec:2008}. At 20 compute nodes, ACM is a small cluster sufficient for development, but not large 
 %enough to thoroughly test scaling properties.
 %
@@ -116,7 +116,7 @@ Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-
 
 %\section{Lincoln}
 %
-%One of the large heterogeneous GPU clusters made available through the TeraGrid is NCSA's Lincoln \cite{Lincoln:2009}. Lincoln sports 192 compute nodes containing Dell PowerEdge 1950 dual-socket nodes with quad-core Intel Harpertown 2.33GHz processors (8 cores per node) and 16GB of memory. This gives Lincoln a total of 1536 total CPU cores. Attached to the compute nodes are 96 NVIDIA Tesla S1070 accelerator units each containing 4 Tesla GPUs (compute capability 1.3) and 16 GB of Global Device Memory for a total of 384 GPU units. The peak performance of a Tesla S1070 is roughly 4 TFLOPS for single precision and 345 GFLOPS for double precision. Each of the 192 compute nodes in Lincoln is connected to two of the Tesla S1070s via PCI-e Gen2 X8. Compute nodes are connected via Infiniband SDR. The peak performance of Lincoln considering both GPU and CPU computation is 47.5 TFLOPS \cite{Lincoln:2009}. 
+%One of the large heterogeneous GPU clusters made available through the TeraGrid is NCSA's Lincoln \cite{Lincoln:2009}. Lincoln sports 192 compute nodes containing Dell PowerEdge 1950 dual-socket nodes with quad-core Intel Harpertown 2.33GHz processors (8 cores per node) and 16GB of memory. This gives Lincoln a total of 1536 total CPU cores. Attached to the compute nodes are 96 NVIDIA Tesla S1070 accelerator units each containing 4 Tesla GPUs (compute capability 1.3) and 16 GB of Global Device Memory for a total of 384 GPU units. The peak performance of a Tesla S1070 is roughly 4 TFLOP/sec for single precision and 345 GFLOPS for double precision. Each of the 192 compute nodes in Lincoln is connected to two of the Tesla S1070s via PCI-e Gen2 X8. Compute nodes are connected via Infiniband SDR. The peak performance of Lincoln considering both GPU and CPU computation is 47.5 TFLOP/sec \cite{Lincoln:2009}. 
 %
 %Lincoln is a heterogeneous multi-core compute platform, with heterogeneity arising from the ability to compute on both the CPU and GPU. G\"{o}ddeke et al. \cite{Goeddeke:2007} call this \emph{local heterogeneity}, in contrast to ACM where the hardware attached to individual nodes is heterogeneous and called \emph{global heterogeneity}. 
 %
