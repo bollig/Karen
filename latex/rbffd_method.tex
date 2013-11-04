@@ -47,7 +47,7 @@ Like most numerical methods, RBFs come with certain
 limitations. For example, RBF interpolation is---in general---not a well-posed
 problem, so it requires careful choice of positive definite or conditionally
 positive definite basis functions \cite{Iske2004,Fasshauer2007}. 
-The example 2D RBFs presented in Figure~\ref{fig:rbfs} are infinitely smooth and satisfy the (conditional) positive definite requirements. 
+The example 2-D RBFs presented in Figure~\ref{fig:rbfs} are infinitely smooth and satisfy the (conditional) positive definite requirements. 
 
 Infinitely smooth RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon r)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. The conditioning of the system also dramatically degrades as the number of nodes in the problem increases. Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2007, Fornberg2011a} allow for numerically stable computation of interpolants in the nearly flat RBF regime (i.e., $\epsilon \rightarrow 0$) where high accuracy has been observed \cite{Larsson2003, Fornberg2008}.
 
@@ -67,7 +67,7 @@ This survey of RBF PDE methods frames the context in which RBF-FD was developed,
 
 In Radial Basis Function methods, radially symmetric functions provide a non-orthogonal basis used to interpolate between 
 nodes of a point cloud. RBFs are univariate and a function of distance from a center point defined in $\R^d$, so 
-they easily extend into higher dimensions without significant change in programming complexity. Examples of commonly used RBFs from the literature are provided in Table~\ref{tbl:rbfs}; 2D representations of the same functions can be found in Figure~\ref{fig:rbf_examples}. 
+they easily extend into higher dimensions without significant change in programming complexity. Examples of commonly used RBFs from the literature are provided in Table~\ref{tbl:rbfs}; 2-D representations of the same functions can be found in Figure~\ref{fig:rbf_examples}. 
 %When solving PDEs, infinitely smooth RBFs (e.g., MQ, IMQ, and GA) are usually preferred over non-smooth and compactly supported RBFs (e.g., TPS and W2), which suffer from slow convergence rates \cite{Chen2002}. 
 Figure~\ref{fig:rbf_dimension_example} illustrates the radial symmetry of RBFs---in this case, a Gaussian RBF---in the first three dimensions. 
 
@@ -76,7 +76,7 @@ RBF methods are based on a superposition of translates of these radially symmetr
 \begin{eqnarray*}
     \sum_{j=1}^{N} \phi_j(r(\vx)) c_{j}   = f(\vx),
 \end{eqnarray*}
-where $\phi_j(r(\vx))$ is an RBF centered at $\{\vx_j\}_{j=1}^{n}$. In theory the radial coordinate, $r(\vx)$, could be any distance metric, but is most often assumed to be $r(\vx) = ||\vx-\vx_j||_2$ (i.e., Euclidean distance), as it is here. The coefficients $\vc$ result in a smooth interpolant that collocates sample values $f(\vx_j)$. An example of RBF interpolation in 2D using 15 Gaussians is shown in Figure~\ref{fig:rbfInterpolation}. 
+where $\phi_j(r(\vx))$ is an RBF centered at $\{\vx_j\}_{j=1}^{n}$. In theory the radial coordinate, $r(\vx)$, could be any distance metric, but is most often assumed to be $r(\vx) = ||\vx-\vx_j||_2$ (i.e., Euclidean distance), as it is here. The coefficients $\vc$ result in a smooth interpolant that collocates sample values $f(\vx_j)$. An example of RBF interpolation in 2-D using 15 Gaussians is shown in Figure~\ref{fig:rbfInterpolation}. 
 
 
 %Infinitely smooth 
@@ -184,7 +184,7 @@ Global RBF methods result in full matrices \cite{Fasshauer2007}. The global coll
 
 Hon et al. \cite{Hon1999} employed Kansa's method to solve shallow water equations for Typhoon simulation.
 In \cite{FlyerWright09}, Flyer and Wright employed RBF-PS (Kansa method) for the solution of shallow water equations on a sphere. Their 
-results show that RBFs allow for longer time steps with spectral accuracy. The survey \cite{FlyerFornberg11} by Flyer and Fornberg showcases RBF-PS (Kansa's method) out-performing some of the of the best available methods in geosciences, namely: Finite Volume, Spectral Elements, Double Fourier, and Spherical Harmonics. When applied to problems such as transport on the sphere \cite{FlyerWright07}, shallow water equations \cite{FlyerWright09}, and 3D mantle convection \cite{WrightFlyerYuen10}, RBF-PS consistently required fewer time steps, and a fraction of the nodes for similar accuracy \cite{FlyerFornberg11}. 
+results show that RBFs allow for longer time steps with spectral accuracy. The survey \cite{FlyerFornberg11} by Flyer and Fornberg showcases RBF-PS (Kansa's method) out-performing some of the of the best available methods in geosciences, namely: Finite Volume, Spectral Elements, Double Fourier, and Spherical Harmonics. When applied to problems such as transport on the sphere \cite{FlyerWright07}, shallow water equations \cite{FlyerWright09}, and 3-D mantle convection \cite{WrightFlyerYuen10}, RBF-PS consistently required fewer time steps, and a fraction of the nodes for similar accuracy \cite{FlyerFornberg11}. 
 
 
 
@@ -214,13 +214,13 @@ collocation matrix from Kansa's method, can be avoided altogether in favor of sm
 each node. Local collocation still faces possible ill-conditioning and singularities 
 like global collocation, but make it easier to distribute computation across parallel systems. Also, the smaller linear systems can be 
 solved 
-with less conditioning issues. In \cite{Sarler2006}, the authors consider 2D diffusion problems. Divo and Kassab \cite{Divo2007} 
+with less conditioning issues. In \cite{Sarler2006}, the authors consider 2-D diffusion problems. Divo and Kassab \cite{Divo2007} 
 employ the 
 method for Poisson-like PDEs including fluid flow and heat transfer. Kosec and \v{S}arler \cite{Kosec2008} apply the 
 same technique to solve coupled heat transfer and fluid flow problems.
 
 In similar fashion, Stevens et al. \cite{Stevens2009a} introduced a local version of 
-Fasshauer's method called \emph{local Hermitian interpolation}. The authors have applied their method to 3D soil 
+Fasshauer's method called \emph{local Hermitian interpolation}. The authors have applied their method to 3-D soil 
 problems based on transient Richards' equations \cite{Stevens2008a, Stevens2009a, Stevens2009b}.
 
 
@@ -549,17 +549,17 @@ accurate interpolants with nearly flat RBFs (i.e., $\epsilon \rightarrow 0$). La
 applied the 
 algorithm to all three methods of collocation (Kansa's, Fasshauer's and Direct Collocation) with considerable gain in accuracy over solutions from classical second-order FD and a pseudospectral method.  
 The Contour-Pad\'{e} 
-algorithm is not overly competitive due to the fact that it only supports fewer than a hundred in 2D and slightly more in 3D \cite{Fornberg2012}. 
+algorithm is not overly competitive due to the fact that it only supports fewer than a hundred in 2-D and slightly more in 3-D \cite{Fornberg2012}. 
 
 The \emph{RBF-QR} method, was later introduced by Fornberg  and 
-Piret \cite{Fornberg2007} in context of a sphere to let $\epsilon \rightarrow 0$ for a few thousand nodes. It was later extended to general 1D, 2D and 3D problems in \cite{Fornberg2011a}. The 
+Piret \cite{Fornberg2007} in context of a sphere to let $\epsilon \rightarrow 0$ for a few thousand nodes. It was later extended to general 1-D, 2-D and 3-D problems in \cite{Fornberg2011a}. The 
 RBF-QR 
-method uses a truncated expansion of RBFs in terms of spherical harmonics or Chebyshev polynomials and leverages QR factorization to create create a new well-conditioned set of basis functions to reproduce the original RBF space. The well-conditioned basis set allows stable solution independent of the value $\epsilon$. The cost of the method is demonstrated to increase as $\epsilon$ increases. Benchmarks in \cite{Fornberg2011a} show that double precision RBF-QR is between 3x-7x slower than RBF-Direct for the same values of $\epsilon$. Fornberg, Larsson and Flyer \cite{Fornberg2011a} successfully implemented the 2D method in less than 100 lines of MATLAB code and apply RBF-QR to problems with 6000 quasi-unifrom nodes and globally supported RBFs. 
+method uses a truncated expansion of RBFs in terms of spherical harmonics or Chebyshev polynomials and leverages QR factorization to create create a new well-conditioned set of basis functions to reproduce the original RBF space. The well-conditioned basis set allows stable solution independent of the value $\epsilon$. The cost of the method is demonstrated to increase as $\epsilon$ increases. Benchmarks in \cite{Fornberg2011a} show that double precision RBF-QR is between 3x-7x slower than RBF-Direct for the same values of $\epsilon$. Fornberg, Larsson and Flyer \cite{Fornberg2011a} successfully implemented the 2-D method in less than 100 lines of MATLAB code and apply RBF-QR to problems with 6000 quasi-unifrom nodes and globally supported RBFs. 
 
 
 Between Contour-Pad\'{e} and RBF-QR, global RBF methods overcame many conditioning issues for small to mid-sized problems. The lack of support for large problem sizes is discouraging, but it leads to an argument in favor of local methods like RBF-FD, which decrease the problem size to fit nicely within the scope of stable methods. % To our knowledge, no application of a local method has required more than a few hundred nodes per local solution. 
 
-Most recently, Fornberg et al. \cite{Fornberg2012} introduced a new method called RBF-GA, which performs a similar change of basis as RBF-QR, but the method avoids truncated infinite expansions by expressing the new basis functions in terms of an incomplete Gamma function. Unlike RBF-QR, this method is limited to Gaussian basis functions only. Like RBF-QR, RBF-GA is also effective only for a small number of nodes: a few hundred in 2D, and at least 500 in 3D. Unlike RBF-QR, which performs a change of basis on the interpolating matrix only, the RBF-GA method requires a complicated change of basis for the RHS as well \cite{Fornberg2012}
+Most recently, Fornberg et al. \cite{Fornberg2012} introduced a new method called RBF-GA, which performs a similar change of basis as RBF-QR, but the method avoids truncated infinite expansions by expressing the new basis functions in terms of an incomplete Gamma function. Unlike RBF-QR, this method is limited to Gaussian basis functions only. Like RBF-QR, RBF-GA is also effective only for a small number of nodes: a few hundred in 2-D, and at least 500 in 3-D. Unlike RBF-QR, which performs a change of basis on the interpolating matrix only, the RBF-GA method requires a complicated change of basis for the RHS as well \cite{Fornberg2012}
 
 Benchmarks provided in \cite{Fornberg2012} rank the stable methods for RBFs from fastest to slowest as: RBF-Direct, RBF-GA, and then RBF-QR. Keeping perspective on run-times, the authors note that RBF-GA is roughly 10x slower than RBF-Direct and RBF-QR is another 2x-4x slower than RBF-GA \cite{Fornberg2012}.
 
@@ -654,13 +654,13 @@ As in classical FD methods, increasing the stencil size, $n$, increases the orde
 
 RBF-FD have been successfully employed for a variety of problems including Hamilton-Jacobi equations \cite{Cecil2004}, convection-diffusion problems \cite{Chandhini2007, Stevens2009b},
 incompressible Navier-Stokes equations \cite{Shu2003,Chinchapatnam2009}, transport on the sphere \cite{FornbergLehto11}, and the shallow water equations \cite{FlyerLehto11}.
-Shu et al. \cite{Shu2006} compared the RBF-FD method to Least Squares FD (LSFD) in context of 2D incompressible viscous 
+Shu et al. \cite{Shu2006} compared the RBF-FD method to Least Squares FD (LSFD) in context of 2-D incompressible viscous 
 cavity flow, and found that under similar conditions, the RBF-FD method was more accurate than LSFD, but the solution required 
 more iterations of an iterative solver. RBF-FD was applied to Poisson's 
-equation in \cite{Wright2004}.  Chandhini and Sanyasiraju \cite{Chandhini2007} studied it in context of 1D and 2D, 
+equation in \cite{Wright2004}.  Chandhini and Sanyasiraju \cite{Chandhini2007} studied it in context of 1-D and 2-D, 
 linear and non-linear, 
 convection-diffusion equations, demonstrating solutions that are non-oscillatory for high Reynolds number, with improved 
-accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cecil2004}, and 2D linear and non-linear PDEs 
+accuracy over classical FD. An application to Hamilton-Jacobi problems \cite{Cecil2004}, and 2-D linear and non-linear PDEs 
 including Navier-Stokes equations \cite{Shu2003} have all been considered. 
 
 This work focuses on RBF-FD in the context of distributed environments, and on GPUs. Our implementation is verified Chapter~\ref{chap:applications} with a study of transport on the sphere following \cite{FornbergLehto11}. 
@@ -795,17 +795,17 @@ where $\pd{\phi}{r}$ for the Gaussian RBFs is given in Equation~\ref{eq:dphi_dr}
 
 
 \subsection{Cartesian Laplacian ($\Laplacian$)}
-Fasshauer \cite{Fasshauer2007} provides the general form of $\nabla^2$ in 2D as: 
+Fasshauer \cite{Fasshauer2007} provides the general form of $\nabla^2$ in 2-D as: 
 \begin{align*}
 \nabla^2 = \pdd{}{r}\phi(r) + \frac{1}{r}\pd{}{r} \phi(r) 
 \end{align*}
 which depends on Equation~\ref{eq:dphi_dr} and \ref{eq:dphi2_dr2}. 
 For Gaussian RBFs in particular we have the following operators:
 \begin{itemize}
-\item 1D: $$\nabla^2 = \epsilon^2 (-2 + 4 (\epsilon r)^2) \phi(r)$$
-\item 2D: $$\nabla^2 = \epsilon^2 (-4 + 4 (\epsilon r)^2) \phi(r)$$
+\item 1-D: $$\nabla^2 = \epsilon^2 (-2 + 4 (\epsilon r)^2) \phi(r)$$
+\item 2-D: $$\nabla^2 = \epsilon^2 (-4 + 4 (\epsilon r)^2) \phi(r)$$
 % e^{-(\epsilon r)^2}$
-\item 3D: $$\nabla^2 = \epsilon^2 (-6 + 4 (\epsilon r)^2) \phi(r)$$
+\item 3-D: $$\nabla^2 = \epsilon^2 (-6 + 4 (\epsilon r)^2) \phi(r)$$
 % e^{-(\epsilon r)^2}$
 \end{itemize}
 which all fit $\nabla^2 = \pdd{}{r}\phi(r) + \frac{d - 1}{r}\pd{}{r} \phi(r)$ for dimension $d$.
@@ -813,10 +813,10 @@ which all fit $\nabla^2 = \pdd{}{r}\phi(r) + \frac{d - 1}{r}\pd{}{r} \phi(r)$ fo
 %
 %
 %
-%2D: \begin{align}
+%2-D: \begin{align}
 % \nabla^2 = 
 % \end{align}
-%3D: 
+%3-D: 
 %\begin{align} 
 %\epsilon^2 \\
 %r^2 \\
@@ -944,7 +944,7 @@ p_k(r) &= 4((\epsilon r)^2 - 2(k-1) - \frac{d}{2})  p_{k-1}(r) - 8(k-1)(2(k-1) -
 where $d$ is the dimension. The application of hyperviscosity in Chapter~\ref{chap:applications}, utilizes the operator as a filter to shift eigenvalues and stabilize advection equations on the surface of the unit sphere. In that case, $d=2$ can be assumed because individual RBF-FD stencils are viewed as (nearly) lying on a plane. A word of caution: for small $N$, the diameter of the stencil may not be sufficiently 
 small compared to the radius of the sphere, and hyperviscosity might not work as advertised. 
 %However,
-%numerical evidence in \cite{FornbergLehto11,BolligFlyer} \ci suggests that if the RBFs adequately resolve the convective operator, the 2D 
+%numerical evidence in \cite{FornbergLehto11,BolligFlyer} \ci suggests that if the RBFs adequately resolve the convective operator, the 2-D 
 %hyperviscosity operator does its job. 
 %We base our work on the work of Fornberg and Lehto \cite{FornbergLehto11}, which was
 %performed on a sphere, and tune our parameters following their guidelines. 
@@ -969,7 +969,7 @@ Tuned parameters for hyperviscosity are provided in Chapter~\ref{chap:applicatio
 
 \section{RBF-FD Implementation for Time-dependent PDEs}
 
-This section considers at a high level how one leverages RBF-FD to solve PDEs. To simplify in the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: preprocessing and application. The complexity for each phase can vary based on the algorithms utilized in each task. 
+This section considers at a high level how one leverages RBF-FD to solve PDEs. To simplify the discussion, consult Algorithm~\ref{alg:rbffd_high_level}, which is split into two phases: Preprocessing and Application. The complexity for each phase can vary based on the algorithms utilized in each task. 
 
 The Preprocessing Phase encompasses tasks such as grid setup/generation, stencil generation and stencil weight calculations. As output this phase produces one or more DMs. Note that preprocessing is a one time cost: grids, stencils, and DMs can be loaded from disk on subsequent runs. 
 
@@ -1057,7 +1057,7 @@ MD node sets were originally utilized by the RBF community due to their success 
 
 The MD node files are available for download on the authors' web site \cite{WomersleySloanMDNodes}, and range in size from $N=4$ up to N=27,556 nodes on the sphere. Figure~\ref{fig:md_nodes} plots the $N=4096$ node set to illustrate the irregularity in distribution. Node sets greater than N=27,556 are not available. Unlike regular grids, each MD node set is a refinement of the sphere, but not a subdivision, so extending beyond N=27,556 nodes would require complete regeneration.
 
-%GORDON: How does this show irregularity? You are not referring to the virtual boundaries, but to the flat region in the center? It is hard to see the irregularities due to the curvature of the sphere. You could have created histrams of nearest neighbor distance or 2nd neighbor distance. I did this in 3D for the work I am doing on random 3D generation with Bengt and Natasha. Bengt gave me the idea. I have a Python implemenation.
+%GORDON: How does this show irregularity? You are not referring to the virtual boundaries, but to the flat region in the center? It is hard to see the irregularities due to the curvature of the sphere. You could have created histrams of nearest neighbor distance or 2nd neighbor distance. I did this in 3-D for the work I am doing on random 3-D generation with Bengt and Natasha. Bengt gave me the idea. I have a Python implemenation.
 
 %The process of generating new MD node sets greater than $N=27,556$ nodes would require recomputing the entire distribution. 
 
@@ -1122,7 +1122,7 @@ The resulting values of $\bar{\kappa}_A$ produce remarkably linear contours, wit
 
 As $N$ grows larger, we assume that the condition number continues linearly. The cost of computing $\bar{\kappa}_A$ balloons as data points are added to the contour plot so values of $N$ are not exhaustively tested. Also, be advised that the node distributions impact conditioning, so switching node distributions (e.g., from MD-nodes to a regular grid) would require constructing a new set of contours. 
 
-%TODO: How do plots change if nodes are uniform in a cube or if 2D, on a square? What is the effect of boundaries? Are there any? Boundaries (like for FD), would reduce the Courant number since points would probably be closer to each other.
+%TODO: How do plots change if nodes are uniform in a cube or if 2-D, on a square? What is the effect of boundaries? Are there any? Boundaries (like for FD), would reduce the Courant number since points would probably be closer to each other.
 
 
 Regression slope and intercept parameters ($c_1$ and $c_2$) are superimposed in Figure~\ref{fig:epsilon_contours} to aid others in choosing $\epsilon$ in new applications. These parameters reproduce contours as $\epsilon(\sqrt{N}) = c_1 \sqrt{N} - c_2$.  The authors of \cite{FlyerLehto11} find condition numbers on the order $10^{10}$ to $10^{12}$ to function well for competitive accuracy compared to other methods in the literature; the method begins to degrade on large grids (i.e., $N > 10^5$). Similar observations are made in Chapter~\ref{chap:applications}. 
