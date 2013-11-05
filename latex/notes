@@ -8,14 +8,13 @@
 	GPU SpMV vs CPU SpMV
 	CPU SpMV in UBLAS, MKL(?)
 
-	SpMV on GPU for increasing N (generate new regular grids now that KDTree works well) 
-
 (DONE) - Need benchmarks: 
 
 (done)    How does SpMV strongly scale as n varies and N is 4096000
 (done) 		-> tells us how stencil size impacts overlap and how MPI time grows
 (done) 		How does SpMV weakly scale as N varies for multiple n? 
 (done)		 -> Tells us how efficient the 
+(DONE)	 Write algorithms for Distributed
 
 
 Gather related work on SpMV and Distributed
@@ -31,7 +30,6 @@ Write algorithms for SpMV
 		ViennaCL allows the kernels to load the appropriate number of
 		threads per kernel 
 
-(DONE)	 Write algorithms for Distributed
 
 
 
@@ -47,8 +45,9 @@ What is really important:
 			viennacl
 			performance benchmarks
 
-		TODO:   benchmark viennacl with top GFLOPs (used tuned
+		DONE:   benchmark viennacl with top GFLOPs (used tuned
 			parameters for SpMV tests on one GPU 
+		TODO:   write-up
 
 
 	- Distributed GPU
@@ -59,7 +58,8 @@ What is really important:
 			overlap comm/comp
 			performance benchmarks with overlapping comm/comp
 		
-		TODO: 	Scaling benchmarks on Fermi with and without overlap
+		DONE: 	Scaling benchmarks on Fermi with and without overlap
+		TODO:   write-up
 
 	- Multi-Domain per GPU
 		why
@@ -109,8 +109,4 @@ What is really important:
 
 	- Appendices
 
-		TODO: Fix GFLOPs to be 24*N*n + 23*N or 16*N*n + 15*N
-
-		TODO: Insert figures and data for Anulus solves or 
-
-
+		DONE: Fix GFLOPs to be 24*N*n + 23*N or 16*N*n + 15*N

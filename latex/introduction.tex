@@ -229,9 +229,7 @@ found that the minimally invasive approach had limited impact on performance in 
 concentrated within GPU-accelerated tasks \cite{Goeddeke2009a}. 
 
 \authnote{Review from here to next section:} 
-At roughly the same time, a number of other efforts around the world started targeting multi-GPU clusters. Many (e.g., \cite{Phillips2009, Thibault2009, Komatitsch2009}) opted to first 
-
-for non-overlapped communication, only to realize the necessity for overlap in order to increase parallel efficiency. The challenges in multi-GPU computing are: a) to hide transfer latency for memory copies between CPU and GPU (and vice-versa), and b) to shrink the visible communication time, which suddenly appears larger against the accelerated GPU computation.
+At roughly the same time, a number of other efforts around the world started targeting multi-GPU clusters. Many (e.g., \cite{Phillips2009, Thibault2009, Komatitsch2009}) adopted non-overlapping communication and computation, only to realize the necessity for overlap in order to increase parallel efficiency. The challenges in multi-GPU computing are: a) to hide transfer latency for memory copies between CPU and GPU (and vice-versa), and b) to shrink the visible communication time, which suddenly appears larger against the accelerated GPU computation.
 Phillips et al. draw this conclusion based on scaling of their finite-volume method for compressible flow equations on an irregular structured grid on eight quad-core workstations with a total of 32 GPUs. 
 Thibault et al. \cite{Thibault2009} also note the need for overlap when modeling 3-D incompressible fluids with finite differences on structured grids and a Jacobi iteration. %Their solutions to the lid-driven cavity problem are based on
 
@@ -261,19 +259,22 @@ Within this document readers should expect to find the following major contribut
 \item Integer dilation and bit interleaving are introduced to the RBF community at large to construct a number of space-filling curve variants in 2-D and 3-D. The curves reorder cells of the fixed-grid algorithm on the prospect of additional cache hits for derivative calculations. 
 \begin{itemize} 
 \item A comparison of the variants to the result of the well-known Reverse Cuthill-McKee (RCM) algorithm concludes that RCM remains the better option for reordering and matrix bandwidth minimization.
+
+%GORDON: Given a grid of 48x48x96 or 96x48x48 or 48x96x48: RCM will have different effects with 48x48x96 producing the lowest bandwidth. You know why? (at least I think that is the case.)
+%Response: 
 \end{itemize} 
 \item The design and tuning of the only known implementation of the RBF-FD method to scale across multiple compute nodes of a supercomputing cluster.
 \begin{itemize} 
-\item Our home-grown implementation divides computation with a Restricted Additive Schwarz (RAS) domain decomposition in a first-of-its-kind application to RBF-FD. % (note: other RBF methods have already encountered RAS decomposition \cite{Yokota2010}). 
-\item As part of the tuning process described herein, balanced workloads are achieved through the use of the METIS graph partitioning algorithm \cite{Karypis1999}.  
-\item A number of steps are taken to improve communication collectives in the CPU-only implementation. The resulting algorithm splits derivative calculation into two steps and overlaps communication with computation. We observe that up to 80\% of the cost in communication can be hidden in some cases. 
+\item Our home-grown implementation distributes computation with a Restricted Additive Schwarz (RAS) domain decomposition in the first application to RBF-FD. % (note: other RBF methods have already encountered RAS decomposition \cite{Yokota2010}). 
+\item As part of the tuning process described herein, balanced workloads are achieved with the help of the METIS graph partitioning algorithm \cite{Karypis1999}.  
+\item A number of steps are taken to reduce communication times in the CPU-only implementation. The resulting algorithm splits derivative calculations into two steps and overlaps communication with computation. We observe that up to 80\% of the cost in communication can be hidden in some cases. 
 \item Scaling benchmarks up to 1024 processes (divided into 8 processes per node) and a grid resolution of $N=160^3$ vertices (i.e., 4.1 million) prove that the implementation scales well in both a strong and weak sense. 
 \end{itemize} 
 \item The design and tuning of the only known single- and multi-GPU implementation of RBF-FD. Also, ours is the only known investigation in the broader RBF community to target multiple GPUs. 
 \begin{itemize} 
 \item Our first paper (\cite{BolligFlyerErlebacher2012}) introduced a set of custom OpenCL kernels for RBF-FD time-stepping of hyperbolic PDEs with an explicit RK4 scheme (up to 10 GPUs). 
-\item Here, the performance per GPU is tuned by choosing an alternative sparse matrix representation. The investigation reveals that the Ellpack (ELL) structure provided by the ViennaCL library \cite{Rupp2010} is a great fit for RBF-FD differentiation matrices, with over 4x faster performance than the original compressed-row storage (CSR). %On one GPU (NVidia M2070) our implementation performs at approximately 8 GFLOP/sec. 
-\item The multi-GPU implementation is extended to a novel overlapping algorithm that naturally derives from our distributed CPU optimizations. Non-blocking MPI collectives plus two asynchronous OpenCL queues amortize the cost of data transfer between CPU and GPU, MPI communication, and in some cases a substantial amount of computation. Iterations of the resulting implementation achieve an average of 3x improvement in strong scaling compared to a non-overlapping equivalent. 
+\item Herein, the performance per GPU is tuned by choosing an alternative sparse matrix representation. The investigation reveals that the Ellpack (ELL) structure provided by the ViennaCL library \cite{Rupp2010} is a great fit for RBF-FD differentiation matrices, with over 4x faster performance than the original compressed-row storage (CSR). %On one GPU (NVidia M2070) our implementation performs at approximately 8 GFLOP/sec. 
+\item The multi-GPU implementation is extended to a novel overlapping algorithm that naturally derives from our distributed CPU optimizations. Non-blocking MPI communication plus two asynchronous OpenCL queues amortize the cost of data transfer between CPU and GPU, MPI communication, and in some cases a substantial amount of computation. Iterations of the resulting implementation achieve an average of 3x improvement in strong scaling compared to a non-overlapping equivalent. 
 \end{itemize} 
 \end{enumerate}
 Of lesser significance we also: 
@@ -281,12 +282,12 @@ Of lesser significance we also:
 \item Verify our explicit solvers against two well studied hyperbolic PDEs (Vortex Roll-up \cite{NairTransport05, NairJablonowski08} and Cosine Bell Advection \cite{JakobChien1995}).
 \begin{itemize} 
 \item Convergence studies confirm that hyperviscosity (\cite{Fornberg2011b}) stabilizes solutions.
-\item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size
+\item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size.
 \end{itemize}
 \item Implement a distributed multi-GPU preconditioned GMRES within ViennaCL for implicit RBF-FD solutions.
 \begin{itemize} 
 \item A divergence-free field is constructed as the manufactured solution for a simplified version of Stokes flow constrained to the unit sphere. 
-\item Contributed a CPU-only preconditioner (Incomplete LU with Zero Fill-in) to ViennaCL to test impact on GMRES convergence rates 
+\item Contributed a CPU-only preconditioner (Incomplete LU with Zero Fill-in) to ViennaCL to test impact on GMRES convergence rates.
 \end{itemize}
 \item Provide preliminary benchmarks evaluating the performance of RBF-FD on the Intel Phi Architecture. 
 %\begin{itemize} 
