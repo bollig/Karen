@@ -124,15 +124,15 @@ The relative error for both direct (Figure~\ref{fig:direct_vs_indirect_relative_
 			\label{fig:direct_vs_indirect_relative_error_xsfc_direct}
 	\end{subfigure}
 	\begin{subfigure}[t]{0.48\textwidth}
-	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error-eps-converted-to.pdf}
-	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$, direct weights}
-			\label{fig:direct_vs_indirect_relative_error_lsfc_direct}
-    \end{subfigure}
-    	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/xsfc_vs_xsfc_alt_on_sph32_times_sine_20x/indirect_rel_l2_error-eps-converted-to.pdf}
 	\caption{$\mathbf{p}_{x} \cdot \nabla ( Y_{3}^{2} \sin(20 x))$, indirect weights}
 		\label{fig:direct_vs_indirect_relative_error_xsfc_indirect}
 	\end{subfigure}
+	\begin{subfigure}[t]{0.48\textwidth}
+	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/direct_rel_l2_error-eps-converted-to.pdf}
+	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$, direct weights}
+			\label{fig:direct_vs_indirect_relative_error_lsfc_direct}
+    \end{subfigure}
 	\begin{subfigure}[t]{0.48\textwidth}
 	\includegraphics[width=1.0\textwidth]{../figures/appendices/direct_vs_indirect_weights/compare_weight_generation/lsfc_vs_px_grad_dot_px_grad/indirect_rel_l2_error-eps-converted-to.pdf}
 	\caption{$\LaplaceBeltrami ( Y_{3}^{2} \sin(20 x) )$, indirect weights}
@@ -142,7 +142,7 @@ The relative error for both direct (Figure~\ref{fig:direct_vs_indirect_relative_
 	\label{fig:direct_vs_indirect_relative_error}
 \end{figure}
 
-The plateau on convergence in Figure~\ref{fig:direct_vs_indirect_relative_error} is an indicator of limitations in the RBF-Direct method and the choice of $\epsilon$. This is interpreted as \emph{saturation error}, or the result of adjusting both $\epsilon$ and the spacing between nodes, $h$ \cite{FlyerFornberg11,Fasshauer2007}. Future investigation may consider the use of an alternative weight method like RBF-GA (\cite{Fornberg2012}) to maintain the rate of convergence. RBF-GA utilizes a change of basis on both the LHS and RHS of Equation~\ref{eq:rbffd_weight_system}, which implies the need to apply derivatives to both gaussian RBFs and incomplete gamma functions. With accurate RBF-GA weights, indirectly assembled DMs could be a viable alternative to the pain of deriving the modified RHS. 
+The plateau on convergence in Figure~\ref{fig:direct_vs_indirect_relative_error} is an indicator of limitations in the RBF-Direct method and the choice of $\epsilon$ (see discussion of \emph{saturation error} in \cite{FlyerFornberg11,Fasshauer2007}). Future investigation may consider the use of an alternative weight method like RBF-GA (\cite{Fornberg2012}) to maintain the rate of convergence. RBF-GA utilizes a change of basis on both the LHS and RHS of Equation~\ref{eq:rbffd_weight_system}, which implies the need to apply derivatives to both gaussian RBFs and incomplete gamma functions. With accurate RBF-GA weights, indirectly assembled DMs could be a viable alternative to the pain of deriving the modified RHS. 
 
 Figure~\ref{fig:direct_vs_indirect_unsigned_diff} considers the unsigned difference in relative $\ell_2$ errors: $| \text{($\ell_{2}$)}_{\text{direct}} - \text{($\ell_{2}$)}_{\text{indirect}} |$. The results confirm that indirect weight approximations for the constrained first derivative are as good (or bad) as using direct weights. The absolute value of the differences shows over six digits of agreement in accuracy for the first derivative. In the case of $\LaplaceBeltrami{}$, the indirect approach is significantly less accurate with only one or two digits of agreement in many cases. Fortunately, as $N$ grows the indirect and direct approximations converge. 
 
