@@ -658,11 +658,11 @@ Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:comp
 \end{figure}
 
 
-Figures~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils} and \ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils}  quantify the overhead in communication for all weak and strong scaling test cases. Both figures show the percentage of \emph{visible communication time}, $t_{Vis}$, during an iteration of the distributed SpMV. The visible time is defined as: 
+Figures~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils} and \ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils}  quantify the overhead in communication for all weak and strong scaling test cases. Both figures show the percentage of \emph{visible communication time} during an iteration of the distributed SpMV. The percentage of visible time is defined as: 
 \begin{align*}
-t_{Vis} = \ ^{(t_{Comm} - t_{SpMV 1}}) /_{t_{Total}}
+Vis = \ ^{(t_{Comm} - t_{SpMV 1}}) /_{t_{Total}} * 100\%
 \end{align*}
-where $t_{Vis}$ is the subset of time between the first MPI\_Irecv post and the start of the first SpMV (for $\setCenters \backslash \setBoundary$). Any communication hidden by the first SpMV is subtracted off $t_{Comm}$ with $t_{SpMV 1}$, the time spent computing.
+where $Vis$ is the subset of time between the first MPI\_Irecv post and the start of the first SpMV (for $\setCenters \backslash \setBoundary$). Any communication hidden by the first SpMV is subtracted off $t_{Comm}$ with $t_{SpMV 1}$, the time spent computing.
 
 The local minima in  Figure~\ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils} reveal an optimal choice of $p$ by stencil size for overlapping communication and computation. Note that the minima at $p=8$ for $n=17$, and $p=32$ for $n=31$ and $50$ correspond to strong scaling efficiency peaks in Figure~\ref{fig:compare_strong_scaling_efficiency_all_stencils}. Remarkably, we observe at those minima up to 80\% of the communication time is hidden. 
 
