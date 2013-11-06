@@ -1004,22 +1004,24 @@ The Preprocessing Phase encompasses tasks such as grid setup/generation, stencil
 \end{algorithmic}
 \end{algorithm}
 
-The algorithm loads/generates a grid. RBF-FD requires only node coordinates, and in some cases an indication of whether nodes are on a boundary. Information on mesh edges/connectivity is optional, but could be used to bypass stencil generation. The \textsc{QueryNeighbors} step forms stencils and constructs a directed adjacency matrix that indicates the connectivity of stencils. Either the grid or the adjacency matrix can be partitioned (see Chapter~\ref{chap:distributed_rbffd}) for distribution across multiple processors in the \textsc{DecomposeDomain} step. Finally, one or more processors operate independently to compute weights and assemble local DMs. The assumption in this work is that grids do not evolve in time, so DMs remain constant for the duration of phase 2 (Application). In the event of moving nodes, weight calculation and DM assembly would move into the loop in the second phase. 
+The algorithm loads/generates a grid. RBF-FD requires only node coordinates, and in some cases an indication of whether nodes are on a boundary. Information on mesh edges/connectivity is optional, but could be used to bypass stencil generation. The \textsc{QueryNeighbors} step forms stencils and constructs a directed adjacency matrix that indicates the connectivity of stencils. Either the grid or the adjacency matrix can be partitioned (see Chapter~\ref{chap:distributed_rbffd}) for distribution across multiple processors in the \textsc{DecomposeDomain} step. Finally, one or more processors operate independently to compute weights and assemble local DMs. The assumption in this work is that grids do not evolve in time, so DMs remain constant for the duration of the Application phase. In the event of moving nodes, weight calculation and DM assembly would move into the loop in the second phase. Note however, that the cost of DM generation would be excessive if the grid changed at every iteration. Efficiently handling grids with moving nodes and/or changing connectivity is a subject of future research. 
 
 
 
-Constructed DMs are applied to solve a PDE either explicitly (e.g., Equation~\ref{eq:explicit_dm}) or implicitly (e.g., Equation~\ref{eq:implicit_dm}). In the case of time-dependent PDEs, RBF-FD is applied the same as any classical FD method with a time-stepping scheme (represented by \textsc{UpdateSolution}). Examples of valid time-schemes include Runge-Kutta, Adams-Bashforth, and Crank Nicholson methods among many others. Based on the choice of time-scheme, one frequently needs multiple iterations through \textsc{SolvePDE} to assemble intermediate solutions that are weighted and combined in the \textsc{UpdateSolution} step.
+Constructed DMs are applied to solve a PDE either explicitly (e.g., Equation~\ref{eq:explicit_dm}) or implicitly (e.g., Equation~\ref{eq:implicit_dm}). In the case of time-dependent PDEs, RBF-FD is applied similarly to any classical FD method with a time-stepping scheme (represented by \textsc{UpdateSolution}). Examples of valid time-schemes include Runge-Kutta, Adams-Bashforth, and Crank Nicholson methods among many others. Based on the choice of time-scheme, one frequently needs multiple iterations through \textsc{SolvePDE} to assemble intermediate solutions that are weighted and combined in the \textsc{UpdateSolution} step.
 
 %TODO: add refs for RBF-FD uses of these schemes. 
 %TODO: add CFL ref
 
-Generally the performance of RBF-FD hinges on the cost of \textsc{SolvePDE}. This is especially true for time-dependent PDEs where the CFL condition relates the number of required time-steps to the spacing between nodes. As the problem size grows, smaller time-steps must be taken in order to maintain stability. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact performance SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, coarser grid, and faster convergence.
+Generally the performance of RBF-FD hinges on the cost of \textsc{SolvePDE}. This is especially true for time-dependent PDEs where the CFL condition relates the number of required time-steps to the spacing between nodes. As the problem size grows, smaller time-steps must be taken in order to maintain stability. Chapter~\ref{chap:stencils} demonstrates that choosing the right algorithms for preprocessing tasks can also directly impact the performance of SpMV. Beyond this, the choice of stencils and accuracy of weights can impact the overall accuracy of approximation, stability and conditioning of the method. As each of these properties improve, the overall time to solution can decrease thanks to larger stable time-steps, coarser grids, and faster convergence.
 
 
 \section{Grids} 
 
 
-RBF-FD has no requirement for structured grids, or need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds; although, the actual node placement can not only impact accuracy of the method, but stability as well. The only restriction from the method is that coincident nodes should not be connected. This functional portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for other methods. 
+RBF-FD has no requirement for structured grids, nor a need for a well-refined mesh/lattice to define and limit connectivity between nodes. It functions the same on existing meshes and randomly generated point clouds, although the actual node placement can not only impact accuracy of the method, but stability as well. The only restriction from the method is that coincident nodes should not be connected. This functional portability on domains of any shape, dimension, and granularity is a major selling point, and something often out of reach for other methods. 
+
+For benchmarking purposes we test a number of \emph{grid refinements}. In this context, a refinement is assumed to be a uniform increase in the global problem size. It is possible, but not required, for refinement to be a \emph{subdivision} of a coarse grid, which implies the coarse grid is included as a proper subset of the finer grid.
 %\begin{itemize} 
 %\item scattered nodes
 %
@@ -1035,13 +1037,13 @@ RBF-FD has no requirement for structured grids, or need for a well-refined mesh/
 
 %The choice of grid is only relevant to the extent that it impacts the connectivity between nodes in stencils. Connectivity translates to nonzeros in rows of the DMs, so the various grid distributions result in a number of sparsity patterns. For all other intents and purposes, the choice of grid is only pertinent to ensure consistency with the PDEs to solve. 
 
-This work verifies and benchmarks RBF-FD on the following grids, which are available for public download (see \cite{BolligSphereGrids}):
+This work verifies and benchmarks RBF-FD on the following grids, which are available for public download (see \cite{BolligSphereGrids}).
 
 %In Chapter~\ref{chap:explicit_implicit_pdes} we test the performance of our method with application to transient and steady-state PDEs. For the purpose of verification we demonstrate convergence for sets of grids previously published in the RBF literature. We briefly describe each type of grid and when it is used. 
 
-\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in multiple dimensions are simple to generate. Additionally, refinements---for scaling benchmarks and convergence tests---are direct subsets. 
+\subsubsection{Regular Grid}For basic debugging and benchmarking purposes the most natural choice is to start with a regular or Cartesian grid. Equally spaced nodes in multiple dimensions are simple to generate. Additionally, grid refinements---for scaling benchmarks and convergence tests---can be generated as subdivisions of coarser grids (i.e., the coarser grids are subsets of the fine grids). 
 
-In theory, RBF-FD functions the same whether nodes are uniformly spaced or random. However, regular grids do not fully exercise advantages that RBF-FD has over other methods with its ability to operate on scattered nodes. For this reason regular grids are only used here for benchmarking purposes and range in size from $N=10^3$ to $N=160^3 =$ 4,096,000 nodes. 
+In theory, RBF-FD functions the same whether nodes are uniformly spaced or random. However, regular grids do not fully expose advantages that RBF-FD has over other methods with its ability to operate on scattered nodes. For this reason regular grids are only used here for benchmarking purposes and range in size from $N=10^3$ to $N=160^3 =$ 4,096,000 nodes. 
 
 
 
@@ -1066,7 +1068,7 @@ The MD node files are available for download on the authors' web site \cite{Wome
 
 \subsubsection{Icosahedral Nodes on the Sphere}
 
-Figure~\ref{fig:icos_nodes} shows Icosahedral nodes on the sphere. Icosahedral grids are nearly homogenous and isotropic, and have been in use since the 1960s \cite{Randall2002}. The grids originate as an icosahedron which is refined by subdividing edges equally and projecting back onto the unit sphere. The direct subdivisions imply that tests on icosahedral grids are true refinements of previous grids (in contrast to MD-nodes). This work tests Icosahedral grids with N=42 up to N=163842 (i.e., the first through 7th refinements). 
+Figure~\ref{fig:icos_nodes} shows Icosahedral nodes on the sphere. Icosahedral grids are nearly homogenous and isotropic, and have been in use since the 1960s \cite{Randall2002}. The grids originate as an icosahedron which is refined by subdividing edges equally and projecting back onto the unit sphere. The direct subdivisions imply that tests on icosahedral grids are true subdivisions of previous grids (in contrast to MD-nodes). This work tests Icosahedral grids with N=42 up to N=163842 (i.e., the first through 7th refinements). 
 
 \begin{figure} 
 \centering
@@ -1100,9 +1102,11 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 \label{sec:epsilon_contours}
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
-If solving for RBF-Direct weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system} directly), one must balance the choice of $\epsilon$ against ill-conditioning to achieve a reasonable accuracy for the weights. Numerous attempts exist in literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). 
+If solving for RBF-Direct weights directly (i.e., inverting Equation~\ref{eq:rbffd_weight_system} directly), one must balance the choice of $\epsilon$ against ill-conditioning to achieve a reasonable accuracy for the weights. %Numerous attempts exist in the literature to provide ``good" functions for $\epsilon$ based on node spacing ($h$), stencil size ($n$), and total number of nodes in the domain ($N$). 
 
-Unfortunately, no foolproof method exists for RBF-Direct---the ``optimal" (in most cases this reads: ``most acceptable") value of $\epsilon$ depends on the node distribution and varies by application. Parameter sweeps to characterize the behavior of $\epsilon$ on large problems can be prohibitively expensive in terms of time and/or money. Ultimately, stable methods for obtaining weights (see \S~\ref{sec:stable_methods}) are really necessary for general large-scale applications, even if such methods are 10x--40x slower than RBF-Direct \cite{Fornberg2012}. 
+Unfortunately, no foolproof method exists to scale $\epsilon$ as a function of $N$ for RBF-Direct---the ``optimal" (in most cases this reads: ``most acceptable") value of $\epsilon$ depends on the node distribution and varies by application. 
+As a rule of thumb, when the spacing between nodes decreases $\epsilon$ must increase. 
+Parameter sweeps to characterize the behavior of $\epsilon$ on large problems can be prohibitively expensive in terms of time and/or money. Ultimately, stable methods for obtaining weights (see \S~\ref{sec:stable_methods}) are really necessary for general large-scale applications, even if such methods are 10x--40x slower than RBF-Direct \cite{Fornberg2012}. 
 
 %GORDON: On large problems that are expensive, how is epsilon chosen? You might not have the $$ to do long, expensive test runs. 
 % Where is kappabar = 1/N … first defined? Same without the bar. Defined where?
