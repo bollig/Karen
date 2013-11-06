@@ -143,6 +143,7 @@ Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is 
 (c_x, c_y, c_z) & = \left(\left\lfloor\frac{(p_x - x_{min})}{dx}\right\rfloor , \left\lfloor\frac{(p_y - y_{min})}{dy}\right\rfloor , \left\lfloor\frac{(p_z - z_{min})}{dz}\right\rfloor \right).
 \label{eq:cell_hash}
 \end{align}
+This work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$) to ensure neighbor queries are true balls and not ellipsoids. 
 Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding positive and negative offsets to each coordinate. %Note that the fixed-grid in this method is virtual. Nodes are matched with cell coordinates, but the full grid (i.e., vertices/edges) is never explicitly constructed.
 
 Fixed grid methods also make use of \emph{space filling curves}. Space filling curves pass through every point in $d$-dimensional space, and through each point only once. Equivalently, space filling curves map $d$-dimensional space down to 1-D, where every point is converted to a unique index or traversal order based on its spatial coordinates. These mapping properties make space filling curves ideal for use as hash functions. Traversing the $d$-dimensional points (i.e., playing ``connect the dots") draws the space filling curve. Figure~\ref{fig:space_filling_curves} presents two common orderings of a 2-D fixed-grid. Note that one-dimensional orderings are not unique. On the left is a \emph{Raster}-ordering (a.k.a. Scanline- or $ijk$-ordering): $f(c_x,c_y,c_z) = ((c_x * h_n) + c_y) * h_n + c_z$. The right half of Figure~\ref{fig:space_filling_curves} shows an ordering known as Morton- or $Z$-ordering. $Z$-ordering construction is discussed later in this chapter. On both sides of Figure~\ref{fig:space_filling_curves}, the lower left corner of each cell indicates the mapped index. Traversing the cells in order produces the curves superimposed in red. 
@@ -169,7 +170,11 @@ The algorithm in this work is inspired by fixed-grid approaches for GPU particle
 
 Note that the fixed-grid method works best for quasi-uniform node distributions. In the case of non-uniform node distributions, the search cost is dominated by the regions of high node density.
 
-The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one halo of neighboring cells (i.e., 8 surrounding cells in 2-D and 26 cells in 3-D). Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. A similar approach is taken by \cite{Goswami2010}, but the authors opt for a $Z$-ordering of cells. 
+
+The authors of \cite{Krog2010,Johnson2011,Green2010} assume a raster-ordering on cells, and that the uniform grid is sufficiently refined to ensure cells contain at most eight nodes. Particle interactions are limited to ball queries on the containing cell plus one halo of neighboring cells. The term \emph{halo} is used to describe the layer of cells neighboring a node's containing cell. The first halo refers to the 8 surrounding cells in 2-D and 26 cells in 3-D. The $i$-th halo in $d$-dimensions contains $\left(2(i+1)-1\right)^d - \left(2i - 1\right)^d$ cells. Returning to Figure~\ref{fig:nearest_neighbor_example}, we find two ball queries intersecting cells of of the first and second halos.
+
+
+Since the number of cells to check is fixed, the neighboring nodes can be obtained by direct access in constant time. A similar approach is taken by \cite{Goswami2010}, but the authors opt for a $Z$-ordering of cells. 
  As a point of difference in implementations, the authors of \cite{Green2010, Krog2010, Goswami2010} leverage a fast radix sort algorithm to order nodes based on hash index, while \cite{Johnson2011} utilizes a slower bitonic sort algorithm. The fixed-grid method in \cite{Wendland2002,WendlandBook} forgoes logic to refine the grid and enforces a maximum limit on the number of nodes per cell. The author also avoids sorting nodes based on cell hashes. Instead, a list is maintained that stores the indices of all contained nodes per cell. %, which implies random memory access when operating on the nodes of a cell.    
 
 
@@ -232,9 +237,9 @@ Looking at Figure~\ref{fig:reorder_example} it should be obvious that reordering
 
 \subsection{Fixed-Grid Neighbor Query}
 
-Querying the $k$-nearest neighbors for a node, $X_q$, is the subject of Algorithm~\ref{alg:fixed_grid_query}. The process begins by finding $X_q$'s containing cell, $c$. The hash value of $c$ is used to identify (in $Q$) the list of nodes contained within that cell, all of which are appended to a vector of neighbor candidates, $pq$. 
+Querying the $k$-nearest neighbors for a node, $X_q$, is the subject of Algorithm~\ref{alg:fixed_grid_query}. The process begins by finding $X_q$'s containing cell, $c$. The hash value of $c$ is used in Algorithm~\ref{alg:fixed_grid_query} to identify (in $Q$) the list of nodes contained within that cell, and then the identified nodes are appended to a list named $pq$, which accumulates all neighbor candidates. 
 
-It is possible for the number nodes in $c$ to exceed $n$; however, the algorithm conservatively assumes that it is necessary to search at least one halo of cells around it.  This ensures that nodes near the cell boundaries will find nearby neighbors outside of $c$, and the stencils will be balanced. Also, for certain fixed-grid resolutions, a single halo may not satisfy the stencil size requirements, so the algorithm iterates outward. As cells are checked, their nodes are appended onto $pq$. 
+It is possible for the number nodes in $c$ to exceed $n$; however, the algorithm conservatively assumes that it is necessary to search at least one halo of cells around it.  This ensures that nodes near the cell boundaries will find nearby neighbors outside of the current cell, $c$, and the stencils will be balanced. Also, for certain fixed-grid resolutions, a single halo may not satisfy the stencil size requirements, so the algorithm iterates outward. As cells are checked, their nodes are appended to $pq$. 
 
 The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance from all candidate nodes to $X_q$, and uses that metric to sort $pq$ in ascending order. The first $n$ nodes in $pq$ are returned as the stencil. 
 \begin{algorithm} 
@@ -265,15 +270,15 @@ The final stage of Algorithm~\ref{alg:fixed_grid_query} calculates the distance 
 \end{algorithm}
 
 
-Complexity of Algorithm~\ref{alg:fixed_grid_query} can vary based on the choice of $h_n$. For a sufficiently refined fixed-grid the $k$-ANN is dominated by the cost of the \emph{while-loop} and behaves as $O(\log h_n)$ per stencil. In the worst case, when $h_n$ is small, the cost of sorting $pq$ dominates, and is proportional to $O(N \log N)$ (using a C++ STL Sort) in the worst case. %TODO: verify with Gordon.  
+The complexity of Algorithm~\ref{alg:fixed_grid_query} can vary based on the choice of $h_n$. For a sufficiently refined fixed-grid the $k$-ANN is dominated by the cost of the \emph{while-loop} is $O(\log h_n)$ operations per stencil. In the worst case, when $h_n$ is small, the cost of sorting $pq$ dominates, and is proportional to $O(N \log N)$ (using a C++ STL Sort).  
 Results below demonstrate that proper choice of $h_n$ can maintain logarithmic complexity similar to the $k$-D Tree query. 
 
 
 The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the blue center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternate black node is selected even though it is more distant. This happens because the more distant black node occupies the second halo of cells around the stencil center, whereas the true near neighbor is in the third. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second iteration by satisfying the requirement on $n$. 
 
-Similarly, if cells are rectangular in shape, the ball-query under fixed-grid functions as an ellipsoid. In this case, stencils are biased with more nodes in one direction. To combat this, and ensure spherical stencils, this work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$). 
+%Similarly, if cells are rectangular in shape, the ball-query under fixed-grid functions as an ellipsoid. In this case, stencils are biased with more nodes in one direction. To combat this, and ensure spherical stencils, this work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$). 
 
-The difference between a true $k$-NN and $k$-ANN is insignificant from the perspective of RBF-FD. The method compensates automatically for differences in node locations when weights are calculated. Additionally, the only differences in stencils generated by $k$-NN versus $k$-ANN occur at nodes on the outermost reaches of the stencil (i.e., nodes with the least impact on the stencil center).
+The difference between a true $k$-NN and $k$-ANN can be significant in terms of performance for the neighbor query, but has little or no impact on RBF-FD operation. The only differences in stencils between $k$-NN and $k$-ANN occur at stencil nodes furthest from the stencil center (i.e., nodes with the least impact on the stencil center). 
 
 
 %\begin{figure}
@@ -308,7 +313,7 @@ Prior to the 2012 improvements, the C++ implementation was over 130x faster for 
 \centering
 \includegraphics[width=\textwidth]{../figures/stencils/kdtree_old_reg_subsets_4m_stencil_gen_time.png}
 \caption{3-D Regular Grid with stencil size $n=50$}
-%\label{fig:sten_query_a}
+\label{fig:sten_query_a}
 \end{subfigure}
 \begin{subfigure}{9.5cm}
 \centering
