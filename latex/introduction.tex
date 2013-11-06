@@ -246,6 +246,10 @@ Most recently, the PETSc library gained GPU support \cite{Minden2010,YokotaGPU20
 
 %Meshed methods have received a large amount of attention from the GPU community. For example, Bolz et al. \cite{Bolz2003} implemented conjugate gradient and multigrid kernels for 2-D FD incompressible fluid simulation using FD on a single GPU.  More recently, a single GPU, multigrid finite-difference based solver was applied to 3-D compressible fluid flow (Euler equations) by Elsen et al. \cite{Elsen2008}.
 
+The bulk of work for the RBF-FD method is a Sparse Matrix Vector (SpMV) Multiplication. Efforts such as \cite{Schubert2011,Kreutzer2012} investigate optimizations that overlap communication and computation \authnote{complete this}
+
+
+
 
 \section{Major Contributions}
 
