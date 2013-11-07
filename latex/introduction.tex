@@ -228,9 +228,8 @@ problems and
 found that the minimally invasive approach had limited impact on performance in the new setting where computational work was no longer  
 concentrated within GPU-accelerated tasks \cite{Goeddeke2009a}. 
 
-\authnote{Review from here to next section:} 
 At roughly the same time, a number of other efforts around the world started targeting multi-GPU clusters. Many (e.g., \cite{Phillips2009, Thibault2009, Komatitsch2009}) adopted non-overlapping communication and computation, only to realize the necessity for overlap in order to increase parallel efficiency. The challenges in multi-GPU computing are: a) to hide transfer latency for memory copies between CPU and GPU (and vice-versa), and b) to shrink the visible communication time, which suddenly appears larger against the accelerated GPU computation.
-Phillips et al. draw this conclusion based on scaling of their finite-volume method for compressible flow equations on an irregular structured grid on eight quad-core workstations with a total of 32 GPUs. 
+Phillips et al. draw this conclusion based on scaling of their finite-volume method for compressible flow equations on an irregular structured grid solved on eight quad-core workstations with a total of 32 GPUs. 
 Thibault et al. \cite{Thibault2009} also note the need for overlap when modeling 3-D incompressible fluids with finite differences on structured grids and a Jacobi iteration. %Their solutions to the lid-driven cavity problem are based on
 
 In another series of articles, Komatitsch et al. \cite{Komatitsch2009, Komatitsch2010b,Komatitsch2010a} ported a well-tuned spectral-element code named SPECFEM to the GPU. The code was initially offloaded in \cite{Komatitsch2009} and demonstrated up to 25x speedup over a serial CPU version. In \cite{Komatitsch2010b,Komatitsch2010a} the authors span computation across GPU clusters. Aided by non-blocking MPI communication and a sufficiently large problem, roughly 90\% of communication time is demonstrated to be hidden during weak scaling tests. 
@@ -238,7 +237,7 @@ In another series of articles, Komatitsch et al. \cite{Komatitsch2009, Komatitsc
 
  %As the 2003 recipient of the Gordon Bell award, SPECFEM had already undergone a plethora of  fine tuning
 
-Phillips and Fatica overlap communication and computation in \cite{Phillips2010} while solving the Himeno benchmark---a test specifically designed to compare performance of processors based on a memory-bound application (in this case the 3-D Poisson problem in generalized coordinates).  
+Phillips and Fatica overlap communication and computation in \cite{Phillips2010} while solving the Himeno benchmark---a test specifically designed to compare performance of processors in the case of memory-bound applications. The Himeno benchmark solves a 3-D Poisson problem in generalized coordinates on a structured curvilinear mesh. The Himeno benchmark considers a 3-D stencil of 27 nodes at each point. 
 
 
 Most recently, the PETSc library gained GPU support \cite{Minden2010,YokotaGPU2010}. PETSc is a widely-used library with proven scalability on many supercomputing clusters that provides distributed sparse and dense matrix algebra, Krylov solvers, and preconditioners. 
