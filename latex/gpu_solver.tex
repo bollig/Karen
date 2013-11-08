@@ -28,12 +28,12 @@ Power constraints make further frequency scaling on CPUs almost impossible, whic
 \end{figure}
 
 GPUs originated as dedicated hardware for video games and computer graphics. 
-Due to the inherent task parallelism in computer graphics  (e.g., for rasterization), early GPU designers adopted a many-core strategy for hardware, which persists today. Computer graphics traditionally involved simple operations, so the majority of transistors on a GPU are dedicated to computation in vector pipelines with limited control for logic. The earliest GPUs had static rendering pipelines with fixed functions. In contrast to this, CPUs have always focused on fast serial and scalar operations. This means they allocate less transistors to computation in order to free space for the needs of advanced logic tasks like branching, caching, etc. \cite{Owens2007,CudaGuide2013}. Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (Courtesy of NVidia, \cite{CudaGuide2013}) illustrates the difference between CPUs and GPUs at a high level. The high density of Arithmetic Logic Units (ALUs) with simple control and caching units is signature of GPUs. 
+Due to the inherent task parallelism in computer graphics  (e.g., for rasterization), early GPU designers adopted a many-core strategy for hardware, which persists today. Computer graphics traditionally involved simple operations, so the majority of transistors on a GPU are dedicated to computation in vector pipelines with limited control for logic. The earliest GPUs had static rendering pipelines with fixed functions. In contrast to this, CPUs have always focused on fast serial and scalar operations. This means they allocate less transistors to computation in order to free space for the needs of advanced logic tasks like branching, caching, etc. \cite{Owens2007,CudaGuide2013}. Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (Courtesy of NVidia, \cite{CudaGuide2013}) illustrates the difference between CPUs and GPUs at a high level. The high density of Arithmetic Logic Units (ALUs) with simple control and caching units is signature design feature of GPUs. 
 
-Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore, was molded into a fully programmable and dynamic execution platform with a SIMD-like platform. Prior to 2006, the GPU had already evolved away from fixed-function pipelines and into limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with substantial effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Trendall2000,Jansen2007,Harris2005,Owens2007}).
+Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore was molded into a fully programmable and dynamic execution platform with a SIMD-like flavor. Prior to 2006, the GPU had already evolved away from fixed-function pipelines and into limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with substantial effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Trendall2000,Jansen2007,Harris2005,Owens2007}).
 GPUs, miles ahead in the many-core arena, only required a bit of flexibility in control and logic to compete against the CPU for general purpose computing.  
 
-The release of NVidia's CUDA architecture and software stack \cite{CudaGuide2013} at the end of 2006, deprecated the need for tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program. The monumental new hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public. 
+The release of NVidia's CUDA architecture and software stack \cite{CudaGuide2013} at the end of 2006, reduced substantially the need for tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program. The monumental new hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public. 
 
 
 The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently leads CPUs by a full order of magnitude. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than CPUs \cite{CudaGuide2013}. Figure~\ref{fig:memory-bandwidth} (courtesy of NVidia; \cite{CudaGuide2013}) compares the evolving memory bandwidth for NVidia and Intel. 
@@ -56,14 +56,14 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 \caption{Performance comparison for Graphics Processing Units (GPUs).}
 \end{figure}
 
-In the years since CUDA was released a vast number of libraries and language extensions have surfaced to leverage the GPU architecture for scientific computing.  
+In the years since CUDA was released, a vast number of libraries and language extensions have surfaced to leverage the GPU architecture for scientific computing.  
 
 
 
 %TODO verify date of open source
-In 2012 NVidia open sourced CUDA to lower level virtual machine. This opened the possibility of directly compiling other languages like Python (Anaconda) to build kernels directly within the Python language for CUDA. 
+In 2012 NVidia open sourced CUDA to lower level virtual machines. This opened the possibility of directly compiling other languages like Python (Anaconda) to build kernels directly within the Python language for CUDA. 
 
-GPUs support single and double precision. RBF-FD certainly requires double precision at the moment. Solving for the weights in single precision might work, but the lower precision would not be able to handle the ill-conditioned system. Projecting double precision weights into single precision results in weights that sum to $\approx 10^{-4}$, a poor approximation to zero. 
+GPUs currently support single and double precision. RBF-FD certainly requires double precision at the moment. Solving for the weights in single precision might work, but the lower precision would not be able to handle the ill-conditioned system. Projecting double precision weights into single precision results in weights that sum to $\approx 10^{-4}$, a poor approximation to zero. 
 %
 %the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
 %OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
@@ -83,14 +83,14 @@ GPUs support single and double precision. RBF-FD certainly requires double preci
 
 \section{Managing Expectations for the GPU}
 \begin{figure} 
-\begin{subfigure}{0.5\textwidth}
+\begin{subfigure}{0.45\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/spmv/roofline_m2050_m2070-eps-converted-to.pdf}
 \caption{Roofline Model for NVidia Fermi class GPUs, M2050 and M2070. SpMV Peak: 36 GFLOP/sec.}
 \label{fig:roofline_m2070}
 \end{subfigure}
 \quad
-\begin{subfigure}{0.5\textwidth}
+\begin{subfigure}{0.45\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/spmv/roofline_k20-eps-converted-to.pdf}
 \caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 52 GFLOP/sec.}
@@ -100,9 +100,9 @@ GPUs support single and double precision. RBF-FD certainly requires double preci
 \end{figure}
 
 
-Success stories abound on the GPU citing massive gains. However, many like \cite{Phillips2009} appear to be impossible
+Success stories abound on the GPU citing massive gains in performance. However, many like \cite{Phillips2009} appear to be impossible
 
-RBF-FD is embarrassingly parallel with stencils applied independently. Unfortunately, perfect concurrency does not always imply perfect performance. %TODO: (SHOW RBF-FD benchmarks for Vortex and Cosine as an example of 1x and 2x SpMV on GPU; state that the generation GPU they were run on has a peak of xxx which means performance was xxx\% (dismal).).
+RBF-FD is embarrassingly parallel with stencils applied independently. Unfortunately, maximum concurrency does not always imply perfect performance. %TODO: (SHOW RBF-FD benchmarks for Vortex and Cosine as an example of 1x and 2x SpMV on GPU; state that the generation GPU they were run on has a peak of xxx which means performance was xxx\% (dismal).).
 
 On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/sec per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/sec on the Fermi and 13 on the K20 (compared to the 2 GFLOP/sec on Itasca). 
 
@@ -170,19 +170,19 @@ CUDA is not the only solution for GPU computing.
 
 %TODO: in 2009 enter OpenCL as a standard as a parallel language on top of all those hardware
 
-In early 2009, the Khronos Group--the group responsible for maintaining OpenGL--announced a new specification for a general 
+In early 2009, the Khronos Group announced a new specification for a general 
 parallel programming lanugage referred to as the Open Compute Language (OpenCL) \cite{OpenCL2009}. Similar in design to the CUDA language---in many ways it is a simple refactoring of the predecessor---the goal of OpenCL is to provide a mid-to-low level API and language to control any multi- or many-core processor in a uniform fashion. Today, OpenCL drivers exist for a variety of hardware including NVidia GPUs, AMD/ATI CPUs and GPUs, and Intel CPUs. 
 
-This \textit{functional portability} is the cornerstone of the OpenCL language. However, functional portability does not imply performance portability. That is, OpenCL allows developers to write kernels capable of running on all types of target hardware, but optimizing kernels for one type of target (e.g., GPU) does not guarantee the kernel will run efficiently on another target (e.g., CPU).
+This \textit{functional portability} is the cornerstone of the OpenCL language. However, functional portability does not imply performance portability. That is, OpenCL allows developers to write kernels capable of running on all types of target hardware, but optimizing kernels for one type of target (e.g., NVidia GPUs) does not guarantee that the kernel will run efficiently on another target (e.g., CPU).
 
-With CPUs tending toward many cores, and the once special purpose, many-core GPUs offering general purpose functionality, it is already possible to see the CPU and GPU converging into general purpose many-core architectures. Already, ATI has introduced the Fusion APU (Accelerated Processing Unit) which couples an AMD CPU and ATI GPU within a single die. OpenCL is an attempt to standardize programming ahead of this intersection. 
+With CPUs tending towards many cores, and the once special purpose, many-core GPUs offering general purpose functionality, it is already possible to see the CPU and GPU converging into general purpose many-core architectures. Already, ATI has introduced the Fusion APU (Accelerated Processing Unit) which couples an AMD CPU and ATI GPU within a single die. OpenCL is an attempt to standardize programming ahead of this intersection. 
 
 %Home computers, smart-phones and other devices containing many- or multi-core compute units internally have driven the generalization of the accelerator language to provide a unified approach to targeting any available hardware. 
 
 \section{Sparse Matrix Libraries}
 
 One thing missing from the original release of CUDA was sparse matrix algebra support. 
-This led to investigations like \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, developed sparse matrix libraries for the GPU. The APIs of CUSP and ViennaCL are used like 
+This led to investigations like \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which are sparse matrix libraries developed for the GPU. The APIs of CUSP and ViennaCL are used like 
 
 Algorithms from \cite{Bell2009} have since been included in the CUDA SDK as the cuSPARSE library. 
 
