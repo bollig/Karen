@@ -261,8 +261,7 @@ Within this document readers should expect to find the following major contribut
 \end{itemize} 
 \item Integer dilation and bit interleaving are introduced to the RBF community at large to construct a number of space-filling curve variants in 2-D and 3-D. The curves reorder cells of the fixed-grid algorithm on the prospect of additional cache hits for derivative calculations. 
 \begin{itemize} 
-\item A comparison of the variants to the result of the well-known Reverse Cuthill-McKee (RCM) algorithm concludes that RCM remains the better option for reordering and matrix bandwidth minimization.
-
+\item A comparison of the variants to the result of the well-known Reverse Cuthill-McKee (RCM) algorithm finds that RCM is the better option for minimizing the matrix bandwidth. 
 %GORDON: Given a grid of 48x48x96 or 96x48x48 or 48x96x48: RCM will have different effects with 48x48x96 producing the lowest bandwidth. You know why? (at least I think that is the case.)
 %Response: 
 \end{itemize} 
@@ -271,7 +270,7 @@ Within this document readers should expect to find the following major contribut
 \item Our home-grown implementation distributes computation with a Restricted Additive Schwarz (RAS) domain decomposition in the first application to RBF-FD. % (note: other RBF methods have already encountered RAS decomposition \cite{Yokota2010}). 
 \item As part of the tuning process described herein, balanced workloads are achieved with the help of the METIS graph partitioning algorithm \cite{Karypis1999}.  
 \item A number of steps are taken to reduce communication times in the CPU-only implementation. The resulting algorithm splits derivative calculations into two steps and overlaps communication with computation. We observe that up to 80\% of the cost in communication can be hidden in some cases. 
-\item Scaling benchmarks up to 1024 processes (divided into 8 processes per node) and a grid resolution of $N=160^3$ vertices (i.e., 4.1 million) prove that the implementation scales well in both a strong and weak sense. 
+\item Scaling benchmarks (\S~\ref{sec:scaling_summary}) up to 1024 processes (divided into 8 processes per node) and a grid resolution of $N=160^3$ vertices (i.e., 4.1 million) demonstrate that the implementation scales moderately well in both a strong and weak sense. 
 \end{itemize} 
 \item The design and tuning of the only known single- and multi-GPU implementation of RBF-FD. Also, ours is the only known investigation in the broader RBF community to target multiple GPUs. 
 \begin{itemize} 

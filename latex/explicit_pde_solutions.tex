@@ -93,8 +93,9 @@ The parameters $\gamma_c$ and $k$ are obtained via trial-and-error parameter sea
 The RBF shape parameter, $\epsilon$, is expressed as a function of $N$ based on work in \cite{FlyerLehto11}. If we let $(\kappa_A)_j$ be the condition number of the interpolation matrix in Equation~\ref{eq:rbffd_weight_system} for the $j^{th}$ stencil, then we seek an $\epsilon$ such that the mean condition number of the local RBF interpolation matrices $\bar{\kappa}_A = \frac{1}{N}\sum_{j=1}^N (\kappa_A)_j$ is kept constant as $N$ grows. For a constant mean condition number, $\epsilon$ varies linearly with $\sqrt{N}$ (see \cite{FlyerLehto11} Figure 4a and b, and the examples in Section~\ref{sec:epsilon_contours}). This is not surprising since the condition number strongly depends on the quantity $\epsilon r$, where $r\thicksim1/\sqrt{N}$ on the sphere. Thus, to obtain a constant condition number, we let $\epsilon (N) = c_1 \sqrt{N} - c_2$, where $c_1$ and $c_2$ are constants based on \cite{FlyerLehto11}.
 
 \begin{table}[t]
-\caption{Values for hyperviscosity and the RBF shape parameter $\epsilon$ for vortex roll-up test.}
 \begin{center}
+\caption{Values for hyperviscosity and the RBF shape parameter $\epsilon$ for vortex roll-up test.}
+\label{tbl:vortex_hv_params}
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline		     & \multicolumn{2}{c|}{$\epsilon = c_1 \sqrt{N} - c_2$} & \multicolumn{2}{c|}{$H = -\gamma_{c} N^{-k} \Delta^{k}$ } \\ \hline
 Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
@@ -104,7 +105,6 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 101 & 0.058 & 0.16 & 4 & $40$ \\ \hline
 \end{tabular}
 \end{center}
-\label{tbl:vortex_hv_params}
 \end{table}
 
 
@@ -225,9 +225,10 @@ having a maximum height of $h_0 = 1$, a radius $R = \frac{1}{3}$ and centered at
 $\rho = \arccos( \sin \theta_{c} \sin \theta + \cos \theta_{c} \cos \theta \cos (\lambda - \lambda_{c}) )$.
 The angle of rotation, $\alpha =\ ^{\pi}/_{2}$, is chosen to transport the bell over the poles of the coordinate system.
 
-\begin{table}[ht!]
-\caption{Values for hyperviscosity and RBF shape parameter for the cosine bell test. }
+\begin{table}
 \begin{center}
+\caption{Values for hyperviscosity and RBF shape parameter for the cosine bell test. }
+\label{tbl:cos_hv_params}
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline		     & \multicolumn{2}{c|}{$\epsilon = c_1 \sqrt{N} - c_2$} & \multicolumn{2}{c|}{$H = -\gamma_{c} N^{-k} \Delta^{k}$ } \\ \hline
 Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
@@ -237,7 +238,6 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 101 & 0.058 & 0.16 & 8 & $5 * 10^{-2}$ \\ \hline
 \end{tabular}
 \end{center}
-\label{tbl:cos_hv_params}
 \end{table}
 
 \begin{figure}
@@ -266,7 +266,7 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 \end{figure}
 
 
-\begin{figure}[ht!]
+\begin{figure}
 \begin{center}
 \begin{subfigure}[b]{0.55\textwidth}
 	%\includegraphics[width=1.0\textwidth]{../figures/paper1/figures/cosine_bell/trimmed_ComputedSolution_ManualBar.pdf}
@@ -296,10 +296,8 @@ Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolu
 
 After ten revolutions, the cosine bell is still intact with only 0.6\% lost from the original peak ($h_0=1$). The white and purple rippling effect shown in Figure~\ref{fig:cosine_approx} is not severe. The absolute error in Figure~\ref{fig:cosine_abserror} clarifies that the majority of the absolute error appears at the base of the $C^1$ bell where the discontinuity appears in the derivative. Beyond the region at the base of the bell, the absolute error drops well below $10^{-5}$. 
 
-Figure~\ref{fig:conv_cosine_bell} illustrates the convergence of the RBF-FD method for the cosine bell advection at 10 full revolutions. All tests in Figure~\ref{fig:conv_cosine_bell} assume 1000 time-steps per revolution (i.e., $\Delta t = 1036.8$ seconds). We find that 1000 time-steps is a conservative estimate to stably advect the bell even up to the highest resolution MD node set, $N=27556$. Our choice of $\Delta t$ is half as large as the 30 minute step taken for $N=4096$ nodes in \cite{FlyerWright07}, but still twice as large as the competing Discontinuous Galerkin implementation and 8x larger than both Spherical Harmonics and Double Fourier methods also considered therein. For $N=27556$ and $n=101$ a minimum of 650 time-steps are required per revolution. 
 
-
-\begin{figure}[htbp]
+\begin{figure}
 \begin{center}
 \includegraphics[width=3in]{../figures/paper1/cosine_bell/convergence_plot_hv-eps-converted-to.pdf}
 \caption{Convergence plot for cosine bell advection. Normalized $\ell_2$ error at 10 revolutions with hyperviscosity enabled. }
@@ -307,6 +305,7 @@ Figure~\ref{fig:conv_cosine_bell} illustrates the convergence of the RBF-FD meth
 \end{center}
 \end{figure}
 
+Figure~\ref{fig:conv_cosine_bell} illustrates the convergence of the RBF-FD method for the cosine bell advection at 10 full revolutions. All tests in Figure~\ref{fig:conv_cosine_bell} assume 1000 time-steps per revolution (i.e., $\Delta t = 1036.8$ seconds). We find that 1000 time-steps is a conservative estimate to stably advect the bell even up to the highest resolution MD node set, $N=27556$. Our choice of $\Delta t$ is half as large as the 30 minute step taken for $N=4096$ nodes in \cite{FlyerWright07}, but still twice as large as the competing Discontinuous Galerkin implementation and 8x larger than both Spherical Harmonics and Double Fourier methods also considered therein. For $N=27556$ and $n=101$ a minimum of 650 time-steps are required per revolution. 
 
 
 

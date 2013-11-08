@@ -228,6 +228,8 @@ Table~\ref{tbl:stencil_sets}, defines the collection of index lists that each CP
 
         \begin{table}[t]
             \begin{center}
+                \caption{Sets defined for stencil distribution to multiple CPUs}
+                            \label{tbl:stencil_sets}
                 \begin{tabular}{l l}
                     \hline
                     $\setAllNodes$ &: all nodes received and contained on the CPU/GPU $g$ \\
@@ -239,8 +241,6 @@ Table~\ref{tbl:stencil_sets}, defines the collection of index lists that each CP
                     $\setDepend$ &: nodes required by $g$ that are managed by another CPU/GPU \\
                     \hline
                 \end{tabular}
-                \caption{Sets defined for stencil distribution to multiple CPUs}
-                            \label{tbl:stencil_sets}
             \end{center}
         \end{table}
         
@@ -535,7 +535,7 @@ In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scal
 For small $p$ the MPI\_Alltoallv is up to 2x faster than MPI\_Isend/MPI\_Irecv variants. For $p\leq8$ it is safe to assume MPI\_Alltoallv makes better use of local shared memory to communicate within the same node. Beyond $p=8$, the collective most likely improves on MPI\_Isend/MPI\_Irecv by optimally packing messages or even breaking large messages into smaller pieces. Its also possible to some extent for the collective to adjust to the network topology. Duplicating those optimizations for the overlapped CPU collective is left for future work. Until then, RBF-FD in distributed CPU environments like Itasca should assume the use of MPI\_Alltoallv collective for $p \leq 16$ and the overlapped MPI\_Isend/MPI\_Irecv in all other cases. 
 
 \subsection{All Stencils Summary}
-
+\label{sec:scaling_summary}
 
 
 \begin{figure}

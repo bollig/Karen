@@ -618,14 +618,14 @@ While bandwidth is an interesting measure, the end-goal of reordering is to impr
 The first row of Table~\ref{tbl:ordering_impact} provides bandwidths by order, and the second shows the speedup gained in the SpMV versus the benchmark for raster-ordering. In this case, the RCM has both the lowest bandwidth and highest yield in the benchmark with a 9\% improvement (5.06x faster than $k$-D Tree). Surprisingly the $Z$- and $X$-orderings are not far behind RCM even with 80x--120x wider bandwidths. 
 %TODO: more? 
 
-\begin{figure}[b]
+\begin{figure}[h]
 \centering
 \includegraphics[width=0.95\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
 \caption{Impact of node orderings on an $N=18^3$ regular grid in 3-D. Stencil size $n=31$, fixed-grid resolution $(h_n)^d=6^3$. }
 \label{fig:ordering_impact_rg}
 \end{figure}
 
-\begin{figure}[b]
+\begin{figure}[h]
 \centering
 \includegraphics[width=0.95\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10.png} 
 \caption{ The impact of reordering on sparsity patterns for $N=4096$ MD nodes on the sphere. Stencil size $n=31$, fixed-grid resolution per dimension $h_n=10$. }

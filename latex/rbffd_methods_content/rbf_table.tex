@@ -2,6 +2,9 @@
 \newcommand{\rbf}[4]{#1 & #2 & #3 & #4}
 \begin{table}[t]
    \centering
+      \caption{Examples of frequently used RBFs based on \cite{Fornberg2008, Fasshauer2007}. $\varepsilon$ is the support parameter. 
+   All RBFs have global support. For compact support, enforce a cut-off radius (see Equation~\ref{eqn:csrbf}).}
+   \label{tbl:rbfs}
    \begin{tabular}{L{1.5in} | C{1.0in} | c |C{1.0in}| } % Column formatting, @{} suppresses leading/trailing space
    \rbf{Name}{Abbrev.}{Formula}{Order ($m$)} \\
    \hline\hline
@@ -11,8 +14,4 @@
    \rbf{Thin Plate Splines}{TPS}{$r^2 ln |r|$}{2} \\
    \rbf{Wendland ($C^2$)}{W2}{$(1-\varepsilon r)^4 (4\varepsilon r + 1)$}{0}
    \end{tabular}
-   \caption{Examples of frequently used RBFs based on \cite{Fornberg2008, Fasshauer2007}. $\varepsilon$ is the support parameter. 
-   %For details on orders refer to Chapter~\ref{chap:rbf_pde} and \cite{Iske2004}. 
-   All RBFs have global support. For compact support, enforce a cut-off radius (see Equation~\ref{eqn:csrbf}).}
-   \label{tbl:rbfs}
 \end{table}

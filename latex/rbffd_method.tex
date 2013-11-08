@@ -124,6 +124,8 @@ interpolation type.  The final row of Table~\ref{tbl:rbfcolloctypes} considers l
 
 \begin{table}[t]
    \centering
+   \caption{RBF interpolation types and properties, assuming a problem with $N$ nodes.}
+   \label{tbl:interp_types}
    \begin{tabular}{E | C{1in}| C{1in}| C{1in}| c | } % Column formatting, @{} suppresses leading/trailing space
    Interpolation Type & Dense/Sparse $A$ & Dim($A$) ($N_S \ll N$) &  \# of $A^{-1}$  & RBF Support \\ 
    \hline \hline
@@ -131,8 +133,6 @@ interpolation type.  The final row of Table~\ref{tbl:rbfcolloctypes} considers l
    Compact & Sparse & $N \times N$ & 1 & Compact \\
    Local & Dense & $N_S \times N_S$ & N & Global/Compact
    \end{tabular}
-   \caption{RBF interpolation types and properties, assuming a problem with $N$ nodes.}
-   \label{tbl:interp_types}
 \end{table}
 
 

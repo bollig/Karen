@@ -40,6 +40,8 @@ Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-
 %NVidia released an architecture code named "Fermi" in 2010 \cite{Fermi2009}. The hardware supports many features of interest, the most important being 8x faster double precision than the older Tesla C1060 (GT200 architecture). It will also allow for concurrent kernel execution (for up to 16 small kernels) making it easier to keep the GPU saturated with computation. Table~\ref{tbl:fermi_compare} considers some of the more monumental differences between the Fermi and GT200 architectures.
 %\begin{table}[t]
 %\begin{center}
+%\caption{Comparison of NVidia's new Fermi architecture to the GT200 architecture used for GTX 280, Tesla C1060 and other GPUs in use today.}
+%\label{tbl:fermi_compare}
 %\begin{tabular}{D|C{1in}|C{1in}|}
 % & Fermi & GT200 \\ 
 % \hline\hline
@@ -54,8 +56,6 @@ Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-
 % Max allowed warps & 48 & 32 \\
 %\end{tabular}
 %\end{center}
-%\caption{Comparison of NVidia's new Fermi architecture to the GT200 architecture used for GTX 280, Tesla C1060 and other GPUs in use today.}
-%\label{tbl:fermi_compare}
 %\end{table}%
 
 %While there has been no word yet as to the date of availability (only speculation for Q1 2010), the Fermi architecture is anticipated to cost around \$2,500 to \$4,000 for the Tesla C2050 (3 GB Global Device Memory) and C2070 (6 GB Global Device Memory) units respectively \cite{FermiPrice:2009}.
@@ -94,6 +94,9 @@ Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-
 %
 %\begin{table}[t]
 %\begin{center}
+%\caption{Heterogeneous configuration of ACM cluster. The last entry represents the ACM head node which has no GPU 
+%attached. }
+%\label{tbl:acm_gpus}
 %\begin{tabular}{|C{1in}|C{1in}|c|C{1in}|C{1in}|}
 %\# of Nodes & \# GPUs per Node & GPU Name & Global Device Memory Size & Compute Capability \\
 %\hline
@@ -103,9 +106,6 @@ Itasca is an HPLinux cluster with 1,134HP ProLiant blade servers, each with two-
 %1 & 0 & (ACM head-node) & N/A & N/A 
 %\end{tabular}
 %\end{center}
-%\caption{Heterogeneous configuration of ACM cluster. The last entry represents the ACM head node which has no GPU 
-%attached. }
-%\label{tbl:acm_gpus}
 %\end{table}%
 %
 %The Compute Capability listed in Table~\ref{tbl:acm_gpus} specifies the GPU's support for advancements such as atomic functions (introduced in 1.1) and double IEEE754 floating point precision (introduced in 1.3) \cite{CudaGuide:2008}. When programming in CUDA, we will only use the homogeneous component of the cluster. On the other hand, we might experiment with homogeneous computing with the OpenCL version of the code. 
