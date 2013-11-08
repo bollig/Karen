@@ -237,16 +237,16 @@ In another series of articles, Komatitsch et al. \cite{Komatitsch2009, Komatitsc
 
  %As the 2003 recipient of the Gordon Bell award, SPECFEM had already undergone a plethora of  fine tuning
 
-Phillips and Fatica overlap communication and computation in \cite{Phillips2010} while solving the Himeno benchmark---a test specifically designed to compare performance of processors in the case of memory-bound applications. The Himeno benchmark solves a 3-D Poisson problem in generalized coordinates on a structured curvilinear mesh. The Himeno benchmark considers a 3-D stencil of 27 nodes at each point. 
+Phillips and Fatica overlap communication and computation in \cite{Phillips2010} while solving the Himeno benchmark---a test specifically designed to compare performance of processors in the case of memory-bound applications. The Himeno benchmark solves a 3-D Poisson problem in generalized coordinates on a structured curvilinear mesh with a 19-point stencil at each grid point. The benchmark reaches over 50 GFLOP/sec in single precision on one GPU, and scales nearly perfectly to over 800 GFLOP/sec on 16 GPUs. Our work can not hope to scale as well as the Himeno benchmark due to the choice of domain decomposition. While the Himeno benchmark assumes one layer of ghost node of overlap between processor domains, our work allows up to $\sqrt{n}$ overlap in domains. The added ghost nodes increase communication time and make it more difficult to hide behind computation.  
 
 
-Most recently, the PETSc library gained GPU support \cite{Minden2010,YokotaGPU2010}. PETSc is a widely-used library with proven scalability on many supercomputing clusters that provides distributed sparse and dense matrix algebra, Krylov solvers, and preconditioners. 
+%The bulk of work for the RBF-FD method is a Sparse Matrix Vector (SpMV) Multiplication. Efforts such as \cite{Schubert2011,Kreutzer2012} investigate overlapping communication and computation techniques to distribute 
+
+
+Most recently, the PETSc library gained GPU support with the addition of both CUSP \cite{Cusp2012} and ViennCL \cite{Rupp2010} back-ends \cite{Minden2010}. PETSc---which dates back to the early 1990s---is widely-used for solving PDEs with proven scalability on the world's top supercomputers. PETSc provides distributed sparse and dense matrix algebra, Krylov solvers, and preconditioners. The support for GPU back-ends allows a vast number of applications that have been developed over more than two decades to run on multiple GPUs with minimal modification. Since PETSc already has overlapping MPI communication and computation for distributed CPU environments, the GPU offloaded applications also benefit from this feature. Yokota et al. \cite{YokotaGPU2010} demonstrate that PETSc multi-GPU applications can scale excellently (in the strong sense) when configured for tree-based communication, which arises naturally from Fast Multipole Methods. The authors scale their boundary element method across 256 GPUs (2 per compute node) with 80\% parallel efficiency, and 512 GPUs (4 per compute node) with 50\% efficiency. In contrast to this our distributed implementation currently achieves no more than 57\% parallel efficiency when spanning 8 GPUs. While we do not take advantage of tree-based communications, this is planned as part of the future work to improve scalability. 
 
 
 %Meshed methods have received a large amount of attention from the GPU community. For example, Bolz et al. \cite{Bolz2003} implemented conjugate gradient and multigrid kernels for 2-D FD incompressible fluid simulation using FD on a single GPU.  More recently, a single GPU, multigrid finite-difference based solver was applied to 3-D compressible fluid flow (Euler equations) by Elsen et al. \cite{Elsen2008}.
-
-The bulk of work for the RBF-FD method is a Sparse Matrix Vector (SpMV) Multiplication. Efforts such as \cite{Schubert2011,Kreutzer2012} investigate optimizations that overlap communication and computation \authnote{complete this}
-
 
 
 
