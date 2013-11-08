@@ -139,11 +139,11 @@ While a $k$-D Tree is designed to accommodate high dimensional data, the cost to
 
 Fixed-grid methods get their name from a coarse 2-D or 3-D regular grid that is overlaid on the domain. The $d$-dimensional grid divides the domain's axis aligned bounding box (AABB)---that is, the minimum bounding box containing the entire domain with edges parallel to axes---into $(h_n)^d$ cells. The variable $h_n$ is used here to distinguish the cell count in one dimension from the cell spacing. Subdivisions are uniform, so one can easily identify the cell containing any sample point, $p$, given the coordinates of the AABB and $(h_n)^d$. For example, let $(c_x, c_y, c_z)$ be the desired cell in 3-D, and $(x_{min}, y_{min}, z_{min})$ and $(x_{max}, y_{max}, z_{max})$ be the minimum and maximum coordinates of the AABB (resp.). Then the cell coordinates are found by:  
 \begin{align}
-(dx, dy, dz) & = \left(\frac{(x_{max} - x_{min})}{h_n}, \frac{(y_{max} - y_{min})}{h_n}, \frac{(z_{max} - z_{min})}{h_n}\right) \nonumber \\
-(c_x, c_y, c_z) & = \left(\left\lfloor\frac{(p_x - x_{min})}{dx}\right\rfloor , \left\lfloor\frac{(p_y - y_{min})}{dy}\right\rfloor , \left\lfloor\frac{(p_z - z_{min})}{dz}\right\rfloor \right).
+(d_x, d_y, d_z) & = \left(\frac{(x_{max} - x_{min})}{h_n}, \frac{(y_{max} - y_{min})}{h_n}, \frac{(z_{max} - z_{min})}{h_n}\right) \nonumber \\
+(c_x, c_y, c_z) & = \left(\left\lfloor\frac{(p_x - x_{min})}{d_x}\right\rfloor , \left\lfloor\frac{(p_y - y_{min})}{d_y}\right\rfloor , \left\lfloor\frac{(p_z - z_{min})}{d_z}\right\rfloor \right).
 \label{eq:cell_hash}
 \end{align}
-This work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$) to ensure neighbor queries are true balls and not ellipsoids. 
+This work assumes the AABB bounding the domain is a cube (i.e., $d_x = d_y = d_z$) to ensure neighbor queries are true balls and not ellipsoids. 
 Cells neighboring $(c_x, c_y, c_z)$ are trivial to find by adding positive and negative offsets to each coordinate. %Note that the fixed-grid in this method is virtual. Nodes are matched with cell coordinates, but the full grid (i.e., vertices/edges) is never explicitly constructed.
 
 Fixed grid methods also make use of \emph{space filling curves}. Space filling curves pass through every point in $d$-dimensional space, and through each point only once. Equivalently, space filling curves map $d$-dimensional space down to 1-D, where every point is converted to a unique index or traversal order based on its spatial coordinates. These mapping properties make space filling curves ideal for use as hash functions. Traversing the $d$-dimensional points (i.e., playing ``connect the dots") draws the space filling curve. Figure~\ref{fig:space_filling_curves} presents two common orderings of a 2-D fixed-grid. Note that one-dimensional orderings are not unique. On the left is a \emph{Raster}-ordering (a.k.a. Scanline- or $ijk$-ordering): $f(c_x,c_y,c_z) = ((c_x * h_n) + c_y) * h_n + c_z$. The right half of Figure~\ref{fig:space_filling_curves} shows an ordering known as Morton- or $Z$-ordering. $Z$-ordering construction is discussed later in this chapter. On both sides of Figure~\ref{fig:space_filling_curves}, the lower left corner of each cell indicates the mapped index. Traversing the cells in order produces the curves superimposed in red. 
@@ -276,7 +276,7 @@ Results below demonstrate that proper choice of $h_n$ can maintain logarithmic c
 
 The fixed grid query algorithm is considered an \emph{approximate nearest neighbor} (ANN) search. Consider again the nodes in Figure~\ref{fig:nearest_neighbor_example}. A $k$-NN stencil of size $n=8$ should contain the blue center, all blue nodes, plus the red node and one black node. The true $k$-NN would select the black node in the right-most column of the grid (i.e. the node closer to the dashed ball query). Under the fixed-grid method, however, the alternate black node is selected even though it is more distant. This happens because the more distant black node occupies the second halo of cells around the stencil center, whereas the true near neighbor is in the third. Algorithm~\ref{alg:fixed_grid_query} is able to truncate the search in the second iteration by satisfying the requirement on $n$. 
 
-%Similarly, if cells are rectangular in shape, the ball-query under fixed-grid functions as an ellipsoid. In this case, stencils are biased with more nodes in one direction. To combat this, and ensure spherical stencils, this work assumes the AABB bounding the domain is a cube (i.e., $dx = dy = dz$). 
+%Similarly, if cells are rectangular in shape, the ball-query under fixed-grid functions as an ellipsoid. In this case, stencils are biased with more nodes in one direction. To combat this, and ensure spherical stencils, this work assumes the AABB bounding the domain is a cube (i.e., $d_x = d_y = d_z$). 
 
 The difference between a true $k$-NN and $k$-ANN can be significant in terms of performance for the neighbor query, but has little or no impact on RBF-FD operation. The only differences in stencils between $k$-NN and $k$-ANN occur at stencil nodes furthest from the stencil center (i.e., nodes with the least impact on the stencil center). 
 
@@ -680,32 +680,32 @@ The C++ fixed-grid stencil generator defaults to the Raster-/IJK-order due to it
 
 Due to the limited significance of stencil generation under RBF-FD, the overhead in implementing and debugging a GPU implementation of the fixed-grid method is hard to justify. No known investigations consider RBF-FD on moving nodes (e.g., for adaptive node refinement like \cite{FlyerLehto10}), although such research should find the fixed-grid method significantly relevant. Future work in this direction would easily justify a GPU implementation following \cite{Krog2010,Green2010,Johnson2011, Goswami2010}. 
 
-It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} developed operators to directly transform floating point coordinates into $Z$-orderings. The MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}) includes a test of those operators, although the investigation is incomplete. Preliminary results are shown in Figure~\ref{fig:float_z_results}. A set of nodes are distributed in $[0,20]^2$ with $dx = 1.0$ ($dy = dx$) in Figure~\ref{fig:connor_works}. Node coordinates are floating point representations of integer values, and the curve drawn shows the successful reproduction of a Z-ordering over the nodes. In Figure~\ref{fig:connor_works2}, the same nodes are scaled to $dx = 3.0$ (i.e., still integer representations). A number of 3-node Z's appear at coordinates that are multiples of powers of two, but that  is an anticipated flaw in the algorithm. The implementation fails when nodes are scaled to non-integer coordinates with $dx = 0.3$ (Figure~\ref{fig:connor_fails}) and $dx=0.05$ (Figure~\ref{fig:connor_fails2}). 
+It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} developed operators to directly transform floating point coordinates into $Z$-orderings. The MATLAB fixed-grid prototype (\cite{BolligRBFFixedGrid}) includes a test of those operators, although the investigation is incomplete. Preliminary results are shown in Figure~\ref{fig:float_z_results}. A set of nodes are distributed in $[0,20]^2$ with $d_x = 1.0$ ($d_y = d_x$) in Figure~\ref{fig:connor_works}. Node coordinates are floating point representations of integer values, and the curve drawn shows the successful reproduction of a Z-ordering over the nodes. In Figure~\ref{fig:connor_works2}, the same nodes are scaled to $d_x = 3.0$ (i.e., still integer representations). A number of 3-node Z's appear at coordinates that are multiples of powers of two, but that  is an anticipated flaw in the algorithm. The implementation fails when nodes are scaled to non-integer coordinates with $d_x = 0.3$ (Figure~\ref{fig:connor_fails}) and $d_x=0.05$ (Figure~\ref{fig:connor_fails2}). 
 
 At this time, investigation into floating point Z-ordering is on hold as there is no urgent need for such an algorithm in RBF-FD. Direct communication with the lead author of \cite{Connor2009} attributed the errors in Figures~\ref{fig:connor_fails} and \ref{fig:connor_fails2} to unexpected behavior/handling of doubles in MATLAB, or an unforeseen error in the design of their algorithm. The author indicated the possibility that these cases were not considered during testing.
 
 \begin{figure}
 \begin{subfigure}[t]{0.5\textwidth}
 \includegraphics[width=\textwidth]{stencils_content/20x20.png}
-\caption{Nodes in range $[0,20]^2$, $dx = dy = 1$.}
+\caption{Nodes in range $[0,20]^2$, $d_x = d_y = 1$.}
 \label{fig:connor_works}
 \end{subfigure}
 \begin{subfigure}[t]{0.5\textwidth}
 \includegraphics[width=\textwidth]{stencils_content/scale3.png}
-\caption{Nodes in range $[0,60]^2$, $dx = dy = 3$.}
+\caption{Nodes in range $[0,60]^2$, $d_x = d_y = 3$.}
 \label{fig:connor_works2}
 \end{subfigure}
 \begin{subfigure}[t]{0.5\textwidth}
 \includegraphics[width=\textwidth]{stencils_content/scale3em1.png}
-\caption{Nodes in range $[0,6]^2$, $dx = dy = 0.3$.  }
+\caption{Nodes in range $[0,6]^2$, $d_x = d_y = 0.3$.  }
 \label{fig:connor_fails}
 \end{subfigure}
 \begin{subfigure}[t]{0.5\textwidth}
 \includegraphics[width=\textwidth]{stencils_content/range0_1.png}
-\caption{Nodes in range $[0,1]^2$, $dx = dy = 0.05$. }
+\caption{Nodes in range $[0,1]^2$, $d_x = d_y = 0.05$. }
 \label{fig:connor_fails2}
 \end{subfigure}
-\caption{Preliminary results from $Z$-ordering nodes based on  (double precision) floating point node coordinates (following algorithm in \cite{Connor2009}). Our implementation functions well on integer coordinates when nodes are floating point representations of integers separated by $dx = 1$ (a). Increasing $dx$ extends some edges to 3-node Z's, but is mostly correct (b). The implementation fails when nodes are not representations of integers (c) and (d).}
+\caption{Preliminary results from $Z$-ordering nodes based on  (double precision) floating point node coordinates (following algorithm in \cite{Connor2009}). Our implementation functions well on integer coordinates when nodes are floating point representations of integers separated by $d_x = 1$ (a). Increasing $d_x$ extends some edges to 3-node Z's, but is mostly correct (b). The implementation fails when nodes are not representations of integers (c) and (d).}
 \label{fig:float_z_results}
 \end{figure}
 
