@@ -1,3 +1,14 @@
+SpMV
+	Caching on vector not on weights
+	ELL format for fewer loadts
+
+
+
+
+
+
+
+
 - Need to explain: 
 	ELL
 	CSR
