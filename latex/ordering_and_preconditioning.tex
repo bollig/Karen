@@ -165,7 +165,7 @@ At a high level, fixed-grid methods have the following construction steps \cite{
 \end{enumerate}
 Particular details of how nodes are sorted, the choice of hashing function, the number of nodes allowed per cell, etc. determine the specific class of fixed-grid method and corresponding complexity. A comprehensive list of options and classifications can be found in \cite{Samet2005}. In this work multiple nodes with the same spatial hash retain their original relative ordering.
 
-\subsection{Fixed-grid Construction}
+\subsection{Fixed-Grid Construction}
 The algorithm in this work is inspired by fixed-grid approaches for GPU particle simulations (\cite{Krog2010,Green2010,Johnson2011}). Particle methods require a ball query at each time-step. With time-steps often dominated by the cost of querying neighbors, the community understandably devotes significant effort to seek out the most efficient solutions possible \cite{Goswami2010}. The fixed-grid method is competitive for at least two reasons: a) by bypassing the need to build a tree, half the cost in querying neighbors is avoided; and b) nodes sorted according to a spatial hash reside closer in memory to nearby neighbors than in the case of unsorted nodes. The spatial locality moves stencil centers with shared nodes closer in memory, thereby improving the likelihood that data for the shared nodes will be resident in cache when it is required for reuse on consecutive stencil operations. 
 Note that reordering by cell hash sorts nodes across cells but not within them---that is, nodes contained by the same cell are contiguous in memory, but remain arbitrarily ordered with respect one another. Fortunately, with contiguous groups of nodes, nearest neighbor queries can directly access all nodes per cell. 
 
