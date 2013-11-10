@@ -120,7 +120,7 @@ Alternative sphere partitionings exist. In atmospheric and geophysical communiti
 
 \subsection{Graph Partitioning with METIS}
 
-One of the major concerns when partitioning for a distributed environment is load balancing. Consider, for example, the situation where $p-1$ processors have equal sized partitions, each with $W_1$ amount of work, and a $p$-th processors is allocated some larger amount of work, $W_2$. In that case, the maximum possible speedup on $p$ processors obeys \cite{Gropp1990}:  
+One of the major concerns when partitioning for a distributed environment is load balancing. Consider, for example, the situation where $p-1$ processors have equal sized partitions, each with $W_1$ amount of work, and the $p$-th processor is allocated some larger amount of work, $W_2$. In that case, the maximum possible speedup on $p$ processors obeys \cite{Gropp1990}:  
 \begin{align}
 S_p = \frac{(p-1) W_1 + W_2}{W_2} = 1 + (p-1)\frac{W_1}{W_2}.
 \label{eq:load_balance}
@@ -147,7 +147,7 @@ A number of libraries exist for graph partitioning including Chaco \cite{CHACO19
 Our latest work (in \cite{BolligRBFFDCode}) partitions graphs via METIS using the library's \emph{gpmetis} executable. During stencil generation, the associated adjacency graph is written to file. The METIS executable reads the file and performs a multi-level recursive bisection algorithm to partition the graph. At its core the algorithm first coarsens the graph into a sequence of smaller resolutions, applies a split to the smallest, and then pops back through the levels of recursion to project the coarse split onto finer graphs and smooth/correct the split at each level \cite{Karypis1999}. As input, METIS requires an undirected adjacency graph and the desired number of partitions. 
 In return for the graph, METIS writes a file containing one integer per vertex, indicating the partition to which each stencil center is assigned. Note that METIS does not guarantee partitions will be contiguous. While this is often the case, METIS may find the alternative more fitting and assign disjoint subgraphs to the same MPI process. % for reduced communication. 
 
-The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting a stencil center to a stencil node is equivalent to cutting its transpose. METIS is equally resistant apply a cut whether the edge is directed or undirected. 
+The adjacency graph for RBF-FD is directed, so symmetry is induced in the associated matrix with $A+A^T$. The added connectivity is harmless to RBF-FD as symmetry is only meant for partitioning purposes and does not impact actual DMs. With respect to load balancing: cutting an edge connecting a stencil center to a stencil node is equivalent to cutting its transpose. METIS is equally resistant to apply a cut regardless of whether the edge is directed or undirected. 
 
 \begin{figure}
 \begin{center}
@@ -191,7 +191,7 @@ $p$ & Partitioning & Total ($\frac{\min N_p}{\max N_p}$) &  Interior ($\frac{\mi
 %\end{tabular}
 %\end{table}
 %
-Based on the per process $N_p$'s, it is observed that that linear partitioning works moderately well for $p=4$ but becomes horribly imbalanced at $p=16$. In both cases METIS proves significantly better with ratios $> 0.9$. Substituting values from Table~\ref{tbl:load_balance} into Equation~\ref{eq:load_balance} leads to the expectation that linear partitioning should be limited to less than 9.3x speedup for $p=16$ processes, while METIS is bounded by at most 14.9x. Data for the partition interiors shows that both linear and METIS partitionings distribute roughly equivalent number of nodes per interior---in fact, linear partitioning appears to be the more consistent of the two options across processors. The problem with linear partitioning, however, boils down to balancing ghost nodes. There are two obvious issues with linear partitioning:
+Based on the per process $N_p$'s, it is observed that the linear partitioning works moderately well for $p=4$ but becomes horribly imbalanced at $p=16$. In both cases METIS proves significantly better with ratios $> 0.9$. Substituting values from Table~\ref{tbl:load_balance} into Equation~\ref{eq:load_balance} leads to the expectation that linear partitioning should be limited to less than 9.3x speedup for $p=16$ processes, while METIS is bounded by at most 14.9x. Data for the partition interiors shows that both linear and METIS partitionings distribute roughly equivalent number of nodes per interior---in fact, linear partitioning appears to be the more consistent of the two options across processors. The problem with linear partitioning, however, boils down to balancing ghost nodes. There are two obvious issues with linear partitioning:
 \begin{itemize} 
 \item End-cap partitions only have dependencies in one direction, whereas interior partitions have left and right dependencies. This immediately drops the ratio to $\frac{\min N_r}{\max N_r} \leq 0.5$. 
 \item Since each overlap region is a small circle of the sphere and approximately $\sqrt{n}$ ghost nodes thick, the number of nodes in each region is therefore a function of its circumference. As $p$ grows, the ratio $\frac{\min N_r}{\max N_r}$ scales as the smallest to largest circumferences for overlap regions. 
@@ -384,7 +384,7 @@ In what follows the MPI\_Alltoallv implementation is taken as baseline for commu
 \label{sec:cpu_scaling}
 
 
-Two types of scaling are considered: weak and strong. Weak scaling monitors the growth in run-time as the number of processes ($p$) increases with the a constant workload per process, $N_p$. In other words the global problem size grows as $N = p*N_p$. Strong scaling keeps a fixed global problem size to consider $N_p = \frac{N}{p}$, where processes are issued diminishing workloads as $p$ grows. 
+Two types of scaling are considered: weak and strong. Weak scaling monitors the growth in run-time as the number of processes ($p$) increases with a constant workload per process, $N_p$. In other words the global problem size grows as $N = p*N_p$. Strong scaling keeps a fixed global problem size to consider $N_p = \frac{N}{p}$, where processes are issued diminishing workloads as $p$ grows. 
 The scalings reveal different properties:
 \begin{itemize} 
 \item Weak scaling demonstrates the ability run problem sizes that are too large for a single CPU. Ideal weak scaling implies that the total run-time remains constant as additional parallelism is added. %Growth in run-time under weak-scaling most can problems with communication and ghost node load imbalances. 

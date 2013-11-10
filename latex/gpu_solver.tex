@@ -348,6 +348,7 @@ kernels on the GPU.
 
 
 \subsection{Custom Kernels}
+\label{sec:custom_gpu_kernels}
 
 From the definition of RBF-FD we can formulate the problem computationally in two ways. First, stencil operations are independent. Therefore, we can write kernels with perfect parallelism by dedicating a single thread per stencil or a group of threads per stencil.  
 

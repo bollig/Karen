@@ -63,7 +63,9 @@ Overlapping communication and GPU computation is enabled by two levels of asynch
 
 \subsection{Non-Overlapping Multi-GPU Results} 
 
-See Appendices~\ref{app:keeneland_alltoallv_benchmarks} and \ref{app:spear_alltoallv_benchmarks} for scaling benchmarks from the non-ViennaCL multi-GPU implementation. Appendix~\ref{app:keeneland_alltoallv_benchmarks} demonstrates the scalability of an iteration of RK4 as applied in \S~\ref{sec:cosine_bell} on the Keeneland GPU cluster---the benchmark assumes three SpMV operations per intermediate evaluation of the RK4 time-step. Appendix~\ref{app:spear_alltoallv_benchmarks} is similar, but considers only two SpMV operations per evaluation corresponding to the test case in \S~\ref{sec:vortex_rollup}. In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
+See Appendix~\ref{app:keeneland_alltoallv_benchmarks} for scaling benchmarks from the non-ViennaCL multi-GPU implementation. Appendix~\ref{app:keeneland_alltoallv_benchmarks} demonstrates the scalability of an iteration of RK4 as applied in \S~\ref{sec:cosine_bell} on the Keeneland GPU cluster---the benchmark assumes three SpMV operations per intermediate evaluation of the RK4 time-step. 
+
+In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
 
 Benchmarks
 

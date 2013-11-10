@@ -38,7 +38,7 @@ For the most part, investigations in RBF communities that delve into efficient n
 This chapter considers the use of an alternative neighbor query algorithm to generate RBF-FD stencils. It is based loosely on the fixed-grid method from \cite{Krog2010,Green2010,Johnson2011}. Samet\cite{Samet2005} would classify the algorithm as a \emph{fixed grid ``bucket" method with one-dimensional spatial ordering}. The fixed-grid method loosens the requirements for finding the $k$-nearest neighbors ($k$-NN) stencils to accept $k$-``approximately nearest" neighbors ($k$-ANN). It also reorders nodes according to space-filling curves. In what follows, the fixed-grid method is compared to an efficient implementation of $k$-D Tree available for use in C++ and MATLAB (\cite{TagliasacchiMFE}). Benchmarks in \S~\ref{sec:fixed_grid_benchmarks} demonstrate that, with the proper choice of parameters for the fixed-grid, the method can be up to 2x faster than $k$-D Tree, and it comes with a free bonus: up to 5x faster SpMV performance due to the impact of spatial reordering that occurs during stencil generation. 
 
 
-\section{$k$-D Tree}
+\section{\texorpdfstring{$k$-D}{k-D} Tree}
 
 A $k$-D Tree is a spatial data structure that generally decomposes a space/volume into a small number of cells. All $k$-D Trees are binary and iteratively partition volumes and sub-volumes at each level into two parts. The ``$k$" in $k$-D Tree refers to the dimensionality of the data/volume  partitioned---that is $k \equiv d$. 
 
@@ -618,14 +618,14 @@ While bandwidth is an interesting measure, the end-goal of reordering is to impr
 The first row of Table~\ref{tbl:ordering_impact} provides bandwidths by order, and the second shows the speedup gained in the SpMV versus the benchmark for raster-ordering. In this case, the RCM has both the lowest bandwidth and highest yield in the benchmark with a 9\% improvement (5.06x faster than $k$-D Tree). Surprisingly the $Z$- and $X$-orderings are not far behind RCM even with 80x--120x wider bandwidths. 
 %TODO: more? 
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=0.95\textwidth]{rbffd_methods_content/hashing/spy_regulargrid_N18d3_n31_hn6.png} 
 \caption{Impact of node orderings on an $N=18^3$ regular grid in 3-D. Stencil size $n=31$, fixed-grid resolution $(h_n)^d=6^3$. }
 \label{fig:ordering_impact_rg}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=0.95\textwidth]{rbffd_methods_content/hashing/dm_node_orderings_md4096_n31_hn10.png} 
 \caption{ The impact of reordering on sparsity patterns for $N=4096$ MD nodes on the sphere. Stencil size $n=31$, fixed-grid resolution per dimension $h_n=10$. }
@@ -685,22 +685,29 @@ It also is worth noting that recent work by Connor and Kumar \cite{Connor2009} d
 At this time, investigation into floating point Z-ordering is on hold as there is no urgent need for such an algorithm in RBF-FD. Direct communication with the lead author of \cite{Connor2009} attributed the errors in Figures~\ref{fig:connor_fails} and \ref{fig:connor_fails2} to unexpected behavior/handling of doubles in MATLAB, or an unforeseen error in the design of their algorithm. The author indicated the possibility that these cases were not considered during testing.
 
 \begin{figure}
-\begin{subfigure}[t]{0.5\textwidth}
+\centering
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
 \includegraphics[width=\textwidth]{stencils_content/20x20.png}
 \caption{Nodes in range $[0,20]^2$, $d_x = d_y = 1$.}
 \label{fig:connor_works}
 \end{subfigure}
-\begin{subfigure}[t]{0.5\textwidth}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
 \includegraphics[width=\textwidth]{stencils_content/scale3.png}
 \caption{Nodes in range $[0,60]^2$, $d_x = d_y = 3$.}
 \label{fig:connor_works2}
 \end{subfigure}
-\begin{subfigure}[t]{0.5\textwidth}
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
 \includegraphics[width=\textwidth]{stencils_content/scale3em1.png}
 \caption{Nodes in range $[0,6]^2$, $d_x = d_y = 0.3$.  }
 \label{fig:connor_fails}
 \end{subfigure}
-\begin{subfigure}[t]{0.5\textwidth}
+\quad
+\begin{subfigure}[t]{0.48\textwidth}
+\centering
 \includegraphics[width=\textwidth]{stencils_content/range0_1.png}
 \caption{Nodes in range $[0,1]^2$, $d_x = d_y = 0.05$. }
 \label{fig:connor_fails2}

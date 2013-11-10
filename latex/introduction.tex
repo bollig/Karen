@@ -191,7 +191,7 @@ Stevens et al. \cite{Stevens2009a} mention a parallel implementation under devel
 \subsection{RBF Methods on GPUs}
 
 
-While a number of related works consider RBFs on GPUs, most of the investigations relate to visualization (e.g., \cite{Cuntz2007, Weiler2005}),  surface reconstruction (e.g., \cite{Corrigan2005,Carr2003}), and neural networks (e.g., \cite{Brandstetter2008}). Of these, only \cite{Cuntz2007} uses a modern GPGPU langauge (CUDA), the rest rely on shader languages (i.e., GLSL, HLSL, etc) denoted as ``Other" in Table~\ref{tbl:parallel_rbf_refs}.
+While a number of related works consider RBFs on GPUs, most of the investigations relate to visualization (e.g., \cite{Cuntz2007, Weiler2005}),  surface reconstruction (e.g., \cite{Corrigan2005,Carr2003}), and neural networks (e.g., \cite{Brandstetter2008}). Of these, only \cite{Cuntz2007} uses a modern GPU langauge (CUDA), the rest rely on shader languages (i.e., GLSL, HLSL, etc) denoted as ``Other" in Table~\ref{tbl:parallel_rbf_refs}.
 
 The only known applications of GPUs to solve PDEs with RBFs are found in \cite{Gumerov2007a, Gumerov2007b,Schmidt2009a, Schmidt2009b}. 
 
@@ -257,7 +257,7 @@ Within this document readers should expect to find the following major contribut
 \item The first application of a fixed-grid neighbor query algorithm (popularized by distantly related particle methods) to generate stencils for RBF-FD. 
 \begin{itemize} 
 \item Performance comparison with the RBF community favorite, $k$-D Tree, shows that the lower complexity fixed-grid method is able to achieve up to 2.5x speedup over the former method on randomly distributed nodes. 
-\item The fixed-grid method is also shown to accelerate RBF-FD time-step performance by up to 5x due spatial locality of node information in memory and improved cache effects.
+\item The fixed-grid method is also shown to accelerate RBF-FD time-step performance by up to 5x due to spatial locality of node information in memory and improved cache effects.
 \end{itemize} 
 \item Integer dilation and bit interleaving are introduced to the RBF community at large to construct a number of space-filling curve variants in 2-D and 3-D. The curves reorder cells of the fixed-grid algorithm on the prospect of additional cache hits for derivative calculations. 
 \begin{itemize} 

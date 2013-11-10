@@ -1,6 +1,8 @@
 \documentclass[11pt,expanded]{fsuthesis}
 %,expanded
-\usepackage{standalone}
+%\usepackage{standalone}
+\usepackage[pdftex]{graphicx}
+
 \input{all_usepackages}
 
 
@@ -40,11 +42,7 @@
 \listoftables
 \listoffigures
 \listofalgorithms
-%%
-%\include{symbols}
-%\input{notation_and_symbols}
-%\include{abbreviations}
-%%
+
 \input{abstract}
 
 \mainmatter
@@ -68,6 +66,10 @@
 
 \include{keeneland_benchmarks}
 \include{publications}
+
+
+
+
 %\include{stokes_revisited}
 
 % The BibTeX bibliography/references section.  View the file
@@ -81,7 +83,6 @@
 %\nocite{Vuduc2005}
 
 
-%TODO: Make sure that we obey formatting rules on refs: • Web sites must not be blue, underlined, or contain an active hyperlink (see p. 10).
 \bibliographystyle{acm}
 \bibliography{merged_references}
 

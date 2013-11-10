@@ -37,7 +37,7 @@ As ``meshless" methods, RBF methods excel at solving problems that require geome
 
 
 This chapter is dedicated to summarizing the four-decade history of RBF methods leading up to the development of the 
-RBF-generated Finite Differences (RBF-FD) method. Beginning with a brief introduction to RBFs and a historical survey, related methods are into classified into three types: global, compact, and local methods. The general approximation problem is then introduced, with a look at the core of all three method classificiations: RBF scattered-data interpolation. %We categorize existing methods for solving PDEs with RBFs as either global 
+RBF-generated Finite Differences (RBF-FD) method. Beginning with a brief introduction to RBFs and a historical survey, related methods are classified into three types: global, compact, and local methods. The general approximation problem is then introduced, with a look at the core of all three method classificiations: RBF scattered-data interpolation. %We categorize existing methods for solving PDEs with RBFs as either global 
 %or local. Global methods use collocation and invert a single large linear system to find the interpolant that satisfies 
 %the differential equations at RBF centers. Local methods limit the influence of basis functions and seek an interpolant 
 %at each RBF center defined in terms of neighboring basis functions (local collocation) or nodal values (RBF-FD).
@@ -52,7 +52,7 @@ The example 2-D RBFs presented in Figure~\ref{fig:rbfs} are infinitely smooth an
 Infinitely smooth RBFs depend on a shape or support parameter $\epsilon$ that controls the width of the function. The functional form of the shape function becomes $\phi(\epsilon r)$. Decreasing $\epsilon$ increases the support of the RBF and in most cases, the accuracy of the interpolation, but worsens the conditioning of the RBF interpolation problem \cite{Schaback1995}. The conditioning of the system also dramatically degrades as the number of nodes in the problem increases. Fortunately, recent algorithms such as Contour-Pad\'{e} \cite{Fornberg2004} and RBF-QR \cite{Fornberg2007, Fornberg2011a} allow for numerically stable computation of interpolants in the nearly flat RBF regime (i.e., $\epsilon \rightarrow 0$) where high accuracy has been observed \cite{Larsson2003, Fornberg2008}.
 
 
-Historically, the most common way to leverage RBFs for PDE solutions is in a global interpolation sense. That is, the value of a function value or any of its derivatives 
+Historically, the most common way to leverage RBFs for PDE solutions is in a global interpolation sense. That is, the value of a function or any of its derivatives 
 at a node location is a linear combination of all the function values over the \textit{entire} domain, just as in a pseudospectral method. If using infinitely smooth RBFs, this can lead to spectral (exponential) convergence of the RBF interpolant for smooth data \cite{Fornberg2005}. %(need reference 
 
 
@@ -258,9 +258,9 @@ interpolation} with Radial Basis Functions.
 \label{sec:rbf_interp}
  Borrowing notation from \cite{Fasshauer2007, Iske2004}, 
 we seek an interpolant of the form
-\begin{eqnarray*}
+\begin{eqnarray}
 f(x) = \sum_{j=1}^{N} \phi_j(x) c_{j}  \label{eq:rbf_scattered_data_interp}
-\end{eqnarray*}
+\end{eqnarray}
 where $f(x)$ is expressed as a scalar product between the unknown coefficient weights $c_j$ and the radial basis functions $\phi_j(x)$.
 
 To obtain the unknown coefficients, $c_j$, form a linear system in terms of the $N$ RBF centers:
@@ -269,9 +269,9 @@ f(x) & = & \sum_{j=1}^{N} c_{j}  \phi_j(x)  \hskip1.5em \textrm{for\ } x = \{x_j
  \parray{c}{ f } & =&  \barray{c}{\phi}\parray{c}{ c } 
 \end{eqnarray*}
 The invertibility of this system depends on the choice of RBF, so one typically chooses a function that leads to a positive definite interpolation matrix to avoid issues. It has been shown (see \cite{Fasshauer2007, Iske2004}) that some choices of RBFs (e.g. multiquadrics and thin-plate splines \cite{Hon2001}) do not satisfy this positive definite requirement and therefore have no guarantee that the approximation is well-posed. A sufficient condition for well-posedness is that the matrix be \emph{conditionally positive definite}. In \cite{Fasshauer2007}, Fasshauer demonstrates that conditional positive definiteness is guaranteed when Equation~\ref{eqn:pde_approx} exactly reproduces functions of degree less than or equal to $m$. 
-For RBF scattered data interpolation in one dimension, this can be achieved by adding a polynomial of order $m$ with $M =$${m+1}\choose{1}$ terms (e.g., $x^0, x^1, \cdots, x^{m}$). 
+For RBF scattered data interpolation in one dimension, this can be achieved by adding a polynomial of order $m$ with $M = \binom{m+1}{1}$ terms (e.g., $x^0, x^1, \cdots, x^{m}$). 
 %For $\R^2$, the terms would be: $1, x, y, xy, x^2y, xy^2, \cdots, x^{m}y^{m-1}, x^{m-1}y^{m}, x^my^m$. 
-In $\R^d$, $M =$${m+d}\choose{d}$ \cite{Iske2004}, giving
+In $\R^d$, $M = \binom{m+d}{d}$ \cite{Iske2004}, giving
 \begin{eqnarray}
 \sum_{j=1}^{N} c_{j}  \phi_j(x)  +  \sum_{l=1}^{M} d_{l} P_l(x) & = & f(x),  \hskip1.5em  P_l(x) \in \Pi^{d}_{m} \label{eqn:interpolation_constraints} \\
 \left[ \begin{array}{c c} 
@@ -284,9 +284,9 @@ In $\R^d$, $M =$${m+d}\choose{d}$ \cite{Iske2004}, giving
 \end{eqnarray}
 where the second summation (referred to as \emph{interpolation conditions} \cite{Iske2004}) ensures that the interpolant has at least $m$-th order accuracy. Refer to Table~\ref{tbl:rbfs} for a short list of recommended RBFs and minimally required orders of $m$. In this document we work with the Gaussian RBF. Notice, in Equation~\ref{eqn:interpolation_constraints}, that the interpolation conditions add $M$ new degrees of freedom, so $M$ 
 additional constraints are necessary to square the system. In this case:
-$$
+\begin{equation*}
 \sum_{j=1}^{N} c_{j} P_l(x_j) = 0,  \hskip1.5em  l=1,..., M 
-$$
+\end{equation*}
 or 
 \begin{eqnarray}
 P^T {c}  = {0}. 
@@ -322,41 +322,40 @@ f(x_i) & = & \sum_{j=1}^{N} c_{j}  \phi_j(x_i) +  \sum_{l=1}^{M} d_{l} P_l(x_i) 
 \subsection{Reconstructing Solutions for PDEs}
 In the next few subsections, collocation equations are considered based on the general form: 
 \begin{eqnarray*}
-\diffop{u_\phi(x)} &=& f(x) \on{\Interior} \label{eqn:colloc_interior}\\ 
-\boundop{u_\phi(x)} &=& g(x) \on{\Boundary}  \label{eqn:colloc_boundary} 
+\diffop{u_\phi(x)} &=& f(x) \on{\Interior} \\ 
+\boundop{u_\phi(x)} &=& g(x) \on{\Boundary}  
 \end{eqnarray*}
 where the methods presented below will apply the differential operators, $\diffop{}$ and $\boundop{}$, to different choices of $u_\phi$ and different sets of collocation points. In many applications $\diffop{}$ is chosen as a differential operator (e.g., $\pd{}{x}$, $\nabla$, $\nabla^2$) and $\boundop = I$ (i.e. identity operator for Dirichlet boundary conditions) for PDEs. For RBF scattered data interpolation, $\diffop{} = I$. There are also  applications where $\diffop{}$ is a convolution operator (see e.g., \cite{Carr2001, Carr2003}) capable of smoothing/de-noising a surface reconstructed from point clouds. 
 
 For all of the RBF methods for PDEs discussed in the remainder of this chapter, the following a linear system is generated: 
-$$
+\begin{equation*}
 A_{\diffop{}}  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  =  \left( \begin{array}{cc}  f \\ 0  \end{array} \right) 
-$$
-\begin{equation}
-  \left( \begin{array}{cc}  c \\ d  \end{array} \right) = A^{-1}_{\diffop{}}  \left( \begin{array}{cc}  f \\ 0  \end{array} \right) \nonumber
-  %\label{eqn:solve_coeffs}
- \end{equation}
+\end{equation*}
+\begin{equation*}
+  \left( \begin{array}{cc}  c \\ d  \end{array} \right) = A^{-1}_{\diffop{}}  \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
+ \end{equation*}
  where the matrix $A_{\diffop{}}$ depends on the choice of collocation method. 
 
 Once the linear system is solved, the value $u(x)$ is reconstructed at the test points following Equation~\ref{eqn:interpolate_x}:
 \begin{eqnarray}
-u(x) & \approx &  \left.
-\left[ \begin{array}{c c} 
+u(x) & \approx &  \left. \left[ \begin{array}{c c} 
        \phi &  P
 	\end{array} \right]
-	  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  \ \right|_{x={x_i}} \nonumber\\
+	  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  \ \right|_{x={x_i}} \nonumber \\
 	 & \approx & B A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right) 
 	\label{eqn:solve_u}
 \end{eqnarray}
 Likewise, to obtain differential quantities, 
-\begin{eqnarray*}
+\begin{eqnarray}
 \diffop{u}(x) & \approx & \left.
 \left[ \begin{array}{c c} 
        \phi_{\diffop{}} &  P_{\diffop{}}
 	\end{array} \right]
-	  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  \ \right|_{x={x_i}} \\
-  	 & \approx & B_{\diffop{}} A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right)
-	\label{eqn:solve_uxx}
-\end{eqnarray*}
+	  \left( \begin{array}{cc}  c \\ d  \end{array} \right)  \ \right|_{x={x_i}} \nonumber \\
+  	 & \approx & B_{\diffop{}} A^{-1}_\diffop{} \left( \begin{array}{cc}  f \\ 0  \end{array} \right) .
+\label{eqn:solve_uxx}
+\end{eqnarray} 
+
 %where $\phi_{\diffop}$ is the analytic RBF with 
 
 
@@ -484,7 +483,7 @@ careful inspection of the index $i$ in Equations~\ref{eqn:kansa_interior} and \r
 
 The extension of global collocation to traditional pseudo-spectral form was introduced by Fasshauer in \cite{Fasshauer2006}. Dubbed RBF-PS, the method utilizes the same logic from Kansa's and Fasshauer's collocation methods to form matrix $A_{\diffop{}}$ (i.e., $A_\diffop{}$ can be either Equation~\ref{eqn:kansa_method} or \ref{eqn:fasshauer_method}). However, RBF-PS subtly assumes the solution, $u(x)$, is only required at collocation points (i.e., $\{x_i\} = \{x_c\}$) \cite{Fasshauer2006, Fasshauer2007}. Then, extending Equation~\ref{eqn:solve_u}, RBF-PS gives:
 \begin{eqnarray*}
-u(x) & = & \left( B A^{-1}_\diffop{} \right) \left( \begin{array}{cc}  f \\ 0  \end{array} \right) \nonumber \\
+u(x) & = & \left( B A^{-1}_\diffop{} \right) \left( \begin{array}{cc}  f \\ 0  \end{array} \right) \\
 & = & D^T_{\diffop{}} \left( \begin{array}{cc}  f \\ 0  \end{array} \right). 
 \end{eqnarray*}
 where $D_\diffop{}$ is a discrete differentiation matrix (DM) for the operator $\diffop{}$.
@@ -509,7 +508,6 @@ After observing the general structure of the symmetric and unsymmetric collocati
 The formula for the interpolant local to the $(k)$-th collocation point (i.e., RBF center) is given by: 
 \begin{eqnarray*}
 u^{(k)}_\phi(x_i) & = & \sum_{j(k)=1}^{n_{I}}  c_j^{(k)} \diffop{\phi_j(x_i)} + \sum_{j(k)=n_{I} + 1}^{n} c^{(k)}_j\boundop{\phi_j(x_i)} + \sum_{l=1}^{M}d^{(k)}_l P_l(x_i)
-%\label{eqn:fasshauer_local_approx}
 \end{eqnarray*}
 where $n$ represents the number of points that defines the local stencil (including the stencil center); $n$ is possibly a function of the cut-off radius in the RBF, $n_{I}$ is the number of interior stencil points (those points of the stencil that lie in the interior of $\Omega$). The index $j$ is a function of the stencil center $k$ allowing the system to include a local neighborhood of stencil points.
 
@@ -529,7 +527,6 @@ This results in a linear system with similar structure to the global collocation
 							0
 							 \end{array}
 						 \right) 
-	%\label{eqn:local_method}
 \end{eqnarray*}
 Solving this system gives an interpolant locally defined around the stencil center. Note that approximating the PDE solution $u(x)$ requires finding the stencil center nearest $x$, then using the local interpolant for that stencil. Since interpolation is local (i.e., $c_j^{(k)}$'s are unique to each RBF center), reconstructing the derivatives with Equation~\ref{eqn:solve_uxx} is limited to an inner product for each center rather than the matrix-vector grouping possible with global RBFs.  
 %In the event that a point lies on the perpendicular bisector between two stencils, one of them can be arbitrarily selected. 
@@ -566,7 +563,7 @@ Benchmarks provided in \cite{Fornberg2012} rank the stable methods for RBFs from
 
 \part{RBF-FD for HPC Environments}
 
-\chapter{Introduction to RBF-FD}
+\chapter{Introduction to the RBF-FD Method}
 \label{chap:rbffd_method}
 
 
@@ -617,7 +614,8 @@ Following \cite{FornbergLehto11}, weights for a 1-D classical-FD stencil can be 
 where the the $x_j$ are assumed to be distinct for guaranteed nonsingularity. In higher dimensions, the use of multivariate polynomials no longer guarantees nonsingularity of the matrix (which is no longer Vandermonde), so FD stencils are typically composed by adding weights from individual spatial directions. 
 
 In contrast to Equation~\ref{eq:classical_fd_weight_system}, RBF-FD weights arise by enforcing that the weights exactly reproduce $\left. \diffop{\phi_i(x)} \ \right|_{x=x_c}$ within the space spanned by the RBFs that are centered at stencil nodes. This amounts to replacing each polynomial basis function $\{1, x, x^2, \cdots, x^{n-1}\}$ in Equation~\ref{eq:classical_fd_weight_system} with a $d$-dimensional RBF, $\phi_j(x)$, which allows for nonsingularity in $d$-dimensions on irregular node placements \cite{FornbergLehto11}. Various studies  \cite{WrightFornberg06,FornbergDriscoll02,FornbergLehto11,FlyerLehto11} show that better accuracy is achieved when the 
-interpolant can exactly reproduce a constant, $p_0$, such that	\begin{align*}
+interpolant can exactly reproduce a constant, $p_0$, such that	
+\begin{align*}
 	       \left. \diffop{\phi_i(x)} \ \right|_{x=x_c} = \sum_{j=1}^{n} c_j \phi_j(x_i) + c_{n+1} p_0 \ \ \ \ \ \ \textrm{for }i=1,2,...,n  
 	\end{align*}
 	with $\diffop{\phi}_i$ provided by analytically applying the differential operator to the RBF. Assuming $p_0 = 1$, the constraint $\sum_{i=1}^{n}c_i=\diffop{p_0}|_{x=x_{c}}=0$ completes the system: 
@@ -691,7 +689,7 @@ For PDEs, it is common practice to assemble a \emph{differentiation matrix} (DM)
  \diffop{u(x)} & \approx D_{\diffop{}} u \\
 D_\diffop{}^{(c,k)} & = \begin{cases} c_j & x_k = x_j \\
                                     0 & x_k \neq x_j \\
-                                    \end{cases} 
+ \end{cases} 
 \end{align*}
 where the condition $x_k = x_j$ maps the local stencil index for each node, $j$, to a global index, $k$, and $(c,k)$ is the global (row, column) index of $D_\diffop{}$. Vector $u = \{u(x_k)\}_{k=1}^{N}$. Equation~\ref{eq:derivFromFDWeights} can be rewritten as:
 \begin{align*}
@@ -711,7 +709,7 @@ Note that the nonzeros in $D_{\diffop{}}$ are independent of the values in $u$. 
 
 An example RBF-FD DM is illustrated in Figure~\ref{fig:example_DM_rows}. In this example, assume operator $\diffop{} = \pd{}{x}$ is approximated at all $N$ stencil centers of an arbitrary domain. RBF-FD weights assemble the rows of the differentiation matrix, $D_{x}$. On each row, weights are indicated by blue dots. The sparsity of rows reflects the subset of $\{x_k\}_{k=1}^N$ included in corresponding stencils of size $n$. The mapping between global indices ($k$) and local indices ($j$) is used for each sum. On the right hand side, discrete derivative values $\d{u}{x}$ are approximated at all stencil centers. 
 
-\begin{figure}[htbp]
+\begin{figure}[ht]
 	\centering
 		\includegraphics[width=0.65\textwidth]{omnigraffle/DM_rows.pdf}
 		\caption{Differentiation matrix $D_x$ is applied explicitly to calculate derivative approximations, $\d{}{x} u(x)$. }
@@ -761,7 +759,7 @@ Best practices dictate that the DMs be stored in some type of compressed sparse 
 \end{center}
 \end{figure}
 
-In Chapters~\ref{chap:stencils} and \ref{chap:distributed_rbffd} the concept of an \emph{adjacency matrix} is required. Adjacency matrices have the same structure as a DM, except that all nonzero elements are masked by the value 1. Nonzero elements indicate node connectivity an adjacency graph. The \emph{degree} of a node is the number of off-diagonal nonzeros in the adjacency matrix. Equivalently, the degree is the number of connections to neighboring nodes in the adjacency graph. For example, Figure~\ref{fig:directed_graph} shows four nodes connected via directional arrows. Arrows originate at a stencil center and terminate at stencil nodes. Both the graph and matrix indicate that $B$ depends on $A$, $C$ and $D$, while $C$ depends on $B$, and $D$ depends on $A$. $A$ has no dependencies. The degree for each node is given as zero for $A$, three for $B$, one for $C$ and one for $D$. The graph in Figure~\ref{fig:directed_graph} is directed with an associated unsymmetric adjacency matrix. Figure~\ref{fig:undirected_graph} demonstrates the case where edges are bijective resulting in an undirected graph and symmetric adjacency matrix. 
+In Chapters~\ref{chap:stencils} and \ref{chap:distributed_rbffd} the concept of an \emph{adjacency matrix} is required. Adjacency matrices have the same structure as a DM, except that all nonzero elements are masked by the value 1. Nonzero elements indicate node connectivity and adjacency graph. The \emph{degree} of a node is the number of off-diagonal nonzeros in the adjacency matrix. Equivalently, the degree is the number of connections to neighboring nodes in the adjacency graph. For example, Figure~\ref{fig:directed_graph} shows four nodes connected via directional arrows. Arrows originate at a stencil center and terminate at stencil nodes. Both the graph and matrix indicate that $B$ depends on $A$, $C$ and $D$, while $C$ depends on $B$, and $D$ depends on $A$. $A$ has no dependencies. The degree for each node is given as zero for $A$, three for $B$, one for $C$ and one for $D$. The graph in Figure~\ref{fig:directed_graph} is directed with an associated unsymmetric adjacency matrix. Figure~\ref{fig:undirected_graph} demonstrates the case where edges are bijective resulting in an undirected graph and symmetric adjacency matrix. 
 
 Some operations, e.g., matrix decompositions and matrix reordering, are easier when applied to symmetric adjacency matrices. RBF-FD can benefit from some of those same operations by symmetrizing the adjacency matrix $A$ with $A+A^T$. Note that all nonzeros in $A+A^T$ continue to be masked by ones.
 
@@ -776,7 +774,7 @@ In the course of this work a variety of operators are tested to solve PDEs. This
 %TODO: finish appendix on composed operators. 
 %While the operators presented here allow for direct acquisition of weights through solution of Equation~\ref{eq:rbffd_weight_system}, Appendix~\ref{app:compose_weights} considers the possibility for reproducing operator DMs based on combinations of  computed weights. For example, the possibility of composing RBF-FD weights for $\Laplacian$ as a combination of $D_{\Laplacian} = D_x * D_x + D_y * D_y$
 
-\subsection{First and Second Derivatives ($\frac{1}{r}\pd{\phi}{r}, \pdd{\phi}{r}$)}
+\subsection{First and Second Derivatives (\texorpdfstring{$\frac{1}{r}\pd{\phi}{r}, \pdd{\phi}{r}$}{ddx phi})}
 The following are used in subsequent dervatives:
 \begin{align}
 \frac{1}{r}\d{}{r}\phi(r) & = -2 \epsilon^2 \phi(r) \label{eq:dphi_dr} \\
@@ -785,7 +783,7 @@ The following are used in subsequent dervatives:
 
 
 
-\subsection{Cartesian Gradient ($\grad$)}
+\subsection{Cartesian Gradient (\texorpdfstring{$\grad$}{nabla})}
 \label{sec:rbffd_grad_weights}
 The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) are produced via the chain rule:
 	\begin{align*} 
@@ -796,10 +794,11 @@ The first derivatives in Cartesian coordinates ($\pd{}{x}, \pd{}{y}, \pd{}{z}$) 
 where $\pd{\phi}{r}$ for the Gaussian RBFs is given in Equation~\ref{eq:dphi_dr}. Formulas are similar for $\pd{}{y}, \pd{}{z}$ (substitute on $x$). 
 
 
-\subsection{Cartesian Laplacian ($\Laplacian$)}
+\subsection{Cartesian Laplacian (\texorpdfstring{$\Laplacian$}{nabla2})}
 The general form of $\nabla^2$ in $d$-dimensions is  
 \begin{align*}
-\nabla^2 \phi = \pdd{}{r}\phi(r) + \frac{d - 1}{r}\pd{}{r} \phi(r)\end{align*}
+\nabla^2 \phi = \pdd{}{r}\phi(r) + \frac{d - 1}{r}\pd{}{r} \phi(r)
+\end{align*}
 which depends on Equation~\ref{eq:dphi_dr} and \ref{eq:dphi2_dr2}. 
 For Gaussian RBFs in particular we have the following operator:
 \begin{align}
@@ -852,7 +851,7 @@ For Gaussian RBFs in particular we have the following operator:
 %\end{verbatim}
 
 
-\subsection{Laplace-Beltrami ($\LaplaceBeltrami$) on the Sphere}
+\subsection{Laplace-Beltrami (\texorpdfstring{$\LaplaceBeltrami$}{Delta s}) on the Sphere}
 
 The $\Laplacian$ operator can be represented in spherical polar coordinates for $\mathbb{R}^3$ as: 
 \begin{align*} 
@@ -870,7 +869,7 @@ Although this originated in the spherical coordinate system, \cite{WrightFlyerYu
 \end{align*} 
 where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
 
-\subsection{Constrained Gradient ($P_{x} \cdot \grad$) on the Sphere}
+\subsection{Constrained Gradient (\texorpdfstring{$P_{x} \cdot \grad$}{P dot nabla}) on the Sphere}
 \label{sec:projected_grad}
 
 Following \cite{FlyerWright09, FlyerLehto11}, the gradient operator can be constrained to the sphere with the following projection matrix: 
@@ -889,7 +888,9 @@ where $\mathbf{x}$ is the unit normal at the stencil center.
 The direct method of computing RBF-FD weights for the projected gradient for $\mathbf{P} \cdot \nabla $ comes from \cite{FlyerWright09}. First, let $\vx = \begin{pmatrix} x_1, x_2, x_3 \end{pmatrix} $ be the stencil center Cartesian coordinates, and $\vx_k=\begin{pmatrix} x_{1,k}, x_{2,k}, x_{3,k}\end{pmatrix}$ be the coordinates of an RBF-FD stencil node. 
 
 Using the chain rule, and the assumption that 
-$$r(\vx_k-\vx)=\vectornorm{\vx_k-\vx} = \sqrt{(x_{1,k}-x_1)^2 + (x_{2,k}-x_2)^2 + (x_{3,k}-x_3)^2},$$
+\begin{equation*}
+r(\vx_k-\vx)=\vectornorm{\vx_k-\vx} = \sqrt{(x_{1,k}-x_1)^2 + (x_{2,k}-x_2)^2 + (x_{3,k}-x_3)^2},
+\end{equation*}
  the unprojected gradient of $\phi$ becomes
 \begin{align*}
 \nabla \phi(r(\vx_k - \vx)) = \nabla r  \pd{}{r} \phi(r(\vx_k - \vx)) = - (\vx_k - \vx)\frac{1}{r(\vx_k - \vx)} \pd{}{r} \phi(r(\vx_k - \vx)) .
@@ -916,7 +917,7 @@ P\pd{}{x_i} \phi = ( x_i \vx^T \vx_k - x_{i,k}) \frac{1}{r(\vx_k - \vx)}  \pd{}{
 %\authnote{Show accuracy of derivative approximation when using projected operator vs linear combinations of dx,dy,dz operators}
 
 
-\subsection{Hyperviscosity $\Delta^k$ for Stabilization}
+\subsection{Hyperviscosity (\texorpdfstring{$\Delta^k$}{Delta k}) for Stabilization}
 \label{sec:hyperviscosity_operators}
 
 The hyperviscosity filter for stabilization is introduced in \cite{FornbergLehto11} and was included in our previous investigations in \cite{BolligFlyerErlebacher2012}.
@@ -933,7 +934,6 @@ to Equation~(\ref{eqconv}) \cite{FornbergLehto11}. By using Gaussian
  RBFs, $\phi(r) = e^{-(\epsilon r)^2}$, the hyperviscosity (a high order Laplacian operator) simplifies to
 \begin{equation*}
 \Delta^{k}\phi(r) = \epsilon^{2k} p_k(r) \phi(r)
-%\label{eqn:gaussian_hv}
 \end{equation*}
 where $k$ is the order of the Laplacian and  $p_k(r)$ are multiples of generalized Laguerre polynomials that
 are generated recursively (\cite{FornbergLehto11}):
@@ -1098,7 +1098,7 @@ Figure~\ref{fig:scvt_nodes} provides an example SCVT grid with N=100,000 nodes. 
 
 
 
-\section{On Choosing the Right $\epsilon$} 
+\section{On Choosing the Right \texorpdfstring{$\epsilon$}{e}} 
 \label{sec:epsilon_contours}
 %First, the method is not infallible; it faces similar conditioning issues as global/compact RBF method in that the success of the method depends on the choice of support parameter, $\epsilon$. Second, proper choice of $\epsilon$ varies based on the underlying node distribution, as well as the generated stencils. Third, the complexity of the method is low, but there are a few 
 
@@ -1118,7 +1118,7 @@ This work utilizes a moderately reliable method, proposed in \cite{FlyerLehto11}
 \end{align*}
 where $(\kappa_A)_i$ is the condition number for the matrix, $A_i$, assembled by Equation~\ref{eq:rbffd_weight_system} for the $i$-th stencil in the domain. MATLAB's \textsc{cond} command computes the 2-norm condition number defined as:
 \begin{align*}
-(\kappa_A)_i = ||A_i^{-1}||_{2}\cdot||A_i||_{2}. %= \frac{\sigma_{\max}(A)}{\sigma_{\min}(A)}
+(\kappa_A)_i = ||A_i^{-1}||_{2}\cdot||A_i||_{2}.
 \end{align*} 
 
  %Here $\kappa_A$ is the condition number of the interpolation matrix from Equation~\ref{eq:rbffd_weight_system}. 
