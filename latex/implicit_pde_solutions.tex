@@ -24,7 +24,7 @@ where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar press
 %This article introduces the first (to our knowledge) parallel approach to solve the steady-state equations on the surface of the unit sphere with the Radial Basis Function-generated Finite Differences (RBF-FD) method. Building on our work in \cite{BolligFlyerErlebacher2012}, which parallelized explicit RBF-FD advection, our goal is to integrate both explicit and implicit components within a larger transient flow model. 
 
 
-For decades, the demand for fast and accurate numerical solutions in fluid flow has lead to a plethora of computational methods for various geometries, discretizations and dimensions.  On the sphere in $\R^3$ popular discretizations include the standard latitude-longitude grid, cubed-sphere \cite{NairTransport05}, Ying-Yang overlapping grid \cite{Kameyama2008a}, icosahedral grid \cite{Randall2002} and centroidal voronoi tessellations \cite{Du2006}. Associate with each discretization is a mesh---specific to the choice of numerical method---that indicates connectivity of nodes for differentiation.
+%For decades, the demand for fast and accurate numerical solutions in fluid flow has lead to a plethora of computational methods for various geometries, discretizations and dimensions.  On the sphere in $\R^3$ popular discretizations include the standard latitude-longitude grid, cubed-sphere \cite{NairTransport05}, Ying-Yang overlapping grid \cite{Kameyama2008a}, icosahedral grid \cite{Randall2002} and centroidal voronoi tessellations \cite{Du2006}. Associate with each discretization is a mesh---specific to the choice of numerical method---that indicates connectivity of nodes for differentiation.
 
 
  %The explicit component of transient flow is a natural extension of our work in \cite{BolligFlyerErlebacher2012}. 
@@ -86,25 +86,27 @@ For decades, the demand for fast and accurate numerical solutions in fluid flow 
 
 \subsubsection{Multi-GPU GMRES}
 
-Our implementation leverages ViennaCL to directly benefit from improvements to the performance of underlying sparse matrix-vector product, vector dot vector and other linear algebra primitives. Also, ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
-
-%TODO: Table comparing CUSP and ViennaCL features in GPU SpMV chapter?
-
-The GMRES algorithm was introduced in 1986 by Saad and Schultz \cite{Saad1986}. The iterative solver support general matrix structures, whereas methods like Conjugate Gradient require symmetric positive definiteness. 
+The Generalized Minimum RESidual (GMRES) iterative solver, introduced in 1986 by Saad and Schultz \cite{Saad1986}, supports general matrix structures, whereas methods like Conjugate Gradient require symmetric positive definiteness. 
 
 
-At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. %TODO: \authnote{significance of orthogonalization}. 
+
+Algorithm~\ref{alg:gmres} presents the basic left-preconditioned GMRES algorithm with restarts and Given's rotations. The comments in blue denote portions of the algorithm that depend on MPI collectives and the MPI routine required. Our implementation of multi-GPU GMRES leverages ViennaCL to directly benefit from improvements to the performance of underlying sparse matrix-vector product, vector dot product and other linear algebra primitives. 
+
+%At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. 
+%
+%Saad \cite{Saad1986} introduced a practical implementation of the GMRES method based on Given's rotations to compute an implicit QR factorization. The Given's based algorithm is part of libraries like CUSP \cite{Cusp2012} and CULA Sparse \cite{CULA}; ViennaCL implements the Householder reflection algorithm.
+
+%At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. %TODO: \authnote{significance of orthogonalization}. 
 
 %TODO: variants in orthogonalization steps and variants in preconditioners, actual iterations, restarts etc. 
-Variants of GMRES exist that utilize unique orthogonalization steps. The motivation behind alternative Arnoldi processes is to save both memory and operation counts. %In some cases stability of the GMRES iterations can also be improved \cite{FindRef}. 
-Saad \cite{Saad1986} introduced a practical implementation of the GMRES method based on Given's rotations to compute an implicit QR factorization. The Given's based algorithm is part of libraries like CUSP \cite{Cusp2012} and CULA Sparse \cite{CULA}; ViennaCL implements the Householder reflection algorithm. 
+%Variants of GMRES exist that utilize unique orthogonalization steps. The motivation behind alternative Arnoldi processes is to save both memory and operation counts. %In some cases stability of the GMRES iterations can also be improved \cite{FindRef}. 
+ 
 
-The Given's rotation algorithm is easier to parallelize than Householder, which led to the addition of an alternate GMRES algorithm with restarts under ViennaCL. 
+%The Given's rotation algorithm is easier to parallelize than Householder, which led to the addition of an alternate GMRES algorithm with restarts under ViennaCL. 
+
+
 
 The authors of \cite{Bahi2011} do not describe their orthogonalization process, but based on the description of their parallelization strategy it is safe to assume a Given's rotation is used.
-
-Algorithm~\ref{alg:gmres} presents the basic Left-preconditioned GMRES algorithm with restarts and Given's rotations. The comments in blue denote portions of the algorithm that depend on MPI collectives and the MPI routine used . 
-
 
 %TODO: The Arnoldi process can be completed using in a variety of ways. Some libraries like CUSP and \cite{Saad2003} prefer the straightforward Givens rotations because they are easily parallelizable. The givens algorithm is provided in Algorithm~\ref{alg:gmres_givens}
 
