@@ -86,11 +86,14 @@ where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar press
 
 \subsubsection{Multi-GPU GMRES}
 
-The Generalized Minimum RESidual (GMRES) iterative solver, introduced in 1986 by Saad and Schultz \cite{Saad1986}, supports general matrix structures, whereas methods like Conjugate Gradient require symmetric positive definiteness. 
+The Generalized Minimum Residual (GMRES) iterative solver, introduced in 1986 by Saad and Schultz \cite{Saad1986}, supports general matrix structures (e.g., unsymmetric matrices from RBF-FD), whereas methods like Conjugate Gradient require symmetric positive definiteness. At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process to compute an implicit QR factorization. Two common variants of GMRES exist, which differ in their approach to orthogonalization (see \cite{Saad2003}): the first, based on Given's rotation, and the second dependent on Householder reflections. The original GMRES iteration, the Given's variant, is highly parallelizable. The Householder variant was later introduced for reduced memory and operation counts at the cost of reduced parallelism. 
 
+Our implementation of multi-GPU GMRES leverages ViennaCL to directly benefit from the performance of SpMV, vector dot products and other linear algebra primitives. 
+Unfortunately, the implementation of GMRES included in the ViennaCL library depends on Householder reflections. As part of our effort, the Given's variant is implemented similar to \cite{Bahi2011}. 
 
+Algorithm~\ref{alg:gmres} presents the basic algorithm of our implementation for a left-preconditioned GMRES algorithm with restarts. The comments in blue denote portions of the algorithm that depend on MPI collectives and the MPI routine that is required. 
+Spanning the GMRES across multiple GPUs depends on the same collectives as those developed in Chapter~\ref{chap:multigpu_rbffd}. 
 
-Algorithm~\ref{alg:gmres} presents the basic left-preconditioned GMRES algorithm with restarts and Given's rotations. The comments in blue denote portions of the algorithm that depend on MPI collectives and the MPI routine required. Our implementation of multi-GPU GMRES leverages ViennaCL to directly benefit from improvements to the performance of underlying sparse matrix-vector product, vector dot product and other linear algebra primitives. 
 
 %At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. 
 %
@@ -99,14 +102,11 @@ Algorithm~\ref{alg:gmres} presents the basic left-preconditioned GMRES algorithm
 %At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process. %TODO: \authnote{significance of orthogonalization}. 
 
 %TODO: variants in orthogonalization steps and variants in preconditioners, actual iterations, restarts etc. 
-%Variants of GMRES exist that utilize unique orthogonalization steps. The motivation behind alternative Arnoldi processes is to save both memory and operation counts. %In some cases stability of the GMRES iterations can also be improved \cite{FindRef}. 
- 
-
-%The Given's rotation algorithm is easier to parallelize than Householder, which led to the addition of an alternate GMRES algorithm with restarts under ViennaCL. 
+%
 
 
 
-The authors of \cite{Bahi2011} do not describe their orthogonalization process, but based on the description of their parallelization strategy it is safe to assume a Given's rotation is used.
+%The authors of \cite{Bahi2011} do not describe their orthogonalization process, but based on the description of their parallelization strategy it is safe to assume a Given's rotation is used.
 
 %TODO: The Arnoldi process can be completed using in a variety of ways. Some libraries like CUSP and \cite{Saad2003} prefer the straightforward Givens rotations because they are easily parallelizable. The givens algorithm is provided in Algorithm~\ref{alg:gmres_givens}
 
@@ -120,13 +120,13 @@ The authors of \cite{Bahi2011} do not describe their orthogonalization process, 
     \State $\varepsilon$ (tolerance for the residual norm $r$), $x_0$ (initial guess), and set $convergence = false$
    	\State {\color{blue} MPI\_Alltoallv($x_0$)}
     \While{ $convergence == false$}  
-    \State $r_0 = M^{-1} (b-Ax_0)$
+    \State $r_0 = M^{-1} (b-Ax_0)$ \label{alg:gmres_precond}
    	\State {\color{blue} MPI\_Alltoallv($r_0$)}
     \State $\beta = ||r_0||_2$			\Comment{{\color{blue} MPI\_Allreduce($<r_0,r_0>$)}}
     \State $v_1 = r_0 / \beta$ 
 
 	\For {$j=1$ to $k$} %\label{alg:gmres_rotation_loop_start} 
-			\State $w_j = M^{-1} A v_j$   
+			\State $w_j = M^{-1} A v_j$  \label{alg:gmres_precond2} 
 			\Comment{{\color{blue} MPI\_Alltoallv($w_j$)}}
 			\For {$i = 1$ to $j$} %\label{alg:gmres_inner_loop_start}
 				\State $h_{i,j} = <w_j, v_i>$ \Comment{{\color{blue} MPI\_Allreduce }}
@@ -148,76 +148,23 @@ The authors of \cite{Bahi2011} do not describe their orthogonalization process, 
 \end{algorithmic}
 \end{algorithm}
 
+%Note that the application of a preconditioner such as ILU0 introduces an additional call to MPI\_Alltoallv before everywhere $M^{-1}$ is present in Algorithm~\ref{alg:gmres}.
+
+\subsubsection{Preconditioners}
+
+In Algorithm~\ref{alg:gmres}, Lines \ref{alg:gmres_precond} and \ref{alg:gmres_precond2} depend on the application of $M^{-1}$, a preconditioner 
 
 
-Note that the application of a preconditioner such as ILU0 introduces an additional call to MPI\_Alltoallv before everywhere $M^{-1}$ is present in Algorithm~\ref{alg:gmres}.
+GMRES is slow to converge when used without a preconditioner. 
 
-Spanning GMRES across multiple GPUs uses the same collectives as those developed in Chapter~\ref{chap:distributed_rbffd}. 
+The differentation matrix produced by RBF-FD is asymmetric, non-positive definite, and non-diagonally dominant. Thus, many of the popular choices for preconditioning provided by CUSP and ViennaCL do not apply. 
 
+Our tests show that an incomplete LU factorization with zero fill-in \cite{Saad2003} functions well. 
 
-%\subsubsection{Domain Decomposition} 
-%A restricted additive Schwarz \cite{Cai1998} domain decomposition is applied. Traditional additive Schwarz methods construct a restriction matrix $R$ to constrain processor computation to a subdomain and $R^T$ project it back onto the global domain. In contrast, restricted additive Schwarz replaces replaces the restriction matrix $R$ with some restriction operator $R^0_P$ where $R^0_P \subset R$, but continues to use $R^T$ to project the solution back onto the global domain. The main idea behind re
-%, restricted additive schwarz assigns all nodes to exactly one subdomain. Regular additive Schwarz would allow nodes to be in one or more subdomains.
-% 
-%\begin{align} 
-%\vu = \sum_{p=0}^{numprocs} R_p' (A (R_p^0)^T)^{-1}  R_P^0 R_P F
-%\end{align} 
-%where $R_p$ is a restriction matrix (identity on diagonals for stencils operated on by a processor, zero elsewhere). In our case, the partitions are determined by node coordinates, so all non-zeros for a stencil row end up on the same processor (i.e., the decomposition of the matrix does not allow multiple domain blocks per row). 
-%
-
-%
-%\begin{align} 
-%\vu = \sum_{p=0}^{numprocs} R_p (A R_p^T)^{-1}  F
-%\end{align} 
-%where $R_p$ is a restriction matrix (identity on diagonals for stencils operated on by a processor, zero elsewhere). In our case, the partitions are determined by node coordinates, so all non-zeros for a stencil row end up on the same processor (i.e., the decomposition of the matrix does not allow multiple domain blocks per row). 
-%
-%The restriction matrix $R^0_p$ contains only zeros and ones. Cai et al. \cite{Cai1998} let $R^0_p$ contain ones on the diagonal to indicate rows of the system for which a processor $p$ is responsible. Our implementation similarly places $I$ on the diagonal, but we then apply a general permutation matrix $P$ to compress $R^0_p A$ such that processors assemble an $N_p \times m$ local matrix (where $N_p \ll N$ and $m \ll N$). Likewise, processors allocate vectors for the reduced problem size. The solution is $N_p \times 1$ and RHS is $m \times 1$. Recall that the domain decomposition is determined by node partitioning, which does not guarantee rows of the global system corresponding to stencils in a processor's partition will be a contiguous block of the full system. 
+We also find that a large Krylov subspace must be saved. GMRES converges best when approximately 250 dimensions are saved between restarts. 
 
 
-\subsubsection{Interleaved Solution}
-
-In a distributed environment values for each $U$, $V$, $W$ and $P$ must be obtained from ghost nodes. Rather than execute four collectives (one per component), we interleave components to group all components by node. Figure~\ref{fig:interleaved_solution} demonstrates the concept of interleaving the solution. This allows us to directly copy a double4 containing the $\{u_i, v_i, w_i, p_i\}$ for node $x_i$
-
-The DM assembly depends on all dimensions of solution values for a single node to be consecutive in memory. While Equation~\ref{eq:stokes_system_with_constraints} has all components of $U, V, W$ and $P$ grouped together, the values of $u_1$, $v_1$, $w_1$ and $p_1$ correspond to node $(x_1, y_1, z_1)$. 
-
-Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving our solution. The sparsity pattern of the original DM with solutions grouped by component is shown in Figure~\ref{fig:original_stokes_dm}. Well defined blocks of non-zeros are filled with RBF-FD weights from Equation~\ref{eq:stokes_constant_viscosity}. Figure~\ref{fig:interleaved_stokes_dm} presents the sparsity pattern for interleaved solution components. The pattern is similar to a single block of Figure~\ref{fig:original_stokes_dm}, but the sub-matrix $(10:50)\times(10:50)$ of each solution ordering, shown in Figures~\ref{fig:original_stokes_zoom_dm} and \ref{fig:interleaved_stokes_zoom_dm}, illustrate that non-zeros in Figure~\ref{fig:interleaved_stokes_dm} are small $4\times4$ blocks with the structure of Equation~\ref{eq:stokes_constant_viscosity}.
-
-\begin{figure} 
-\centering
-        \begin{subfigure}[b]{0.4\textwidth}
-        		\centering
-		\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_Stokes.pdf} 
-		\caption{Grouped by Solution Component}
-		\label{fig:original_stokes_dm}
-	\end{subfigure}
-	\quad
-	\begin{subfigure}[b]{0.4\textwidth}
-		\centering
-		\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_ReorderedStokes.pdf} 
-		\caption{Interleaved Solution Components}
-		\label{fig:interleaved_stokes_dm}
-	\end{subfigure} \\
-	\begin{subfigure}[b]{0.4\textwidth}
-        		\centering
-		\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_Stokes_10to50.pdf}
-		\caption{Grouped Submatrix $(10:50) \times (10:50)$}
-		\label{fig:original_stokes_zoom_dm}
-	\end{subfigure}
-	\quad
-	\begin{subfigure}[b]{0.4\textwidth}
-		\centering
-	\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_ReorderedStokes_10to50.pdf} 
-		\caption{Interleaved Submatrix $(10:50) \times (10:50)$}
-		\label{fig:interleaved_stokes_zoom_dm}
-	\end{subfigure} \\
-\caption{Sparsity pattern of linear system in Equation~\ref{eq:stokes_constant_viscosity}. Solution values are either ordered by component (e.g., $( u_1, \cdots, u_N, v_1, \cdots, v_N, w_1, \cdots, w_N, p_1, \cdots, p_N)^T$) or interleaved (e.g., $( u_1, v_1, w_1, p_1,\cdots, u_N, v_N, w_N, p_N)^T$). }
-\label{fig:interleaved_solution}
-\end{figure} 
-
-
-The distributed GMRES implementation depends on two MPI collectives: MPI\_Alltoallv and MPI\_Allreduce. 
-
-
+\subsubsection{Stokes Flow on the Unit Sphere}
 
 We solve the PDE on the surface of the sphere as an example for one and multiple GPUs. 
 
@@ -324,6 +271,48 @@ where the subscript on $1_{N \times 1}$ indicates a $N \times 1$ vector of ones.
 We also investigate the use of GMRES without constraints. This increases the number of iterations required to converge, but allows increased parallelism (decreased data sharing). %TODO: why is dropping the constraints valid? GMRES assumes zero for each of those? 
 %\authnote{Perhaps we can iterate without constraints until convergence slows then ``restart" the problem on a single GPU with constraints included? Limits scalability but would allow more parallelism for part of iterations while also reasonable convergence.}
 
+\subsubsection{Interleaved Solution}
+
+In a distributed environment values for each $U$, $V$, $W$ and $P$ must be obtained from ghost nodes. Rather than execute four collectives (one per component), we interleave components to group all components by node. Figure~\ref{fig:interleaved_solution} demonstrates the concept of interleaving the solution. This allows us to directly copy a double4 containing the $\{u_i, v_i, w_i, p_i\}$ for node $x_i$
+
+The DM assembly depends on all dimensions of solution values for a single node to be consecutive in memory. While Equation~\ref{eq:stokes_system_with_constraints} has all components of $U, V, W$ and $P$ grouped together, the values of $u_1$, $v_1$, $w_1$ and $p_1$ correspond to node $(x_1, y_1, z_1)$. 
+
+Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving our solution. The sparsity pattern of the original DM with solutions grouped by component is shown in Figure~\ref{fig:original_stokes_dm}. Well defined blocks of non-zeros are filled with RBF-FD weights from Equation~\ref{eq:stokes_constant_viscosity}. Figure~\ref{fig:interleaved_stokes_dm} presents the sparsity pattern for interleaved solution components. The pattern is similar to a single block of Figure~\ref{fig:original_stokes_dm}, but the sub-matrix $(10:50)\times(10:50)$ of each solution ordering, shown in Figures~\ref{fig:original_stokes_zoom_dm} and \ref{fig:interleaved_stokes_zoom_dm}, illustrate that non-zeros in Figure~\ref{fig:interleaved_stokes_dm} are small $4\times4$ blocks with the structure of Equation~\ref{eq:stokes_constant_viscosity}.
+
+Interleaved solutions can also be replaced by multiple SpMVs. For example, our work in \cite{ErlebacherSauleFlyerBollig2013} investigates the 
+
+\begin{figure} 
+\centering
+        \begin{subfigure}[b]{0.4\textwidth}
+        		\centering
+		\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_Stokes.pdf} 
+		\caption{Grouped by Solution Component}
+		\label{fig:original_stokes_dm}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{0.4\textwidth}
+		\centering
+		\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_ReorderedStokes.pdf} 
+		\caption{Interleaved Solution Components}
+		\label{fig:interleaved_stokes_dm}
+	\end{subfigure} \\
+	\begin{subfigure}[b]{0.4\textwidth}
+        		\centering
+		\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_Stokes_10to50.pdf}
+		\caption{Grouped Submatrix $(10:50) \times (10:50)$}
+		\label{fig:original_stokes_zoom_dm}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[b]{0.4\textwidth}
+		\centering
+	\includegraphics[width=1.0\textwidth]{../figures/paper2/figures/N10201_KDTree_ReorderedStokes_10to50.pdf} 
+		\caption{Interleaved Submatrix $(10:50) \times (10:50)$}
+		\label{fig:interleaved_stokes_zoom_dm}
+	\end{subfigure} \\
+\caption{Sparsity pattern of linear system in Equation~\ref{eq:stokes_constant_viscosity}. Solution values are either ordered by component (e.g., $( u_1, \cdots, u_N, v_1, \cdots, v_N, w_1, \cdots, w_N, p_1, \cdots, p_N)^T$) or interleaved (e.g., $( u_1, v_1, w_1, p_1,\cdots, u_N, v_N, w_N, p_N)^T$). }
+\label{fig:interleaved_solution}
+\end{figure} 
+
 \subsubsection{Manufactured Solution}
 
 To verify our implementation, we manufacture a solution that satisfies the continuity equation. Using the identity
@@ -340,9 +329,7 @@ Then, a manufactured solution that satisfies both momentum and continuity condit
 \end{align*} 
 
 Typically, on the surface of the sphere, the projection operator from Equation~\ref{eq:gradient_projection} must be applied to an arbitrary $g(\vx)$. 
-Here, we choose the components of $g(\vx)$ to be various spherical harmonics in Cartesian coordinates. Spherical harmonics nicely satisfy $P_x Y_l^m = Y_l^m$. Consequently, the entire application of $P_x$ is neglected. 
-
-%TODO: figure showing spherical harmonics 
+Our approach is to choose the components of $g(\vx)$ to be various spherical harmonics in Cartesian coordinates. Spherical harmonics nicely satisfy $P_x Y_l^m = Y_l^m$. Consequently, the entire application of $P_x$ is neglected. 
 
 
 We select $g(x)$ to be: 
@@ -354,13 +341,11 @@ and the pressure function:
 P = Y_6^4 
 \end{align} 
 
-The manufactured solution is shown in Figure~\ref{fig:manufactured_solution}. A Mollweide projection given as: 
+The manufactured solution is shown in Figure~\ref{fig:manufactured_solution}, projected onto the plane via a Mollweide projection: 
 \begin{align*}
 x &= \frac{2\sqrt{2}}{\pi} \lambda \cos{\theta} \\
-y &= \sqrt{2}\sin{\theta}
+y &= \sqrt{2}\sin{\theta}.
 \end{align*}
-
- maps the sphere onto the plane. 
 
 \begin{figure} 
 \centering
@@ -388,17 +373,8 @@ y &= \sqrt{2}\sin{\theta}
 
 
 
-\subsection{Preconditioning} 
-
 %\cite{Divo2005} studied ILU for global collocation 
 
-GMRES is slow to converge when used without a preconditioner. 
-
-The differentation matrix produced by RBF-FD is asymmetric, non-positive definite, and non-diagonally dominant. Thus, many of the popular choices for preconditioning provided by CUSP and ViennaCL do not apply. 
-
-Our tests show that an incomplete LU factorization with zero fill-in \cite{Saad2003} functions well. 
-
-We also find that a large Krylov subspace must be saved. GMRES converges best when approximately 250 dimensions are saved between restarts. 
 
 %TODO: Plot comparing residual of GMRES without precond and with ILU0 
 
@@ -423,22 +399,6 @@ We also find that a large Krylov subspace must be saved. GMRES converges best wh
 %We want to express benchmarks in terms of the number of GMRES iterations per second, and the number of iterations required to converge. Readers wont 
 %care what percentage of peak we are getting, just how fast we get to the solution. 
 
-
-%\begin{itemize} 
-%\item One GPU
-%\begin{itemize} 
-%	\item {\color{blue} Convergence for stokes steady}  
-%	\item {\color{blue} GMRES iteration plot (assuming 1e-8 and restart=60)} 
-%\end{itemize} 
-%\item Multi-GPU
-%	\begin{itemize} 
-%		\item Number of iterations without constraints
-%		\item Number of iterations with constraints
-%		\item GMRES iteration plot
-%		\item plot: number of GMRES iterations per second w.r.t. number of processors
-%	\end{itemize} 
-%\end{itemize} 
-%
 
 %
 %TODO: State that the conditions under which a problem is solved determines how quickly it will converge. For example, nodes too close together on delaunay meshes cause higher condition numbers and require more iterations. Proper choice of preconditioners can dramatically reduce the number of iterations required to converge. Although preconditioners incur an additional cost in preprocessing and at each iteration of the solver, the potential number of iterations they save 
