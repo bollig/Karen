@@ -1,32 +1,33 @@
 %!TEX root = karen.tex
 
-\chapter{Stokes (Incomplete)}
+\subsection{Multi-GPU Preconditioned GMRES Applied to Stokes Flow}
 
-This whole chapter is incomplete work. We started working toward stoke solutions on the unit sphere but it has yet to be completed. 
+%This whole chapter is incomplete work. We started working toward stoke solutions on the unit sphere but it has yet to be completed. 
+%
+%\section{Introduction}
 
-\section{Introduction}
+%We consider herein the 
 
-We consider herein the solution to steady-state viscous Stokes flow on the surface of a sphere, governed by: 
-%TODO: 	\authnote{Where did we go wrong? Our vector laplacian does not have a curl component included. How do we derive that from here?} 
-% We actually went wrong because $u$ is a vector. That means that the $\grad$ operator is actually a Jacobian matrix.
-% We also f-d up \div ( n F) = \grad n dot F + n \div F. (i.e., the term cannot be moved out easily). Really unless we rederive
-% from scratch this whole section amounts to: a mock system of coupled scalar PDEs. 
+Another major effort currently underway is the implicit solution of coupled PDEs with RBF-FD on multiple GPUs. Implicit methods assemble a sparse linear system that must be solved by either inverting the differentiation matrix directly (e.g., via a sparse LU decomposition), or solving the system via a sparse iterative solver (e.g., GMRES or BiCGStab).
+Our effort adopts the iterative solver method, and we have implemented a multi-GPU preconditioned GMRES method in OpenCL similar to the CUDA implementation in \cite{Bahi2011}. The core operation within sparse iterative solvers is the SpMV. Therefore, all optimizations achieved in Chapters~\ref{chap:gpu_rbffd}, \ref{chap:distributed_rbffd}, and \ref{chap:multigpu_rbffd} continue to apply in this case. 
+
+Many practical applications in sciences such as geophysics, climate modeling, and computational fluid dynamics must solve variations of the Navier-Stokes equations, and depend on an implicit solve component. This paper develops multi-GPU algorithms for implicit RBF-FD systems toward the goal of integration within transient flow problems.
+
+To verify the functionality of the implicit solver, we attempt to solve a simplified model of steady-state viscous Stokes flow on the surface of a sphere, governed by: 
   \begin{align}
 \div{[\eta(\grad{\vu} + (\grad{\vu})^T)]} + Ra T \hat{r} & = \grad{p} \label{eq:stokes_momentum} \\
 %\pd{T}{t} + (\vu \cdot \grad) T & = \Laplacian T \ \ \ \ \ \ \ \ \textsl{(Energy)}\label{eq:stokes_energy}
 \div{\vu} & = 0 \label{eq:stokes_continuity} 
 \end{align}
-where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar pressure-field respectively, $\eta$ is the viscosity tensor, $Ra$ is the non-dimensional Rayleigh number, and $T$ is an initial temperature profile. Many practical applications in sciences such as geophysics, climate modeling, and computational fluid dynamics must solve variations of the Navier-Stokes equations. The focus of this paper is on the implicit solve component for viscous (Stokes) flow, which amounts to the steady-state problem described by Equations~\ref{eq:stokes_momentum} and \ref{eq:stokes_continuity}. 
+where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar pressure-field respectively, $\eta$ is the viscosity tensor, $Ra$ is the non-dimensional Rayleigh number, and $T$ is an initial temperature profile. 
 
-
-
-This article introduces the first (to our knowledge) parallel approach to solve the steady-state equations on the surface of the unit sphere with the Radial Basis Function-generated Finite Differences (RBF-FD) method. Building on our work in \cite{BolligFlyerErlebacher2012}, which parallelized explicit RBF-FD advection, our goal is to integrate both explicit and implicit components within a larger transient flow model. 
+%This article introduces the first (to our knowledge) parallel approach to solve the steady-state equations on the surface of the unit sphere with the Radial Basis Function-generated Finite Differences (RBF-FD) method. Building on our work in \cite{BolligFlyerErlebacher2012}, which parallelized explicit RBF-FD advection, our goal is to integrate both explicit and implicit components within a larger transient flow model. 
 
 
 For decades, the demand for fast and accurate numerical solutions in fluid flow has lead to a plethora of computational methods for various geometries, discretizations and dimensions.  On the sphere in $\R^3$ popular discretizations include the standard latitude-longitude grid, cubed-sphere \cite{NairTransport05}, Ying-Yang overlapping grid \cite{Kameyama2008a}, icosahedral grid \cite{Randall2002} and centroidal voronoi tessellations \cite{Du2006}. Associate with each discretization is a mesh---specific to the choice of numerical method---that indicates connectivity of nodes for differentiation.
 
 
-Until now, most of the focus in RBF-FD has been on explicit methods. However, many practical applications in sciences such as geophysics, climate modeling, and computational fluid dynamics must solve variations of the Navier-Stokes equations, and depend on an implicit solve component. This paper develops multi-GPU algorithms for implicit RBF-FD systems toward the goal of integration within transient flow problems. %The explicit component of transient flow is a natural extension of our work in \cite{BolligFlyerErlebacher2012}. 
+ %The explicit component of transient flow is a natural extension of our work in \cite{BolligFlyerErlebacher2012}. 
 
 %TODO: Speed not the issue. Functioning solutions first. 
 %TODO: Need less RBFs for given accuracy of steady state
@@ -43,43 +44,24 @@ Until now, most of the focus in RBF-FD has been on explicit methods. However, ma
 %\item Multi-GPU Jacobi iteration for Navier stokes flow in cavity \url{http://scholarworks.boisestate.edu/cgi/viewcontent.cgi?article=1003&context=mecheng_facpubs}
 %\end{itemize} 
 
-Our goal is to demonstrate to the geosciences that RBF-FD can function well on
-both hyperbolic and elliptic problems. In \cite{BolligFlyerErlebacher2012} we
-introduced a multi-GPU implementation of RBF-FD and demonstrated the method's
-strong ability to stably advect solid bodies on the sphere. In this paper we
-continue toward the goal of RBF-FD solutions for fluid flow problems with a
-multi-GPU Poisson solver for steady-state Stokes flow. In this context, speed is
-not a paramount issue.
-
-Related work on RBF methods targeting the GPU is quite limited. Schmidt et al.
-\cite{Schmidt2009b} solve an implicit system for a global RBF method using
-Accelerys Jacket in Matlab. Our work in \cite{BolligFlyerErlebacher2012} introduced the first
-parallel implementation of RBF-FD for explicit advection capable of spanning
-multiple CPUs as well as multiple GPUs. 
-
-Related work on multi-CPU or multi-GPU RBFs
-\begin{itemize} 
-	\item CPU \cite{Yokota2010} \cite{Wildemann2009}
-	\item single-GPU \cite{Schmidt2009b}
-	\item multi-GPU 
-	\begin{itemize} 
-	\item Preconditioned BiCGStab for Navier Stokes, Finite Element method \cite{Goeddeke2009a} 
-	\end{itemize} 
-\end{itemize} 
-
-While RBF-FD differentiation matrices are applied in the same fashion as standard FD methods, they are unique in that they are asymmetric, non-positive definite and potentially have high condition numbers. To solve an implicit system therefore, we requie an iterative krylov solver like GMRES or BiCGStab which are applicable to matrices of this type. Additionally, preconditioned variants of these methods are required to reduce the complexity of the solution process. 
-
-Within this paper we implement a preconditioned GMRES method for RBF-FD on multiple GPUs. 
-
-Parallel GMRES
-\begin{itemize} 
-	\item CPU only: PETSc \cite{Yokota2010}, Hypre \cite{Wildemann2009} 
-	\item Parallel GMRES on single GPU available in ViennaCL \cite{Rupp2010} and CUSP \cite{Cusp2012}
-	\item Parallel GMRES on Multiple GPUs \cite{Bahi2011}
-	\item Reduced Communication with increased computation \cite{Dekker2000}
-\end{itemize} 
-
-This article continues our effort with an implementation of RBF-FD on both single and multiple-GPUs for elliptic PDEs. In the next section we introduce 
+%Our goal is to demonstrate to the geosciences that RBF-FD can function well on
+%both hyperbolic and elliptic problems. In \cite{BolligFlyerErlebacher2012} we
+%introduced a multi-GPU implementation of RBF-FD and demonstrated the method's
+%strong ability to stably advect solid bodies on the sphere. In this paper we
+%continue toward the goal of RBF-FD solutions for fluid flow problems with a
+%multi-GPU Poisson solver for steady-state Stokes flow. In this context, speed is
+%not a paramount issue.
+%
+%While RBF-FD differentiation matrices are applied in the same fashion as standard FD methods, they are unique in that they are asymmetric, non-positive definite and potentially have high condition numbers. To solve an implicit system therefore, we requie an iterative krylov solver like GMRES or BiCGStab which are applicable to matrices of this type. Additionally, preconditioned variants of these methods are required to reduce the complexity of the solution process. 
+%%
+%
+%Parallel GMRES
+%\begin{itemize} 
+%	\item CPU only: PETSc \cite{Yokota2010}, Hypre \cite{Wildemann2009} 
+%	\item Parallel GMRES on single GPU available in ViennaCL \cite{Rupp2010} and CUSP \cite{Cusp2012}
+%	\item Parallel GMRES on Multiple GPUs \cite{Bahi2011}
+%	\item Reduced Communication with increased computation \cite{Dekker2000}
+%\end{itemize} 
 
 %\section{Bad Problem} 
 %
@@ -102,7 +84,7 @@ This article continues our effort with an implementation of RBF-FD on both singl
 %
 %
 
-\section{Multi-GPU GMRES}
+\subsubsection{Multi-GPU GMRES}
 
 Our implementation leverages ViennaCL to directly benefit from improvements to the performance of underlying sparse matrix-vector product, vector dot vector and other linear algebra primitives. Also, ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
@@ -190,7 +172,7 @@ Spanning GMRES across multiple GPUs uses the same collectives as those developed
 %The restriction matrix $R^0_p$ contains only zeros and ones. Cai et al. \cite{Cai1998} let $R^0_p$ contain ones on the diagonal to indicate rows of the system for which a processor $p$ is responsible. Our implementation similarly places $I$ on the diagonal, but we then apply a general permutation matrix $P$ to compress $R^0_p A$ such that processors assemble an $N_p \times m$ local matrix (where $N_p \ll N$ and $m \ll N$). Likewise, processors allocate vectors for the reduced problem size. The solution is $N_p \times 1$ and RHS is $m \times 1$. Recall that the domain decomposition is determined by node partitioning, which does not guarantee rows of the global system corresponding to stencils in a processor's partition will be a contiguous block of the full system. 
 
 
-\subsection{Interleaved Solution}
+\subsubsection{Interleaved Solution}
 
 In a distributed environment values for each $U$, $V$, $W$ and $P$ must be obtained from ghost nodes. Rather than execute four collectives (one per component), we interleave components to group all components by node. Figure~\ref{fig:interleaved_solution} demonstrates the concept of interleaving the solution. This allows us to directly copy a double4 containing the $\{u_i, v_i, w_i, p_i\}$ for node $x_i$
 
@@ -305,7 +287,7 @@ P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r} \pd{}{r} |_{\vx=\vx_j}
 \end{align*}
 
 
-\subsection{Constraints} 
+\subsubsection{Constraints} 
 Due to the lack of boundary conditions on the sphere, the family of solutions that satisfy the PDE in Equation~\ref{eq:stokes_constant_viscosity} includes four free constants (one for each $u_1$, $u_2$, $u_3$ and $p$). 
 %In light of this, Equations~\ref{eq:stokes_linear_system} and \ref{eq:stokes_constant_viscosity} are singular with a four-vector null space corresponding to each for the four components of the solution $\begin{pmatrix} u_1, u_2, u_3, p \end{pmatrix}$. 
 
@@ -340,7 +322,7 @@ where the subscript on $1_{N \times 1}$ indicates a $N \times 1$ vector of ones.
 We also investigate the use of GMRES without constraints. This increases the number of iterations required to converge, but allows increased parallelism (decreased data sharing). %TODO: why is dropping the constraints valid? GMRES assumes zero for each of those? 
 %\authnote{Perhaps we can iterate without constraints until convergence slows then ``restart" the problem on a single GPU with constraints included? Limits scalability but would allow more parallelism for part of iterations while also reasonable convergence.}
 
-\subsection{Manufactured Solution}
+\subsubsection{Manufactured Solution}
 
 To verify our implementation, we manufacture a solution that satisfies the continuity equation. Using the identity
 \begin{align*} 
@@ -393,15 +375,18 @@ y &= \sqrt{2}\sin{\theta}
 \caption{A divergence free field is manufactured for the sphere. }
 \label{fig:manufactured_solution}
 \end{figure} 
+%
+%\subsubsection{Convergence}
+%
+%%TODO: convergence for Stokes
+%As the problem size $N$ increases, we expect the approximation to the solution to converge on the order of $\sqrt{n}$ where $n$ is the choice of stencil size. %Figure~\ref{fig:convergence} demonstrates the convergence of our solution with respect to $\sqrt{N}$ for stencil sizes $n=31$, $101$ 
+%
+\authnote{Include convergence plot from handout as initial evidence; state that its ongoing investigation to improve}. 
 
-\subsubsection{Convergence}
 
-%TODO: convergence for Stokes
-As the problem size $N$ increases, we expect the approximation to the solution to converge on the order of $\sqrt{n}$ where $n$ is the choice of stencil size. %Figure~\ref{fig:convergence} demonstrates the convergence of our solution with respect to $\sqrt{N}$ for stencil sizes $n=31$, $101$ 
 
-\authnote{Finish convergence plot}. 
 
-\section{Preconditioning} 
+\subsection{Preconditioning} 
 
 %\cite{Divo2005} studied ILU for global collocation 
 
@@ -432,9 +417,6 @@ We also find that a large Krylov subspace must be saved. GMRES converges best wh
 %    \EndFor
 %\end{algorithmic}
 %\end{algorithm}
-
-\section{GMRES Results}
-%TODO: generate results today
 
 %We want to express benchmarks in terms of the number of GMRES iterations per second, and the number of iterations required to converge. Readers wont 
 %care what percentage of peak we are getting, just how fast we get to the solution. 

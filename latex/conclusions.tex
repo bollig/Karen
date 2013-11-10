@@ -66,18 +66,14 @@ Of lesser significance we also:
 \section{Future Work}
 
 
-This work led to a number of additional investigations:
+This work leads to a number of additional investigations:
 \begin{itemize}
-\item There are a number of alternatives for SpMV that target various matrix features (e.g., BELL, SELL, SELL-T, etc.). New investigation will determine the which, if any, alternatives can benefit RBF-FD. 
+\item There are a number of alternatives for SpMV that target various matrix features (e.g., BELL, SELL, SELL-T, etc.) \cite{Kreutzer2012,SuKeutzer2012}. New investigation will determine the which, if any, alternatives can benefit RBF-FD. 
 
-\item ViennaCL has support for multiple backends, including the Intel Phi. Initial experiments result in performance $\frac{1}{10}$th as fast as the K20 GPU. Those results are: a) limited by a beta driver for OpenCL on Intel Phi; and b) using OpenCL kernels intended for the GPU architecture. Continued investigations are targeting features (language, vector instructions, etc.) of the Phi. 
-\item To improve the accuracy of RBF-FD weights, 
+\item ViennaCL has support for multiple backends, including the Intel Phi. Initial experiments result in performance $\frac{1}{10}$-th as fast as the K20 GPU. Those results are: a) limited by a beta driver for OpenCL on Intel Phi; and b) using OpenCL kernels intended for the GPU architecture. Continued investigations are targeting features (language, vector instructions, etc.) of the Phi. 
 \item 
 New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. Dynamic parallelism allows GPU kernels to spawn new kernels directly on the GPU without returning to the CPU. It provides stream priority features which allow kernels to preemptively execute out of order based on priority and dependencies. Such a feature is powerful for MPI support where the GPU can continue processing kernels while waiting on MPI communication to complete. 
 \item In Section~\ref{sec:epsilon_contours} we mention the need for stable methods to solve for weights. We have partially implemented the RBF-GA method from \cite{Fornberg2012}.  Initial exposure to the algorithm leaves the impression that the change of basis on the RHS is a nuisance. In effort to bypass the difficulty in deriving new RHS expressions, we plan to assemble complex DMs using DMs of lower (i.e., first-) order operators.
 
 \end{itemize}
-
-
-
 
