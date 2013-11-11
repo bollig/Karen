@@ -13,7 +13,8 @@ To verify the functionality of the implicit solver, we attempt to solve a simpli
 \end{align}
 where the unknowns $\vu = \begin{pmatrix} U \\ V \\ W\end{pmatrix}$ and $p$ represent the vector velocity- and scalar pressure-field respectively, $\eta$ is the viscosity tensor, $Ra$ is the non-dimensional Rayleigh number, and $T$ is an initial temperature profile. 
 
-This effort leads to a number of different avenues for future work, which we now survey. 
+%This effort leads to a number of different avenues for future work, which we now survey. 
+In this Appendix we survey a number details related to the multi-GPU iterative solver implementation and discuss possible extensions for future investigations. 
 
 %This article introduces the first (to our knowledge) parallel approach to solve the steady-state equations on the surface of the unit sphere with the Radial Basis Function-generated Finite Differences (RBF-FD) method. Building on our work in \cite{BolligFlyerErlebacher2012}, which parallelized explicit RBF-FD advection, our goal is to integrate both explicit and implicit components within a larger transient flow model. 
 
@@ -155,7 +156,7 @@ U \\ V \\ W \\ p
 \end{align} 
 Recall from Chapter~\ref{chap:rbffd_method} that on the surface of the unit sphere the radial term vanishes, so we are left with:
 \begin{align*}
-\Laplacian    \equiv \LaplaceBeltrami . 
+\Laplacian{} \phi   \equiv \LaplaceBeltrami{} \phi. 
 \end{align*}
 The following RBF operator from \cite{WrightFlyerYuen10}---Equation (20)---is applied to the RHS of Equation~\ref{eq:rbffd_weight_system} to generate Laplace-Beltrami RBF-FD weights: 
 \begin{align*} 
@@ -326,7 +327,7 @@ In a distributed environment some values for $\vu$ and $p$ are obtained from gho
 
 Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving our solution. The sparsity pattern of the original DM with solutions grouped by component is shown in Figure~\ref{fig:original_stokes_dm}. Well defined blocks of non-zeros are filled with RBF-FD weights from Equation~\ref{eq:stokes_constant_viscosity}. Figure~\ref{fig:interleaved_stokes_dm} presents the sparsity pattern for interleaved solution components. The pattern is similar to a single block of Figure~\ref{fig:original_stokes_dm}, but the sub-matrix $(10:50)\times(10:50)$ of each solution ordering, shown in Figures~\ref{fig:original_stokes_zoom_dm} and \ref{fig:interleaved_stokes_zoom_dm}, illustrate that non-zeros in Figure~\ref{fig:interleaved_stokes_dm} are small $4\times4$ blocks with the structure of Equation~\ref{eq:stokes_constant_viscosity}.
 
-Our current application of interleaving was started only to simplify MPI communication and data transfers between CPUs and GPUs. However, future work will continue to investigate interleaving for the purpose of increased operational intensity. Each of the 9 nonzero blocks of Equation~\ref{eq:stokes_constant_viscosity} (16 blocks if solving variable $\eta$) can be multiplied independently against the four vectors $U$, $V$, $W$ and $p$. Our work in \cite{ErlebacherSauleFlyerBollig2013} shows that multiplying multiple sparse matrices with the same sparsity pattern against a matrix of vectors---that is, performing multiple Sparse Matrix-times-Matrix multiplies (SpMMs)---can be formulated as a tensor cross product for each nonzero element of the matrices. The tensor cross products increase operational intensity and achieve significantly higher GFLOP/sec compared to a single SpMV \cite{ErlebacherSauleFlyerBollig2013}. %Future work will apply the tensor products to solve Stokes flow on the sphere. 
+Our current application of interleaving was started only to simplify MPI communication and data transfers between CPUs and GPUs. However, future work will continue to investigate interleaving for the purpose of increased operational intensity. Each of the 9 nonzero blocks of Equation~\ref{eq:stokes_constant_viscosity} (16 blocks if solving variable $\eta$) can be multiplied independently against the four vectors $U$, $V$, $W$ and $p$. Our work in \cite{ErlebacherSauleFlyerBollig2013} shows that multiplying multiple sparse matrices with the same sparsity pattern against a matrix of vectors---that is, performing multiple Sparse Matrix-times-Matrix multiplies (SpMMs)---can be formulated as a tensor cross product for each nonzero element of the matrices. The tensor cross products increase operational intensity and achieve significantly higher GFLOP/sec compared to a single SpMV \cite{ErlebacherSauleFlyerBollig2013}.  %Future work will apply the tensor products to solve Stokes flow on the sphere. 
 
 
 %\subsubsection{Manufactured Solution}
