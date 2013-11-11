@@ -16,8 +16,7 @@
 \chapter{Distributed RBF-FD}
 \label{chap:distributed_rbffd}
 
-Parallelizing applications in a distributed computing environment requires three
-design decisions \cite{Saad2003}: 
+Parallelizing applications in a distributed computing environment requires three actions \cite{Saad2003}: 
 \begin{enumerate} 
 \item Partition the problem to distribute work across multiple processes. Intelligent partitioning
 impacts load balancing and communication latency.
@@ -26,15 +25,15 @@ solution values, etc. that are visible to each process, and establish index mapp
 \item Establish a local ordering of data. The right local order can improve solver performance and/or simplify data movement. %Of particular interest here is how to minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
 \end{enumerate}
 
-This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale computation across a thousand processes. The discussion in this chapter applies to both multi-CPU and multi-GPU implementations of RBF-FD. Since each GPU is used as an accelerator, details of partitioning, local and global index mappings, and node ordering are managed on the CPU while the GPU computes only on a local context.  
+This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale the computation across a thousand processes. The discussion in this chapter applies to both multi-CPU and multi-GPU implementations of RBF-FD. Since each GPU is used as an accelerator, details of partitioning, local and global index mappings, and node ordering are managed on the CPU while the GPU computes only on a local context.  
 
 We operate under the assumption that inter-process communication is managed by the \emph{Message Passing Interface (MPI)} \cite{MPI}. Detail on how communication collectives are used is included below in Section~\ref{sec:mpi_collectives}. We use the term \emph{MPI process} to refer to a process that occupies one CPU core and is associated with at most one GPU accelerator. MPI processes on multiple cores of the same CPU behave the same as processes on independent compute nodes in a cluster; the only difference being the fabric used for communication: cores of the same processor communicate via fast shared memory versus the slower QDR InfiniBand connecting cores of independent compute nodes. MPI always uses the fastest interconnect possible to connect processes. 
 
-In order to manage expectations of how well the code will run in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that must run in serial \cite{Shi2012}:
+In order to manage expectations of how well the code will run in a distributed environment, we turn to Amdahl's law, which states that the total speedup possible for $p$ processors is limited by the fraction of code that is serial \cite{Shi2012}:
 \begin{align}
 S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
 \end{align}
-where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions of code respectively. Amdahl's law reveals that scaling to a large number of processors, $p$, can make the time in parallelizable portions of code vanish, but $T_s$ is constant. Communication is always included in $T_s$, so it is pertinent to minimize the cost of communication for maximum gain. Our initial implementation of distributed RBF-FD on multiple CPUs and multiple GPUs (\cite{BolligFlyerErlebacher2012}) had an extremely high cost of communication, which limited parallel execution to only a dozen or so processes. This chapter details the design and tuning of a distributed RBF-FD implementation capable of scaling across more than a thousand processors. 
+where $T_s$ and $T_p$ represent the time spent in the serial and parallelizable portions of code respectively. Amdahl's law reveals that scaling to a large number of processors, $p$, can make the time in parallelizable portions of code vanish, but $T_s$ is constant. Communication is always included in $T_s$, so it is pertinent to minimize the cost of communication for maximum gain. Our initial implementation of distributed RBF-FD on multiple CPUs and multiple GPUs (\cite{BolligFlyerErlebacher2012}) had an extremely high cost of communication, which saturated scaling at only a dozen or so processes. This chapter details the design and tuning of a distributed RBF-FD implementation that scales to over a thousand processors. 
 
 
 
@@ -57,7 +56,7 @@ where $T_s$ and $T_p$ are the time spent in serial and parallelizable portions o
 
 \section{Partitioning}
 
-Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decomposition methods simply subdivide/partition the computational domain of a PDE into \emph{subdomains}, which are then solved independently. Subdomains can be solved sequentially by the same MPI process or in parallel across multiple processes. A number of methods exist for domain decomposition including Multiplicative Schwarz, Additive Schwarz, and Restricted Additive Schwarz (see related works in \cite{Yokota2010,StCyr2007}). The choice of method determines how the domain is subdivided, and how often data is passed between subdomains (i.e., how parallelizable the method is). Domain decomposition methods are well known as a form of preconditioning (see e.g., \cite{Beatson2000, StCyr2007}), but the two Additive variants of Schwarz decomposition are inherently parallel and naturally extend to distributed architectures \cite{Yokota2010, Gropp1990}. 
+Parallelization of RBF-FD relies on \emph{domain decomposition}. Domain decomposition methods simply subdivide/partition the computational domain of a PDE into \emph{subdomains}, which are then solved independently. Subdomains can be solved sequentially by the same MPI process or in parallel across multiple processes. A number of methods exist for domain decomposition including Multiplicative Schwarz, Additive Schwarz, and Restricted Additive Schwarz (see related works in \cite{Yokota2010,StCyr2007}). The choice of method determines how the domain is subdivided, and how often data is passed between subdomains (i.e., how parallelizable the method is). Domain decomposition methods are well-known as a form of preconditioning (see e.g., \cite{Beatson2000, StCyr2007}), but the two Additive variants of Schwarz decomposition are inherently parallel and naturally extend to distributed architectures \cite{Yokota2010, Gropp1990}. 
 
 The parallelization strategy employed for RBF-FD in this work is equivalent to a Restricted Additive Schwarz (RAS), although our strategy was implemented prior to formal knowledge of the RAS method. In this case we assume that partitioning occurs within the spatial domain. At each time-step the PDE is first solved independently within subdomains, and then information is shared across subdomain boundaries to ensure a consistent global solution entering the next time-step. We also assume that subdomains are always assigned to independent processes, even though each process could operate on multiple subdomains in theory. 
 
