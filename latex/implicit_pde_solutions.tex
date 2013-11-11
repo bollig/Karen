@@ -1,17 +1,9 @@
 %!TEX root = karen.tex
 
-\subsection{Multi-GPU Preconditioned GMRES Applied to Stokes Flow}
+\chapter{Multi-GPU Preconditioned GMRES Applied to Stokes Flow}
+\label{app:implicit_solver}
 
-%This whole chapter is incomplete work. We started working toward stoke solutions on the unit sphere but it has yet to be completed. 
-%
-%\section{Introduction}
-
-%We consider herein the 
-
-Another major effort currently underway is the implicit solution of coupled PDEs with RBF-FD on multiple GPUs. Implicit methods assemble a sparse linear system that must be solved by either inverting the differentiation matrix directly (e.g., via a sparse LU decomposition), or solving the system via a sparse iterative solver (e.g., GMRES or BiCGStab).
-Our effort adopts the iterative solver method, and we have implemented a multi-GPU preconditioned GMRES method in OpenCL similar to the CUDA implementation in \cite{Bahi2011}. The core operation within sparse iterative solvers is the SpMV. Therefore, all optimizations achieved in Chapters~\ref{chap:gpu_rbffd}, \ref{chap:distributed_rbffd}, and \ref{chap:multigpu_rbffd} continue to apply in this case. 
-
-Many practical applications in sciences such as geophysics, climate modeling, and computational fluid dynamics must solve variations of the Navier-Stokes equations, and depend on an implicit solve component. This paper develops multi-GPU algorithms for implicit RBF-FD systems toward the goal of integration within transient flow problems.
+Many practical applications in sciences such as geophysics, climate modeling, and computational fluid dynamics must solve variations of the Navier-Stokes equations, and depend on an implicit solve component. We are currently investigating multi-GPU algorithms to solve implicit RBF-FD systems with a final goal of integrating the solvers within transient flow problems.
 
 To verify the functionality of the implicit solver, we attempt to solve a simplified model of steady-state viscous Stokes flow on the surface of a sphere, governed by: 
   \begin{align}

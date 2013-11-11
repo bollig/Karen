@@ -3,7 +3,7 @@
 
 
 
-Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation achieves 30\% to 40\% parallel efficiency on 128 processors of the Itasca HPC cluster (CPU-only) at the University of Minnesota when given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
+Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation scales well achieves 30\% to 40\% (strong and weak) parallel efficiency on 128 processors of the Itasca HPC cluster (CPU-only) at the University of Minnesota when given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
 
 Our implementation leverages METIS for general domain decomposition and load balancing. Individual processes do not require a full mapping between RBF nodes and CPUs. Instead, processes assemble and operate on local linear systems for their subdomains. Communication between processes is limited to nearest-neighbor or all-to-subset collectives based on the intersection of subdomains. 
 
@@ -44,11 +44,6 @@ Of lesser significance we also:
 \item Convergence studies confirm that hyperviscosity (\cite{Fornberg2011b}) stabilizes solutions.
 \item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size
 \end{itemize}
-\item Implement a distributed multi-GPU preconditioned GMRES within ViennaCL for implicit RBF-FD solutions.
-\begin{itemize} 
-\item A divergence-free field is constructed as the manufactured solution for a simplified version of Stokes flow constrained to the unit sphere. 
-\item A CPU-only preconditioner (Incomplete LU with Zero Fill-in) is implemented to test impact on GMRES convergence rates 
-\end{itemize}
 \item Provide preliminary benchmarks evaluating the performance of RBF-FD on the Intel Phi Architecture. 
 \end{enumerate}
 
@@ -73,7 +68,9 @@ This work leads to a number of additional investigations:
 \item ViennaCL has support for multiple backends, including the Intel Phi. Initial experiments result in performance $\frac{1}{10}$-th as fast as the K20 GPU. Those results are: a) limited by a beta driver for OpenCL on Intel Phi; and b) using OpenCL kernels intended for the GPU architecture. Continued investigations are targeting features (language, vector instructions, etc.) of the Phi. 
 \item 
 New features on NVidia Kepler level GPUs and CUDA v5 allow dynamic parallelism. Dynamic parallelism allows GPU kernels to spawn new kernels directly on the GPU without returning to the CPU. It provides stream priority features which allow kernels to preemptively execute out of order based on priority and dependencies. Such a feature is powerful for MPI support where the GPU can continue processing kernels while waiting on MPI communication to complete. 
-\item In Section~\ref{sec:epsilon_contours} we mention the need for stable methods to solve for weights. We have partially implemented the RBF-GA method from \cite{Fornberg2012}.  Initial exposure to the algorithm leaves the impression that the change of basis on the RHS is a nuisance. In effort to bypass the difficulty in deriving new RHS expressions, we plan to assemble complex DMs using DMs of lower (i.e., first-) order operators.
+\item In Section~\ref{sec:epsilon_contours} we mention the need for stable methods to solve for weights. We have partially implemented the RBF-GA method from \cite{Fornberg2012}.  Initial exposure to the algorithm leaves the impression that the change of basis on the RHS is a nuisance. In effort to bypass the difficulty in deriving new RHS expressions, we plan to assemble complex DMs using DMs of lower (e.g., first-) order operators. See Appendix~\ref{app:indirect_weights} for details on how such DMs would be composed.
+\item Another major effort currently underway is the implicit solution of coupled PDEs with RBF-FD on multiple GPUs. Implicit methods assemble a sparse linear system that must be solved by either inverting the differentiation matrix directly (e.g., via a sparse LU decomposition), or by solving the system via a sparse iterative solver (e.g., GMRES or BiCGStab).
+Our effort adopts the iterative solver method, and we have implemented a multi-GPU preconditioned GMRES method in OpenCL similar to the CUDA implementation in \cite{Bahi2011}. The core operation within sparse iterative solvers is the SpMV. Therefore, all optimizations achieved in Chapters~\ref{chap:gpu_rbffd}, \ref{chap:distributed_rbffd}, and \ref{chap:multigpu_rbffd} continue to apply in this case. Additional details related to this effort are provided in Appendix~\ref{app:implicit_solver}.
 
 \end{itemize}
 
