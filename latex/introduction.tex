@@ -286,12 +286,12 @@ Of lesser significance we also:
 \item Convergence studies confirm that hyperviscosity (\cite{Fornberg2011b}) stabilizes solutions.
 \item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size.
 \end{itemize}
-\item Implement a distributed multi-GPU preconditioned GMRES within ViennaCL for implicit RBF-FD solutions.
-\begin{itemize} 
-\item A divergence-free field is constructed as the manufactured solution for a simplified version of Stokes flow constrained to the unit sphere. 
-\item Contributed a CPU-only preconditioner (Incomplete LU with Zero Fill-in) to ViennaCL to test impact on GMRES convergence rates.
-\end{itemize}
 \item Provide preliminary benchmarks evaluating the performance of RBF-FD on the Intel Phi Architecture. 
+%\item Implement a distributed multi-GPU preconditioned GMRES within ViennaCL for implicit RBF-FD solutions.
+%\begin{itemize} 
+%\item A divergence-free field is constructed as the manufactured solution for a simplified version of Stokes flow constrained to the unit sphere. 
+%\item Contributed a CPU-only preconditioner (Incomplete LU with Zero Fill-in) to ViennaCL to test impact on GMRES convergence rates.
+%\end{itemize}
 %\begin{itemize} 
 %\item We leverage the cross-platform functionality of OpenCL to operate in Offload Mode on the Phi with the latest Beta OpenCL driver from Intel. 
 %\end{itemize}
