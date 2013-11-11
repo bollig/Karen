@@ -19,7 +19,9 @@ To verify the functionality of the implicit solver, we attempt to solve a simpli
 %\pd{T}{t} + (\vu \cdot \grad) T & = \Laplacian T \ \ \ \ \ \ \ \ \textsl{(Energy)}\label{eq:stokes_energy}
 \div{\vu} & = 0 \label{eq:stokes_continuity} 
 \end{align}
-where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar pressure-field respectively, $\eta$ is the viscosity tensor, $Ra$ is the non-dimensional Rayleigh number, and $T$ is an initial temperature profile. 
+where the unknowns $\vu = \begin{pmatrix} U \\ V \\ W\end{pmatrix}$ and $p$ represent the vector velocity- and scalar pressure-field respectively, $\eta$ is the viscosity tensor, $Ra$ is the non-dimensional Rayleigh number, and $T$ is an initial temperature profile. 
+
+This effort leads to a number of different avenues for future work, which we now survey. 
 
 %This article introduces the first (to our knowledge) parallel approach to solve the steady-state equations on the surface of the unit sphere with the Radial Basis Function-generated Finite Differences (RBF-FD) method. Building on our work in \cite{BolligFlyerErlebacher2012}, which parallelized explicit RBF-FD advection, our goal is to integrate both explicit and implicit components within a larger transient flow model. 
 
@@ -29,29 +31,6 @@ where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar press
 
  %The explicit component of transient flow is a natural extension of our work in \cite{BolligFlyerErlebacher2012}. 
 
-%TODO: Speed not the issue. Functioning solutions first. 
-%TODO: Need less RBFs for given accuracy of steady state
-%TODO: less nodes implies less memory
-%TODO: general geometries are supported
-%TODO: better distributions of nodes on spheres. competition like CitComS, etc. use cubed sphere, yinyang grids and triangular meshes in combination with low order methods (2nd and 3rd order). Increasing the order of the method or dimension can significantly increase the complexity of the algorithms. RBF-FD naturally extends to higher dimensions and increasing the order is as simple as increasing the number of nodes in the stencil. 
-
-%TODO: Related work
-%TODO: divergence-free spherical radial basis Glerkin method for Stokes on the unit sphere \cite{Ganesh2011} 
-%TODO: Incompressible Navier-Stokes using explicit (Euler) and semi-implicit (Crank Nicholson) time step. Small problem size  ($61 x 61$) and small stencil sizes ($n=9$); ghost nodes beyond boundary strategy.  Both RBF-FD and RBF-HFD tested. \cite{Chinchapatnam2009}
-%TODO: Related work on Preconditioned iterative methods for Stokes Flow
-%\begin{itemize}
-%\item Survey of preconditioners used for Stokes flow problems \cite{May2008} (limited applicability since they do not assume non-SPD matrices) 
-%\item Multi-GPU Jacobi iteration for Navier stokes flow in cavity \url{http://scholarworks.boisestate.edu/cgi/viewcontent.cgi?article=1003&context=mecheng_facpubs}
-%\end{itemize} 
-
-%Our goal is to demonstrate to the geosciences that RBF-FD can function well on
-%both hyperbolic and elliptic problems. In \cite{BolligFlyerErlebacher2012} we
-%introduced a multi-GPU implementation of RBF-FD and demonstrated the method's
-%strong ability to stably advect solid bodies on the sphere. In this paper we
-%continue toward the goal of RBF-FD solutions for fluid flow problems with a
-%multi-GPU Poisson solver for steady-state Stokes flow. In this context, speed is
-%not a paramount issue.
-%
 %While RBF-FD differentiation matrices are applied in the same fashion as standard FD methods, they are unique in that they are asymmetric, non-positive definite and potentially have high condition numbers. To solve an implicit system therefore, we requie an iterative krylov solver like GMRES or BiCGStab which are applicable to matrices of this type. Additionally, preconditioned variants of these methods are required to reduce the complexity of the solution process. 
 %%
 %
@@ -84,9 +63,11 @@ where the unknowns $\vu$ and $p$ represent the vector velocity- and scalar press
 %
 %
 
-\subsubsection{Multi-GPU GMRES}
+\subsubsection{Multi-GPU Preconditioned GMRES}
 
-The Generalized Minimum Residual (GMRES) iterative solver, introduced in 1986 by Saad and Schultz \cite{Saad1986}, supports general matrix structures (e.g., unsymmetric matrices from RBF-FD), whereas methods like Conjugate Gradient require symmetric positive definiteness. At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process to compute an implicit QR factorization. Two common variants of GMRES exist, which differ in their approach to orthogonalization (see \cite{Saad2003}): the first, based on Given's rotation, and the second dependent on Householder reflections. The original GMRES iteration, the Given's variant, is highly parallelizable. The Householder variant was later introduced for reduced memory and operation counts at the cost of reduced parallelism. 
+The Generalized Minimum Residual (GMRES) iterative solver was introduced in 1986 by Saad and Schultz \cite{Saad1986}. In contrast to methods like the popular Conjugate Gradient method, which requires symmetric positive definiteness to converge to a solution, the GMRES method allows for general matrix structures. The differentiation matrices produced by RBF-FD are typically unsymmetric, non-positive definite, and non-diagonally dominant. 
+
+At the core of the GMRES algorithm is an Arnoldi (orthogonalization) process to compute an implicit QR factorization. Two common variants of GMRES exist, which differ in their approach to orthogonalization (see \cite{Saad2003}): the first, based on Given's rotation, and the second dependent on Householder reflections. The original GMRES iteration, the Given's variant, is highly parallelizable. The Householder variant was later introduced for reduced memory and operation counts at the cost of reduced parallelism. 
 
 Our implementation of multi-GPU GMRES leverages ViennaCL to directly benefit from the performance of SpMV, vector dot products and other linear algebra primitives. 
 Unfortunately, the implementation of GMRES included in the ViennaCL library depends on Householder reflections. As part of our effort, the Given's variant is implemented similar to \cite{Bahi2011}. 
@@ -148,31 +129,27 @@ Spanning the GMRES across multiple GPUs depends on the same collectives as those
 \end{algorithmic}
 \end{algorithm}
 
+Lines \ref{alg:gmres_precond} and \ref{alg:gmres_precond2} of Algorithm~\ref{alg:gmres} depend on the application of a preconditioner, $M^{-1}$, to accelerate convergence of the solver. Our initial tests of GMRES applied to RBF-FD have found that the method is slow to converge without preconditioning. Our current effort includes testing a number of preconditioners including Incomplete LU decomposition, and both geometric and algebraic multigrid methods \cite{Saad2003}.
+%
+%demonstrates slow  that GMRES applied without preconditioning is slow to converge and often requires more than 250 iterations to reach a reasonable level of convergence. 
+%
+%Our tests show that an incomplete LU factorization with zero fill-in \cite{Saad2003} functions well. 
+%
+%We also find that a large Krylov subspace must be saved. GMRES converges best when approximately 250 dimensions are saved between restarts. 
+
+
 %Note that the application of a preconditioner such as ILU0 introduces an additional call to MPI\_Alltoallv before everywhere $M^{-1}$ is present in Algorithm~\ref{alg:gmres}.
-
-\subsubsection{Preconditioners}
-
-In Algorithm~\ref{alg:gmres}, Lines \ref{alg:gmres_precond} and \ref{alg:gmres_precond2} depend on the application of $M^{-1}$, a preconditioner 
-
-
-GMRES is slow to converge when used without a preconditioner. 
-
-The differentation matrix produced by RBF-FD is asymmetric, non-positive definite, and non-diagonally dominant. Thus, many of the popular choices for preconditioning provided by CUSP and ViennaCL do not apply. 
-
-Our tests show that an incomplete LU factorization with zero fill-in \cite{Saad2003} functions well. 
-
-We also find that a large Krylov subspace must be saved. GMRES converges best when approximately 250 dimensions are saved between restarts. 
 
 
 \subsubsection{Stokes Flow on the Unit Sphere}
 
-We solve the PDE on the surface of the sphere as an example for one and multiple GPUs. 
+As part of the verification process for our multi-GPU GMRES implementation, we attempt to solve for manufactured solutions of an overly simplified steady state example of Stokes flow on the surface of the unit sphere. 
 
 %TODO: Boundary conditions detract from the accuracy of RBF-FD and introduce other issues such as Runge phenomena \cite{RBFRungePaper}, so we first verify the solution without boundaries. Also, this section 
 
 %TODO: \authnote{ Need to reference work that solves problem in two steps and justify our approach to solve in one step. Golub paper might be good for this. Or the Stoke preconditioners paper. SIMPLE method?  }
 
-Assuming $\eta$ is a constant (i.e., $\grad\eta = 0$), our system simplifies to
+Assuming $\eta$ is a constant (i.e., $\grad\eta = 0$), Equations~\ref{eq:stokes_momentum} and \ref{eq:stokes_continuity} result in a linear system of the following form:
 \begin{align}
 \begin{pmatrix}
 -\eta \Laplacian & 0 & 0 & \pd{}{x_1} \\ 
@@ -180,38 +157,41 @@ Assuming $\eta$ is a constant (i.e., $\grad\eta = 0$), our system simplifies to
 0 & 0 & -\eta \Laplacian & \pd{}{x_3} \\ 
 \pd{}{x_1} & \pd{}{x_2} & \pd{}{x_3} & 0 \\
 \end{pmatrix} \begin{pmatrix}
-u_1 \\ u_2 \\ u_3 \\ p 
+U \\ V \\ W \\ p 
 \end{pmatrix} = \frac{RaT}{\sqrt{x_1^2 + x_2^2 + x_3^2}}\begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ 0\end{pmatrix}.
 \label{eq:stokes_constant_viscosity}
-\end{align}
-where we recall from Chapter~\ref{chap:rbffd_method} that the $\Laplacian$ operator in spherical polar coordinates for $\mathbb{R}^3$ is: 
-\begin{align*} 
-\Laplacian = \underbrace{\frac{1}{\hat{r}} \pd{}{\hat{r}} \left( \hat{r}^{2} \pd{}{\hat{r}}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{\hat{r}^2} \Delta_{S}}_{\mathsf{angular}}. %\label{eq:laplacian_as_radial_angular}
-\end{align*}
-Here $\LaplaceBeltrami$ is the Laplace-Beltrami operator---i.e., the Laplacian constrained to the surface of the sphere with radius $\hat{r}$. This form nicely illustrates the components of the $\Laplacian$ corresonding to the radial and angular terms. 
-
-On the surface of the unit sphere the radial term vanishes, so we are left with:
+\end{align} 
+Recall from Chapter~\ref{chap:rbffd_method} that on the surface of the unit sphere the radial term vanishes, so we are left with:
 \begin{align*}
 \Laplacian    \equiv \LaplaceBeltrami . 
 \end{align*}
-The RBF operator from \cite{WrightFlyerYuen10}---Equation (20)---is applied to the RHS of Equation~\ref{eq:rbffd_weight_system} to generate Laplace-Beltrami RBF-FD weights: 
+The following RBF operator from \cite{WrightFlyerYuen10}---Equation (20)---is applied to the RHS of Equation~\ref{eq:rbffd_weight_system} to generate Laplace-Beltrami RBF-FD weights: 
 \begin{align*} 
-\LaplaceBeltrami = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{}{r} + \frac{4-3r^2}{r} \pd{}{r} \right],
+\LaplaceBeltrami{} \phi = \frac{1}{4} \left[ \left(4-r^2\right) \pdd{}{r} + \frac{4-3r^2}{r} \pd{}{r} \right] \phi,
 \end{align*} 
 where $r$ is the Euclidean distance between nodes of an RBF-FD stencil and is independent of our choice of coordinate system. 
-
-
-Additionally following \cite{FlyerWright09, FlyerLehto11}, the off-diagonal blocks in Equation~\ref{eq:stokes_constant_viscosity} must be constrained to the sphere via the projection matrix: 
+Additionally, the off-diagonal blocks in Equation~\ref{eq:stokes_constant_viscosity} must be constrained to the sphere via the projection matrix $P = I - \mathbf{x} \mathbf{x}^T$ (also from Chapter~\ref{chap:rbffd_method}) and can be obtained from Equation~\ref{eq:rbffd_weight_system} with the following operator:  
+\begin{align*} 
+P\pd{}{x_i} \phi = ( x_i \vx^T \vx_k - x_{i,k}) \frac{1}{r(\vx_k - \vx)}  \pd{}{r} \phi(r(\vx_k - \vx)) |_{\vx=\vx_j} 
+\end{align*}
+% following \cite{FlyerWright09, FlyerLehto11},
+% following \cite{FlyerWright09, FlyerLehto11},
+%Recall from Chapter~\ref{chap:rbffd_method} that the on the unit Sphere, $\Laplacian \equiv \LaplaceBeltrami$. 
+% operator in spherical polar coordinates for $\mathbb{R}^3$ is: 
+%\begin{align*} 
+%\Laplacian \phi = \left(\underbrace{\frac{1}{\hat{r}} \pd{}{\hat{r}} \left( \hat{r}^{2} \pd{}{\hat{r}}  \right)}_{\mathsf{radial}} + \underbrace{\frac{1}{\hat{r}^2} \Delta_{S}}_{\mathsf{angular}} \right) \phi. %\label{eq:laplacian_as_radial_angular}
+%\end{align*}
+%Here $\LaplaceBeltrami$ is the Laplace-Beltrami operator---i.e., the Laplacian constrained to the surface of the sphere with radius $\hat{r}$. This form nicely illustrates the components of the $\Laplacian$ corresonding to the radial and angular terms.
 %\frac{1}{||\mathbf{x}||}
-\begin{align}
-P = I - \mathbf{x} \mathbf{x}^T =  \begin{pmatrix} 
-(1-x_1^2) & -x_1 x_2 & -x_1 x_3 \\
--x_1 x_2 & (1-x_2^2) & -x_2 x_3 \\ 
--x_1 x_3 & -x_2 x_3 & (1-x_3^2) 
-\end{pmatrix} = \begin{pmatrix} P_{x_1} \\ P_{x_2} \\ P_{x_3} \end{pmatrix}
-\label{eq:gradient_projection}
-\end{align}
-where $\mathbf{x}$ is the unit normal at the stencil center, and 
+%\begin{align}
+%P = I - \mathbf{x} \mathbf{x}^T =  \begin{pmatrix} 
+%(1-x_1^2) & -x_1 x_2 & -x_1 x_3 \\
+%-x_1 x_2 & (1-x_2^2) & -x_2 x_3 \\ 
+%-x_1 x_3 & -x_2 x_3 & (1-x_3^2) 
+%\end{pmatrix} = \begin{pmatrix} P_{x_1} \\ P_{x_2} \\ P_{x_3} \end{pmatrix}
+%\label{eq:gradient_projection}
+%\end{align}
+%where $\mathbf{x}$ is the unit normal at the stencil center, and 
 %
 %Using the chain rule, and assumption that $r(\vx_k-\vx)=\vectornorm{\vx_k-\vx} = \sqrt{(x_{1,k}-x_1)^2 + (x_{2,k}-x_2)^2 + (x_{3,k}-x_3)^2}$, we obtain the unprojected gradient of $\phi$ as
 %$$\nabla \phi(r(\vx_k - \vx)) = \pd{r}{\vx} \pd{\phi(r(\vx_k - \vx))}{r} = - (\vx_k - \vx)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r}$$. 
@@ -222,31 +202,25 @@ where $\mathbf{x}$ is the unit normal at the stencil center, and
 %& = - (I-\vx\vx^T)(\vx_k
 %)\frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} \\
 %& = \begin{pmatrix} x \vx^T \vx_k - x_k \\ y \vx^T \vx_k -  y_k \\ z \vx^T \vx_k -z_k \end{pmatrix} \frac{1}{r(\vx_k - \vx)} \pd{\phi(r(\vx_k - \vx))}{r} 
-% \end{align}
-\cite{FlyerWright09, FlyerLehto11} show that with a little manipulation, the weights can be directly computed with these operators: 
+%% \end{align}
+%\cite{FlyerWright09, FlyerLehto11} show that with a little manipulation, the weights can be directly computed with these operators: 
 %\begin{align} 
 %P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{d(\vx_k - \vx)} \pd{\phi(d(\vx_k - \vx))}{d} |_{\vx=\vx_j} \\
 %P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{d(\vx_k - \vx)} \pd{\phi(d(\vx_k - \vx))}{d} |_{\vx=\vx_j} \\
 %P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{d(\vx_k - \vx)} \pd{\phi(d(\vx_k - \vx))}{d} |_{\vx=\vx_j}
 %\end{align}
-\begin{align*} 
-P\pd{}{x_1} = ( x_1 \vx^T \vx_k - x_{1,k}) \frac{1}{r} \pd{}{r} |_{\vx=\vx_j} \\
-P\pd{}{x_2} = ( x_2 \vx^T \vx_k - x_{2,k}) \frac{1}{r} \pd{}{r} |_{\vx=\vx_j} \\
-P\pd{}{x_3} = ( x_3 \vx^T \vx_k - x_{3,k}) \frac{1}{r} \pd{}{r} |_{\vx=\vx_j}
-\end{align*}
+
 
 
 \subsubsection{Constraints} 
-Due to the lack of boundary conditions on the sphere, the family of solutions that satisfy the PDE in Equation~\ref{eq:stokes_constant_viscosity} includes four free constants (one for each $u_1$, $u_2$, $u_3$ and $p$). 
-%In light of this, Equations~\ref{eq:stokes_linear_system} and \ref{eq:stokes_constant_viscosity} are singular with a four-vector null space corresponding to each for the four components of the solution $\begin{pmatrix} u_1, u_2, u_3, p \end{pmatrix}$. 
-
+Our current investigation attempts to solve for $\vu$ and $p$ simultaneously. Due to the lack of boundary conditions on the sphere, the family of solutions that satisfy the PDE in Equation~\ref{eq:stokes_constant_viscosity} includes four free constants (one for each $U$, $V$, $W$ and $p$). 
 %The null space is found using the matlab sparse SVD command: \begin{mcode}{1}
 %[Usvd, Ssvd, Vsvd, flagSVD] = svds(LHS,10,0);
 %sing_value_indices = find(max(Ssvd) < 1e-6)
 %\end{mcode} 
 
 %TODO: null-space *of the solution*? or null-space of the equation?
-One way to close the null-space of the solution is to augment Equation~\ref{eq:stokes_constant_viscosity} with the following constraints: 
+One way to close the null-space of the equation is to augment Equation~\ref{eq:stokes_constant_viscosity} with the following constraints: 
 \begin{multline}
 \left(\begin{array}{cccc:cccc}  
 -\eta \Laplacian & 0 & 0 & \pd{}{x_1} & 1_{N \times 1} & 0 & 0 & 0 \\ 
@@ -259,29 +233,25 @@ One way to close the null-space of the solution is to augment Equation~\ref{eq:s
 0 & 0 & 1_{1 \times N} & 0 & \\ 
 0 & 0 & 0 & 1_{1 \times N} & \\
 \end{array} \right) \left(\begin{array}{c} 
-u_1 \\ u_2 \\ u_3 \\ p \\ \hdashline c_1 \\ c_2 \\ c_3 \\ c_4
+U \\ V \\ W \\ p \\ \hdashline c_1 \\ c_2 \\ c_3 \\ c_4
 \end{array} \right) \\
- = \frac{RaT}{\sqrt{x_1^2 + x_2^2 + x_3^2}}\begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ 0 \\ \hdashline \int_\Omega u_1 \partial\Omega \\ \int_\Omega u_2 \partial\Omega \\ \int_\Omega u_3 \partial\Omega \\ \int_\Omega p \partial\Omega \end{pmatrix}.
+ = \frac{RaT}{\sqrt{x_1^2 + x_2^2 + x_3^2}}\begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ 0 \\ \hdashline \int_\Omega U \partial\Omega \\ \int_\Omega V \partial\Omega \\ \int_\Omega W \partial\Omega \\ \int_\Omega p \partial\Omega \end{pmatrix}.
 \label{eq:stokes_system_with_constraints}
 \end{multline}
-%TODO explain this in text: \authnote{Need the integral of my manufactured solution on the RHS. $\ell_1$ norm does not converge to 0, so it will screw solve with constraints}
 where the subscript on $1_{N \times 1}$ indicates a $N \times 1$ vector of ones. These constraints add the unknowns $(c_1, c_2, c_3, c_4)$, which should solve to be zero. The four rows on the bottom require that the solution satisfy the integral over the domain for each solution component. In combination with the four added columns, the constraints indicate that the solution components must satisfy integrals using the same constant value. This is only possible if the constants are zero. The added constraints are not physically significant, but are chosen to satisfy the system algebraicly. Of course when solving Equation~\ref{eq:stokes_system_with_constraints} with GMRES, the constraints help increase the rate of convergence. 
 
-%TODO: data to show? 
-We also investigate the use of GMRES without constraints. This increases the number of iterations required to converge, but allows increased parallelism (decreased data sharing). %TODO: why is dropping the constraints valid? GMRES assumes zero for each of those? 
+Although the constraints in Equation~\ref{eq:stokes_system_with_constraints} satisfy the system algebraically, they have no physical significance. As another facet for future work, we are investigating methods that avoid the constraints by splitting Equation~\ref{eq:stokes_system_with_constraints} into a two-step solution process (e.g., solving for $\vu$ then $p$). This would be similar to the SIMPLE method proposed in \cite{Patankar1972} and widely used in computational fluid dynamics. 
+
+%We also investigate the use of GMRES without constraints. This increases the number of iterations required to converge, but allows increased parallelism (decreased data sharing). %TODO: why is dropping the constraints valid? GMRES assumes zero for each of those? 
 %\authnote{Perhaps we can iterate without constraints until convergence slows then ``restart" the problem on a single GPU with constraints included? Limits scalability but would allow more parallelism for part of iterations while also reasonable convergence.}
 
 \subsubsection{Interleaved Solution}
+%
+%Equation~\ref{eq:stokes_system_with_constraints} has all solution values for the vectors $U, V, W$ and $p$ grouped together, the values of $u_1$, $v_1$, $w_1$ and $p_1$ correspond to node $(x_1, y_1, z_1)$. 
 
-In a distributed environment values for each $U$, $V$, $W$ and $P$ must be obtained from ghost nodes. Rather than execute four collectives (one per component), we interleave components to group all components by node. Figure~\ref{fig:interleaved_solution} demonstrates the concept of interleaving the solution. This allows us to directly copy a double4 containing the $\{u_i, v_i, w_i, p_i\}$ for node $x_i$
+In a distributed environment values for $\vu$ and $p$ must be obtained from ghost nodes. Rather than execute four collectives (one per component), we interleave the solution vectors to group all components by node (e.g., $( u_1, v_1, w_1, p_1,\cdots, u_N, v_N, w_N, p_N)^T$). Figure~\ref{fig:interleaved_solution} demonstrates the concept of interleaving the solution. This allows us to operate on four-element wide vectors containing the $\{u_i, v_i, w_i, p_i\}$ for each node $x_i$, and maintains contiguous memory copies between host and device in multi-GPU mode. 
 
-The DM assembly depends on all dimensions of solution values for a single node to be consecutive in memory. While Equation~\ref{eq:stokes_system_with_constraints} has all components of $U, V, W$ and $P$ grouped together, the values of $u_1$, $v_1$, $w_1$ and $p_1$ correspond to node $(x_1, y_1, z_1)$. 
-
-Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving our solution. The sparsity pattern of the original DM with solutions grouped by component is shown in Figure~\ref{fig:original_stokes_dm}. Well defined blocks of non-zeros are filled with RBF-FD weights from Equation~\ref{eq:stokes_constant_viscosity}. Figure~\ref{fig:interleaved_stokes_dm} presents the sparsity pattern for interleaved solution components. The pattern is similar to a single block of Figure~\ref{fig:original_stokes_dm}, but the sub-matrix $(10:50)\times(10:50)$ of each solution ordering, shown in Figures~\ref{fig:original_stokes_zoom_dm} and \ref{fig:interleaved_stokes_zoom_dm}, illustrate that non-zeros in Figure~\ref{fig:interleaved_stokes_dm} are small $4\times4$ blocks with the structure of Equation~\ref{eq:stokes_constant_viscosity}.
-
-Interleaved solutions can also be replaced by multiple SpMVs. For example, our work in \cite{ErlebacherSauleFlyerBollig2013} investigates the 
-
-\begin{figure} 
+\begin{figure}[ht] 
 \centering
         \begin{subfigure}[b]{0.4\textwidth}
         		\centering
@@ -313,9 +283,16 @@ Interleaved solutions can also be replaced by multiple SpMVs. For example, our w
 \label{fig:interleaved_solution}
 \end{figure} 
 
+Figure~\ref{fig:interleaved_solution} demonstrates the effect of interleaving our solution. The sparsity pattern of the original DM with solutions grouped by component is shown in Figure~\ref{fig:original_stokes_dm}. Well defined blocks of non-zeros are filled with RBF-FD weights from Equation~\ref{eq:stokes_constant_viscosity}. Figure~\ref{fig:interleaved_stokes_dm} presents the sparsity pattern for interleaved solution components. The pattern is similar to a single block of Figure~\ref{fig:original_stokes_dm}, but the sub-matrix $(10:50)\times(10:50)$ of each solution ordering, shown in Figures~\ref{fig:original_stokes_zoom_dm} and \ref{fig:interleaved_stokes_zoom_dm}, illustrate that non-zeros in Figure~\ref{fig:interleaved_stokes_dm} are small $4\times4$ blocks with the structure of Equation~\ref{eq:stokes_constant_viscosity}.
+
+We also note that interleaved solutions can be replaced by multiple SpMVs. For example, each of the 9 nonzero blocks of Equation~\ref{eq:stokes_system_with_constraints} can be multiplied independently against the four vectors $U, V, W$ and $p$. Our work in \cite{ErlebacherSauleFlyerBollig2013} showed that , we investigated the increase
+
+%Future work in this area will include integrating the SpMM from \cite{ErlebacherSauleFlyerBollig2013} into an a fluid simulation.
+
+
 \subsubsection{Manufactured Solution}
 
-To verify our implementation, we manufacture a solution that satisfies the continuity equation. Using the identity
+To verify our implementation, we manufacture a solution that satisfies the continuity equation, Equation~\ref{eq:stokes_continuity}. Applying the identity
 \begin{align*} 
 \div (\curl g(\vx)) = 0,
 \end{align*} 
