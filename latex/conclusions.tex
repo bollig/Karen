@@ -3,7 +3,7 @@
 
 This work is the first known investigation of the RBF-FD method applied to geophysical PDEs within the context of high performance computing. 
 
-In Chapter~\ref{chap:gpu_rbffd}, our implementation of RBF-FD was ported to GPUs. Custom OpenCL kernels 
+In Chapter~\ref{chap:gpu_rbffd}, our implementation of RBF-FD was ported to NVidia GPUs using OpenCL. Two OpenCL kernels designed to time-step to the solution of PDEs with an RK4 iteration 
 
 
 Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation scales well achieves 30\% to 40\% (strong and weak) parallel efficiency on 128 processors of the Itasca HPC cluster (CPU-only) at the University of Minnesota when given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
@@ -14,8 +14,6 @@ A number of tuning steps reduce communication times and increase scalability bey
 
 
 
-
-Within this document readers should expect to find the following major contributions: 
 \begin{enumerate} 
 \item 
 \begin{itemize} 

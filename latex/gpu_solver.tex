@@ -35,7 +35,7 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 %TODO: update with latest GFLOPs (up to TFLOPs now)
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth]{../figures/prospectus/GPU_Evolution_opencl.pdf}
+\includegraphics[width=0.6\textwidth]{../figures/prospectus/GPU_Evolution_opencl.pdf}
 \caption{Performance comparison for Graphics Processing Units (GPUs). GFLOP/sec data based on \cite{CudaGuide2013}.}
 \label{fig:floating-point-operations-per-second}
 \end{figure}
@@ -309,11 +309,18 @@ Under OpenCL, the equivalent to CUDA local memory is called \textit{private memo
 
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth]{../figures/prospectus/opencl_execute_model.pdf}
-\caption{The OpenCL execution model is viewed as} 
+\includegraphics[width=0.6\textwidth]{../figures/prospectus/opencl_execute_model.pdf}
+\caption{The OpenCL execution model executes a kernel in parallel across many work-items. A collection of work-items execute in SIMD as a work-group. The work-groups are further bundled into an NDRange representing the full set of tasks executed within a kernel. } 
 \label{fig:grid-of-thread-blocks}
 \end{figure}
 
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{../figures/prospectus/opencl_memory_model.pdf}
+\caption{The OpenCL memory model provides a hierarchy of increasingly faster memories, each with smaller size and more limited scope. A single GPU contains multiple multiprocessors and a large global memory shared by all multiprocessors. Within each multiprocessor, the many cores/threads execute work-items and have access to local and cache memory shared with other work-items of the same multiprocessor. Individual work-items also private memory independent from other work-items. The OpenCL memory model generically abstracts the memory architectures for both CPUs and GPUs.} 
+\label{fig:opencl_memory_model}
+\end{figure}
 
 
 \subsection{OpenCL vs CUDA}
@@ -526,6 +533,7 @@ Due to the assumption that all stencils have equal size, the ELL format is prefe
 \section{Cascade}
 
 The actual observed GFLOP/sec achieved on Cascade's M2070 GPUs with the ViennaCL package is shown in Figure~\ref{fig:gflops_cascade_m2070}. Figure~\ref{fig:gflops_cascade_k20} provides achieved GFLOP/sec for Cascade's K20 GPUs.  
+
 \begin{figure} 
 \centering
 \begin{subfigure}[t]{0.48\textwidth}
@@ -687,7 +695,7 @@ Conclude: sparse containers allow increased efficiency compared to our custom ke
 
 
 
-We compare the performance of our custom kernel to ViennaCL kernels (ELL, CSR, COO), UBlas (CSR) 
+We compare the performance of our custom kernel to ViennaCL kernels (ELL, CSR, COO), UBlas (CSR).
 
 
 ViennaCL allows control of the number of work-items for each kernel. 
