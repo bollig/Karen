@@ -22,7 +22,7 @@ Parallelizing applications in a distributed computing environment requires three
 impacts load balancing and communication latency.
 \item Determine the subset of node information,
 solution values, etc. that are visible to each process, and establish index mappings to translate between a local context and the global problem. 
-\item Establish a local ordering of data. The right local order can improve solver performance and/or simplify data movement. %Of particular interest here is how to minimize data movement at each iteration. In Chapter~\ref{chap:multigpu_rbffd} the local ordering will help minimize data transfer between CPU and GPU. 
+\item Establish a local ordering of data. The right local order can improve solver performance and/or simplify data movement. 
 \end{enumerate}
 
 This chapter details the first implementation of RBF-FD designed for distributed computing environments and a few optimizations that help scale the computation across a thousand processes. The discussion in this chapter applies to both multi-CPU and multi-GPU implementations of RBF-FD. Since each GPU is used as an accelerator, details of partitioning, local and global index mappings, and node ordering are managed on the CPU while the GPU computes only on a local context.  
@@ -34,24 +34,6 @@ In order to manage expectations of how well the code will run in a distributed e
 S_p = \frac{T_s + T_p}{T_s + \frac{T_p}{p}},  \nonumber
 \end{align}
 where $T_s$ and $T_p$ represent the time spent in the serial and parallelizable portions of code respectively. Amdahl's law reveals that scaling to a large number of processors, $p$, can make the time in parallelizable portions of code vanish, but $T_s$ is constant. Communication is always included in $T_s$, so it is pertinent to minimize the cost of communication for maximum gain. Our initial implementation of distributed RBF-FD on multiple CPUs and multiple GPUs (\cite{BolligFlyerErlebacher2012}) had an extremely high cost of communication, which saturated scaling at only a dozen or so processes. This chapter details the design and tuning of a distributed RBF-FD implementation that scales to over a thousand processors. 
-
-
-
-
-%TODO: related distributed 
-%TODO: \authnote{finish additional related work}
-%The power of hindsight reveals that RBF-FD can be implemented with any library designed for sparse matrix algebra. 
-%Our implementation is unlikely to to compete well against a number of well established libraries that have seen decades of active development. 
-% that PETSc, Hypre, Trilinos are all libraries/frameworks that we could have developed in, but none of them had GPU support. We continued with custom built code, but that decision required additional decisions from us. 
-
-%\cite{Yokota2010}
-%\cite{Yokota2012}
-%\cite{Schubert2011} 
-
-%TODO: Similar Overlapping algorithm: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
- %Imbalanced computation can be the source of excessive delays as processors sit idle and wait for other processors to catch up. 
-
-
 
 
 \section{Partitioning}
@@ -602,10 +584,6 @@ Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong sc
 
 
 
-%By sampling the time between the start of the $\setCenters \backslash \setBoundary$ SpMV launch and the finish of the $\setBoundary$ SpMV kernel, one gets an approximation to $t_{SpMV}$, the total time spent computing the SpMV. Likewise the time between MPI\_Irecv and an MPI\_Waitall at the end of the $\setCenters \backslash \setBoundary$ SpMV gives the time spent in communication, $t_{Comm}$. Note that $t_{Comm}$ includes the encoding time. Figure~\ref{fig:compare_strong_scaling_comm_only_all_stencils} subtracts the $t_{Comm}$ and $t_{SpMV}$ to get an idea of what percentage of the original ti gives an idea of how much overlap hides communication. 
-%
-
-
 \begin{figure}
 \centering
 \begin{subfigure}{0.48\textwidth}
@@ -636,7 +614,6 @@ E_p = \ ^{t_{1}}/_{(p*t_p)} * 100\%.
 \end{align*}
 Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:compare_strong_scaling_efficiency_all_stencils} show our distributed RBF-FD achieves about 30\% to 40\% parallel efficiency in strong and weak cases for $p \leq 128$. At $p=1024$ strong and weak scaling converge to a little over 15\% efficiency. 
 
-%TODO: Strong scaling efficiency for $p=128$ is at 33\% for $n=17$ and 37\% for $n=50$. A similar efficiency of 36\% was stated by the PetRBF implementation \cite{Yokota2010} for the Cray XT4. 
 
 \begin{figure}
 \centering
