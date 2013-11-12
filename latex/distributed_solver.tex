@@ -252,7 +252,7 @@ The set $\setProvide\in\setCenters$ indexes nodes that are needed in other parti
 
                 \begin{figure}[ht] 
             \centering
-            \includegraphics[width=3.5in]{../figures/paper1/figures/omnigraffle/SimpleExample.pdf} 
+            \includegraphics[width=3.5in]{../figures/paper1/figures/omnigraffle/SimpleExample.pdf}  
             \caption{Partitioning, index mappings and memory transfers for nine stencils ($n=5$) spanning two CPUs and two GPUs. Top: the directed graph created by stencil edges is partitioned for two CPUs. Middle: the partitioned stencil centers are reordered locally by each CPU to keep values sent to/received from other CPUs contiguous in memory. Bottom: to synchronize GPUs, CPUs must act as intermediaries for communication and global to local index translation. Middle and Bottom: color coding on indices indicates membership in sets from Table~\ref{tbl:stencil_sets}: $\setCenters \backslash \setBoundary$ is white, $\setBoundary \backslash \setProvide$ is yellow, $\setProvide$ is green and $\setDepend$ is red.
             }
             \label{fig:stencilSets2CPU}
