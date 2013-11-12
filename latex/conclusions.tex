@@ -1,6 +1,9 @@
 \chapter{Final Discussion, Conclusions and Future Work}
 \label{chap:conclusions}
 
+This work is the first known investigation of the RBF-FD method applied to geophysical PDEs within the context of high performance computing. 
+
+In Chapter~\ref{chap:gpu_rbffd}, our implementation of RBF-FD was ported to GPUs. Custom OpenCL kernels 
 
 
 Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation scales well achieves 30\% to 40\% (strong and weak) parallel efficiency on 128 processors of the Itasca HPC cluster (CPU-only) at the University of Minnesota when given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
@@ -14,7 +17,7 @@ A number of tuning steps reduce communication times and increase scalability bey
 
 Within this document readers should expect to find the following major contributions: 
 \begin{enumerate} 
-\item The first ever application of a fixed-grid neighbor query algorithm (popularized by distantly related particle methods) to generate stencils for RBF-FD. 
+\item 
 \begin{itemize} 
 \item Performance comparison with the RBF community favorite, $k$-D Tree, shows that the lower complexity fixed-grid method is able to achieve up to 2.5x speedup over the former method on randomly distributed nodes. 
 \item The fixed-grid method is also shown to accelerate RBF-FD time-step performance by up to 5x due spatial locality of node information in memory and improved cache effects.

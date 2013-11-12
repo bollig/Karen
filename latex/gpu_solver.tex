@@ -20,15 +20,9 @@ In the last decade, CPU designers have been forced to transition to multi- and m
 %TODO: Moore's law states that 
 Power constraints make further frequency scaling on CPUs almost impossible, which leaves increased core counts as the only viable solution for designers to continue satisfying Moore's Law \cite{Owens2007}. 
 
-\begin{figure}
-\centering
-\includegraphics[width=0.8\textwidth]{gpu_content/nvidia_figures/gpu-devotes-more-transistors-to-data-processing.png}
-\caption{The GPU Devotes More Transistors to Data Processing (Image courtesy of NVidia \cite{CudaGuide2013})} 
-\label{fig:gpu-devotes-more-transistors-to-data-processing}
-\end{figure}
 
 GPUs originated as dedicated hardware for video games and computer graphics. 
-Due to the inherent task parallelism in computer graphics  (e.g., for rasterization), early GPU designers adopted a many-core strategy for hardware, which persists today. Computer graphics traditionally involved simple operations, so the majority of transistors on a GPU are dedicated to computation in vector pipelines with limited control for logic. The earliest GPUs had static rendering pipelines with fixed functions. In contrast to this, CPUs have always focused on fast serial and scalar operations. This means they allocate less transistors to computation in order to free space for the needs of advanced logic tasks like branching, caching, etc. \cite{Owens2007,CudaGuide2013}. Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (Courtesy of NVidia, \cite{CudaGuide2013}) illustrates the difference between CPUs and GPUs at a high level. The high density of Arithmetic Logic Units (ALUs) with simple control and caching units is signature design feature of GPUs. 
+Due to the inherent task parallelism in computer graphics  (e.g., for rasterization), early GPU designers adopted a many-core strategy for hardware, which persists today. Computer graphics traditionally involved simple operations, so the majority of transistors on a GPU are dedicated to computation in vector pipelines with limited control for logic. The earliest GPUs had static rendering pipelines with fixed functions. In contrast to this, CPUs have always focused on fast serial and scalar operations. This means they allocate less transistors to computation in order to free space for the needs of advanced logic tasks like branching, caching, etc. \cite{Owens2007,CudaGuide2013}. %Figure~\ref{fig:gpu-devotes-more-transistors-to-data-processing} (Courtesy of NVidia, \cite{CudaGuide2013}) illustrates the difference between CPUs and GPUs at a high level. The high density of Arithmetic Logic Units (ALUs) with simple control and caching units is signature design feature of GPUs. 
 
 Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore was molded into a fully programmable and dynamic execution platform with a SIMD-like flavor. Prior to 2006, the GPU had already evolved away from fixed-function pipelines and into limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with substantial effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Trendall2000,Jansen2007,Harris2005,Owens2007}).
 GPUs, miles ahead in the many-core arena, only required a bit of flexibility in control and logic to compete against the CPU for general purpose computing.  
@@ -36,24 +30,14 @@ GPUs, miles ahead in the many-core arena, only required a bit of flexibility in 
 The release of NVidia's CUDA architecture and software stack \cite{CudaGuide2013} at the end of 2006, reduced substantially the need for tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program. The monumental new hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public. 
 
 
-The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently leads CPUs by a full order of magnitude. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than CPUs \cite{CudaGuide2013}. Figure~\ref{fig:memory-bandwidth} (courtesy of NVidia; \cite{CudaGuide2013}) compares the evolving memory bandwidth for NVidia and Intel. 
+The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently leads CPUs by a full order of magnitude. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than CPUs \cite{CudaGuide2013}. %Figure~\ref{fig:memory-bandwidth} (courtesy of NVidia; \cite{CudaGuide2013}) compares the evolving memory bandwidth for NVidia and Intel. 
 
-
+%TODO: update with latest GFLOPs (up to TFLOPs now)
 \begin{figure}
 \centering
-\begin{subfigure}{0.6\textwidth}
-\centering
-\includegraphics[width=\textwidth]{gpu_content/nvidia_figures/floating-point-operations-per-second.png}
-\caption{Floating-Point Operations per Second for the CPU and GPU (Image courtesy of NVidia \cite{CudaGuide2013})} 
+\includegraphics[width=0.5\textwidth]{../figures/prospectus/GPU_Evolution_opencl.pdf}
+\caption{Performance comparison for Graphics Processing Units (GPUs). GFLOP/sec data based on \cite{CudaGuide2013}.}
 \label{fig:floating-point-operations-per-second}
-\end{subfigure}
-\begin{subfigure}{0.6\textwidth}
-\centering
-\includegraphics[width=\textwidth]{gpu_content/nvidia_figures/memory-bandwidth.png}
-\caption{Memory Bandwidth for the CPU and GPU (Image courtesy of NVidia \cite{CudaGuide2013})} 
-\label{fig:memory-bandwidth}
-\end{subfigure}
-\caption{Performance comparison for Graphics Processing Units (GPUs).}
 \end{figure}
 
 In the years since CUDA was released, a vast number of libraries and language extensions have surfaced to leverage the GPU architecture for scientific computing.  
@@ -272,9 +256,6 @@ At the hardware level, a \textit{thread} executes instructions on the GPU. On Fe
 In OpenCL (i.e., software), a collection of hardware threads performing the same instructions are referred to as a \textit{work-group} of \textit{work-items}. Work-groups execute as a collection of warps constrained to the same multiprocessor. Multiple work-groups of matching dimension are grouped into an \textit{NDRange}. Figure~\ref{fig:grid-of-thread-blocks} shows how threads/work-items are grouped into NDRanges. The \textit{kernel} provides a master set of instructions
 for all threads in an NDRange \cite{OpenCL2009}. 
 
-%TODO: fix image
-\authnote{Replace grid of thread blocks with ndrange of work-items}
-
 
 NVidia GPUs have a tiered memory hierarchy related to the grouping of threads described above. 
 In multiprocessors, each computing core executes a thread with a limited set of registers. The number of registers varies with the generation of hardware, but always come in small quantities (e.g., 32K shared by all threads of a multiprocessor on the Fermi). Accessing registers is free, but keeping data in registers requires an effort to maintain balance between kernel complexity and the number of threads per block. Threads of a single work-group can share information within a multiprocessor through \textit{shared memory}. With only 48 KB 
@@ -325,12 +306,14 @@ Under OpenCL, the equivalent to CUDA local memory is called \textit{private memo
 %Based on \cite{Behr2009, OpenCL2009}, Figure~\ref{fig:opencl_memory} compares the underlying implementation of the OpenCL memory hierarchy on GPUs and CPUs. Notably, on current CPUs most of the memory is reserved in System RAM, whereas the hierarchy naturally fits on the deep memory hierarchy of the GPU. 
 
 
+
 \begin{figure}
 \centering
-\includegraphics[width=0.5\textwidth]{gpu_content/nvidia_figures/grid-of-thread-blocks.png}
-\caption{Grid of Thread Blocks (Image courtesy of NVidia \cite{CudaGuide2013})} 
+\includegraphics[width=0.5\textwidth]{../figures/prospectus/opencl_execute_model.pdf}
+\caption{The OpenCL execution model is viewed as} 
 \label{fig:grid-of-thread-blocks}
 \end{figure}
+
 
 
 \subsection{OpenCL vs CUDA}
