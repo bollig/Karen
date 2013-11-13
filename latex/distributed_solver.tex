@@ -301,7 +301,7 @@ Figure~\ref{fig:decomp_spy} demonstrates the structure of a local DM on an MPI p
 \begin{center}
 \includegraphics[width=9cm]{rbffd_methods_content/decompositions/spy_metis_stencil_example_labels.png}
 %\includegraphics[width=0.45\textwidth]{rbffd_methods_content/decompositions/spy_metis_stencil_example_part_2_of_4.pdf}
-\caption{Sparsity pattern (i.e., \tt{spy}) of the local DM on processor 3 of 4 from a METIS partitioning of $N=4096$ nodes with stencil size $n=31$ and stencils generated with Algorithm~\ref{alg:fixed_grid_query} ($hnx=100$). Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setBoundary$, and $\setDepend$. $\setDepend$ Stencils involved in MPI communications have been permuted to the bottom of the matrix. The split in $\setDepend$ indicates communication with two neighboring partitions. }
+\caption{Sparsity pattern (i.e., \texttt{spy}) of the local DM on processor 3 of 4 from a METIS partitioning of $N=4096$ nodes with stencil size $n=31$ and stencils generated with Algorithm~\ref{alg:fixed_grid_query} ($hnx=100$). Blocks are highlighted to distinguish node sets $\setCenters \backslash \setBoundary$, $\setBoundary$, and $\setDepend$. $\setDepend$ Stencils involved in MPI communications have been permuted to the bottom of the matrix. The split in $\setDepend$ indicates communication with two neighboring partitions. }
 \label{fig:decomp_spy}
 \end{center}
 \end{figure}
@@ -315,7 +315,7 @@ Figure~\ref{fig:decomp_spy} demonstrates the structure of a local DM on an MPI p
 
 With a partitioning and local ordering decided, communication collectives are established to transfer data between MPI processes. Two types of collectives are possible: all-to-all and all-to-subset. 
 
-All-to-all collectives pass data from every processor to all other processors. The most basic MPI implementation of an all-to-all, the MPI\_Alltoall routine, is illustrated in Figure~\ref{fig:mpi_alltoall_visual}. For a cluster of $p$ processes, MPI\_Alltoall assumes that every process intends to send $N_p$ bytes to all $p-1$ processors. On the left, an output buffer with $p*N_p$ bytes is assembled locally on each process. Block sizes in Figure~\ref{fig:mpi_alltoall_visual} are indicative of the number of bytes sent to each process. The subscripts on example data A, B, C indicate the destination process.  When the collective executes, MPI\_Alltoall scatters $N_p$ bytes from all processes to effectively interchange/transpose data on the right of Figure~\ref{fig:mpi_alltoall_visual}. 
+All-to-all collectives pass data from every processor to all other processors. The most basic MPI implementation of an all-to-all, the \texttt{MPI\_Alltoall} routine, is illustrated in Figure~\ref{fig:mpi_alltoall_visual}. For a cluster of $p$ processes, \texttt{MPI\_Alltoall} assumes that every process intends to send $N_p$ bytes to all $p-1$ processors. On the left, an output buffer with $p*N_p$ bytes is assembled locally on each process. Block sizes in Figure~\ref{fig:mpi_alltoall_visual} are indicative of the number of bytes sent to each process. The subscripts on example data A, B, C indicate the destination process.  When the collective executes, \texttt{MPI\_Alltoall} scatters $N_p$ bytes from all processes to effectively interchange/transpose data on the right of Figure~\ref{fig:mpi_alltoall_visual}. 
 
 \begin{figure}
 \centering
@@ -325,18 +325,18 @@ All-to-all collectives pass data from every processor to all other processors. T
 \end{figure}
 
 %All-to-all collectives are only useful when data needs to be simultaneously interchanged between all processes. 
-Since RBF-FD partitioning via METIS restricts overlap to a subset of neighboring partitions, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by MPI\_Alltoall. 
+Since RBF-FD partitioning via METIS restricts overlap to a subset of neighboring partitions, it makes sense to adopt an all-to-subset approach and avoid the overhead of unnecessary connections and memory padding required by \texttt{MPI\_Alltoallv}. 
 Two types of all-to-subset are illustrated in Figures~\ref{fig:mpi_alltoallv_visual} and \ref{fig:mpi_isendirecv_visual}. 
 
 
 \begin{figure}
 \centering
 \includegraphics[width=10cm]{../figures/omnigraffle/MPI_Alltoallv_Visual.png}
-\caption{RBF-FD interchanges a variable number bytes between processes. An ``all-to-subset" collective implemented via the MPI\_Alltoallv collective compresses the interchange by allowing variable message sizes between processors. Zero-byte connections are skipped by the routine internally.}
+\caption{RBF-FD interchanges a variable number bytes between processes. An ``all-to-subset" collective implemented via the \texttt{MPI\_Alltoallv} collective compresses the interchange by allowing variable message sizes between processors. Zero-byte connections are skipped by the routine internally.}
 \label{fig:mpi_alltoallv_visual}
 \end{figure}
 
-Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv. MPI\_Alltoallv improves on the all-to-all counterpart by allowing variable message sizes per connection. Unpadded messages transmit fewer bytes and reduce the overall communication time. Implementations of MPI\_Alltoallv detect \emph{zero-byte messages} (i.e., empty messages), and skip connections to their intended processes. This gives the routine an all-to-subset behavior. Note that MPI\_Alltoallv should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows with the number of processors. For very large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}). 
+Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an \texttt{MPI\_Alltoallv}. \texttt{MPI\_Alltoallv} improves on the all-to-all counterpart by allowing variable message sizes per connection. Unpadded messages transmit fewer bytes and reduce the overall communication time. Implementations of \texttt{MPI\_Alltoallv} detect \emph{zero-byte messages} (i.e., empty messages), and skip connections to their intended processes. This gives the routine an all-to-subset behavior. Note that \texttt{MPI\_Alltoallv} should be used with caution: while zero-byte connections are avoided, the overhead in checking message sizes grows with the number of processors. For very large $p$ the communication time can be dominated by those operations, defeating the gains in all-to-subset connection (see e.g., \cite{Balaji2010}). 
 
 
 %TODO: 
@@ -345,21 +345,21 @@ Figure~\ref{fig:mpi_alltoallv_visual} shows the behavior of an MPI\_Alltoallv. M
 % so we want to hide it as much as possible
 %
 
-MPI\_Alltoallv is also a blocking collective: when the routine is called, all communication must complete before control is returned to computation. This blocking behavior prevents the use of MPI\_Alltoallv in overlapping communication and computation within a distributed CPU environment. A distributed GPU environment can overlap MPI\_Alltoallv communication due to the non-blocking behavior of GPU commands (this is tested in Chapter~\ref{chap:multigpu_rbffd}). As of this writing, a new version of the MPI standard (v3.0) introduces MPI\_Ialltoallv, a non-blocking collective that would allow overlap on the CPU \cite{MPI}. MPI\_Ialltoallv is not considered here as popular MPI distributions did not yet offer MPI v3.0 compliant implementations.
+\texttt{MPI\_Alltoallv} is also a blocking collective: when the routine is called, all communication must complete before control is returned to computation. This blocking behavior prevents the use of \texttt{MPI\_Alltoallv} in overlapping communication and computation within a distributed CPU environment. A distributed GPU environment can overlap \texttt{MPI\_Alltoallv} communication due to the non-blocking behavior of GPU commands (this is tested in Chapter~\ref{chap:multigpu_rbffd}). As of this writing, a new version of the MPI standard (v3.0) introduces \texttt{MPI\_Ialltoallv}, a non-blocking collective that would allow overlap on the CPU \cite{MPI}. \texttt{MPI\_Ialltoallv} is not considered here as popular MPI distributions did not yet offer MPI v3.0 compliant implementations.
 
 \begin{figure}
 \centering
 \includegraphics[width=10cm]{../figures/omnigraffle/MPI_IsendIrecv_Visual.png}
-\caption{A true ``all-to-subset" collective based on direct sends and receives allows for variable message sizes, and strictly truncates the number of connections between processors to only required connections. This collective is implemented with MPI\_Send/MPI\_Recv or MPI\_Isend/MPI\_Irecv.}
+\caption{A true ``all-to-subset" collective based on direct sends and receives allows for variable message sizes, and strictly truncates the number of connections between processors to only required connections. This collective is implemented with \texttt{MPI\_Send}/\texttt{MPI\_Recv} or \texttt{MPI\_Isend}/\texttt{MPI\_Irecv}.}
 \label{fig:mpi_isendirecv_visual}
 \end{figure}
 
-Figure~\ref{fig:mpi_isendirecv_visual} shows a true all-to-subset collective implemented with direct sends and receives between processes that are either blocking (MPI\_Send, MPI\_Recv) or non-blocking (MPI\_Isend, MPI\_Irecv). Processes strictly communicate with required neighbors, so no zero-byte messages inflate communication time. 
+Figure~\ref{fig:mpi_isendirecv_visual} shows a true all-to-subset collective implemented with direct sends and receives between processes that are either blocking (\texttt{MPI\_Send}, \texttt{MPI\_Recv}) or non-blocking (\texttt{MPI\_Isend}, \texttt{MPI\_Irecv}). Processes strictly communicate with required neighbors, so no zero-byte messages inflate communication time. 
 A blocking version of this all-to-subset was employed in our first paper (\cite{BolligFlyerErlebacher2012}) for debugging purposes. MPI sends and receives were issued in a round-robin fashion. Unfortunately, the serialized connections made it infeasible to target $p > 10$. 
 
-In an effort to improve performance and scaling of our implementation an MPI\_Alltoallv was employed. Appendix~\ref{app:keeneland_alltoallv_benchmarks} presents benchmarks of the new collective running on Keeneland for comparison with our first paper and tests the scaling of the distributed SpMV up to 10 GPUs, one per compute node. 
+In an effort to improve performance and scaling of our implementation an \texttt{MPI\_Alltoallv} was employed. Appendix~\ref{app:keeneland_alltoallv_benchmarks} presents benchmarks of the new collective running on Keeneland for comparison with our first paper and tests the scaling of the distributed SpMV up to 10 GPUs, one per compute node. 
 
-In what follows the MPI\_Alltoallv implementation is taken as baseline for communication. An attempt is then made to further reduce communication times and improve the scaling of our implementation in a distributed CPU environment. By focusing on the CPU-only environment we can test scaling on moderately large $p$ (we go up to $p = 1024$). Scaling improvements for the CPU-only environment similarly improve the distributed GPU implementation (see Chapter~\ref{chap:multigpu_rbffd}). 
+In what follows the \texttt{MPI\_Alltoallv} implementation is taken as baseline for communication. An attempt is then made to further reduce communication times and improve the scaling of our implementation in a distributed CPU environment. By focusing on the CPU-only environment we can test scaling on moderately large $p$ (we go up to $p = 1024$). Scaling improvements for the CPU-only environment similarly improve the distributed GPU implementation (see Chapter~\ref{chap:multigpu_rbffd}). 
 
 \section{Scaling Improvements} 
 \label{sec:cpu_scaling}
@@ -373,7 +373,7 @@ The scalings reveal different properties:
 \end{itemize}
  
 
-For both scalings a simple idealized problem is tested where four derivatives are computed over a regular grid in 3-D and used as the intermediate vectors for an RK4 time-step. At the end of each SpMV a communication collective synchronizes the local derivative vectors. At the end of one thousand iterations, each process computes the local norm of the latest vector and an MPI\_Reduce collects global norms for verification. Timings are reported for the distributed SpMV including MPI communication using \emph{gettimeofday}.
+For both scalings a simple idealized problem is tested where four derivatives are computed over a regular grid in 3-D and used as the intermediate vectors for an RK4 time-step. At the end of each SpMV a communication collective synchronizes the local derivative vectors. At the end of one thousand iterations, each process computes the local norm of the latest vector and an \texttt{MPI\_Reduce} collects global norms for verification. Timings are reported for the distributed SpMV including MPI communication using \emph{gettimeofday}.
 
 Stencil sizes $n=17, 31, 50$ and $101$ are tested. Weak scaling is evaluated for $N_p=4000$ per processor. Strong scaling considers $N=4096000$ (i.e., $N=160^3$) nodes. Timings are reported for total execution time in a distributed SpMV, as well as per-component times for computation and communication only.
 
@@ -387,9 +387,9 @@ Itasca's InfiniBand network topology is a 2-way fat-tree network. Each compute n
 
 
 
-\subsection{Baseline: MPI\_Alltoallv}
+\subsection{Baseline: \texttt{MPI\_Alltoallv}}
 
-As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv} which shows the strong scaling achieved on Itasca with an MPI\_Alltoallv collective. Strong scaling is assessed in terms of speedup: $S_p = \ ^{t_1}/_{t_p}$ where $t_1$ is the serial time and $t_p$ is parallel time. The average execution times for the distributed SpMV are provided in Figure~\ref{fig:strong_scaling_alltoallv_all_stencils} with corresponding speedups relative to the single process execution in Figure~\ref{fig:strong_scaling_speedup_alltoallv_all_stencils}. For $p <= 8$ the scaling is poor due to the growing number of processes on the same compute node contending for shared memory. The code scales well (i.e., nearly linear) between 8 and 128 processes, but the gains taper off beyond $p > 128$. Per-component data for the MPI\_Alltoallv test case reveals the expected linear decrease in computation for $p>8$ (see Figure~\ref{fig:strong_scaling_spmv_only_alltoallv_all_stencils}), and eventually the communication time exceeding computation time at $p \geq 128$ (see Figure~\ref{fig:strong_scaling_comm_only_alltoallv_all_stencils}). 
+As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv} which shows the strong scaling achieved on Itasca with an \texttt{MPI\_Alltoallv} collective. Strong scaling is assessed in terms of speedup: $S_p = \ ^{t_1}/_{t_p}$ where $t_1$ is the serial time and $t_p$ is parallel time. The average execution times for the distributed SpMV are provided in Figure~\ref{fig:strong_scaling_alltoallv_all_stencils} with corresponding speedups relative to the single process execution in Figure~\ref{fig:strong_scaling_speedup_alltoallv_all_stencils}. For $p <= 8$ the scaling is poor due to the growing number of processes on the same compute node contending for shared memory. The code scales well (i.e., nearly linear) between 8 and 128 processes, but the gains taper off beyond $p > 128$. Per-component data for the \texttt{MPI\_Alltoallv} test case reveals the expected linear decrease in computation for $p>8$ (see Figure~\ref{fig:strong_scaling_spmv_only_alltoallv_all_stencils}), and eventually the communication time exceeding computation time at $p \geq 128$ (see Figure~\ref{fig:strong_scaling_comm_only_alltoallv_all_stencils}). 
 
 
 \begin{figure} 
@@ -406,7 +406,7 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \caption{Speedup ($S_p = \ ^{t_{1}}/_{t_p}$)}
 \label{fig:strong_scaling_speedup_alltoallv_all_stencils}
 \end{subfigure}
-\caption{Strong scaling of the distributed SpMV on $N=4096000$ nodes (i.e., a $160^3$ regular grid) and various stencil sizes. Communication handled by MPI\_Alltoallv. }
+\caption{Strong scaling of the distributed SpMV on $N=4096000$ nodes (i.e., a $160^3$ regular grid) and various stencil sizes. Communication handled by \texttt{MPI\_Alltoallv}. }
 \label{fig:strong_scaling_alltoallv}
 \end{figure}
 
@@ -420,7 +420,7 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \end{subfigure}
 \begin{subfigure}{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_commOnly.png} \caption{Communication Only (MPI\_Alltoallv)}
+\includegraphics[width=\textwidth]{performance_content/scaling/strong_scaling_4M_regular_alltoallv_commOnly.png} \caption{Communication Only (\texttt{MPI\_Alltoallv})}
 \label{fig:strong_scaling_comm_only_alltoallv_all_stencils}
 \end{subfigure}
 \caption{Per-component benchmarks for strong scaling benchmarks on $N=4096000$ nodes. Communication time outweighs computation time for $p>128$ processes.  }
@@ -428,7 +428,7 @@ As a baseline for discussion, consider Figure~\ref{fig:strong_scaling_alltoallv}
 \end{figure}
 
 
-The data in Figure~\ref{fig:weak_scaling_alltoallv_all_stencils} shows MPI\_Alltoallv weak scaling is poor. As $p$ grows, the total time follows at a discouraging rate. Figure~\ref{fig:weak_scaling_spmv_only_alltoallv_all_stencils}, which presents the SpMV (computation) time only, verifies that beyond the initial contention on a single compute node, the SpMV is constant for all stencil sizes. That then implies the cost of communication could be reduced (or hidden). 
+The data in Figure~\ref{fig:weak_scaling_alltoallv_all_stencils} shows \texttt{MPI\_Alltoallv} weak scaling is poor. As $p$ grows, the total time follows at a discouraging rate. Figure~\ref{fig:weak_scaling_spmv_only_alltoallv_all_stencils}, which presents the SpMV (computation) time only, verifies that beyond the initial contention on a single compute node, the SpMV is constant for all stencil sizes. That then implies the cost of communication could be reduced (or hidden). 
 
 \begin{figure}
 \centering
@@ -441,7 +441,7 @@ The data in Figure~\ref{fig:weak_scaling_alltoallv_all_stencils} shows MPI\_Allt
 %\begin{subfigure}{0.48\textwidth}
 %\centering
 %\includegraphics[width=\textwidth]{performance_content/scaling/weak_scaling_np4000_regular_alltoallv_commOnly.png}
-%\caption{MPI\_Alltoallv only}
+%\caption{\texttt{MPI\_Alltoallv} only}
 %\label{fig:weak_scaling_comm_only_alltoallv_all_stencils}
 %\end{subfigure}
 \begin{subfigure}{0.48\textwidth}
@@ -466,19 +466,19 @@ Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in ef
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/omnigraffle/AlltoallvCPU.pdf}
-\caption{MPI\_Alltoallv}
+\caption{\texttt{MPI\_Alltoallv}}
 \label{fig:alltoallv_cpu}
 \end{subfigure}
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/omnigraffle/IsendIrecvCPU.pdf}
-\caption{MPI\_Isend/MPI\_Irecv}
+\caption{\texttt{MPI\_Isend}/\texttt{MPI\_Irecv}}
 \label{fig:isendirecv_cpu}
 \end{subfigure}
 \begin{subfigure}{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/omnigraffle/IsendPreIrecvCPU.pdf}
-\caption{Post an MPI\_Irecv before SpMV (``Pre-Recv")}
+\caption{Post an \texttt{MPI\_Irecv} before SpMV (``Pre-Recv")}
 \label{fig:preirecv_cpu}
 \end{subfigure}
 \begin{subfigure}{0.48\textwidth}
@@ -500,20 +500,20 @@ Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in ef
 
 Tuning occurred as follows for the $n=50$ node stencil case and $N_p=4000$ nodes per process:  
 \begin{enumerate} 
-\item The entire SpMV for $\setCenters$ is executed, followed by a blocking MPI\_Alltoallv collective (Figure~\ref{fig:alltoallv_cpu}). This is the baseline discussed above.
-\item The MPI\_Alltoallv is replaced by non-blocking MPI\_Isend/MPI\_Irecv (Figure~\ref{fig:isendirecv_cpu}). This avoids unnecessary overhead in zero-byte message handling. 
-\item MPI\_Irecv is issued \emph{before} starting the SpMV to ensure MPI\_Isends have pending connections when ready (Figure~\ref{fig:preirecv_cpu}). Posting the non-blocking receives early helps to hide some load balancing issues. 
+\item The entire SpMV for $\setCenters$ is executed, followed by a blocking \texttt{MPI\_Alltoallv} collective (Figure~\ref{fig:alltoallv_cpu}). This is the baseline discussed above.
+\item The \texttt{MPI\_Alltoallv} is replaced by non-blocking \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} (Figure~\ref{fig:isendirecv_cpu}). This avoids unnecessary overhead in zero-byte message handling. 
+\item \texttt{MPI\_Irecv} is issued \emph{before} starting the SpMV to ensure \texttt{MPI\_Isend}s have pending connections when ready (Figure~\ref{fig:preirecv_cpu}). Posting the non-blocking receives early helps to hide some load balancing issues. 
 \item Based on the assumption that elements of $\setDepend$ are sorted contiguous by neighboring process, the entire decode process is skipped (Figure~\ref{fig:no_decode_cpu}). 
-\item MPI\_Irecv and MPI\_Isend are issued before computing the SpMV for set $\setCenters \backslash \setBoundary$. MPI\_Isend is non-blocking so the SpMV for $\setCenters \backslash \setBoundary$ starts before communication is complete. A barrier at the end of the first SpMV waits for communication to finish before launching the second SpMV on $\setBoundary$. This hides some cost of communication behind computation on the CPU (Figure~\ref{fig:overlap_cpu}). This collective is the basis for distributed GPU computing approach in Chapter~\ref{chap:multigpu_rbffd}.
+\item \texttt{MPI\_Irecv} and \texttt{MPI\_Isend} are issued before computing the SpMV for set $\setCenters \backslash \setBoundary$. \texttt{MPI\_Isend} is non-blocking so the SpMV for $\setCenters \backslash \setBoundary$ starts before communication is complete. A barrier at the end of the first SpMV waits for communication to finish before launching the second SpMV on $\setBoundary$. This hides some cost of communication behind computation on the CPU (Figure~\ref{fig:overlap_cpu}). This collective is the basis for distributed GPU computing approach in Chapter~\ref{chap:multigpu_rbffd}.
 \end{enumerate}
-\noindent Weak scaling for each case is presented in Figure~\ref{fig:compare_weak_scaling_n50}. The gap between MPI\_Alltoallv (blue) and the basic MPI\_Isend/MPI\_Irecv (red) in Figure~\ref{fig:compare_weak_scaling_n50} nicely captures the substantial loss of time due to zero-byte message tests. Posting MPI\_Irecv before the SpMV (see the green line) shows moderate improvement for large $p$, and reflects that the load balancing of the test is getting worse. At $p=1024$ processes the overlapping CPU approach is 2.8x faster than the baseline. Although its scaling is not ideal, overlapping the SpMV and communication does represent a significant improvement over the original MPI\_Alltoallv. %At $p=1024$ the overlapped communication and computation is 
+\noindent Weak scaling for each case is presented in Figure~\ref{fig:compare_weak_scaling_n50}. The gap between \texttt{MPI\_Alltoallv} (blue) and the basic \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} (red) in Figure~\ref{fig:compare_weak_scaling_n50} nicely captures the substantial loss of time due to zero-byte message tests. Posting \texttt{MPI\_Irecv} before the SpMV (see the green line) shows moderate improvement for large $p$, and reflects that the load balancing of the test is getting worse. At $p=1024$ processes the overlapping CPU approach is 2.8x faster than the baseline. Although its scaling is not ideal, overlapping the SpMV and communication does represent a significant improvement over the original \texttt{MPI\_Alltoallv}. %At $p=1024$ the overlapped communication and computation is 
 
 
 Our overlapped SpMV approach is similar in concept to the ``hybrid vector mode with naive overlap" adopted by Schubert et al. \cite{Schubert2011}. However, whereas Schubert et al. consider a two-level parallelism with each MPI process splitting into a number of OpenMP threads, our implementation is limited to a single CPU thread per MPI process. The comparison is bit surprising. Data provided in \cite{Schubert2011} suggest that the vector mode with naive overlap actually scales worse than the case when no overlap is used. Contrary to this, Figure~\ref{fig:compare_weak_scaling_n50} indicates that splitting the SpMV improves scaling compared to a non-overlapped approach. In the case of Schubert et al., their data shows better scaling for a non-overlapped 
 
-In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scaling for each of the collectives. Differences in curves are difficult to discern except for $p \leq 16$ and $p = 1024$. Starting with the latter case, observe that the trend of near linear scaling for the overlapping collective persists at $p=1024$ rather than bottoming-out in the fashion of MPI\_Alltoallv. 
+In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scaling for each of the collectives. Differences in curves are difficult to discern except for $p \leq 16$ and $p = 1024$. Starting with the latter case, observe that the trend of near linear scaling for the overlapping collective persists at $p=1024$ rather than bottoming-out in the fashion of \texttt{MPI\_Alltoallv}. 
 
-For small $p$ the MPI\_Alltoallv is up to 2x faster than MPI\_Isend/MPI\_Irecv variants. For $p\leq8$ it is safe to assume MPI\_Alltoallv makes better use of local shared memory to communicate within the same node. Beyond $p=8$, the collective most likely improves on MPI\_Isend/MPI\_Irecv by optimally packing messages or even breaking large messages into smaller pieces. Its also possible to some extent for the collective to adjust to the network topology. Duplicating those optimizations for the overlapped CPU collective is left for future work. Until then, RBF-FD in distributed CPU environments like Itasca should assume the use of MPI\_Alltoallv collective for $p \leq 16$ and the overlapped MPI\_Isend/MPI\_Irecv in all other cases. 
+For small $p$ the \texttt{MPI\_Alltoallv} is up to 2x faster than \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} variants. For $p\leq8$ it is safe to assume \texttt{MPI\_Alltoallv} makes better use of local shared memory to communicate within the same node. Beyond $p=8$, the collective most likely improves on \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} by optimally packing messages or even breaking large messages into smaller pieces. Its also possible to some extent for the collective to adjust to the network topology. Duplicating those optimizations for the overlapped CPU collective is left for future work. Until then, RBF-FD in distributed CPU environments like Itasca should assume the use of \texttt{MPI\_Alltoallv} collective for $p \leq 16$ and the overlapped \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} in all other cases. 
 
 \subsection{All Stencils Summary}
 \label{sec:scaling_summary}
@@ -580,7 +580,7 @@ This may be a limitation in METIS when partitioning domains for large $p$. If so
 \end{figure} 
 
 
-Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to MPI\_Isend/MPI\_Irecv, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The 110 GLFOP/sec (n=17) to 220 GFLOP/sec (n=50) achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory bound SpMV. 
+Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to \texttt{MPI\_Isend}/\texttt{MPI\_Irecv}, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The 110 GLFOP/sec (n=17) to 220 GFLOP/sec (n=50) achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory bound SpMV. 
 
 
 
@@ -638,7 +638,7 @@ Figures~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils} and \ref{f
 \begin{align*}
 Vis = \ ^{(t_{Comm} - t_{SpMV 1}}) /_{t_{Total}} * 100\%
 \end{align*}
-where $Vis$ is the subset of time between the first MPI\_Irecv post and the start of the first SpMV (for $\setCenters \backslash \setBoundary$). Any communication hidden by the first SpMV is subtracted off $t_{Comm}$ with $t_{SpMV 1}$, the time spent computing.
+where $Vis$ is the subset of time between the first \texttt{MPI\_Irecv} post and the start of the first SpMV (for $\setCenters \backslash \setBoundary$). Any communication hidden by the first SpMV is subtracted off $t_{Comm}$ with $t_{SpMV 1}$, the time spent computing.
 
 The local minima in  Figure~\ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils} reveal an optimal choice of $p$ by stencil size for overlapping communication and computation. Note that the minima at $p=8$ for $n=17$, and $p=32$ for $n=31$ and $50$ correspond to strong scaling efficiency peaks in Figure~\ref{fig:compare_strong_scaling_efficiency_all_stencils}. Remarkably, we observe at those minima up to 80\% of the communication time is hidden. 
 
@@ -658,7 +658,7 @@ All three of these concerns will be investigated as part of future work.
 
 This chapter covered the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation was demonstrated to be scalable with 30\% to 40\% parallel efficiency on 128 processors of the Itasca HPC (CPU-only) cluster at the University of Minnesota given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
 
-A number of optimizations reduce communication times and increase scalability beyond the results in our first paper, \cite{BolligFlyerErlebacher2012}. Starting with an MPI\_Alltoallv collective, the tuning effort ultimately leads to a scheme which overlaps communication and computation on the CPU. Chapter~\ref{chap:multigpu_rbffd} extends this collective to overlap with computation on GPUs. 
+A number of optimizations reduce communication times and increase scalability beyond the results in our first paper, \cite{BolligFlyerErlebacher2012}. Starting with an \texttt{MPI\_Alltoallv} collective, the tuning effort ultimately leads to a scheme which overlaps communication and computation on the CPU. Chapter~\ref{chap:multigpu_rbffd} extends this collective to overlap with computation on GPUs. 
 
 Our implementation leverages METIS for general domain decomposition and load balancing. Individual processes do not require a full mapping between RBF nodes and CPUs. Instead, processes assemble and operate on local linear systems for their subdomains. Communication between processes is limited to nearest-neighbor or all-to-subset collectives based on the intersection of subdomains. 
 		
