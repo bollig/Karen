@@ -30,13 +30,14 @@ GPUs, miles ahead in the many-core arena, only required a bit of flexibility in 
 The release of NVidia's CUDA architecture and software stack \cite{CudaGuide2013} at the end of 2006, reduced substantially the need for tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program. The monumental new hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public. 
 
 
-The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (from \cite{CudaGuide2013}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently leads CPUs by a full order of magnitude. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than CPUs \cite{CudaGuide2013}. %Figure~\ref{fig:memory-bandwidth} (courtesy of NVidia; \cite{CudaGuide2013}) compares the evolving memory bandwidth for NVidia and Intel. 
+The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (based on data from \cite{Behr2009, OpenCL2009}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently leads CPUs by a full order of magnitude. Today, a single NVidia K20 (Kepler-class) GPU is advertised as capable of 1.17 TFLOP/sec in double precision \cite{KeplerFactSheet} and the older generation NVidia M2070 (Fermi-class) GPU is rated at 515 GFLOP/sec \cite{Fermi2009}. Meanwhile, benchmarks have shown that Intel hardware peaks an order of magnitude lower with at most 97 GFLOP/sec for double precision operations using all cores of a SandyBridge processor and at most 48 GFLOP/sec on all cores of a Westmere EP processor \cite{Vladimirov2012}. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than Intel CPUs \cite{CudaGuide2013}.
 
 %TODO: update with latest GFLOPs (up to TFLOPs now)
 \begin{figure}
 \centering
 \includegraphics[width=0.6\textwidth]{../figures/prospectus/GPU_Evolution_opencl.pdf}
-\caption{Performance comparison for Graphics Processing Units (GPUs). GFLOP/sec data based on \cite{CudaGuide2013}.}
+\caption{Performance comparison for Graphics Processing Units (GPUs). GFLOP/sec data based on \cite{Behr2009, OpenCL2009}. Although data in this figure was last added in 2010, the divide between NVidia and Intel hardware continues to persist today. Currently, the NVidia M2070 (Fermi-class) GPU is capable of 515 GFLOP/sec in double precision, and the NVidia K20 (Kepler-class) GPU is capable of 1.17 TFLOP/sec in double precision \cite{CudaGuide2013}.}
+%Meanwhile, the Intel Westmere EP and SandyBridge chips tout 71.8 GFLOP/sec and 157.7 GFLOP/sec respectively, leaving the CPUs an order of magnitude behind NVidia \cite{IntelGFLOPs}}
 \label{fig:floating-point-operations-per-second}
 \end{figure}
 
@@ -70,14 +71,14 @@ GPUs currently support single and double precision. RBF-FD certainly requires do
 \begin{subfigure}{0.45\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/spmv/roofline_m2050_m2070-eps-converted-to.pdf}
-\caption{Roofline Model for NVidia Fermi class GPUs, M2050 and M2070. SpMV Peak: 36 GFLOP/sec.}
+\caption{Roofline Model for NVidia Fermi class GPUs, M2050 and M2070. SpMV Peak: 18.5 GFLOP/sec (double precision).}
 \label{fig:roofline_m2070}
 \end{subfigure}
 \quad
 \begin{subfigure}{0.45\textwidth}
 \centering
 \includegraphics[width=\textwidth]{../figures/spmv/roofline_k20-eps-converted-to.pdf}
-\caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 52 GFLOP/sec.}
+\caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 26 GFLOP/sec (double precision).}
 \label{fig:roofline_k20}
 \end{subfigure}
 \caption{Roofline models manage expectations for maximum possible GFLOP/sec based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $0.25$. }
