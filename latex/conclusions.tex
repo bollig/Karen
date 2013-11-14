@@ -1,57 +1,60 @@
 \chapter{Final Discussion, Conclusions and Future Work}
 \label{chap:conclusions}
 
-This work is the first known investigation of the RBF-FD method applied to geophysical PDEs with a focus on high performance computing. The RBF-FD numerical method was chosen based on its low complexity ($O(N)$) and high order accuracy, as well as the ability to function on arbitrary grids and independent of the number of dimensions. In recent years the generalized FD method has rapidly gained popularity in atmospheric and geophysical science communities, but prior to this effort was limited to serial MATLAB implementations. 
+This work is the first known investigation of the RBF-FD method applied to geophysical PDEs with a focus on high performance computing. The RBF-FD numerical method was chosen based on its low complexity ($O(N)$) and high order accuracy, as well as the ability to function on arbitrary grids, independent of the number of dimensions. In recent years the generalized FD method has grown in popularity in the atmospheric and geophysical communities, and has reached a point where some believe it could compete against more traditional methods like classical Finite Differences, Finite Volume and Finite Elements that are often found in large-scale simulations that execute on supercomputers. Unfortunately, existing implementations of RBF-FD are predominantly serial MATLAB codes that run on laptops and consider grid sizes up to a couple hundred thousand nodes.
 
-At the core of RBF-FD is the Sparse Matrix Vector multiply (SpMV). The SpMV operation performs a sparse dot product between every row of the matrix and a dense vector, and requires two floating point operations for every two elements of memory loaded. In double precision this translates to an operational intensity of $\frac{1}{8}$ FLOPs:Gbytes, which makes indicates a memory bound application with performance limited by the hardware bandwidth. 
 
-The goal of this dissertation was to scale RBF-FD solutions on high resolution meshes across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. To that end we accomplished the following: 
+The goal of this work was to scale RBF-FD solutions on high resolution meshes (i.e., millions of nodes) across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. Additionally, we sought to extend RBF-FD to clusters with one or more GPUs attached to each compute node with the knowledge that each GPU offers over 1 TFLOP/sec peak performance in double precision. In light of these goals we accomplished the following: 
 
 \begin{itemize}
-\item Chapter~\ref{chap:gpu_rbffd} presented the first implementation of RBF-FD ported to NVidia GPUs using OpenCL. Two approaches to OpenCL kernels designed to time-step to the solution of PDEs with an RK4 iteration 
+\item Chapters~\ref{chap:background} and \ref{chap:rbffd_method} provided a survey of RBF methods for PDEs and highlighted the evolution from the original application of RBF Interpolation in 1970 to the most recent extensions developed for RBF-FD as of this writing (2013). 
 
-\item Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation scales well achieves 30\% to 40\% (strong and weak) parallel efficiency on 128 processors of the Itasca HPC cluster (CPU-only) at the University of Minnesota when given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
-
-\item Our implementation leverages METIS for general domain decomposition and load balancing. Individual processes do not require a full mapping between RBF nodes and CPUs. Instead, processes assemble and operate on local linear systems for their subdomains. Communication between processes is limited to nearest-neighbor or all-to-subset collectives based on the intersection of subdomains. 
-
-
-\item A number of tuning steps reduce communication times and increase scalability beyond the results in our first paper, \cite{BolligFlyerErlebacher2012}. Starting with an \texttt{MPI\_Alltoallv} collective, the tuning effort ultimately leads to a scheme which overlaps communication and computation on the CPU. Chapter~\ref{chap:multigpu_rbffd} extends this collective to overlap with computation on GPUs. 
+\item Chapter~\ref{chap:stencils} investigated RBF-FD stencil generation and introduced the Fixed-Grid algorithm to a) perform nearest neighbor queries for stencils and b) precondition grids as part of RBF-FD preprocessing. 
+\begin{itemize} 
+\item We compared the performance of our method to the RBF community favorite, $k$-D Tree, and find that the lower complexity Fixed-Grid method only achieves up to 2.5x speedup over $k$-D Tree on randomly distributed nodes. In most cases the methods perform equally well with $O(N \log_2 N)$ complexity to build and query.
+\item The Fixed-Grid method effectively preconditions random node distributions by reordering nodes in memory to keep physically close neighbors nearby in memory. The study finds that using the preconditioned node distributions can accelerate RBF-FD time-step performance by up to 5x (for quasi-random node distributions) due to spatial locality of node information in memory and improved cache effects when operating on stencils. 
+\item A discussion of integer dilation and bit interleaving demonstrates the process to construct a number of space-filling curve variants in 2-D and 3-D. The curves reorder cells of the Fixed-Grid algorithm on the prospect of additional cache hits during RBF-FD time-steps. A comparison of space-filling curve orderings to the well-known Reverse Cuthill-McKee (RCM) algorithm finds that RCM delivers an ordering that has both the lowest differentiation matrix bandwidth and the fastest derivative calculation. Unfortunately, the RCM ordering only accelerates derivative calculations by less than 10\% compared to the default space-filling curve (i.e., IJK/Raster-order) generated in the Fixed-Grid method. We find it most convenient to start all RBF-FD calculations by generating stencils with the basic IJK ordered Fixed-Grid method, and then---only if peak performance is absolutely necessary---reorder nodes with the RCM algorithm. 
 \end{itemize} 
 
 
-\begin{enumerate} 
-\item 
+
+
+\item Chapter~\ref{chap:gpu_rbffd} presented the first implementation of RBF-FD to run on a single NVidia GPU using OpenCL. 
 \begin{itemize} 
-\item Performance comparison with the RBF community favorite, $k$-D Tree, shows that the lower complexity fixed-grid method is able to achieve up to 2.5x speedup over the former method on randomly distributed nodes. 
-\item The fixed-grid method is also shown to accelerate RBF-FD time-step performance by up to 5x due spatial locality of node information in memory and improved cache effects.
-\end{itemize} 
-\item Integer dilation and bit interleaving are introduced to the RBF community at large to construct a number of space-filling curve variants in 2-D and 3-D. The curves reorder cells of the fixed-grid algorithm on the prospect of additional cache hits for derivative calculations. 
+
+\item Two strategies were employed within custom GPU kernels to compute derivatives and perform a fourth order Runge Kutta time-step. The custom kernels were applied to solve hyperbolic PDEs and performed up to 3 GFLOP/sec, which translates to 2x-4x speedup over the CPU. 
+
+\item  At the core of RBF-FD is the Sparse Matrix Vector multiply (SpMV). The SpMV requires two floating point operations for every two elements of memory loaded. In double precision this translates to an operational intensity of $\frac{1}{8}$ FLOP/Gbytes, which indicates that the SpMV is a memory bound operation. Due to the low operational intensity, the SpMV can only hope to achieve at most $18.5$ GFLOP/sec on an NVidia M2070 GPU.
+
+\item To improve the performance of the SpMV we adopt the ELLPACK (ELL) sparse matrix structure provided by the ViennaCL library \cite{Rupp2010}. The ELL structure reduces the amount of memory loaded during the SpMV and increases performance to 8 GFLOP/sec, which is approximately 43\% of the peak possible on the GPU in double precision, and up to 18x faster than the performance of the CPU. 
+
+%\item Leveraging the functional portability of OpenCL we provide preliminary benchmarks evaluating the performance of RBF-FD on the Intel Phi Architecture. The results
+
+\end{itemize}
+
+Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters.
 \begin{itemize} 
-\item A comparison of the variants to the result of the well-known Reverse Cuthill-McKee (RCM) algorithm concludes that RCM remains the better option for reordering and matrix bandwidth minimization.
-\end{itemize} 
-\item The design and tuning of the only known implementation of the RBF-FD method to scale across multiple compute nodes of a supercomputing cluster.
-\begin{itemize} 
-\item Our home-grown implementation divides computation with a Restricted Additive Schwarz (RAS) domain decomposition in a first-of-its-kind application to RBF-FD. % (note: other RBF methods have already encountered RAS decomposition \cite{Yokota2010}). 
-\item As part of the tuning process described herein, balanced workloads are achieved through the use of the METIS graph partitioning algorithm \cite{Karypis1999}.  
+\item Our home-grown implementation of RBF-FD divides computation with a Restricted Additive Schwarz (RAS) domain decomposition. We depend on METIS \cite{Karypis1999} for grid partitioning and load balancing. Individual processes do not require a full mapping between RBF nodes and CPUs. Instead, processes assemble and operate on local linear systems for their subdomains. Communication between processes is limited to nearest-neighbor or all-to-subset collectives based on the intersection of subdomains.
+
 \item A number of steps are taken to improve communication collectives in the CPU-only implementation. The resulting algorithm splits derivative calculation into two steps and overlaps communication with computation. We observe that up to 80\% of the cost in communication can be hidden in some cases. 
-\item Scaling benchmarks up to 1024 processes (divided into 8 processes per node) and a grid resolution of $N=160^3$ vertices (i.e., 4.1 million) prove that the implementation scales well in both a strong and weak sense. 
+
+\item Scaling benchmarks up to 1024 processes (divided into 8 processes per node) and a grid resolution of $N=160^3$ nodes (i.e., 4.1 million) prove that the overlapping communication and computation approach scales reasonably well in both a strong and weak sense for a moderate number of processors (e.g., $p \leq 256$). We achieve 30\% to 40\% parallel efficiency (both strong and weak) on $p=128$ processors when given a problem size of $N=160^3$ nodes and stencil sizes between $n=17$ and $n=50$ on Itasca, the CPU-only HPC cluster at the University of Minnesota. %Scaling beyond $p > 256$ processors shows 
+
 \end{itemize} 
-\item The design and tuning of the only known single- and multi-GPU implementation of RBF-FD. Also, ours is the only known investigation in the broader RBF community to target multiple GPUs (\cite{Schmidt2009a,Cuomo2013} are single-GPU). 
+
+\item Chapter~\ref{chap:multigpu_rbffd} extended the work on GPUs to distribute RBF-FD across a cluster of 32 GPUs (four per compute node). %To our knowledge, this is also the only known investigation in the broader RBF community to target multiple GPUs. 
 \begin{itemize} 
-\item Our first paper (\cite{BolligFlyerErlebacher2012}) introduced a set of custom OpenCL kernels for RBF-FD time-stepping of hyperbolic PDEs with an explicit RK4 scheme (up to 10 GPUs). 
-\item Here, the performance per GPU is tuned by choosing an alternative sparse matrix representation. The investigation reveals that the Ellpack (ELL) structure provided by the ViennaCL library \cite{Rupp2010} is a great fit for RBF-FD differentiation matrices, with over 4x faster performance than the original compressed-row storage (CSR). %On one GPU (NVidia M2070) our implementation performs at approximately 8 GFLOP/sec. 
 \item The multi-GPU implementation is extended to a novel overlapping algorithm that naturally derives from our distributed CPU optimizations. Non-blocking MPI collectives plus two asynchronous OpenCL queues amortize the cost of data transfer between CPU and GPU, MPI communication, and in some cases a substantial amount of computation. Iterations of the resulting implementation achieve an average of 3x better strong scaling compared to a non-overlapping equivalent. 
+\item In some cases, the overlapping communication and computation in our multi-GPU implementation is able to hide the cost of CPU to GPU memory transfers 
 \end{itemize} 
-\end{enumerate}
-Of lesser significance we also: 
-\begin{enumerate}
+
 \item Verify our explicit solvers against two well studied hyperbolic PDEs (Vortex Roll-up \cite{NairTransport05, NairJablonowski08} and Cosine Bell Advection \cite{JakobChien1995}).
 \begin{itemize} 
 \item Convergence studies confirm that hyperviscosity (\cite{Fornberg2011b}) stabilizes solutions.
 \item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size
 \end{itemize}
-\item Provide preliminary benchmarks evaluating the performance of RBF-FD on the Intel Phi Architecture. 
-\end{enumerate}
+
+\end{itemize} 
 
 
 %The question, however, is frequently asked: is GPU computing a buzzword that will die out, or is it here to stay? 
