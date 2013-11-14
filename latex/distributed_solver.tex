@@ -509,7 +509,7 @@ Tuning occurred as follows for the $n=50$ node stencil case and $N_p=4000$ nodes
 \noindent Weak scaling for each case is presented in Figure~\ref{fig:compare_weak_scaling_n50}. The gap between \texttt{MPI\_Alltoallv} (blue) and the basic \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} (red) in Figure~\ref{fig:compare_weak_scaling_n50} nicely captures the substantial loss of time due to zero-byte message tests. Posting \texttt{MPI\_Irecv} before the SpMV (see the green line) shows moderate improvement for large $p$, and reflects that the load balancing of the test is getting worse. At $p=1024$ processes the overlapping CPU approach is 2.8x faster than the baseline. Although its scaling is not ideal, overlapping the SpMV and communication does represent a significant improvement over the original \texttt{MPI\_Alltoallv}. %At $p=1024$ the overlapped communication and computation is 
 
 
-Our overlapped SpMV approach is similar in concept to the ``hybrid vector mode with naive overlap" adopted by Schubert et al. \cite{Schubert2011}. However, whereas Schubert et al. consider a two-level parallelism with each MPI process splitting into a number of OpenMP threads, our implementation is limited to a single CPU thread per MPI process. The comparison is bit surprising. Data provided in \cite{Schubert2011} suggest that the vector mode with naive overlap actually scales worse than the case when no overlap is used. Contrary to this, Figure~\ref{fig:compare_weak_scaling_n50} indicates that splitting the SpMV improves scaling compared to a non-overlapped approach. In the case of Schubert et al., their data shows better scaling for a non-overlapped 
+Our overlapped SpMV approach is similar in concept to the ``hybrid vector mode with naive overlap" adopted by Schubert et al. \cite{Schubert2011}. However, whereas Schubert et al. consider a two-level parallelism with each MPI process splitting into a number of OpenMP threads, our implementation is limited to a single CPU thread per MPI process. The comparison is bit surprising. Data provided in \cite{Schubert2011} suggest that the vector mode with naive overlap actually scales worse than the case when no overlap is used. Contrary to this, Figure~\ref{fig:compare_weak_scaling_n50} indicates that splitting the SpMV improves scaling compared to a non-overlapped approach. In the case of Schubert et al., their use of the OpenMP threads to parallelize the split SpMV operation appears to increase the overhead in launching the two-part SpMV computation, which in turn decreases the performance of the overlapped case. %One major contribution in \cite{Schubert2011} is a so-called ``task mode" execution, which ensures overlapping communication and computation by running a separate OpenMP thread dedicated to communication while other threads focus solely on computation. Although the authors do not explicitly state the performance gains in this  
 
 In similar fashion Figure~\ref{fig:compare_strong_scaling_n50} shows strong scaling for each of the collectives. Differences in curves are difficult to discern except for $p \leq 16$ and $p = 1024$. Starting with the latter case, observe that the trend of near linear scaling for the overlapping collective persists at $p=1024$ rather than bottoming-out in the fashion of \texttt{MPI\_Alltoallv}. 
 
@@ -537,9 +537,7 @@ For small $p$ the \texttt{MPI\_Alltoallv} is up to 2x faster than \texttt{MPI\_I
 \caption{Weak and Strong Scaling Improvements}
 \end{figure}
 
-Figures~\ref{fig:compare_weak_scaling_all_stencils} and \ref{fig:compare_strong_scaling_all_stencils} demonstrate the scaling for the overlapped communication and computation and various stencil sizes ($n=17,31,50,101$). 
-
-Figure~\ref{fig:compare_weak_scaling_all_stencils} shows that degradation in weak scaling starts at smaller $p$ as the stencil size, $n$, grows. This is attributed---at least in part---to the proportional increase in the number of ghost node dependencies per partition sent/received. Based on the comparison in \S~\ref{sec:load_balance}, the ratio of ghost node counts was found to be $\frac{\min N_r}{\max N_r} = 0.39$ for $p=1024$ and $n=17$. The low ratio points to imbalanced communication loads as one cause for communication increase. 
+Figures~\ref{fig:compare_weak_scaling_all_stencils} and \ref{fig:compare_strong_scaling_all_stencils} demonstrate the scaling for the overlapped communication and computation and various stencil sizes ($n=17,31,50,101$). Figure~\ref{fig:compare_weak_scaling_all_stencils} shows that degradation in weak scaling starts at smaller $p$ as the stencil size, $n$, grows. This is attributed---at least in part---to the proportional increase in the number of ghost node dependencies per partition sent/received. Based on the comparison in \S~\ref{sec:load_balance}, the ratio of ghost node counts was found to be $\frac{\min N_r}{\max N_r} = 0.39$ for $p=1024$ and $n=17$. The low ratio points to imbalanced communication loads as one cause for communication increase. 
 This may be a limitation in METIS when partitioning domains for large $p$. If so, future work may be able to improve balancing with other graph partitioning methods. 
 
 \begin{figure}
@@ -580,7 +578,7 @@ This may be a limitation in METIS when partitioning domains for large $p$. If so
 \end{figure} 
 
 
-Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong scaling for the implementation even though all three cases taper off toward the end. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling in turns of speedup. Here we see that, after an initial slow-down due to \texttt{MPI\_Isend}/\texttt{MPI\_Irecv}, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The 110 GLFOP/sec (n=17) to 220 GFLOP/sec (n=50) achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory bound SpMV. 
+Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong scaling in our implementation even though all three cases taper off for $p > 256$. Figure~\ref{fig:compare_strong_scaling_speedup_all_stencils} presents the strong scaling as a function of speedup. Here we see that, after an initial slow-down due to \texttt{MPI\_Isend}/\texttt{MPI\_Irecv}, the implementation scales linearly up to $p=256$. For comparison against GPU performance, the measured GFLOP/sec for each strong scaling case is provided in \ref{fig:compare_strong_scaling_gflops_all_stencils}. The 110 GLFOP/sec (n=17) to 220 GFLOP/sec (n=50) achieved on 1024 cores of Itasca is a far cry from peta-scale performance, but still a respectable number for the memory-bound SpMV. 
 
 
 
@@ -603,12 +601,12 @@ Figure~\ref{fig:compare_strong_scaling_all_stencils} demonstrates fair strong sc
 \end{figure}
 
 
-For comparison with related work, and to assess how well the implementation utilizes hardware, we provide weak and strong scaling efficiencies in Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:compare_strong_scaling_efficiency_all_stencils}. Efficiency can have multiple definitions, but is always expressed as a percentage of linear scaling with 100\% as ideal. Lower percentages indicate under-utilization of parallelism due to communication overhead or other issues.  Weak Scaling Efficiency is calculated as: 
+For comparison with related work, and to assess how well the implementation utilizes hardware, we provide weak and strong scaling efficiencies in Figures~\ref{fig:compare_weak_scaling_efficiency_all_stencils} and \ref{fig:compare_strong_scaling_efficiency_all_stencils}. Efficiency can have multiple definitions, but is always expressed as a percentage of linear scaling with 100\% as ideal. Lower percentages indicate under-utilization of parallelism due to communication overhead or other issues.  Weak Scaling Efficiency is calculated as 
 \begin{align*}
 E_p = \ ^{t_1}/_{t_p} * 100\%
 \end{align*}
 where $t_1$ is the execution time on 1 processor and $t_p$ is the time on $p$ processors.
-Strong Scaling Efficiency is: 
+Strong Scaling Efficiency is 
 \begin{align*}
 E_p = \ ^{t_{1}}/_{(p*t_p)} * 100\%.
 \end{align*}
@@ -642,7 +640,7 @@ where $Vis$ is the subset of time between the first \texttt{MPI\_Irecv} post and
 
 The local minima in  Figure~\ref{fig:compare_strong_scaling_unoverlap_comm_all_stencils} reveal an optimal choice of $p$ by stencil size for overlapping communication and computation. Note that the minima at $p=8$ for $n=17$, and $p=32$ for $n=31$ and $50$ correspond to strong scaling efficiency peaks in Figure~\ref{fig:compare_strong_scaling_efficiency_all_stencils}. Remarkably, we observe at those minima up to 80\% of the communication time is hidden. 
 
- For weak scaling, the constant SpMV computation time (and constant overlap) means the linear trend in Figure~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils}  is purely growth in communication time with respect to $p$. Possible causes include (but are not limited to): 
+ For weak scaling, the constant SpMV computation time (and constant overlap) means that the linear trend in Figure~\ref{fig:compare_weak_scaling_unoverlapped_comm_all_stencils}  is purely growth in communication time with respect to $p$. Possible causes include (but are not limited to): 
 \begin{itemize}
 \item \emph{Worsening load balance}. As previously mentioned, METIS may be incapable of partitioning the domain optimally.
 \item \emph{Network contention}. As the number of processes scale, the increasing network traffic is expected to slow MPI globally.  
@@ -658,7 +656,7 @@ All three of these concerns will be investigated as part of future work.
 
 This chapter covered the design and tuning of the first distributed RBF-FD implementation for CPU and GPU clusters. The implementation was demonstrated to be scalable with 30\% to 40\% parallel efficiency on 128 processors of the Itasca HPC (CPU-only) cluster at the University of Minnesota given a problem size of $N=4096000$ nodes and stencil sizes between $n=17$ and $n=50$. 
 
-A number of optimizations reduce communication times and increase scalability beyond the results in our first paper, \cite{BolligFlyerErlebacher2012}. Starting with an \texttt{MPI\_Alltoallv} collective, the tuning effort ultimately leads to a scheme which overlaps communication and computation on the CPU. Chapter~\ref{chap:multigpu_rbffd} extends this collective to overlap with computation on GPUs. 
+A number of optimizations reduce communication times and increase scalability beyond the results in our first paper, \cite{BolligFlyerErlebacher2012}. Starting with an \texttt{MPI\_Alltoallv} collective, the tuning effort ultimately leads to a scheme that overlaps communication and computation on the CPU. Chapter~\ref{chap:multigpu_rbffd} extends this collective to overlap with computation on GPUs. 
 
 Our implementation leverages METIS for general domain decomposition and load balancing. Individual processes do not require a full mapping between RBF nodes and CPUs. Instead, processes assemble and operate on local linear systems for their subdomains. Communication between processes is limited to nearest-neighbor or all-to-subset collectives based on the intersection of subdomains. 
 		
