@@ -4,7 +4,7 @@
 This work is the first known investigation of the RBF-FD method applied to geophysical PDEs with a focus on high performance computing. The RBF-FD numerical method was chosen based on its low complexity ($O(N)$) and high order accuracy, as well as the ability to function on arbitrary grids, independent of the number of dimensions. In recent years the generalized FD method has grown in popularity in the atmospheric and geophysical communities, and has reached a point where some believe it could compete against more traditional methods like classical Finite Differences, Finite Volume and Finite Elements that are often found in large-scale simulations that execute on supercomputers. Unfortunately, existing implementations of RBF-FD are predominantly serial MATLAB codes that run on laptops and consider grid sizes up to a couple hundred thousand nodes.
 
 
-The goal of this work was to scale RBF-FD solutions on high resolution meshes (i.e., millions of nodes) across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. Additionally, we sought to extend RBF-FD to clusters with one or more GPUs attached to each compute node with the knowledge that each GPU offers over 1 TFLOP/sec peak performance in double precision. In light of these goals we accomplished the following: 
+The goal of this work was to scale RBF-FD solutions on high resolution meshes (i.e., millions of nodes) across high performance clusters, and to lead the way for its adoption within HPC and supercomputing circles. Additionally, we sought to extend RBF-FD to clusters with one or more GPUs attached to each compute node with the knowledge that each GPU offers greater than 1 TFLOP/sec peak performance in double precision. In light of these goals we accomplished the following: 
 
 \begin{itemize}
 \item Chapters~\ref{chap:background} and \ref{chap:rbffd_method} provided a survey of RBF methods for PDEs and highlighted the evolution from the original application of RBF Interpolation in 1970 to the most recent extensions developed for RBF-FD as of this writing (2013). 
@@ -24,9 +24,9 @@ The goal of this work was to scale RBF-FD solutions on high resolution meshes (i
 
 \item Two strategies were employed within custom GPU kernels to compute derivatives and perform a fourth order Runge Kutta time-step. The custom kernels were applied to solve hyperbolic PDEs and performed up to 3 GFLOP/sec, which translates to 2x-4x speedup over the CPU. 
 
-\item  At the core of RBF-FD is the Sparse Matrix Vector multiply (SpMV). The SpMV requires two floating point operations for every two elements of memory loaded. In double precision this translates to an operational intensity of $\frac{1}{8}$ FLOP/Gbytes, which indicates that the SpMV is a memory bound operation. Due to the low operational intensity, the SpMV can only hope to achieve at most $18.5$ GFLOP/sec on an NVidia M2070 GPU.
+\item  At the core of RBF-FD is the Sparse Matrix Vector multiply (SpMV). The SpMV requires two floating point operations for every two elements of memory loaded. In double precision this translates to an operational intensity of $\frac{1}{8}$ FLOP/Gbytes, which indicates that the SpMV is a memory bound operation. Due to the low operational intensity, the Roofline Model \cite{Williams2009} dictates that the SpMV can only hope to achieve at most $18.5$ GFLOP/sec on an NVidia M2070 GPU, a far cry from the GPU's advertised peak TFLOP/sec performance on the GPU. 
 
-\item To improve the performance of the SpMV we adopt the ELLPACK (ELL) sparse matrix structure provided by the ViennaCL library \cite{Rupp2010}. The ELL structure reduces the amount of memory loaded during the SpMV and increases performance to 8 GFLOP/sec, which is approximately 43\% of the peak possible on the GPU in double precision, and up to 18x faster than the performance of the CPU. 
+\item To improve the performance of the SpMV we adopt the ELLPACK (ELL) sparse matrix structure provided by the ViennaCL library \cite{Rupp2010}. The ELL structure reduces the number of bytes loaded from memory during the SpMV and increases performance to 8 GFLOP/sec, which is approximately 43\% of the peak performance dictated by the Roofline Model, and up to 18x faster than the performance of the SpMV on the CPU. 
 
 %\item Leveraging the functional portability of OpenCL we provide preliminary benchmarks evaluating the performance of RBF-FD on the Intel Phi Architecture. The results
 
@@ -38,34 +38,26 @@ Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the fir
 
 \item A number of steps are taken to improve communication collectives in the CPU-only implementation. The resulting algorithm splits derivative calculation into two steps and overlaps communication with computation. We observe that up to 80\% of the cost in communication can be hidden in some cases. 
 
-\item Scaling benchmarks up to 1024 processes (divided into 8 processes per node) and a grid resolution of $N=160^3$ nodes (i.e., 4.1 million) prove that the overlapping communication and computation approach scales reasonably well in both a strong and weak sense for a moderate number of processors (e.g., $p \leq 256$). We achieve 30\% to 40\% parallel efficiency (both strong and weak) on $p=128$ processors when given a problem size of $N=160^3$ nodes and stencil sizes between $n=17$ and $n=50$ on Itasca, the CPU-only HPC cluster at the University of Minnesota. %Scaling beyond $p > 256$ processors shows 
+\item Scaling benchmarks up to 1024 processes (divided into 8 processes per node) and a grid resolution of $N=160^3$ nodes (i.e., 4.1 million) prove that the overlapping communication and computation scales reasonably well in both a strong and weak sense for a moderate number of processors (e.g., $p \leq 256$). We achieve 30\% to 40\% parallel efficiency (both strong and weak) on $p=128$ processors when given a problem size of $N=160^3$ nodes and stencil sizes between $n=17$ and $n=50$ on Itasca, the CPU-only HPC cluster at the University of Minnesota. %Scaling beyond $p > 256$ processors shows 
 
 \end{itemize} 
 
 \item Chapter~\ref{chap:multigpu_rbffd} extended the work on GPUs to distribute RBF-FD across a cluster of 32 GPUs (four per compute node). %To our knowledge, this is also the only known investigation in the broader RBF community to target multiple GPUs. 
 \begin{itemize} 
 \item The multi-GPU implementation is extended to a novel overlapping algorithm that naturally derives from our distributed CPU optimizations. Non-blocking MPI collectives plus two asynchronous OpenCL queues amortize the cost of data transfer between CPU and GPU, MPI communication, and in some cases a substantial amount of computation. Iterations of the resulting implementation achieve an average of 3x better strong scaling compared to a non-overlapping equivalent. 
-\item In some cases, the overlapping communication and computation in our multi-GPU implementation is able to hide the cost of CPU to GPU memory transfers 
+\item In some cases, overlapping communication and computation for the GPU exceeds our expectations for scaling. For example, in some cases non-overlapping communication faces serialization on memory transfers between CPU and GPU due to contention on I/O hubs connecting four GPUs per compute node to CPU sockets. The contention not only delays memory transfers but also leads to nearly serialized execution times across the four local GPUs per node. Overlapping communication and computation and fully leveraging GPU queues hides the contention, and in some cases avoids it altogether, resulting in over 4x speedup compared to the non-overlapped cases. 
 \end{itemize} 
 
-\item Verify our explicit solvers against two well studied hyperbolic PDEs (Vortex Roll-up \cite{NairTransport05, NairJablonowski08} and Cosine Bell Advection \cite{JakobChien1995}).
+\item In Chapter~\ref{chap:applications} our explicit solvers are applied to solve two well studied hyperbolic PDEs (Vortex Roll-up \cite{NairTransport05, NairJablonowski08} and Cosine Bell Advection \cite{JakobChien1995}).
 \begin{itemize} 
 \item Convergence studies confirm that hyperviscosity (\cite{Fornberg2011b}) stabilizes solutions.
-\item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size
+\item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size.
+\item Each test case is run in all compute environments (e.g., single CPU, multi-CPU, single GPU, and multi-GPU) in double precision. The expectation in each case is that the final solutions and errors will match the single CPU results up to 12 digits. In fact, the IEEE double precision floating point support on GPUs allows perfect reproduction of all CPU results. 
 \end{itemize}
 
 \end{itemize} 
 
 
-%The question, however, is frequently asked: is GPU computing a buzzword that will die out, or is it here to stay? 
-%
-%Fine tuning of kernels is the way of the past. Anyone fine tuning kernels will be operating at a lower level, attempting to optimize library routines underlying large scale codes. The fine tuning can ultimately be replaced by auto-tuned kernels (e.g., see work in ViennaCL to auto-tune similar to libATLAS). 
-%
-%Already this is seen in attempts to port applications to the GPU in so-called ``minimally invasive" fashion. 
-%
-%So the short answer is: yes. And it is from this assumption that we proceed with our efforts to target the GPU with RBF-FD. However, we have made a few predictions on the future of GPUs and these predictions guided our efforts to port RBFs onto GPUs. 
-%
-%First, we are proponents for OpenCL over CUDA. Although CUDA has a large following due to its early release, we believe in functional portability of code enabled by OpenCL over the performance provided by CUDA. 
 
 \section{Future Work}
 
