@@ -27,10 +27,10 @@ Due to the inherent task parallelism in computer graphics  (e.g., for rasterizat
 Thanks to the highly profitable and always demanding game industry, the static rendering pipeline of yore was molded into a fully programmable and dynamic execution platform with a SIMD-like flavor. Prior to 2006, the GPU had already evolved away from fixed-function pipelines and into limited programmable functionality with control over a subset of phases in the rendering process. At the time researchers were able---with substantial effort---to trick the GPU into solving scientific problems by encoding solutions within the graphics rendering process (see e.g., \cite{Trendall2000,Jansen2007,Harris2005,Owens2007}).
 GPUs, miles ahead in the many-core arena, only required a bit of flexibility in control and logic to compete against the CPU for general purpose computing.  
 
-The release of NVidia's CUDA architecture and software stack \cite{CudaGuide2013} at the end of 2006, reduced substantially the need for tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program. The monumental new hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public. 
+The release of NVidia's CUDA architecture and software stack \cite{CudaGuide2013} at the end of 2006, reduced substantially the need for tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program. The monumental new hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public, and in the years since CUDA's release a vast number of libraries and language extensions have surfaced that leverage the GPU architecture for scientific computing in nearly every field of research (see e.g. \cite{NVidiaExamples}). 
 
 
-The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (based on data from \cite{Behr2009, OpenCL2009}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently leads CPUs by a full order of magnitude. Today, a single NVidia K20 (Kepler-class) GPU is advertised as capable of 1.17 TFLOP/sec in double precision \cite{KeplerFactSheet} and the older generation NVidia M2070 (Fermi-class) GPU is rated at 515 GFLOP/sec \cite{Fermi2009}. Meanwhile, benchmarks have shown that Intel hardware peaks an order of magnitude lower with at most 97 GFLOP/sec for double precision operations using all cores of a SandyBridge processor and at most 48 GFLOP/sec on all cores of a Westmere EP processor \cite{Vladimirov2012}. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than Intel CPUs \cite{CudaGuide2013}.
+The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (based on data from \cite{Behr2009, OpenCL2009}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently tops CPUs by a full order of magnitude. Today, a single NVidia K20 (Kepler-class) GPU is advertised as capable of 1.17 TFLOP/sec in double precision \cite{KeplerFactSheet} and the previous generation NVidia M2070 (Fermi-class) GPU is rated at 515 GFLOP/sec \cite{Fermi2009}. Meanwhile, benchmarks (e.g., \cite{Vladimirov2012}) have found that Intel hardware peaks at an order of magnitude lower with at most 97 GFLOP/sec for double precision operations using all cores of a SandyBridge processor and at most 48 GFLOP/sec on all cores of a Westmere EP processor. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than Intel CPUs \cite{CudaGuide2013}.
 
 %TODO: update with latest GFLOPs (up to TFLOPs now)
 \begin{figure}
@@ -41,7 +41,76 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 \label{fig:floating-point-operations-per-second}
 \end{figure}
 
-In the years since CUDA was released, a vast number of libraries and language extensions have surfaced to leverage the GPU architecture for scientific computing.  
+\section{OpenCL}
+
+Due to the success of CUDA (architecture, language, compiler, etc.), and partly because it was vendor specific and closed source, the OpenCL standard for GPU computing was proposed in 2009 \cite{OpenCL2009}. When CUDA was released in 2006, NVidia was not the only contender in the ring of GPU computing: AMD/ATI also had programmable GPUs that could be targeted by a high level language called Brook+ \cite{BrookGPU2004}. Distantly related, Intel was already working toward multi-/many-core architectures that could be targeted by Intel Threaded Building Blocks \cite{IntelTBB}. The OpenCL standard proposed a parallel computing language with the ability to run on any multi-/many-core architecture. The standard is maintained by the Khronos Group, an advisory committee with representatives from the biggest names in hardware and computing (e.g., Apple, AMD, Intel, NVidia, Samsung, Sony, etc.). 
+
+At the onset of this work it was our decision to utilize OpenCL. The GPU computing market was relatively young, and no single company had a dominant share of the HPC market. GPU hardware from both NVidia and ATI was evolving rapidly and OpenCL promised functional portability (i.e., it would run everywhere), so we hedged our bets on the most likely technology to be supported across vendors going into the future. Note that functional portability does not guarantee performance portability (i.e., optimal kernels for NVidia are not optimal for ATI). Some features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL and not supported everywhere. 
+
+
+\subsection{OpenCL Memory and Execution Models}
+
+In Figure~\ref{fig:opencl_execute_model} The OpenCL language \cite{OpenCL2009} assumes a lowest common denominator of hardware capabilities to provide functional portability. 
+For example, all target architectures are assumed to support some level of SIMD (Single Instruction Multiple Data) execution for kernels. Multiple \textit{work-items} execute a kernel in parallel. 
+A collection of work-items performing the same task is called a \textit{work-group}. While a user might think of work-groups as executing all work-items simultaneously, the work-items are divided at the hardware level into one or more SIMD \textit{warps}, which are executed by a single multiprocessor. For the Fermi and Kepler families of NVidia GPUs, a warp is 32 work-items \cite{CudaGuide2013}. 
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{../figures/prospectus/opencl_execute_model.pdf}
+\caption{The OpenCL execution model executes a kernel in parallel across many work-items. A collection of work-items execute in SIMD as a work-group. The work-groups are further bundled into an NDRange representing the full set of tasks executed within a kernel. } 
+\label{fig:opencl_execute_model}
+\end{figure}
+
+OpenCL assumes a tiered memory hierarchy that provides fast but small \textit{local memory} space that is shared within a work-group \cite{OpenCL2009}. Local memory on Fermi GPUs is 48 KB per multiprocessor \cite{CudaGuide2013}. The \textit{global device memory} allows sharing between work-groups and is the slowest but most abundant memory. 
+In the GPU computing literature, the terms \textit{thread} and \textit{shared memory} are synonymous to \textit{work-item} and \textit{local memory} respectively, and are preferred below. 
+
+
+At the hardware level, a \textit{thread} executes instructions on the GPU. On Fermi level GPUs, groups of 32 threads are referred to as \textit{warps}. A warp is the unit of threads executed concurrently on a single \textit{multi-processor}. 
+In OpenCL (i.e., software), a collection of hardware threads performing the same instructions are referred to as a \textit{work-group} of \textit{work-items}. Work-groups execute as a collection of warps constrained to the same multiprocessor. Multiple work-groups of matching dimension are grouped into an \textit{NDRange}. Figure~\ref{fig:grid-of-thread-blocks} shows how threads/work-items are grouped into NDRanges. The \textit{kernel} provides a master set of instructions
+for all threads in an NDRange \cite{OpenCL2009}. 
+
+
+NVidia GPUs have a tiered memory hierarchy related to the grouping of threads described above. 
+In multiprocessors, each computing core executes a thread with a limited set of registers. The number of registers varies with the generation of hardware, but always come in small quantities (e.g., 32K shared by all threads of a multiprocessor on the Fermi). Accessing registers is free, but keeping data in registers requires an effort to maintain balance between kernel complexity and the number of threads per block. Threads of a single work-group can share information within a multiprocessor through \textit{shared memory}. With only 48 KB 
+available per 
+multiprocessor \cite{CudaGuide2011}, shared memory is another fast but limited resource on the GPU. OpenCL refers to shared memory as \textit{local memory}. 
+Sharing information across multiprocessors is possible in \textit{global device memory}---the largest and slowest memory space on the GPU. To improve seek times into global memory, Fermi level architectures include L1 on each multiprocessor and a shared L2 cache for all multiprocessors.
+
+
+Under OpenCL, the equivalent to CUDA local memory is called \textit{private memory} and is also reserved read-only per work-item in global device memory. CUDA's shared memory is labeled \textit{local memory} and shared by threads of a work-group. The CUDA texture and constant caches are known as \textit{Global/Constant Cache}, and similar to CUDA, exist outside of developer control. OpenCL refers to \textit{global memory} and \textit{constant memory} when referring to read/write and read-only sections of CUDA's global device memory (respectively). Finally, CUDA textures are equivalent to OpenCL \textit{buffers} (1-D arrays) or \textit{images} (2-D/3-D arrays) \cite{OpenCL2009}.
+
+
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{../figures/prospectus/opencl_memory_model.pdf}
+\caption{The OpenCL memory model provides a hierarchy of increasingly faster memories, each with smaller size and more limited scope. A single GPU contains multiple multiprocessors and a large global memory shared by all multiprocessors. Within each multiprocessor, the many cores/threads execute work-items and have access to local and cache memory shared with other work-items of the same multiprocessor. Individual work-items also private memory independent from other work-items. The OpenCL memory model generically abstracts the memory architectures for both CPUs and GPUs.} 
+\label{fig:opencl_memory_model}
+\end{figure}
+
+
+
+\section{Sparse Matrix Support on the GPU}
+
+One thing missing from the original release of CUDA was sparse matrix algebra support. 
+This led to investigations like \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which are sparse matrix libraries developed for the GPU. The CUSP and ViennaCL libraries are very similar in that they both provide sparse and dense matrix containers, vector containers, iterative Krylov solvers, preconditioners, etc. Both libraries offer similar sparse matrix containers including: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid Format (HYB) that is the combination of ELL and CSR. All of these formats were ported to the GPU in \cite{Bell2009} and have also been included in the CUDA SDK since then as part of the cuSPARSE library.  
+
+ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
+
+%TODO: get date
+NVidia eventually included a library named CUSPARSE as part of the CUDA SDK. Initial releases were 
+Developers either implemented their own kernels (as we did in \cite{BolligFlyerErlebacher2012}) or   
+
+
+%TODO: CUDA MPI not a feature provided by OpenCL. 
+
+Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}. The roofline model 
+
+
+Most recently, the PETSc library gained GPU support with the addition of both CUSP \cite{Cusp2012} and ViennCL \cite{Rupp2010} back-ends \cite{Minden2010}. PETSc---which dates back to the early 1990s---is widely-used for solving PDEs with proven scalability on the world's top supercomputers. PETSc provides distributed sparse and dense matrix algebra, Krylov solvers, and preconditioners. The support for GPU back-ends allows a vast number of applications that have been developed over more than two decades to run on multiple GPUs with minimal modification. Since PETSc already has overlapping MPI communication and computation for distributed CPU environments, the GPU offloaded applications also benefit from this feature. Yokota et al. \cite{YokotaGPU2010} demonstrate that PETSc multi-GPU applications can scale excellently (in the strong sense) when configured for tree-based communication, which arises naturally from Fast Multipole Methods. The authors scale their boundary element method across 256 GPUs (2 per compute node) with 80\% parallel efficiency, and 512 GPUs (4 per compute node) with 50\% efficiency. In contrast to this our distributed implementation currently achieves no more than 57\% parallel efficiency when spanning 8 GPUs. While we do not take advantage of tree-based communications, this is planned as part of the future work to improve scalability. 
+
+
 
 
 
@@ -148,41 +217,6 @@ On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI o
 %\end{verbatim}
 
 
-
-%TODO: competition in the market led to similar architectures from vendors like AMD and ever-expanding CPUs
-
-CUDA is not the only solution for GPU computing. 
-
-%TODO: in 2009 enter OpenCL as a standard as a parallel language on top of all those hardware
-
-In early 2009, the Khronos Group announced a new specification for a general 
-parallel programming lanugage referred to as the Open Compute Language (OpenCL) \cite{OpenCL2009}. Similar in design to the CUDA language---in many ways it is a simple refactoring of the predecessor---the goal of OpenCL is to provide a mid-to-low level API and language to control any multi- or many-core processor in a uniform fashion. Today, OpenCL drivers exist for a variety of hardware including NVidia GPUs, AMD/ATI CPUs and GPUs, and Intel CPUs. 
-
-This \textit{functional portability} is the cornerstone of the OpenCL language. However, functional portability does not imply performance portability. That is, OpenCL allows developers to write kernels capable of running on all types of target hardware, but optimizing kernels for one type of target (e.g., NVidia GPUs) does not guarantee that the kernel will run efficiently on another target (e.g., CPU).
-
-With CPUs tending towards many cores, and the once special purpose, many-core GPUs offering general purpose functionality, it is already possible to see the CPU and GPU converging into general purpose many-core architectures. Already, ATI has introduced the Fusion APU (Accelerated Processing Unit) which couples an AMD CPU and ATI GPU within a single die. OpenCL is an attempt to standardize programming ahead of this intersection. 
-
-%Home computers, smart-phones and other devices containing many- or multi-core compute units internally have driven the generalization of the accelerator language to provide a unified approach to targeting any available hardware. 
-
-\section{Sparse Matrix Libraries}
-
-One thing missing from the original release of CUDA was sparse matrix algebra support. 
-This led to investigations like \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which are sparse matrix libraries developed for the GPU. The CUSP and ViennaCL libraries are very similar in that they both provide sparse and dense matrix containers, vector containers, iterative Krylov solvers, preconditioners, etc. Both libraries offer similar sparse matrix containers including: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid Format (HYB) that is the combination of ELL and CSR. All of these formats were ported to the GPU in \cite{Bell2009} and have also been included in the CUDA SDK since then as part of the cuSPARSE library.  
-
-ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
-
-%TODO: get date
-NVidia eventually included a library named CUSPARSE as part of the CUDA SDK. Initial releases were 
-Developers either implemented their own kernels (as we did in \cite{BolligFlyerErlebacher2012}) or   
-
-
-%TODO: CUDA MPI not a feature provided by OpenCL. 
-
-Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}. The roofline model 
-%TODO: GPU memory layout
-%TODO: GPU multi-processor units
-
-%TODO: GPU software (OpenCL vs CUDA)
 %TODO: targeting the GPU for SpMV (how to write a kernel as forloop without the for)
 
  
@@ -201,6 +235,8 @@ Performance of SpMV on GPU will not be optimal. Often one finds in literature ex
 %\cite{Vuduc2005} etc. 
 
 
+
+In our initial implementation, published in \cite{BolligFlyerErlebacher2012}, all bets were hedged in favor of OpenCL as the future of GPU computing. Custom kernels were developed to apply RBF-FD weights in the equivalent of a CSR SpMV. 
 
 
 \section{Performance}
@@ -232,94 +268,6 @@ maximizing return of investment).
 Many GPU applications claim a 50x or higher speedup. This will never be the case for RBF-FD for the simple reason that the method reduces to an SpMV. The SpMV is a low computational complexity operation with only two operations for every one memory load. 
 
 
-
-\section{Targeting the GPU}
-
-\subsection{OpenCL}
-In our initial implementation, published in \cite{BolligFlyerErlebacher2012}, all bets were hedged in favor of OpenCL as the future of GPU computing. Custom kernels were developed to apply RBF-FD weights in the equivalent of a CSR SpMV. 
-
-OpenCL is chosen with the future in mind. Hardware changes rapidly and vendors often leapfrog one another in the performance race. By selecting OpenCL, we hedged our bets on the functional portability. 
-
-Apple, Intel, AMD, NVidia all support OpenCL.  Unfortunately Apple overrides vendor specific drivers and offers its own driver without support for concurrent kernel execution. 
-
-One serious limitation exists with the choice of OpenCL. Since the language is intended to function across a slew of platforms, the language itself is limited to a subset of hardware features common to the different vendors. Features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL. 
-
-We leverage the OpenCL language for functional portability. 
-
-Our dedication to OpenCL is a hedged bet that the future architectures will merge in the middle between many and multi-core architectures with co-processors alongside CPUs. By selecting an open standard parallel programming language, we increase the likelihood for future support of our programs. 
-
-
-While the nomenclature used in this paper is typically associated with CUDA programming, the names \textit{thread} and \textit{warp} are used to clearly illustrate kernel execution in context of the NVidia specific hardware used in tests. OpenCL assumes a lowest common denominator of hardware capabilities to provide functional portability. However, intimate knowledge of hardware allows for better understanding of performance and optimization on a target architecture. For example, OpenCL assumes all target architectures are capable at some level of SIMD (Single Instruction Multiple Data) execution, but CUDA architectures allow for Single Instruction Multiple Thread (SIMT). SIMT is similar to traditional SIMD, but while SIMD immediately serializes on divergent operations, SIMT allows for a limited amount of divergence without serialization. 
-
-At the hardware level, a \textit{thread} executes instructions on the GPU. On Fermi level GPUs, groups of 32 threads are referred to as \textit{warps}. A warp is the unit of threads executed concurrently on a single \textit{multi-processor}. 
-In OpenCL (i.e., software), a collection of hardware threads performing the same instructions are referred to as a \textit{work-group} of \textit{work-items}. Work-groups execute as a collection of warps constrained to the same multiprocessor. Multiple work-groups of matching dimension are grouped into an \textit{NDRange}. Figure~\ref{fig:grid-of-thread-blocks} shows how threads/work-items are grouped into NDRanges. The \textit{kernel} provides a master set of instructions
-for all threads in an NDRange \cite{OpenCL2009}. 
-
-
-NVidia GPUs have a tiered memory hierarchy related to the grouping of threads described above. 
-In multiprocessors, each computing core executes a thread with a limited set of registers. The number of registers varies with the generation of hardware, but always come in small quantities (e.g., 32K shared by all threads of a multiprocessor on the Fermi). Accessing registers is free, but keeping data in registers requires an effort to maintain balance between kernel complexity and the number of threads per block. Threads of a single work-group can share information within a multiprocessor through \textit{shared memory}. With only 48 KB 
-available per 
-multiprocessor \cite{CudaGuide2011}, shared memory is another fast but limited resource on the GPU. OpenCL refers to shared memory as \textit{local memory}. 
-Sharing information across multiprocessors is possible in \textit{global device memory}---the largest and slowest memory space on the GPU. To improve seek times into global memory, Fermi level architectures include L1 on each multiprocessor and a shared L2 cache for all multiprocessors.
-
-
-%\textit{constant} and \textit{texture} memory caches are available for read-only access. 
-%To use shared memory, 
-%Threads must 
-%explicitly copy intermediate computational results or data in and out. 
-
-%Shared memory is divided evenly into 16 \textit{memory 
-%banks} or 
-%regions of memory that can be accessed simultaneously. Memory and registers can be accessed equally fast as long as no two 
-%threads in the 
-%same half-warp (i.e., first 16 threads or last 16 threads of the warp) are accessing the same memory bank. If this occurs, the 
-%access is 
-%considered to be a \textit{bank conflict} and the multiprocessor is forced to serialize memory access, increasing the delay until 
-%the warp can 
-%proceed with execution \cite{CudaGuide:2008}. 
-
-%\begin{figure}[t] %  figure placement: here, top, bottom, or page
-%   \centering
-%   \includegraphics[width=4.5in]{../figures/paper1/figures/opencl_memory_model.pdf} 
-%   \caption{Comparison of GPU and CPU implementations underlying the OpenCL memory model for a single compute device.}
-%   \label{fig:opencl_memory}
-%\end{figure}
-%
-
-
-% and the place to which all data and kernels from the 
-%CPU are copied for 
-%execution. Note 
-%that multiprocessors maintain read-only \textit{caches} for \textit{constants} and \textit{textures}---constants are values that 
-%never change during kernel execution, 
-%while textures are interpreted as read only arrays and provide a sophisticated cache mechanisms for certain types of non-sequential access. The real memory for constants and textures is part of the global device 
-%memory, so reading 
-%from texture and constant memory is faster than reads from global memory when no cache misses \cite{CudaGuide:2008}. 
-%Also, if a kernel 
-%uses too many registers per thread, \textit{local memory} is reserved in the global device memory to temporarily store register 
-%contents for 
-%later use with an associated penalty in efficiency \cite{CudaGuide:2008}. 
-
-Under OpenCL, the equivalent to CUDA local memory is called \textit{private memory} and is also reserved read-only per work-item in global device memory. CUDA's shared memory is labeled \textit{local memory} and shared by threads of a work-group. The CUDA texture and constant caches are known as \textit{Global/Constant Cache}, and similar to CUDA, exist outside of developer control. OpenCL refers to \textit{global memory} and \textit{constant memory} when referring to read/write and read-only sections of CUDA's global device memory (respectively). Finally, CUDA textures are equivalent to OpenCL \textit{buffers} (1-D arrays) or \textit{images} (2-D/3-D arrays) \cite{OpenCL2009}.
-
-%Based on \cite{Behr2009, OpenCL2009}, Figure~\ref{fig:opencl_memory} compares the underlying implementation of the OpenCL memory hierarchy on GPUs and CPUs. Notably, on current CPUs most of the memory is reserved in System RAM, whereas the hierarchy naturally fits on the deep memory hierarchy of the GPU. 
-
-
-
-\begin{figure}
-\centering
-\includegraphics[width=0.6\textwidth]{../figures/prospectus/opencl_execute_model.pdf}
-\caption{The OpenCL execution model executes a kernel in parallel across many work-items. A collection of work-items execute in SIMD as a work-group. The work-groups are further bundled into an NDRange representing the full set of tasks executed within a kernel. } 
-\label{fig:grid-of-thread-blocks}
-\end{figure}
-
-
-\begin{figure}
-\centering
-\includegraphics[width=0.6\textwidth]{../figures/prospectus/opencl_memory_model.pdf}
-\caption{The OpenCL memory model provides a hierarchy of increasingly faster memories, each with smaller size and more limited scope. A single GPU contains multiple multiprocessors and a large global memory shared by all multiprocessors. Within each multiprocessor, the many cores/threads execute work-items and have access to local and cache memory shared with other work-items of the same multiprocessor. Individual work-items also private memory independent from other work-items. The OpenCL memory model generically abstracts the memory architectures for both CPUs and GPUs.} 
-\label{fig:opencl_memory_model}
-\end{figure}
 
 
 \subsection{OpenCL vs CUDA}
