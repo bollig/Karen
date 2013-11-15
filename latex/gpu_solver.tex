@@ -45,7 +45,7 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 
 Due to the success of CUDA (architecture, language, compiler, etc.), and partly because it was vendor specific and closed source, the OpenCL standard for GPU computing was proposed in 2009 \cite{OpenCL2009}. When CUDA was released in 2006, NVidia was not the only contender in the ring of GPU computing: AMD/ATI also had programmable GPUs that could be targeted by a high level language called Brook+ \cite{BrookGPU2004}. Distantly related, Intel was already working toward multi-/many-core architectures that could be targeted by Intel Threaded Building Blocks \cite{IntelTBB}. The OpenCL standard proposed a parallel computing language with the ability to run on any multi-/many-core architecture. The standard is maintained by the Khronos Group, an advisory committee with representatives from the biggest names in hardware and computing (e.g., Apple, AMD, Intel, NVidia, Samsung, Sony, etc.). 
 
-At the onset of this work it was our decision to utilize OpenCL. The GPU computing market was relatively young, and no single company had a dominant share of the HPC market. GPU hardware from both NVidia and ATI was evolving rapidly and OpenCL promised functional portability (i.e., it would run everywhere), so we hedged our bets on the most likely technology to be supported across vendors going into the future. Note that functional portability does not guarantee performance portability (i.e., optimal kernels for NVidia are not optimal for ATI). Some features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL and not supported everywhere. 
+At the onset of this work it was decided that utilizing OpenCL was preferred over CUDA. The GPU computing market was relatively young, and no single company had a dominant share of the HPC market. GPU hardware from both NVidia and ATI was evolving rapidly and OpenCL promised functional portability (i.e., it would run everywhere), so our bets were hedged on the most likely technology to be supported across vendors going into the future. Note that functional portability does not guarantee performance portability (i.e., optimal kernels for NVidia are not optimal for ATI). Some features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL and not supported everywhere. In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). Although OpenCL does not allow access to all NVidia specific hardware features, knowledge of the hardware does help maintain performance
 
 
 \subsection{OpenCL Memory and Execution Models}
@@ -84,7 +84,6 @@ This led to investigations like \cite{Bell2009,SuKeutzer2012} and resulted in th
 
 ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
-%TODO: get date
 NVidia eventually included a library named CUSPARSE as part of the CUDA SDK. Initial releases were 
 Developers either implemented their own kernels (as we did in \cite{BolligFlyerErlebacher2012}) or   
 
@@ -222,46 +221,44 @@ On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI o
 
 
 
-In our initial implementation, published in \cite{BolligFlyerErlebacher2012}, all bets were hedged in favor of OpenCL as the future of GPU computing. Custom kernels were developed to apply RBF-FD weights in the equivalent of a CSR SpMV. 
+%\section{Performance}
+%In order to quantify the performance of our implementation, we can measure two
+%factors. First, we can check the speedup achieved on the GPU relative to the
+%CPU to get an idea of how much return of investment is to be expected by all
+%the effort in porting the application to the GPU. Speedup is measured as the
+%time to execute on the CPU divided by the time to execute on the GPU. 
+%
+%The second quantification is to check the throughput of the process. By
+%quantifying the GFLOP throughput we have a measure that tells us two things:
+%first, a concrete number quantifying the amount of work performed per second by
+%either hardware, and second because we can calculate the peak throughput possible on
+%each hardware, we also have a measure of how occupied our CPU/GPU units are.
+%With the GFLOP/sec we can also determine the cost per watt for computation and
+%conclude on what problem sizes the GPU is cost effective to target and use. 
+%
+%As we parallelize across multiple GPUs, these same numbers can come into
+%play. However we are also interested in the efficiency. Efficiency is the
+%speedup divided by the number of processors. With efficiency we have a measure
+%of how well-utilized processors are as we scale either the problem size (weak)
+%or the number of processors (strong). As the efficiency diminishes we can
+%conclude on how many stencils/nodes per processor will keep our processors
+%occupied balanced with the shortest compute time possible (i.e., we are
+%maximizing return of investment). 
 
-
-\section{Performance}
-\subsection{GFLOP/sec}
-In order to quantify the performance of our implementation, we can measure two
-factors. First, we can check the speedup achieved on the GPU relative to the
-CPU to get an idea of how much return of investment is to be expected by all
-the effort in porting the application to the GPU. Speedup is measured as the
-time to execute on the CPU divided by the time to execute on the GPU. 
-
-The second quantification is to check the throughput of the process. By
-quantifying the GFLOP throughput we have a measure that tells us two things:
-first, a concrete number quantifying the amount of work performed per second by
-either hardware, and second because we can calculate the peak throughput possible on
-each hardware, we also have a measure of how occupied our CPU/GPU units are.
-With the GFLOP/sec we can also determine the cost per watt for computation and
-conclude on what problem sizes the GPU is cost effective to target and use. 
-
-Now, as we parallelize across multiple GPUs, these same numbers can come into
-play. However we are also interested in the efficiency. Efficiency is the
-speedup divided by the number of processors. With efficiency we have a measure
-of how well-utilized processors are as we scale either the problem size (weak)
-or the number of processors (strong). As the efficiency diminishes we can
-conclude on how many stencils/nodes per processor will keep our processors
-occupied balanced with the shortest compute time possible (i.e., we are
-maximizing return of investment). 
-
-\subsection{Expectations in Performance}
-Many GPU applications claim a 50x or higher speedup. This will never be the case for RBF-FD for the simple reason that the method reduces to an SpMV. The SpMV is a low computational complexity operation with only two operations for every one memory load. 
+%Many GPU applications claim a 50x or higher speedup. This will never be the case for RBF-FD for the simple reason that the method reduces to an SpMV. The SpMV is a low computational complexity operation with only two operations for every one memory load. 
 
 
 
 
-\subsection{OpenCL vs CUDA}
-The market is volatile. Companies survive by investing margins in their next great product. If a product fails or the company faces a recall, their survival may come into question. Thus far, NVidia's CUDA has been wildly popular, but for the longest time (until May 2012) it was closed source. The closed source limited the language to NVidia hardware. As such, the OpenCL language gained popularity due to its support for AMD, Intel, mobile devices, web browsers, etc. NVidia's push to provide an open source compiler may be an attempt to regain the market share, but OpenCL appears to be on good footing. One other point: with an open source NVidia compiler, OpenCL can be optimized by the more mature NVidia compiler for their proprietary hardware. OpenCL compilers are also becoming more sophisticated at auto-optimization. 
+%\subsection{OpenCL vs CUDA}
+%The market is volatile. Companies survive by investing margins in their next great product. If a product fails or the company faces a recall, their survival may come into question. Thus far, NVidia's CUDA has been wildly popular, but for the longest time (until May 2012) it was closed source. The closed source limited the language to NVidia hardware. As such, the OpenCL language gained popularity due to its support for AMD, Intel, mobile devices, web browsers, etc. NVidia's push to provide an open source compiler may be an attempt to regain the market share, but OpenCL appears to be on good footing. One other point: with an open source NVidia compiler, OpenCL can be optimized by the more mature NVidia compiler for their proprietary hardware. OpenCL compilers are also becoming more sophisticated at auto-optimization. 
 
 
 \subsection{Custom Kernels}
 \label{sec:custom_gpu_kernels}
+
+
+In our initial implementation, published in \cite{BolligFlyerErlebacher2012}, all bets were hedged in favor of OpenCL as the future of GPU computing. Custom kernels were developed to apply RBF-FD weights in the equivalent of a CSR SpMV. 
 
 From the definition of RBF-FD we can formulate the problem computationally in two ways. First, stencil operations are independent. Therefore, we can write kernels with perfect parallelism by dedicating a single thread per stencil or a group of threads per stencil.  
 
