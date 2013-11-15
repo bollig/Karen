@@ -16,9 +16,7 @@
 
 General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs. With over 1 TFLOP/s peak possible throughput in double precision on a single GPU \cite{KeplerFactSheet}, a compelling argument is made for the latter. 
 
-In the last decade, CPU designers have been forced to transition to multi- and many-core chips in order to keep up with demand for continued growth in computational performance. 
-%TODO: Moore's law states that 
-Power constraints make further frequency scaling on CPUs almost impossible, which leaves increased core counts as the only viable solution for designers to continue satisfying Moore's Law \cite{Owens2007}. 
+In the last decade, CPU designers have been forced to transition to multi- and many-core chips in order to keep up with demand for continued growth in computational performance. Power constraints make further frequency scaling on CPUs almost impossible, which leaves increased core counts as the only viable solution for designers to continue satisfying Moore's Law \cite{Owens2007}. 
 
 
 GPUs originated as dedicated hardware for video games and computer graphics. 
@@ -80,7 +78,7 @@ Sharing information across multiprocessors is possible in \textit{global device 
 \section{Sparse Matrix Support on the GPU}
 
 One thing missing from the original release of CUDA was sparse matrix algebra support. 
-This led to investigations like \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which are sparse matrix libraries developed for the GPU. The CUSP and ViennaCL libraries are very similar in that they both provide sparse and dense matrix containers, vector containers, iterative Krylov solvers, preconditioners, etc. Both libraries offer similar sparse matrix containers including: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid Format (HYB) that is the combination of ELL and CSR. All of these formats were ported to the GPU in \cite{Bell2009} and have also been included in the CUDA SDK since then as part of the cuSPARSE library.  
+This led to a number of investigations into sparse matrix handling on the GPU including \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}. The CUSP and ViennaCL libraries are very similar in that they both provide sparse and dense matrix containers, vector containers, iterative Krylov solvers, preconditioners, etc. Both libraries offer similar sparse matrix containers including: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid Format (HYB) that is the combination of the ELL and CSR formats. All of these formats were ported to the GPU in \cite{Bell2009}. Since 2010 NVidia has included the cuSPARSE library in the standard CUDA Toolkit \cite{CudaToolkitDoc}.  
 
 ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
