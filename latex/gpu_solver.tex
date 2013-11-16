@@ -43,13 +43,13 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 
 Due to the success of CUDA (architecture, language, compiler, etc.), and partly because it was vendor specific and closed source, the OpenCL standard for GPU computing was proposed in 2009 \cite{OpenCL2009}. When CUDA was released in 2006, NVidia was not the only contender in the ring of GPU computing: AMD/ATI also had programmable GPUs that could be targeted by a high level language called Brook+ \cite{BrookGPU2004}. Distantly related, Intel was already working toward multi-/many-core architectures that could be targeted by Intel Threaded Building Blocks \cite{IntelTBB}. The OpenCL standard proposed a parallel computing language with the ability to run on any multi-/many-core architecture. The standard is maintained by the Khronos Group, an advisory committee with representatives from the biggest names in hardware and computing (e.g., Apple, AMD, Intel, NVidia, Samsung, Sony, etc.). 
 
-At the onset of this work it was decided that utilizing OpenCL was preferred over CUDA. The GPU computing market was relatively young, and no single company had a dominant share of the HPC market. GPU hardware from both NVidia and ATI was evolving rapidly and OpenCL promised functional portability (i.e., it would run everywhere), so our bets were hedged on the most likely technology to be supported across vendors going into the future. Note that functional portability does not guarantee performance portability (i.e., optimal kernels for NVidia are not optimal for ATI). Some features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL and not supported everywhere. In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). Although OpenCL does not allow access to all NVidia specific hardware features, knowledge of the hardware does help maintain performance
+At the onset of this work it was decided that utilizing OpenCL was preferred over CUDA. The GPU computing market was relatively young, and no single company had a dominant share of the HPC market. GPU hardware from both NVidia and ATI was evolving rapidly and OpenCL promised functional portability (i.e., it would run everywhere), so our bets were hedged on the most likely technology to be supported across vendors going into the future. Note that functional portability does not guarantee performance portability (i.e., optimal kernels for NVidia are not optimal for ATI). Some features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL and not supported everywhere. In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). Although OpenCL does not leverage all NVidia specific hardware features, knowledge of the hardware is essential to tune kernels for the best performance. 
 
 
 \subsection{OpenCL Memory and Execution Models}
 
-Figure~\ref{fig:opencl_execute_model} shows the execution model for OpenCL code. OpenCL assumes that all target architectures support some level of SIMD (Single Instruction Multiple Data) execution, and that compute intensive sections of an application are offloaded to the GPU as SIMD \emph{kernels} (callable snippets). At the hardware level, a large number of \textit{work-items} (software threads) execute a kernel. For Fermi and Kepler level GPUs, groups of 32 hardware threads are referred to as \textit{warps} and represent the unit of hardware threads that execute concurrently on a single \textit{multi-processor} \cite{CudaGuide2013}. 
-In OpenCL (i.e., software), bundles of work-items are called \textit{work-groups}, and execute as a collection of warps constrained to the same multiprocessor. Multiple work-groups of matching dimension are grouped into an \textit{NDRange}, which represents the total number of work-items used to execute a kernel \cite{OpenCL2009}. In the GPU computing literature, the terms \textit{thread} and \textit{warp} have become the prominent vocabulary used to describe the execution of kernels and are preferred below in reference to execution at the hardware level. 
+Figure~\ref{fig:opencl_execute_model} shows the execution model for OpenCL code. OpenCL assumes that all target architectures support some level of SIMD (Single Instruction Multiple Data) execution, and that compute intensive sections of an application are offloaded to the GPU as SIMD \emph{kernels} (callable routines). At the hardware level, a large number of \textit{work-items} (software threads) execute a kernel. For Fermi and Kepler level GPUs, groups of 32 hardware threads are referred to as \textit{warps} and represent the unit of hardware threads that execute concurrently on a single \textit{multi-processor} \cite{CudaGuide2013}. 
+In OpenCL (i.e., software), bundles of work-items are called \textit{work-groups}, and execute as a collection of warps constrained to the same multiprocessor. In turn, multiple work-groups of matching dimension are grouped into an \textit{NDRange}, which represents the total number of work-items used to execute a kernel \cite{OpenCL2009}. In the GPU computing literature, the terms \textit{thread} and \textit{warp} have become the prominent vocabulary used to describe the execution of kernels, and are preferred below in reference to execution at the hardware level. 
 
 \begin{figure}
 \centering
@@ -58,9 +58,8 @@ In OpenCL (i.e., software), bundles of work-items are called \textit{work-groups
 \label{fig:opencl_execute_model}
 \end{figure}
 
-The memory model in OpenCL, depicted in Figure~\ref{fig:opencl_memory_model}, follows a similar hierarchy to the execution model. On a multiprocessor, each computing core executes a work-item (thread) with a limited set of registers. The number of registers varies with the generation of hardware, but always come in small quantities (e.g., 32K per multiprocessor on the Fermi \cite{CudaGuide2011}). Accessing registers is essentially free, but they must be shared across all work-items executing on the multiprocessor. Therefore, keeping data in registers requires one to balance the kernel complexity and the number of work-items per work-group. Work-items of a single work-group share data with one another through a small \textit{local memory} that also doubles as an on-processor L1 cache. Fermi- and Kepler-class GPUs have 64 KB of configurable shared local and cache memory per multiprocessor. The option to configure the size of local versus cache memory is CUDA specific and not offered as an extension in OpenCL, so the default split is assumed with 16 KB in cache and 48 KB of local memory \cite{CudaGuide2013}.
-Sharing information across multiprocessors is possible in \textit{global device memory}---the largest and slowest memory space on the GPU. To improve seek times into global memory, Fermi and Kepler level architectures include a shared L2 cache for all multiprocessors in addition to the L1 on each multiprocessor.
-
+The memory model for OpenCL, depicted in Figure~\ref{fig:opencl_memory_model}, follows a similar hierarchy to the execution model. On a multiprocessor, each computing core executes a work-item (thread) with a limited set of registers. The number of registers varies with the generation of hardware, but always come in small quantities (e.g., 32K per multiprocessor on the Fermi \cite{CudaGuide2011}). Accessing registers is essentially free, but they must be shared across all work-items executing on the multiprocessor. Therefore, keeping data in registers requires one to balance the kernel complexity and the number of work-items per work-group. Work-items of a single work-group share data with one another through a small \textit{local memory} that also doubles as an on-processor L1 cache. Fermi- and Kepler-class GPUs have 64 KB of configurable memory shared between the local and cache memory on each multiprocessor. The option to configure the size of local versus cache memory is CUDA specific and not offered as an extension in OpenCL, so the default split is assumed with 16 KB in cache and 48 KB of local memory \cite{CudaGuide2013}.
+Sharing information across multiprocessors is possible in \textit{global device memory}---the largest and slowest memory space on the GPU. To improve seek times into global memory, Fermi and Kepler level architectures include a shared L2 cache for all multiprocessors in addition to the L1 on each multiprocessor. 
 
 \begin{figure}
 \centering
@@ -162,6 +161,26 @@ Performance of SpMV on GPU will not be optimal. Often one finds in literature ex
 %\end{itemize}
 
 \section{Managing Expectations for the GPU}
+
+\begin{table}[h]
+\centering
+\caption{Comparison of NVidia GPU features \cite{M2070FactSheet,KeplerFactSheet}.}
+\label{tbl:gpu_comparison}
+\begin{tabular}{c|c|c}
+ & M2070  & K20 \\ \hline
+Class & Fermi & Kepler \\ \hline
+Global Memory & 6 GB & 5 GB \\ 
+Max Bandwidth & 148 GB/sec & 208 GB/sec \\ 
+DP Peak Performance & 515 GFLOP/sec & 1170 GFLOP/sec \\ 
+Multiprocessors & 14 & 13 \\ 
+Total Cores & 448 & 2496 \\ 
+Cores per Multiprocessor & 32 & 192 \\ \hline
+\end{tabular}
+\end{table}
+
+
+This work tests kernels on two GPUs: an NVidia M2070 GPU with 6 GB of global memory, 14 multiprocessors with 32 threads per multiprocessor,  148 Gbyte/sec . 
+
 \begin{figure} 
 \begin{subfigure}{0.45\textwidth}
 \centering
