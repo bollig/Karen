@@ -3,8 +3,21 @@
 \chapter{Distributed GPU SpMV}
 \label{chap:multigpu_rbffd}
 
-%The distributed GPU 
+%%%%%%%%%%
 
+%TODO: extending work from chapter 6 we return to the GPU but this time attempt to span multiple GPUs
+%TODO: describe context with multiple devices, we assume one device per context
+%TODO: describe multiple queues, assume two for SpMV (why? indep operation, overlapping kernel execution not just comm)
+%TODO: nonoverlapping test case description
+%TODO: overlapping test case description
+%TODO: benchmark nonoverlapping shows significant loss on multiple GPUs one host
+%TODO: Known issue on Cascade is that all GPUs are attached to the same I/O hub
+%TODO: limits performance because transfers to each GPU are serialized 
+%TODO: we have explicit barrier on comm ensuring that each kernel gets to transfer at the same time
+%TODO: benchmark overlapping shows 5x boost because queues do not necessarily transfer at the same time
+%TODO: also the multiple queues ensure overlapping memtransfer and some comp with the original spmv. 
+%TODO: a single queue would have synchronous copy following kernel execution and synchronous SpMV if both in same queue
+%TODO: two queues allows asynchronous copy and overlap between SpMVs.
 
 
 Recent advances in distributed (multi-)GPU computing involve NVidia's GPU Direct technology. GPU Direct allows hardware like the PCI-e bus to directly access memory on the GPU device. CUDA V5.5 adds full support for MPI applications 
@@ -97,7 +110,7 @@ If speedup greater than $p = (Compute Nodes * PPN)$ is achieved
 
 \begin{table}[h]
 \centering
-\caption{GFLOP/sec achieved by the distributed ELL SpMV on Cascade's M2070 GPUs, with non-overlapping MPI communication. The SpMV computes derivatives over a 3-D regular grid of size $N=4096000$ nodes (i.e., $160^3$). Data reflects various combinations of stencil sizes, number of compute nodes and number of processes per node (PPN). }
+\caption{GFLOP/sec achieved by the distributed ELL SpMV on Cascade's M2070 GPUs, with non-overlapping MPI communication. The SpMV computes derivatives over a 3-D regular grid of size $N=4096000$ nodes (i.e., $160^3$). Data reflects various combinations of stencil sizes, number of compute nodes and number of processes per node (PPN). GPUs are attached to each process per node (i.e. 4 PPN implies 4 GPUs). }
 \label{tbl:cascade_m2070_nonoverlap}
 \begin{tabular}{c|c|c|c|c|c|c}
  \multicolumn{2}{c}{ } & \multicolumn{4}{|c|}{Observed GFLOP/sec} \\  \hline

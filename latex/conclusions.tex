@@ -52,7 +52,7 @@ Chapter~\ref{chap:distributed_rbffd} introduced the design and tuning of the fir
 \begin{itemize} 
 \item Convergence studies confirm that hyperviscosity (\cite{Fornberg2011b}) stabilizes RBF-FD solutions.
 \item Tuned parameters are provided for selecting the RBF support parameter and scaling hyperviscosity as a function of the problem size.
-\item Each test case is run in all compute environments (e.g., single CPU, multi-CPU, single GPU, and multi-GPU) in double precision. The expectation in each case is that the final solutions and errors will match the single CPU results up to 12 digits. In fact, the IEEE double precision floating point support on GPUs allows perfect reproduction of all CPU results. 
+\item Each test case is run in all compute environments (e.g., single CPU, multi-CPU, single GPU, and multi-GPU) in double precision. The IEEE floating point support on GPUs allows perfect reproduction of all results. Final solutions and errors from the single GPU case are presented, but the results match exactly to the single CPU and multi-CPU/GPU cases. 
 \end{itemize}
 
 \end{itemize} 
