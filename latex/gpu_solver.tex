@@ -93,9 +93,25 @@ When reading and writing global memory on the GPU, the hardware operates on L1 c
 %TODO: alternative formats include ELL, CSR, COO 
 
 The most essential operation for RBF-FD derivative calculations is the sparse matrix-vector multiply (SpMV). 
-Unfortunately, the SpMV is an inherently memory bound problem (\cite{Bell2009, SuKeutzer2012, Kreutzer2012}). The general SpMV multiplies nonzero elements of each matrix row against corresponding elements of a dense vector. Each row is only applied once as a sparse dot product before it is discarded from memory. The sparse dot product performs two floating point operations (i.e., a multiply and add) for each element of the matrix. A major concern for SpMV is that either a random set of weights per row are multiplied against a dense, structured vector, or the set of weights for each row are condensed for structure, but then multiplied against a random-access vector. In either case, the structure of the sparse matrix (i.e., how regular or random the weights are distributed in the rows) governs how well the GPU utilizes cache and performs overall. 
+Unfortunately, the SpMV is an inherently memory bound problem (\cite{Bell2009, SuKeutzer2012, Kreutzer2012}). The general SpMV multiplies nonzero elements of each matrix row against corresponding elements of a dense vector. Each row is only applied once as a sparse dot product before it is discarded from memory. The sparse dot product performs two floating point operations (i.e., a multiply and add) for each element of the matrix. A major concern for SpMV is that either a random set of weights per row are multiplied against a dense, structured vector, or the set of weights for each row are condensed for structure, but then multiplied against a random-access vector. In either case, the structure of the sparse matrix (i.e., how regular or random the weights are distributed in the rows) governs how well the GPU utilizes cache and the overall performance. 
 
-When CUDA was first released in 2006 it lacked support for sparse linear algebra. Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU in 2009, and introduced a set of five sparse matrix data structures, or \emph{sparse formats} for the GPU, that compress a sparse matrix in memory based on the presence of various types of structure in the nonzeros. By embracing the structure of the matrix, the sparse formats reduce the total amount of memory required to store the matrix and thus the amount that must be loaded by the memory bound kernels. 
+When CUDA was first released in 2006 it lacked support for sparse linear algebra. Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU in 2009, and introduced a set of five sparse matrix data structures, or \emph{sparse formats} for the GPU, which compress the matrix in memory based on the presence of certain types of structure in the nonzeros. By embracing the structure of the matrix, the sparse formats reduce the total number of bytes required to store the matrix and thus the number of bytes that must be loaded by the memory bound SpMV kernels. 
+
+Ultimately, the sparse formats in \cite{Bell2009} were included in the cuSPARSE library, which was added to the standard CUDA Toolkit in 2010  and provides only basic sparse matrix operations (e.g., multiplication, addition, etc.) \cite{CudaToolkitDoc}. Bell and Garland's formats are also included in the third party sparse linear algebra libraries CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which both expand beyond the primitive matrix operations to include features like dense matrix algebra, iterative Krylov solvers, preconditioners, etc. 
+
+
+We consider the following formats: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid format (HYB) that combines the ELL and CSR formats. On top of 
+
+
+are very similar in that they  Both libraries offer similar sparse matrix containers including:    
+
+
+for sparse linear algebra 
+
+The work in \cite{Bell2009} led to a number of more recent investigations into sparse matrix handling on the GPU including \cite{SuKeutzer2012,Kreutzer2012,LiSaad2010} and resulted in third party libraries like . The CUSP and ViennaCL libraries 
+ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
+
+
 
 
 Ultimately, Bell and Garland proposed a number of \emph{sparse formats} or data structures to fit a variety of problem types. Each sparse format 
@@ -103,9 +119,7 @@ Because the problem is inherently memory bound, optimizations focus on reducing 
 
 Of course application specific kernels had hope to achieve better performance with fine tuned logic 
 
-
-The general SpMV is a memory bound problem. 
-The formats from \cite{Bell2009} were ultimately led to the sparse matrix data structures implemented as part of the CUSP library \cite{Cusp2012} and was later integrated into standard CUDA Toolkit as the cuSPARSE library \cite{CudaToolkitDoc}. An OpenCL library similar to CUSP
+The formats from \cite{Bell2009} were provided as part of the CUSP library \cite{Cusp2012} and then they were later integrated into standard CUDA Toolkit as the cuSPARSE library \cite{CudaToolkitDoc}. An OpenCL library similar to CUSP
 
 structured versus unstructured matrices limit 
 low reuse of memory leaves the problem memory-bound
@@ -133,10 +147,6 @@ Due to the lack of SpMV support, many attempts in the literature
 Without a standard solution for SpMV, the GPU computing community was left to develop 
 
 %TODO: reasons SpMV is difficult
-
-This led to a number of independent investigations into sparse matrix handling on the GPU including \cite{SuKeutzer2012,Kreutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}. The CUSP and ViennaCL libraries are very similar in that they both provide sparse and dense matrix containers, vector containers, iterative Krylov solvers, preconditioners, etc. Both libraries offer similar sparse matrix containers including: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid Format (HYB) that is the combination of the ELL and CSR formats. All of these formats were ported to the GPU in \cite{Bell2009}. Since 2010 NVidia has included the cuSPARSE library in the standard CUDA Toolkit \cite{CudaToolkitDoc}.  
-
-ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
 NVidia eventually included a library named CUSPARSE as part of the CUDA SDK. Initial releases were 
 Developers either implemented their own kernels (as we did in \cite{BolligFlyerErlebacher2012}) or   
