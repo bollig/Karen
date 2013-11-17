@@ -25,7 +25,7 @@ Ultimately, the sparse formats in \cite{Bell2009} were included included in the 
 
 Unfortunately, the original absence of SpMV led our earliest efforts to port RBF-FD onto the GPU with a custom set of codes to perform the same SpMV operation, albeit with lower performance. Later efforts to improve performance did eventually leverage the tuned SpMV implementations in the ViennaCL library. Details of both approaches are presented here. 
 
-The content of this chapter is as follows. First, we introduce GPU computing and outline the features and benefits GPUs for solving scientific problems. Second, the OpenCL language is introduced along with a few hardware features that tie in to the performance of the SpMV. Third, the Roofline Model (\cite{Williams2009}) is presented in an effort to develop reasonable  expectations for the level of performance RBF-FD can achieve on the GPU. Following this, our custom GPU kernels are presented, along with details of how ViennaCL is utilized in the most recent iteration of RBF-FD on the GPU. Finally, the chapter concludes with a look at the actual performance of RBF-FD on a single GPU. 
+The content of this chapter is as follows. First, GPU computing is introduced with an outline of GPU features and benefits for solving scientific problems. Second, the OpenCL language is introduced along with a few hardware features that tie in to the performance of the SpMV. Third, the Roofline Model (\cite{Williams2009}) is presented in an effort to develop reasonable  expectations for the level of performance RBF-FD can achieve on the GPU. Following this, our custom GPU kernels are presented, along with details of how ViennaCL is utilized in the most recent iteration of RBF-FD on the GPU. Finally, the chapter concludes with a look at the actual performance of RBF-FD on a single GPU. 
 
 \section{Introduction to GPU Computing} 
 General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs. With over 1 TFLOP/s peak possible throughput in double precision on a single GPU \cite{KeplerFactSheet}, a compelling argument is made for the latter. 
@@ -90,21 +90,14 @@ The memory model for OpenCL, depicted in Figure~\ref{fig:opencl_memory_model}, f
 Work-items of a single work-group share data with one another through a small \textit{local memory} that also doubles as an on-processor L1 cache. Fermi- and Kepler-class GPUs have 64 KB of configurable memory shared between the local and cache memory on each multiprocessor. The option to configure the size of local versus cache memory is CUDA specific and not offered as an extension in OpenCL, so the default split is assumed with 16 KB in cache and 48 KB of local memory \cite{CudaGuide2013}.
 Sharing information across multiprocessors is possible in \textit{global device memory}---the largest and slowest memory space on the GPU. To improve seek times into global memory, Fermi and Kepler level architectures include a shared L2 cache for all multiprocessors in addition to the L1 on each multiprocessor. 
 
-When reading and writing global memory on the GPU, the hardware operates on L1 cache lines that are 128 bytes wide and shared by a warp of work-items. Load or store operations on global memory result in an entire cache line being read or written in a single transaction. If warps operate on data spanning multiple cache lines, then the hardware attempts to coalesce operations into as few transactions as possible \cite{CudaGuide2013}. For example, if a warp loads 32 double precision variables (8 bytes each) that are consecutive in memory, then two transactions are needed. If the variables are not consecutive in global memory, but randomly dispersed in global memory, then up to 32 independent memory transactions could be required. The cost of a single transaction in global memory is estimated to take about 400 clock cycles on Fermi and Kepler class GPUs, whereas a single arithmetic instruction issued for for all 32 threads of a warp can take between 2 and 4 clock cycles to complete \cite{CudaGuide2013}. Thus, properly packing operations to fully utilize cache lines and hide the latency in global memory access is key to performance in kernels. 
+When reading and writing global memory on the GPU, the hardware operates on L1 cache lines that are 128 bytes wide and shared by a warp of work-items. Load or store operations on global memory result in an entire cache line being read or written in a single transaction. If warps operate on data spanning multiple cache lines, then the hardware attempts to coalesce operations into as few transactions as possible \cite{CudaGuide2013}. For example, if a warp loads 32 double precision variables (8 bytes each) that are consecutive in memory, then two transactions are needed. If the variables are not consecutive in global memory, but randomly dispersed in global memory, then up to 32 independent memory transactions could be required. The cost of a single transaction in global memory is estimated to take about 400 clock cycles on Fermi and Kepler class GPUs, whereas a single arithmetic instruction issued for for all 32 threads of a warp can take between 2 and 4 clock cycles to complete \cite{CudaGuide2013}. Thus, properly packing operations to utilize full cache lines and hide the latency in global memory access is key to performance in kernels. 
+
+Although the work presented here does not directly address cache line utilization for RBF-FD kernels, the node reordering in Chapter~\ref{chap:stencils} is an easy way to improve cache hits. Each row of a sparse matrix is 
+
+increases the spatial locality of neighboring nodes in memory, which in turn brings  the locality 
+
 
 %Our approach to solving PDEs with RBF-FD computes derivatives with a sparse matrix-vector multiply (SpMV). %Once a line has entered the L1 cache, the warp of work-items can access the cache line concurrently, although some rules exist on how quickly
-
-\section{Sparse Matrix Support on the GPU}
-
-The most essential operation for RBF-FD derivative calculations is the sparse matrix-vector multiply (SpMV). 
-Unfortunately, the SpMV is an inherently memory bound problem (\cite{Bell2009, SuKeutzer2012, Kreutzer2012}). The general SpMV multiplies nonzero elements of each matrix row against corresponding elements of a dense vector. Each row is only applied once as a sparse dot product before it is discarded from memory. The sparse dot product performs two floating point operations (i.e., a multiply and add) for each element of the matrix. A major concern for SpMV is that either a random set of weights per row are multiplied against a dense, structured vector, or the set of weights for each row are condensed for structure, but then multiplied against a random-access vector. In either case, the structure of the sparse matrix (i.e., how regular or random the weights are distributed in the rows) governs how well the GPU utilizes cache and what performance can be achieved overall. 
-
-When CUDA was first released in 2006 it lacked support for sparse linear algebra. 
-Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU in 2009, and introduced a set of five sparse matrix data structures, or \emph{sparse formats} for the GPU, which compress the matrix in memory based on the presence of certain types of structure in the nonzeros. 
-A number of alternative formats have also been proposed in \cite{SuKeutzer2012,Kreutzer2012,LiSaad2010} with the same goal of capitalizing on available structure.  By embracing the structure of the matrix, sparse formats reduce the total number of bytes required to store the matrix and thus the number of bytes that must be loaded by the memory bound SpMV kernels. 
-
-Ultimately, the sparse formats in \cite{Bell2009} were included included in the CUDA Toolkit for basic sparse matrix operations (e.g., multiplication, addition, etc.) \cite{CudaToolkitDoc}. The same formats are also included in the third party sparse linear algebra libraries CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which expand beyond the basic matrix operations to include features like dense matrix algebra, iterative Krylov solvers, preconditioners, etc. 
-
 
 \section{Understanding SpMV Performance on the GPU}
 
@@ -205,41 +198,24 @@ Performance of SpMV on GPU will not be optimal. Often one finds in literature ex
 
 \section{Custom Kernels}
 \label{sec:custom_gpu_kernels}
-
-
-In our initial implementation, published in \cite{BolligFlyerErlebacher2012}, all bets were hedged in favor of OpenCL as the future of GPU computing. Custom  
-
-From the definition of RBF-FD we can formulate the problem computationally in two ways. First, stencil operations are independent. Therefore, we can write kernels with perfect parallelism by dedicating a single thread per stencil or a group of threads per stencil.  
-
-Unfortunately, perfect concurrency does not imply perfect or even ideal concurrency on the GPU. 
-
-Since our focus within this work is to lay the foundation for parallel computing
-with RBF-FD, we have made several simplifying assumptions in our code design.
-Libraries like PETsc, Hypre, Trilinos and Deal.ii distribute sparse matrix
-operations in similar fashion to our approach. When work initially began on this
-dissertation, none of these competing libraries contained support for the GPU.
-PETsc is currently developing support for the GPU, but we have not had the
-chance to consider it yet. 
-
-Our codebase began as a prototype demonstrating the feasibility of RBF-FD
-operating on the GPU. The initial code, published in \cite{BolligFlyerErlebacher2012}, was developed as $N$ independent dot
-products of weights and solution values to approximate derivatives. Weights were
-stored linearly in memory, with the solution values read randomly. On the GPU,
-stencils were evaluated independently by threads, or shared by a warp of
-threads. Operating on stencils in this way implied that GPU kernels were to be
-hand written, tuned and optimized. 
-
-Much later, our perspective evolved to see derivative approximation and
-time-stepping as sparse matrix operations. This opened new possibilities for
-optimization and allowed us to forego hand optimization and fine-tuning of GPU
-kernels. With all of the effort put into optimizing sparse operations within
-libraries like CUSP \cite{Bell2009}, ViennaCL \cite{Rupp2010} and even the
-NVidia provided CUSPARSE \cite{CudaToolkitDoc}, formulating the problem in terms of
-sparse matrix operations allows us to quickly prototype on the GPU and leverage
-all of the optimizations available within the third party libraries. 
-
-
-\subsection{RK4 on GPU Kernels}
+ 
+%
+%Our codebase began as a prototype demonstrating the feasibility of RBF-FD
+%operating on the GPU. The initial code, published in \cite{BolligFlyerErlebacher2012}, was developed as $N$ independent dot
+%products of weights and solution values to approximate derivatives. Weights were
+%stored linearly in memory, with the solution values read randomly. On the GPU,
+%stencils were evaluated independently by threads, or shared by a warp of
+%threads. Operating on stencils in this way implied that GPU kernels were to be
+%hand written, tuned and optimized. 
+%
+%Much later, our perspective evolved to see derivative approximation and
+%time-stepping as sparse matrix operations. This opened new possibilities for
+%optimization and allowed us to forego hand optimization and fine-tuning of GPU
+%kernels. With all of the effort put into optimizing sparse operations within
+%libraries like CUSP \cite{Bell2009}, ViennaCL \cite{Rupp2010} and even the
+%NVidia provided CUSPARSE \cite{CudaToolkitDoc}, formulating the problem in terms of
+%sparse matrix operations allows us to quickly prototype on the GPU and leverage
+%all of the optimizations available within the third party libraries. 
 
 %TODO: add explicit equation formula
 
