@@ -19,15 +19,16 @@ Unfortunately, the SpMV is an inherently memory bound problem (\cite{Bell2009, S
 Due to the low number of operations, it is the structure of the sparse matrix (i.e., how regular or random the weights are distributed in the rows) that governs how well the operation performs on the GPU. %GPU utilizes cache and what performance can be achieved overall. 
 
 When GPU computing first took off in 2006 with the release of CUDA, it lacked support for sparse linear algebra. Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU in 2009, and introduced a set of five sparse matrix data structures, or \emph{sparse formats} for the GPU, which compress the matrix in memory based on the presence of certain types of structure in the nonzeros. 
-A number of alternative formats have also been proposed in \cite{SuKeutzer2012,Kreutzer2012,LiSaad2010} with the same goal of capitalizing on available structure.  By embracing the structure of the matrix, sparse formats reduce the total number of bytes required to store the matrix and thus the number of bytes that must be loaded by the memory bound SpMV kernels. 
+A number of alternative formats have also been proposed in \cite{SuKeutzer2012,Kreutzer2012,LiSaad2010} with the same goal of capitalizing on available structure. By embracing the structure of the matrix, sparse formats reduce the total number of bytes required to store the matrix and thus the number of bytes that must be loaded by the memory bound SpMV kernels. 
 
 Ultimately, the sparse formats in \cite{Bell2009} were included included in the CUDA Toolkit (\cite{CudaToolkitDoc}) to provide basic sparse matrix operations (e.g., multiplication, addition, etc.). The formats are also included in the third party sparse linear algebra libraries CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which expand beyond the basic matrix operations to include features like dense matrix algebra, iterative Krylov solvers, preconditioners, etc. 
 
-Unfortunately, the original absence of SpMV led our earliest efforts to port RBF-FD onto the GPU with a custom set of codes to perform the same SpMV operation, albeit with lower performance. Later efforts to improve performance did eventually leverage the tuned SpMV implementations in the ViennaCL library. Details of both approaches are presented here. 
+Unfortunately, the original absence of SpMV led our earliest efforts to port RBF-FD onto the GPU with a custom set of codes to perform the same SpMV operation, albeit with lower performance. Later efforts to improve performance eventually turned to leveraging the tuned SpMV implementations from the ViennaCL library. Details of both efforts are presented here. 
 
 The content of this chapter is as follows. First, GPU computing is introduced with an outline of GPU features and benefits for solving scientific problems. Second, the OpenCL language is introduced along with a few hardware features that tie in to the performance of the SpMV. Third, the Roofline Model (\cite{Williams2009}) is presented in an effort to develop reasonable  expectations for the level of performance RBF-FD can achieve on the GPU. Following this, our custom GPU kernels are presented, along with details of how ViennaCL is utilized in the most recent iteration of RBF-FD on the GPU. Finally, the chapter concludes with a look at the actual performance of RBF-FD on a single GPU. 
 
 \section{Introduction to GPU Computing} 
+
 General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs. With over 1 TFLOP/s peak possible throughput in double precision on a single GPU \cite{KeplerFactSheet}, a compelling argument is made for the latter. 
 
 In the last decade, CPU designers have been forced to transition to multi- and many-core chips in order to keep up with demand for continued growth in computational performance. Power constraints make further frequency scaling on CPUs almost impossible, which leaves increased core counts as the only viable solution for designers to continue satisfying Moore's Law \cite{Owens2007}. 
@@ -92,14 +93,16 @@ Sharing information across multiprocessors is possible in \textit{global device 
 
 When reading and writing global memory on the GPU, the hardware operates on L1 cache lines that are 128 bytes wide and shared by a warp of work-items. Load or store operations on global memory result in an entire cache line being read or written in a single transaction. If warps operate on data spanning multiple cache lines, then the hardware attempts to coalesce operations into as few transactions as possible \cite{CudaGuide2013}. For example, if a warp loads 32 double precision variables (8 bytes each) that are consecutive in memory, then two transactions are needed. If the variables are not consecutive in global memory, but randomly dispersed in global memory, then up to 32 independent memory transactions could be required. The cost of a single transaction in global memory is estimated to take about 400 clock cycles on Fermi and Kepler class GPUs, whereas a single arithmetic instruction issued for for all 32 threads of a warp can take between 2 and 4 clock cycles to complete \cite{CudaGuide2013}. Thus, properly packing operations to utilize full cache lines and hide the latency in global memory access is key to performance in kernels. 
 
-Although the work presented here does not directly address cache line utilization for RBF-FD kernels, the node reordering in Chapter~\ref{chap:stencils} is an easy way to improve cache hits. Each row of a sparse matrix is 
-
-increases the spatial locality of neighboring nodes in memory, which in turn brings  the locality 
+Techniques such as node reordering, presented in Chapter~\ref{chap:stencils}, is one effective way to increase cache line utilization. Although this work does not go into depth on the subject of optimal cache line usage, it is definitely part of future optimizations (see e.g., the work in \cite{ErlebacherSauleFlyerBollig2013}). 
 
 
 %Our approach to solving PDEs with RBF-FD computes derivatives with a sparse matrix-vector multiply (SpMV). %Once a line has entered the L1 cache, the warp of work-items can access the cache line concurrently, although some rules exist on how quickly
 
 \section{Understanding SpMV Performance on the GPU}
+
+One of the challenges is performin
+
+Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}.
 
 On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/sec per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/sec on the Fermi and 13 on the K20 (compared to the 2 GFLOP/sec on Itasca). 
 
@@ -139,17 +142,6 @@ This work tests kernels on two GPUs: an NVidia M2070 GPU with 6 GB of global mem
 \caption{Roofline models manage expectations for maximum possible GFLOP/sec based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $0.25$. }
 \end{figure}
 
-Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}.
-
-
-%DONE: cost increases at each level of memory 
-%DONE: load memory in lines of 128 bits. 
-%DONE: rule of thumb to keep data close to compute threads
-
-%DONE: sparse support was missing but it is key to a lot of problems
-%DONE: added in Bell
-%DONE: problem with SpMV is that it is memory bound. 
-%DONE: many investigations followed within SuKeutzer, Kreutzter, Vuduc etc.
 %TODO: problem with SpMV is operational intensity 
 %TODO: OI dictates GFLOP/sec (define GFLOP/sec)
 %TODO: roofline model predicts that the stock operation can only achieve 18.5 GFLOP/sec
@@ -217,11 +209,12 @@ Performance of SpMV on GPU will not be optimal. Often one finds in literature ex
 %sparse matrix operations allows us to quickly prototype on the GPU and leverage
 %all of the optimizations available within the third party libraries. 
 
-%TODO: add explicit equation formula
+%Stencil weights are calculated once by the CPU and copied to the GPU at the beginning of the simulation. The static weights are then reused in every iteration on the GPU. When weights are initially computed they are written to disk in the MatrixMarket format, a standard format for archiving GPU Subsequent runs load weights from disk. Ignoring code initialization, the cost of the algorithm is simply the explicit time advancement of the solution. 
 
-Our initial implementation in \cite{BolligFlyerErlebacher2012} leverages the GPU for acceleration of the standard fourth order Runge-Kutta (RK4) scheme. Stencil weights are calculated once at the beginning of the simulation, and reused in every iteration. Subsequent runs load weights from disk. Ignoring code initialization, the cost of the algorithm is simply the explicit time advancement of the solution. 
 
-Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for the multi-CPU/GPU implementation. The RK4 steps are: 
+Our initial implementation of RBF-FD on the GPU (published in \cite{BolligFlyerErlebacher2012}) accelerates the standard fourth order Runge-Kutta (RK4) scheme with OpenCL. Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for the multi-CPU/GPU implementation. Starting with code initialization, RBF-FD stencils and weights 
+
+The RK4 steps are: 
 \begin{eqnarray} 
 \mathbf{k}_1 &=& \Delta t f(t_n, \mathbf{u}_n) \nonumber \\
 \mathbf{k}_2 &=& \Delta t f(t_n+\frac{1}{2}\Delta t, \mathbf{u}_n + \frac{1}{2}\mathbf{k}_1) \nonumber \\
@@ -264,7 +257,7 @@ All the computation on the GPU is performed in 8-byte double precision.
 
 
 
-\subsubsection{Naive Approach: One thread per stencil}
+\subsection{Naive Approach: One thread per stencil}
 
 In this first implementation, each thread computes 
 the derivative at one stencil center  (Figure~\ref{fig:oneThreadPerStencil}). 
@@ -288,7 +281,7 @@ However, with stencils sharing many common nodes, and the Fermi hardware providi
 \end{figure}
 
 
-\subsubsection{Alternate Approach: One warp per stencil} 
+\subsection{Alternate Approach: One warp per stencil} 
 
 \begin{figure}[htbp]
       \centering
@@ -304,13 +297,13 @@ Should  a stencil be larger than the warp size, the warp iterates over the stenc
 By operating on a warp by warp basis, weights for a single stencil are loaded with a reduced number of memory accesses. Memory loads for the solution vector remain random access but see some benefit when solution values for a stencil are in a small neighborhood in the memory space. Proximity in memory can be controlled by node indexing (see Chapter~\ref{chap:stencils}). 
 
 For stencil sizes smaller than 32, some threads in the warp always remain idle. Idle threads do not slow down the computation within a warp, but under-utilization of the GPU is not desirable. For small stencil sizes, caching on the Fermi can hide some of the cost of memory loads for the naive approach, with no idle threads, making it more efficient. The real strength of one warp per stencil is seen for large stencil sizes. 
-As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. 
+%As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. 
+
+\subsection{Performance}
+For the performance of our custom RBF-FD implementation we refer readers to \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks}. 
 
 
-
-
-
-\subsection{ViennaCL} 
+\section{ViennaCL Implementation} 
 
 
 In the time since the publication of \cite{BolligFlyerErlebacher2012} custom OpenCL kernels have been dropped in favor of a library called ViennaCL. 
