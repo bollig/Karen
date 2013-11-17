@@ -68,6 +68,67 @@ Sharing information across multiprocessors is possible in \textit{global device 
 \label{fig:opencl_memory_model}
 \end{figure}
 
+\section{Sparse Matrix Support on the GPU}
+
+%DONE: sparse support was missing but it is key to a lot of problems
+%DONE: added in Bell
+%TODO: problem with SpMV is that it is memory bound. 
+%TODO: many investigations followed within SuKeutzer, Kreutzter, Vuduc etc.
+%TODO: problem with SpMV is operational intensity 
+%TODO: OI dictates GFLOP/sec (define GFLOP/sec)
+%TODO: roofline model predicts that the stock operation can only achieve 18.5 GFLOP/sec
+%TODO: the best way to optimize is through memory load reduction which leads to alternative formats
+%TODO: alternative formats include ELL, CSR, COO
+
+Early releases of CUDA lacked support for sparse linear algebra, a key dependency for efficient implementations of many PDE methods, RBF-FD included. Of all possible sparse operations to be missing, the most essential was a general sparse matrix-vector multiply (SpMV). 
+
+In 2009, Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU. Their work identified a number of challenges in porting the problem to the GPU, including the fact that each application of SpMV has its own complexity and irregularity, which requires flexibility in how the operation is performed. 
+
+The general SpMV is a memory bound problem. Nonzero elements of each matrix row are multiplied against corresponding elements of a dense vector, and rows are only applied once before being discarded from memory. Because the problem is inherently memory bound, optimizations focus on reducing the amount of memory that is loaded, and embracing any regularity in structure of the sparse matrix. Ultimately, Bell and Garland proposed a number of \emph{sparse formats} or data structures to fit a variety of problem types. Each sparse format 
+
+The formats from \cite{Bell2009} were ultimately led to the sparse matrix data structures implemented as part of the CUSP library \cite{Cusp2012} and was later integrated into standard CUDA Toolkit as the cuSPARSE library \cite{CudaToolkitDoc}. An OpenCL library similar to CUSP
+
+structured versus unstructured matrices limit 
+low reuse of memory leaves the problem memory-bound
+
+
+The reason SpMV is such a challenge
+
+
+
+
+
+
+identified a number of reasons why sparse matrices pose such a difficult problem on the GPU. Their assessment 
+
+ limit performance on GPUs, the most important of which is that sparse matrices  
+
+
+The SpMV 
+
+Due to the lack of SpMV support, many attempts in the literature 
+
+
+%TODO: the reason SpMV is difficult
+
+Without a standard solution for SpMV, the GPU computing community was left to develop 
+
+%TODO: reasons SpMV is difficult
+
+This led to a number of independent investigations into sparse matrix handling on the GPU including \cite{SuKeutzer2012,Kreutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}. The CUSP and ViennaCL libraries are very similar in that they both provide sparse and dense matrix containers, vector containers, iterative Krylov solvers, preconditioners, etc. Both libraries offer similar sparse matrix containers including: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid Format (HYB) that is the combination of the ELL and CSR formats. All of these formats were ported to the GPU in \cite{Bell2009}. Since 2010 NVidia has included the cuSPARSE library in the standard CUDA Toolkit \cite{CudaToolkitDoc}.  
+
+ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
+
+NVidia eventually included a library named CUSPARSE as part of the CUDA SDK. Initial releases were 
+Developers either implemented their own kernels (as we did in \cite{BolligFlyerErlebacher2012}) or   
+
+
+%TODO: CUDA MPI not a feature provided by OpenCL. 
+
+Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}.
+
+
+
 
 %TODO: cost increases at each level of memory 
 %TODO: load memory in lines of 128 bits. 
@@ -123,21 +184,6 @@ Sharing information across multiprocessors is possible in \textit{global device 
 
 
 
-
-\section{Sparse Matrix Support on the GPU}
-
-One thing missing from the original release of CUDA was sparse matrix algebra support. 
-This led to a number of investigations into sparse matrix handling on the GPU including \cite{Bell2009,SuKeutzer2012} and resulted in third party libraries like CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}. The CUSP and ViennaCL libraries are very similar in that they both provide sparse and dense matrix containers, vector containers, iterative Krylov solvers, preconditioners, etc. Both libraries offer similar sparse matrix containers including: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid Format (HYB) that is the combination of the ELL and CSR formats. All of these formats were ported to the GPU in \cite{Bell2009}. Since 2010 NVidia has included the cuSPARSE library in the standard CUDA Toolkit \cite{CudaToolkitDoc}.  
-
-ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
-
-NVidia eventually included a library named CUSPARSE as part of the CUDA SDK. Initial releases were 
-Developers either implemented their own kernels (as we did in \cite{BolligFlyerErlebacher2012}) or   
-
-
-%TODO: CUDA MPI not a feature provided by OpenCL. 
-
-Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}. The roofline model 
 
 
 %Most recently, the PETSc library gained GPU support with the addition of both CUSP \cite{Cusp2012} and ViennCL \cite{Rupp2010} back-ends \cite{Minden2010}. PETSc---which dates back to the early 1990s---is widely-used for solving PDEs with proven scalability on the world's top supercomputers. PETSc provides distributed sparse and dense matrix algebra, Krylov solvers, and preconditioners. The support for GPU back-ends allows a vast number of applications that have been developed over more than two decades to run on multiple GPUs with minimal modification. Since PETSc already has overlapping MPI communication and computation for distributed CPU environments, the GPU offloaded applications also benefit from this feature. Yokota et al. \cite{YokotaGPU2010} demonstrate that PETSc multi-GPU applications can scale excellently (in the strong sense) when configured for tree-based communication, which arises naturally from Fast Multipole Methods. The authors scale their boundary element method across 256 GPUs (2 per compute node) with 80\% parallel efficiency, and 512 GPUs (4 per compute node) with 50\% efficiency. In contrast to this our distributed implementation currently achieves no more than 57\% parallel efficiency when spanning 8 GPUs. While we do not take advantage of tree-based communications, this is planned as part of the future work to improve scalability. 
