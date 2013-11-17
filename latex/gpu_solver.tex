@@ -43,11 +43,13 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 
 Due to the success of CUDA (architecture, language, compiler, etc.), and partly because it was vendor specific and closed source, the OpenCL standard for GPU computing was proposed in 2009 \cite{OpenCL2009}. When CUDA was released in 2006, NVidia was not the only contender in the ring of GPU computing: AMD/ATI also had programmable GPUs that could be targeted by a high level language called Brook+ \cite{BrookGPU2004}. Distantly related, Intel was already working toward multi-/many-core architectures that could be targeted by Intel Threaded Building Blocks \cite{IntelTBB}. The OpenCL standard proposed a parallel computing language with the ability to run on any multi-/many-core architecture. The standard is maintained by the Khronos Group, an advisory committee with representatives from the biggest names in hardware and computing (e.g., Apple, AMD, Intel, NVidia, Samsung, Sony, etc.). 
 
-At the onset of this work it was decided that utilizing OpenCL was preferred over CUDA. The GPU computing market was relatively young, and no single company had a dominant share of the HPC market. GPU hardware from both NVidia and ATI was evolving rapidly and OpenCL promised functional portability (i.e., it would run everywhere), so our bets were hedged on the most likely technology to be supported across vendors going into the future. Note that functional portability does not guarantee performance portability (i.e., optimal kernels for NVidia are not optimal for ATI). Some features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL and not supported everywhere. In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). Although OpenCL does not leverage all NVidia specific hardware features, knowledge of the hardware generally helps %leads to optimal structure of 
+At the onset of this work it was decided that utilizing OpenCL was preferred over CUDA. The GPU computing market was relatively young, and no single company had a dominant share of the HPC market. GPU hardware from both NVidia and ATI was evolving rapidly and OpenCL promised functional portability (i.e., it would run everywhere), so our bets were hedged on the most likely technology to be supported across vendors going into the future. Note that functional portability does not guarantee performance portability (i.e., optimal kernels for NVidia are not optimal for ATI). Some features like 2-D and 3-D textures, which are part of the CUDA standard, are vendor provided extensions in OpenCL and not supported everywhere. Although OpenCL does not leverage all NVidia specific hardware features, knowledge of the hardware generally helps
 structure kernels for the best performance. 
 
 
 \subsection{OpenCL Memory and Execution Models}
+
+Designing OpenCL kernels for the GPU follows a similar set of rules as in CUDA. Problems are broken into hundreds or thousands of parallel tasks, with each task involving as many operations as possible per element of memory in order to justify the high cost of memory access.
 
 Figure~\ref{fig:opencl_execute_model} shows the execution model for OpenCL code. OpenCL assumes that all target architectures support some level of SIMD (Single Instruction Multiple Data) execution, and that compute intensive sections of an application are offloaded to the GPU as SIMD \emph{kernels} (callable routines). At the hardware level, a large number of \textit{work-items} (software threads) execute a kernel. For Fermi and Kepler level GPUs, groups of 32 hardware threads are referred to as \textit{warps} and represent the unit of hardware threads that execute concurrently on a single \textit{multi-processor} \cite{CudaGuide2013}. 
 In OpenCL (i.e., software), bundles of work-items are called \textit{work-groups}, and execute as a collection of warps constrained to the same multiprocessor. In turn, multiple work-groups of matching dimension are grouped into an \textit{NDRange}, which represents the total number of work-items used to execute a kernel \cite{OpenCL2009}. In the GPU computing literature, the terms \textit{thread} and \textit{warp} have become the prominent vocabulary used to describe the execution of kernels, and are preferred below in reference to execution at the hardware level. 
@@ -59,7 +61,7 @@ In OpenCL (i.e., software), bundles of work-items are called \textit{work-groups
 \label{fig:opencl_execute_model}
 \end{figure}
 
-Optimizing OpenCL kernels for the GPU follows the same set of rules as in CUDA. Problems are broken into hundreds or thousands of work-items, with each work-item performing as many operations as possible per element of memory in order to justify the high cost of memory access. For compute intensive problems, a large number of strategies exist to restructure computation and ensure SIMD processing of work-items (see e.g., \cite{CudaGuide2013}). Unfortunately, RBF-FD is a memory-bound problem. In such cases optimizations must focus solely on efficient use of memory and cache. 
+% For compute intensive problems, a large number of strategies exist to restructure computation and ensure SIMD processing of work-items (see e.g., \cite{CudaGuide2013}). Unfortunately, RBF-FD is a memory-bound problem. In such cases optimizations must focus solely on efficient use of memory and cache. 
 
 The memory model for OpenCL, depicted in Figure~\ref{fig:opencl_memory_model}, follows a similar hierarchy to the execution model. On a multiprocessor, each multiprocessor core executes a work-item (thread) with a limited set of registers. The number of registers varies with the generation of hardware, but always come in small quantities (e.g., 32K per multiprocessor on the Fermi \cite{CudaGuide2013}). Accessing registers is essentially free, but they are shared across all work-items executing on the multiprocessor. Therefore, keeping data in registers requires one to balance the kernel complexity and the number of work-items per work-group. 
 
@@ -74,36 +76,35 @@ The memory model for OpenCL, depicted in Figure~\ref{fig:opencl_memory_model}, f
 Work-items of a single work-group share data with one another through a small \textit{local memory} that also doubles as an on-processor L1 cache. Fermi- and Kepler-class GPUs have 64 KB of configurable memory shared between the local and cache memory on each multiprocessor. The option to configure the size of local versus cache memory is CUDA specific and not offered as an extension in OpenCL, so the default split is assumed with 16 KB in cache and 48 KB of local memory \cite{CudaGuide2013}.
 Sharing information across multiprocessors is possible in \textit{global device memory}---the largest and slowest memory space on the GPU. To improve seek times into global memory, Fermi and Kepler level architectures include a shared L2 cache for all multiprocessors in addition to the L1 on each multiprocessor. 
 
-When reading and writing global memory on the GPU, the hardware operates on L1 cache lines that are 128 bytes wide and shared by a warp of work-items. Load or store operations on global memory result in an entire cache line being read or written in a single transaction. If warps operate on data spanning multiple cache lines, then the hardware attempts to coalesce operations into as few transactions as possible \cite{CudaGuide2013}. For example, if a warp loads 32 double precision floats (8 bytes each) that are consecutive in memory, then two transactions are needed. If the floats are not consecutive in global memory, but randomly dispersed across four 128 byte-aligned segments of global memory, then four transactions are required. Properly packing operations to fully utilize cache lines is key to performance in kernels. 
+When reading and writing global memory on the GPU, the hardware operates on L1 cache lines that are 128 bytes wide and shared by a warp of work-items. Load or store operations on global memory result in an entire cache line being read or written in a single transaction. If warps operate on data spanning multiple cache lines, then the hardware attempts to coalesce operations into as few transactions as possible \cite{CudaGuide2013}. For example, if a warp loads 32 double precision variables (8 bytes each) that are consecutive in memory, then two transactions are needed. If the variables are not consecutive in global memory, but randomly dispersed in global memory, then up to 32 independent memory transactions could be required. The cost of a single transaction in global memory is estimated to take about 400 clock cycles on Fermi and Kepler class GPUs, whereas a single arithmetic instruction issued for for all 32 threads of a warp can take between 2 and 4 clock cycles to complete \cite{CudaGuide2013}. Thus, properly packing operations to fully utilize cache lines and hide the latency in global memory access is key to performance in kernels. 
 
-
-%Once a line has entered the L1 cache, the warp of work-items can access the cache line concurrently, although some rules exist on how quickly
-
-
- 
-%TODO: how does packing impact RBF-FD? 
-%TODO: transition from this section to 5.2 (sparse matrix support)
-
+%Our approach to solving PDEs with RBF-FD computes derivatives with a sparse matrix-vector multiply (SpMV). %Once a line has entered the L1 cache, the warp of work-items can access the cache line concurrently, although some rules exist on how quickly
 
 \section{Sparse Matrix Support on the GPU}
 
 %DONE: sparse support was missing but it is key to a lot of problems
 %DONE: added in Bell
 %TODO: problem with SpMV is that it is memory bound. 
-%TODO: dense algebra sells hardware, sparse algebra was harder.
 %TODO: many investigations followed within SuKeutzer, Kreutzter, Vuduc etc.
 %TODO: problem with SpMV is operational intensity 
 %TODO: OI dictates GFLOP/sec (define GFLOP/sec)
 %TODO: roofline model predicts that the stock operation can only achieve 18.5 GFLOP/sec
 %TODO: the best way to optimize is through memory load reduction which leads to alternative formats
-%TODO: alternative formats include ELL, CSR, COO
+%TODO: alternative formats include ELL, CSR, COO 
 
-Early releases of CUDA lacked support for sparse linear algebra, a key dependency for efficient implementations of many PDE methods, RBF-FD included. Of all possible sparse operations to be missing, the most essential was a general sparse matrix-vector multiply (SpMV). 
+The most essential operation for RBF-FD derivative calculations is the sparse matrix-vector multiply (SpMV). 
+Unfortunately, the SpMV is an inherently memory bound problem (\cite{Bell2009, SuKeutzer2012, Kreutzer2012}). The general SpMV multiplies nonzero elements of each matrix row against corresponding elements of a dense vector. Each row is only applied once as a sparse dot product before it is discarded from memory. The sparse dot product performs two floating point operations (i.e., a multiply and add) for each element of the matrix. A major concern for SpMV is that either a random set of weights per row are multiplied against a dense, structured vector, or the set of weights for each row are condensed for structure, but then multiplied against a random-access vector. In either case, the structure of the sparse matrix (i.e., how regular or random the weights are distributed in the rows) governs how well the GPU utilizes cache and performs overall. 
 
-In 2009, Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU. Their work identified a number of challenges in porting the problem to the GPU, including the fact that each application of SpMV has its own complexity and irregularity, which requires flexibility in how the operation is performed. 
+When CUDA was first released in 2006 it lacked support for sparse linear algebra. Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU in 2009, and introduced a set of five sparse matrix data structures, or \emph{sparse formats} for the GPU, that compress a sparse matrix in memory based on the presence of various types of structure in the nonzeros. By embracing the structure of the matrix, the sparse formats reduce the total amount of memory required to store the matrix and thus the amount that must be loaded by the memory bound kernels. 
 
-The general SpMV is a memory bound problem. Nonzero elements of each matrix row are multiplied against corresponding elements of a dense vector, and rows are only applied once before being discarded from memory. Because the problem is inherently memory bound, optimizations focus on reducing the amount of memory that is loaded, and embracing any regularity in structure of the sparse matrix. Ultimately, Bell and Garland proposed a number of \emph{sparse formats} or data structures to fit a variety of problem types. Each sparse format 
 
+Ultimately, Bell and Garland proposed a number of \emph{sparse formats} or data structures to fit a variety of problem types. Each sparse format 
+Because the problem is inherently memory bound, optimizations focus on reducing the amount of memory that is loaded, and embracing any regularity in structure of the sparse matrix.
+
+Of course application specific kernels had hope to achieve better performance with fine tuned logic 
+
+
+The general SpMV is a memory bound problem. 
 The formats from \cite{Bell2009} were ultimately led to the sparse matrix data structures implemented as part of the CUSP library \cite{Cusp2012} and was later integrated into standard CUDA Toolkit as the cuSPARSE library \cite{CudaToolkitDoc}. An OpenCL library similar to CUSP
 
 structured versus unstructured matrices limit 
@@ -746,9 +747,9 @@ In an effort to boost performance, we integrated the ViennaCL library into our R
 
 
 
+In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). 
 
-
-The latest version of OpenMP (v4.0) introduces pragmas for offloading computation to accelerators. These pragmas will function similarly to pragmas from PGI, OpenACC, and the Intel MIC. 
+%The latest version of OpenMP (v4.0) introduces pragmas for offloading computation to accelerators. These pragmas will function similarly to pragmas from PGI, OpenACC, and the Intel MIC. 
 
 
 %
