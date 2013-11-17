@@ -15,20 +15,17 @@
 \label{chap:gpu_rbffd}
 
 The most essential operation for RBF-FD derivative calculations is the sparse matrix-vector multiply (SpMV). 
-Unfortunately, the SpMV is an inherently memory bound problem (\cite{Bell2009, SuKeutzer2012, Kreutzer2012}). The general SpMV multiplies nonzero elements of each matrix row against corresponding elements of a dense vector. Each row is only applied once as a sparse dot product before it is discarded from memory. The sparse dot product performs two floating point operations (i.e., a multiply and add) for each element of the matrix. A major concern for SpMV is that either a random set of weights per row are multiplied against a dense, structured vector, or the set of weights for each row are condensed for structure, but then multiplied against a random-access vector. In either case, the structure of the sparse matrix (i.e., how regular or random the weights are distributed in the rows) governs how well the GPU utilizes cache and what performance can be achieved overall. 
+Unfortunately, the SpMV is an inherently memory bound problem (\cite{Bell2009, SuKeutzer2012, Kreutzer2012}). The general SpMV multiplies nonzero elements of each matrix row against corresponding elements of a dense vector. Each row is only applied once as a sparse dot product before it is discarded from memory. The sparse dot product performs two floating point operations (i.e., a multiply and add) for each element of the matrix. %A major concern for SpMV is that either a random set of weights per row are multiplied against a dense, structured vector, or the set of weights for each row are condensed for structure, but then multiplied against a random-access vector. In either case, 
+Due to the low number of operations, it is the structure of the sparse matrix (i.e., how regular or random the weights are distributed in the rows) that governs how well the operation performs on the GPU. %GPU utilizes cache and what performance can be achieved overall. 
 
-%When CUDA was first released in 2006 it lacked support for sparse linear algebra. 
-When GPU computing first took off in 2006, it lacked support for sparse linear algebra.
-
-Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU in 2009, and introduced a set of five sparse matrix data structures, or \emph{sparse formats} for the GPU, which compress the matrix in memory based on the presence of certain types of structure in the nonzeros. 
+When GPU computing first took off in 2006 with the release of CUDA, it lacked support for sparse linear algebra. Bell and Garland \cite{Bell2009} launched the first study of the general SpMV problem on the GPU in 2009, and introduced a set of five sparse matrix data structures, or \emph{sparse formats} for the GPU, which compress the matrix in memory based on the presence of certain types of structure in the nonzeros. 
 A number of alternative formats have also been proposed in \cite{SuKeutzer2012,Kreutzer2012,LiSaad2010} with the same goal of capitalizing on available structure.  By embracing the structure of the matrix, sparse formats reduce the total number of bytes required to store the matrix and thus the number of bytes that must be loaded by the memory bound SpMV kernels. 
 
-Ultimately, the sparse formats in \cite{Bell2009} were included included in the CUDA Toolkit for basic sparse matrix operations (e.g., multiplication, addition, etc.) \cite{CudaToolkitDoc}. The same formats are also included in the third party sparse linear algebra libraries CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which expand beyond the basic matrix operations to include features like dense matrix algebra, iterative Krylov solvers, preconditioners, etc. 
+Ultimately, the sparse formats in \cite{Bell2009} were included included in the CUDA Toolkit (\cite{CudaToolkitDoc}) to provide basic sparse matrix operations (e.g., multiplication, addition, etc.). The formats are also included in the third party sparse linear algebra libraries CUSP \cite{Cusp2012} and ViennaCL \cite{Rupp2010,Rupp2010a}, which expand beyond the basic matrix operations to include features like dense matrix algebra, iterative Krylov solvers, preconditioners, etc. 
 
+Unfortunately, the original absence of SpMV led our earliest efforts to port RBF-FD onto the GPU with a custom set of codes to perform the same SpMV operation, albeit with lower performance. Later efforts to improve performance did eventually leverage the tuned SpMV implementations in the ViennaCL library. Details of both approaches are presented here. 
 
-
-Our early efforts to port RBF-FD onto the GPU (\cite{BolligFlyerErlebacher2012}) focused on the implementation of a custom set of OpenCL kernels. The kernels were developed to apply RBF-FD weights in the equivalent of multiple SpMV operations.
-
+The content of this chapter is as follows. First, we introduce GPU computing and outline the features and benefits GPUs for solving scientific problems. Second, the OpenCL language is introduced along with a few hardware features that tie in to the performance of the SpMV. Third, the Roofline Model (\cite{Williams2009}) is presented in an effort to develop reasonable  expectations for the level of performance RBF-FD can achieve on the GPU. Following this, our custom GPU kernels are presented, along with details of how ViennaCL is utilized in the most recent iteration of RBF-FD on the GPU. Finally, the chapter concludes with a look at the actual performance of RBF-FD on a single GPU. 
 
 \section{Introduction to GPU Computing} 
 General Purpose GPU (GPGPU) computing is one of today's hottest trends in scientific computing. As problem sizes grow larger, it behooves us to work on parallel architectures, be it across multiple CPUs or one or more GPUs. With over 1 TFLOP/s peak possible throughput in double precision on a single GPU \cite{KeplerFactSheet}, a compelling argument is made for the latter. 
@@ -56,7 +53,7 @@ The success of GPGPU is largely due to the incredible gap between compute capabi
 \label{fig:floating-point-operations-per-second}
 \end{figure}
 
-\subsection{OpenCL}
+\section{OpenCL}
 
 Due to the success of CUDA (architecture, language, compiler, etc.), and partly because it was vendor specific and closed source, the OpenCL standard for GPU computing was proposed in 2009 \cite{OpenCL2009}. When CUDA was released in 2006, NVidia was not the only contender in the ring of GPU computing: AMD/ATI also had programmable GPUs that could be targeted by a high level language called Brook+ \cite{BrookGPU2004}. Distantly related, Intel was already working toward multi-/many-core architectures that could be targeted by Intel Threaded Building Blocks \cite{IntelTBB}. The OpenCL standard proposed a parallel computing language with the ability to run on any multi-/many-core architecture. The standard is maintained by the Khronos Group, an advisory committee with representatives from the biggest names in hardware and computing (e.g., Apple, AMD, Intel, NVidia, Samsung, Sony, etc.). 
 
