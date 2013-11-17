@@ -488,7 +488,7 @@ At the onset of work with ViennaCL two things were apparent: 1) the library was 
 Due to the assumption that all stencils have equal size, the ELL format is preferred as the default. 
  
 
-\section{Cascade}
+\section{SpMV Performance on Cascade}
 
 The actual observed GFLOP/sec achieved on Cascade's M2070 GPUs with the ViennaCL package is shown in Figure~\ref{fig:gflops_cascade_m2070}. Figure~\ref{fig:gflops_cascade_k20} provides achieved GFLOP/sec for Cascade's K20 GPUs.  
 
@@ -591,13 +591,42 @@ Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} 
 \caption{Comparison by stencil size for the ELL sparse matrix format.}
 \end{figure}
 
+\section{Conclusions and Future Work}
+
+This chapter presents the first implementation of RBF-FD to run on GPUs. Our OpenCL implementations apply RBF-FD differentiation matrices via Sparse Matrix-Vector multiplication (SpMV) to compute derivatives everywhere in the domain. The solution values are then updated via a fourth-order Runge Kutta (RK4) time-step. 
+
+Two custom GPU SpMV kernels were tested: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. 
+
+The Roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance (in terms of GFLOP/sec) that can be achieved for RBF-FD. Although GPUs advertise over 1 TFLOP/sec peak possible performance in double precision, the actual achieved FLOP/sec for the memory-bound RBF-FD application is significantly lower. The SpMV operational intensity of $\frac{1}{8}$ FLOPs:bytes, limits the expected performance to be less than 20 GFLOP/sec on NVidia M2070 hardware. Our custom OpenCL kernels achieve at most 3 GFLOP/sec on NVidia M2070 GPUs.
+
+
+
+Sparse containers allow increased efficiency compared to our custom kernels. 
+In an effort to boost performance, we integrated the ViennaCL library into our RBF-FD implementation and compared performance of three sparse containers provided by the library to determine the most appropriate sparse representation for RBF-FD. We compare the performance of the ViennaCL sparse containers (ELL, CSR, COO), and a CPU-only implementation of SpMV to the BOOST::uBLAS compressed-row storage. 
+
+%ViennaCL allows control of the number of work-items for each kernel. 
+%ViennaCL includes a set of auto-tuning options. %TODO: provide tuned parameters
+
+%TODO: what is profile for each GPU type
+%TODO: What is the significance of tuning on our problem $n=17, 31, 50, 101,$ etc. 
+%TODO: experiment: SpMV on N=10^6, n = variable (5->105)
+%TODO: idealized experiment: SpMV on N=10^6 regular grid with n=variable.
+
+
+
+\subsection{Future Work} 
+
+
+In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). 
+
+%The latest version of OpenMP (v4.0) introduces pragmas for offloading computation to accelerators. These pragmas will function similarly to pragmas from PGI, OpenACC, and the Intel MIC. 
 
 
 
 
-\subsection{Intel Phi} 
+\subsection{Preliminary Results for Intel Xeon Phi} 
 
-As part of future work into accelerating RBF methods, investigations are underway into the new Intel Phi architecture. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
+As part of future work into accelerating RBF methods, investigations are underway into the new Intel Xeon Phi architecture \cite{IntelXeonPhi2013}. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
 
 %TODO: preliminary benchmarks on performance of ViennaCL SpMV. 
 
@@ -644,37 +673,6 @@ Figure~\ref{fig:gflops_cascade_intel_phi} is provided for comparison with Figure
 \end{figure}
 
 
-
-
-\section{Conclusions and Future Work}
-
-This chapter presents the first implementation of RBF-FD to run on GPUs. Our OpenCL implementations apply RBF-FD differentiation matrices via Sparse Matrix-Vector multiplication (SpMV) to compute derivatives everywhere in the domain. The solution values are then updated via a fourth-order Runge Kutta (RK4) time-step. 
-
-Two custom GPU SpMV kernels were tested: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. 
-
-The Roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance (in terms of GFLOP/sec) that can be achieved for RBF-FD. Although GPUs advertise over 1 TFLOP/sec peak possible performance in double precision, the actual achieved FLOP/sec for the memory-bound RBF-FD application is significantly lower. The SpMV operational intensity of $\frac{1}{8}$ FLOPs:bytes, limits the expected performance to be less than 20 GFLOP/sec on NVidia M2070 hardware. Our custom OpenCL kernels achieve at most 3 GFLOP/sec on NVidia M2070 GPUs.
-
-
-
-Sparse containers allow increased efficiency compared to our custom kernels. 
-In an effort to boost performance, we integrated the ViennaCL library into our RBF-FD implementation and compared performance of three sparse containers provided by the library to determine the most appropriate sparse representation for RBF-FD. We compare the performance of the ViennaCL sparse containers (ELL, CSR, COO), and a CPU-only implementation of SpMV to the BOOST::uBLAS compressed-row storage. 
-
-%ViennaCL allows control of the number of work-items for each kernel. 
-%ViennaCL includes a set of auto-tuning options. %TODO: provide tuned parameters
-
-%TODO: what is profile for each GPU type
-%TODO: What is the significance of tuning on our problem $n=17, 31, 50, 101,$ etc. 
-%TODO: experiment: SpMV on N=10^6, n = variable (5->105)
-%TODO: idealized experiment: SpMV on N=10^6 regular grid with n=variable.
-
-
-
-
-
-
-In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). 
-
-%The latest version of OpenMP (v4.0) introduces pragmas for offloading computation to accelerators. These pragmas will function similarly to pragmas from PGI, OpenACC, and the Intel MIC. 
 
 
 %
