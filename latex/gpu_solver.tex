@@ -43,14 +43,14 @@ GPUs, miles ahead in the many-core arena, only required a bit of flexibility in 
 The release of NVidia's CUDA architecture and software stack \cite{CudaGuide2013} at the end of 2006, reduced substantially the need for tricks as developers could suddenly target the GPU with the ease of writing a generic C-like program. The monumental new hardware bypassed the graphics rendering pipeline and allowed programs to execute as though the GPU were just another compute device. The CUDA software stack included NVidia's compiler, \emph{nvcc}, for developers to compile custom GPU codes. Since day one, developers who wanted to quickly transition existing code-bases to the GPU had access to the CUBLAS API, an implementation of the Basic Linear Algebra Subprograms (BLAS) suite on the GPU. CUFFT, a CUDA implementation of the Fast Fourier Transform (FFT), was also provided with the same justification. In many ways NVidia ensured that GPGPU computing was easily accessible to the general public, and in the years since CUDA's release a vast number of libraries and language extensions have surfaced that leverage the GPU architecture for scientific computing in nearly every field of research (see e.g. \cite{NVidiaExamples}). 
 
 
-The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (based on data from \cite{Behr2009, OpenCL2009}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently tops CPUs by a full order of magnitude. Today, a single NVidia K20 (Kepler-class) GPU is advertised as capable of 1.17 TFLOP/sec in double precision \cite{KeplerFactSheet} and the previous generation NVidia M2070 (Fermi-class) GPU is rated at 515 GFLOP/sec \cite{Fermi2009}. Meanwhile, benchmarks (e.g., \cite{Vladimirov2012}) have found that Intel hardware peaks at an order of magnitude lower with at most 97 GFLOP/sec for double precision operations using all cores of a SandyBridge processor and at most 48 GFLOP/sec on all cores of a Westmere EP processor. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than Intel CPUs \cite{CudaGuide2013}.
+The success of GPGPU is largely due to the incredible gap between compute capabilities of the GPU versus a CPU. Individual cores on a GPU operate at a lower clock frequency than CPU cores, but the sheer number of them leads to an astounding level of throughput in terms of floating point operations per second (FLOPs). Figure~\ref{fig:floating-point-operations-per-second} (based on data from \cite{Behr2009, OpenCL2009}) illustrates the historical growth in terms of billions of FLOP/s (GFLOP/sec) achieved by NVidia GPUs versus Intel CPUs. Over the last decade the peak GFLOP/sec for a single GPU has sky-rocketed and consistently tops CPUs by a full order of magnitude. Today, a single NVidia K20 (Kepler-class) GPU is advertised as capable of 1.17 TFLOP/sec in double precision \cite{KeplerFactSheet} and the previous generation NVidia M2070 (Fermi-class) GPU is rated at 515 GFLOP/sec \cite{Fermi2009}. Meanwhile, benchmarks (e.g., \cite{Vladimirov2012}) have found that Intel hardware peaks at an order of magnitude lower with at most 97 GFLOP/sec for double precision operations using all cores of a Sandy-Bridge processor and at most 48 GFLOP/sec on all cores of a Westmere EP processor. To supply much needed data to parallel cores, GPUs have also evolved a memory hierarchy with bandwidth up to five times higher than Intel CPUs \cite{CudaGuide2013}.
 
 %TODO: update with latest GFLOPs (up to TFLOPs now)
 \begin{figure}
 \centering
 \includegraphics[width=0.6\textwidth]{../figures/prospectus/GPU_Evolution_opencl.pdf}
 \caption{Performance comparison for Graphics Processing Units (GPUs). GFLOP/sec data based on \cite{Behr2009, OpenCL2009}. Although data in this figure was last added in 2010, the divide between NVidia and Intel hardware continues to persist today. Currently, the NVidia M2070 (Fermi-class) GPU is capable of 515 GFLOP/sec in double precision, and the NVidia K20 (Kepler-class) GPU is capable of 1.17 TFLOP/sec in double precision \cite{CudaGuide2013}.}
-%Meanwhile, the Intel Westmere EP and SandyBridge chips tout 71.8 GFLOP/sec and 157.7 GFLOP/sec respectively, leaving the CPUs an order of magnitude behind NVidia \cite{IntelGFLOPs}}
+%Meanwhile, the Intel Westmere EP and Sandy-Bridge chips tout 71.8 GFLOP/sec and 157.7 GFLOP/sec respectively, leaving the CPUs an order of magnitude behind NVidia \cite{IntelGFLOPs}}
 \label{fig:floating-point-operations-per-second}
 \end{figure}
 
@@ -113,7 +113,7 @@ where values for the peak performance and memory bandwidth are given by the vend
 
 This work tests two generations of NVidia GPUs shown in Table~\ref{tbl:gpu_comparison}. The first GPU is the previous generation NVidia ``Fermi"-class M2070 with 6 GB global memory and a maximum memory bandwidth of 148 GB/sec \cite{M2070FactSheet}. The second GPU is the latest generation NVidia ``Kepler"-class K20, which has only 5 GB of global memory but 208 GB/sec bandwidth \cite{KeplerFactSheet}. Both GPUs are mounted on the Cascade cluster at the University of Minnesota Supercomputing Institute. 
 
-Cascade is a heterogenous compute cluster built with a total of 14 compute nodes. The cluster is configured in such a way that the first eight nodes each have two 6-core Intel Xeon X5675 ``Westmere-EP" class CPUs (3.06 GHz), 96 GB of memory, and four M2070 GPUs (i.e., 32 Fermi-class GPUs in total). The next four compute nodes each contain dual 8-core Intel Xeon E5-2670 ``SandyBridge" class CPUs (2.60 GHz), 124 GB of memory, and two K20 GPUs (i.e., 8 total). The remaining nodes in the cluster are styled the same as the K20 compute nodes, except the GPUs are replaced by a single Intel Xeon Phi 5110P accelerator \cite{IntelXeonPhi2013}. The cluster is connected via a QDR-link InfiniBand network in order to promote its use as a distributed multi-GPU computing environment. In Chapter~\ref{chap:multigpu_rbffd} we present details of RBF-FD spanning multiple GPUs on Cascade, but at present are only concerned with the performance on a single GPU. 
+Cascade is a heterogenous compute cluster built with a total of 14 compute nodes. The cluster is configured in such a way that the first eight nodes each have two 6-core Intel Xeon X5675 ``Westmere-EP" class CPUs (3.06 GHz), 96 GB of memory, and four M2070 GPUs (i.e., 32 Fermi-class GPUs in total). The next four compute nodes each contain dual 8-core Intel Xeon E5-2670 ``Sandy-Bridge" class CPUs (2.60 GHz), 124 GB of memory, and two K20 GPUs (i.e., 8 total). The remaining nodes in the cluster are styled the same as the K20 compute nodes, except the GPUs are replaced by a single Intel Xeon Phi 5110P accelerator \cite{IntelXeonPhi2013}. The cluster is connected via a QDR-link InfiniBand network in order to promote its use as a distributed multi-GPU computing environment. In Chapter~\ref{chap:multigpu_rbffd} we present details of RBF-FD spanning multiple GPUs on Cascade, but at present are only concerned with the performance on a single GPU. 
 
 \begin{table}[t]
 \centering
@@ -392,7 +392,7 @@ We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec ac
 \label{fig:gflops_cascade_m2070}
 \end{figure}
 
-Figure~\ref{fig:gflops_cascade_k20} shows the achieved GFLOP/sec for Cascade's K20 GPUs. In this case we expect the K20 to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for in the case of the CSR and COO formats
+Figure~\ref{fig:gflops_cascade_k20} shows the achieved GFLOP/sec for Cascade's K20 GPUs. In this case we expect the K20 to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible in the case of the CSR and COO, the ELL disappointingly performs the same as the M2070 with 8 GFLOP/sec peak for stencil size $n=101$. 
 
 \begin{figure} 
 \centering
@@ -427,7 +427,11 @@ Figure~\ref{fig:gflops_cascade_k20} shows the achieved GFLOP/sec for Cascade's K
 \end{figure}
 
 
-Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} summarize the best achieved GFLOP/sec (in all cases the ELL format) for each stencil size on the M2070's and K20's respectively. Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20} show the achieved speedup each GPU gained over their respective Westmere and Sandy-Bridge CPUs. In the case of the K20, Figure~\ref{fig:ell_speedup_cascade_k20} shows that the Sandy-Bridge architecture is closing the divide between CPUs and GPUs, although an order of magnitude difference in the GFLOP/sec still exists.
+Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} summarize the best achieved GFLOP/sec (in all cases the ELL format) for each stencil size on the M2070 and K20 respectively. Surprisingly, for stencil sizes $n=17$ and $n=31$ we find that the K20 performs worse than the M2070. 
+
+Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20} demonstrate the achieved speedup each GPU gains over their respective CPUs running the Boost::uBLAS CSR format (i.e., Westmere-EP and Sandy-Bridge). In \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} our custom kernels only achieved up to 4x speedup over the CPU in setups nearly identical to the M2070 case here. Leveraging the ELL format provides between 10x and 14x acceleration on one million nodes.
+
+In the case of the K20, Figure~\ref{fig:ell_speedup_cascade_k20} shows that the faster Sandy-Bridge architecture closes some of the divide between CPUs and GPUs, but the GPU is still between 8x to 10x faster than the CPU on one million nodes. 
 
 \begin{figure} 
 \centering
@@ -447,7 +451,7 @@ Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} 
 \begin{subfigure}[t]{0.48\textwidth}
 \centering
 \includegraphics[width=\textwidth]{gpu_content/cascade_spmv/ell_comparison_speedup_cascade_m2070.png}
-\caption{Speedup, NVidia M2070 GPU (Cascade) vs. CSR format on Intel Westmere (Intel Xeon X5675)}
+\caption{Speedup, NVidia M2070 GPU (Cascade) vs. CSR format on Intel Westmere-EP (Intel Xeon X5675)}
 \label{fig:ell_speedup_cascade_m2070}
 \end{subfigure}
 \quad
@@ -500,7 +504,7 @@ As our investigation into the Xeon Phi continues, the benchmarks will be reasses
 \caption{Stencil size $n=101$}
 %\label{fig:gflops_cascade_intel_phi_n101}
 \end{subfigure}
-\caption{Performance comparison of ViennaCL CSR, COO and ELL matrix formats on Cascade's Intel Phi Accelerator, and the Boost::uBLAS CSR format on an Intel Sandy-Bridge CPU (Intel Xeon E5-2670). ViennaCL's kernels are optimized for NVidia GPUs, but function (albeit poorly) on the Intel Phi with the current release of Intel's OpenCL SDK (May, 2013). }
+\caption{Performance comparison of ViennaCL CSR, COO and ELL matrix formats on Cascade's Intel Phi Accelerator, and the Boost::uBLAS CSR format on an Intel Sandy-Bridge CPU (Intel Xeon E5-2670). ViennaCL's kernels function (albeit poorly) on the Intel Phi with the current beta release of Intel's OpenCL SDK (May, 2013). }
 \label{fig:gflops_cascade_intel_phi}
 \end{figure}
 
