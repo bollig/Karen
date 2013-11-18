@@ -333,11 +333,11 @@ As a testament to the functionality of the ViennaCL library and its utility with
 ViennaCL supports a number of sparse formats similar to \cite{Bell2009,Cusp2012}. Due to the low operational intensity in the SpMV operation, the best way to boost performance is to increase compression on the sparse matrix. To this end we consider the performance of three ViennaCL formats shown in Figure~\ref{fig:sparse_format}: 
 \begin{itemize} 
 \item \emph{Coordinate Matrix (COO)} -- The sparse matrix is compressed to three arrays of equal length. The first array stores all nonzero weights from the matrix contiguous by row. The second and third arrays store the row and column indices (resp.) for each nonzero element. For a mesh of $N$ nodes and RBF-FD stencil size $n$ this format requires $(3*N*n)$ storage. 
-\item \emph{Compressed Row Storage (CSR)} -- Similar to COO, the matrix is stored in three arrays. All $N*n$ nonzero weight are stored in the first array. The second array stores $N$ integers that indicate the offset (into the first array) to get to the first nonzero of each row. Finally, the $N*n$ column indices for each nonzero are stored in the third array. This format requires a total of $(2*(n+1)*N)$ storage.
-\item \emph{ELLPACK (ELL)} -- The matrix is assumed to have exactly $m$ nonzeros per row. Then the matrix is stored in two arrays, each of size $N*m$, containing the matrix nonzeros and column indices. Due to our assumption that all RBF-FD stencils will have equal size, $n$, this requires a total of $(2*N)$ storage. 
+\item \emph{Compressed Row Storage (CSR)} -- Similar to COO, the matrix is stored in three arrays. All $N*n$ nonzero weights are stored in the first array. In the second array $N$ integers indicate the offset (into the first array) to get to the first nonzero of each row. Finally, the $N*n$ column indices for each nonzero are stored in the third array. This format requires a total of $(2*(n+1)*N)$ storage.
+\item \emph{ELLPACK (ELL)} -- The matrix is assumed to have exactly $m$ nonzeros per row. Then the matrix is compressed to two arrays, each of size $N*m$, that contain only the matrix nonzeros and the column indices. If a row has less than $m$ nonzeros then zeros are used to pad up to the required number of nonzeros. However, based on the assumption that all RBF-FD stencils will have equal size, we have $m=n$ and the format is a good fit for the problem. ELL requires a total of $(2*N*n)$ storage. 
 \end{itemize}
-COO and CSR matrices are convenient for problems that have variable number of nonzeros per row. However, the extra storage means that 
-, the ELL format is clearly preferred. 
+%COO and CSR matrices are convenient for problems that have variable number of nonzeros per row. However, the extra storage means that 
+%, the ELL format is clearly preferred. 
 
 
 \begin{figure}
