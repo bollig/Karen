@@ -253,7 +253,7 @@ where $D_{\diffop{}}$ is the sparse differentiation matrix for the derivative op
 \end{enumerate} 
 We choose $\alpha_{i}=0, \frac{1}{2}, \frac{1}{2}, 1, 0$ and $\mathbf{k}_{0} = \mathbf{u}_n$. The second output for each $\mathbf{k}_{i=1,2,3}$ serves as input to the next evaluation, $\mathbf{k}_{i+1}$. In an effort to avoid an extra kernel launch---and corresponding memory loads---the SAXPY that produces the second output uses the same evaluation kernel. Both outputs are stored in global device memory. When the computation spans multiple GPUs, steps $\mathbf{k}_{1\rightarrow3}$ are each followed by a communication barrier to synchronize the subsets $\mathcal{O}$ and $\mathcal{R}$ of the second output (this includes copying the subsets between GPU and CPU). An additional synchronization occurs on the updated solution, $\mathbf{u}_{n+1}$, to ensure that all GPUs share a consistent view of the solution going into the next time-step.
 
-Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for one or more GPUs. Starting with code initialization, RBF-FD stencils and weights are computed on the CPU and assembled into differentiation matrices. The initial conditions, including the matrices, are copied to the GPU, and the solver enters a loop to perform the method of lines time-steps. Each iteration the GPU launches the evaluation kernel four times before launching a fifth kernel to advance the solution by computing $u_{n+1}$ from Equation~\ref{eqn:rk4}. For each launch of the evaluation substeps an application specific GPU kernel, labelled as the \texttt{PDE Solver}, is executed to evaluate to evaluate the PDE at the specified time-step. In order to do this, the \texttt{PDE Solver} loads RBF-FD weights and solution values from memory and then calls the generic GPU function \texttt{Apply Weights} to perform the SpMV for derivatives. The output vectors from calls to \texttt{Apply Weights} are scaled and combined by \texttt{PDE Solver}.
+Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for one or more GPUs. Starting with code initialization, RBF-FD stencils and weights are computed on the CPU and assembled into differentiation matrices. The initial conditions, including the matrices, are copied to the GPU, and the solver enters a loop to perform the method of lines time-steps. Each iteration the GPU launches the evaluation kernel four times before launching a fifth kernel to advance the solution by computing $u_{n+1}$ from Equation~\ref{eqn:rk4}. Each evaluation substep a GPU kernel customized for the PDE and labelled as the \texttt{PDE Solver}, is executed to apply derivative operators at the specified time-step. In order to do this, the \texttt{PDE Solver} loads RBF-FD weights and solution values from memory and then calls a generic GPU function \texttt{Apply Weights} to perform the SpMV for derivatives. The output vectors from calls to \texttt{Apply Weights} are scaled and combined by \texttt{PDE Solver}. %When running on multiple GPUs between kernel executions the CPU will trigger data transfers from GPU to CPU whenever communication is necessary, send and receive data via MPI, and then transfer data from CPU to GPU. 
 
 \begin{figure}[ht]
       \centering
@@ -264,8 +264,8 @@ Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for one or
  
 Our initial implementation of RBF-FD on multiple GPUs (\cite{BolligFlyerErlebacher2012}) tested two approaches to compute derivatives within \texttt{Apply Weights}. 
 In both cases, the stencil weights are stored in  
-a packed one-dimensional array of $N*n$ nonzeros in global memory with all the weights 
-of a single stencil (i.e., a row) in consecutive memory addresses. The one-dimensional array of weights is indexed by two vectors. The first vector contains $N$ integer offsets used to jump to the first nonzero of each row. The second vector contains $N*n$ integers representing the nonzero column index. This sparse compression is equivalent to the \emph{Compressed Row Storage} (CSR) format in \cite{Bell2009, Rupp2010, Cusp2012}.
+a packed one-dimensional array in global memory with $N*n$ nonzeros and all of the weights 
+for a single stencil (i.e., an entire row) stored in consecutive memory. The one-dimensional array of weights is indexed by two arrays. The first array contains $N$ integer offsets used to jump to the first nonzero of each row. The second array contains $N*n$ integers representing the column index for each nonzero. This sparse compression is equivalent to the \emph{Compressed Row Storage} (CSR) format in \cite{Bell2009, Rupp2010, Cusp2012}.
 
 Each derivative operator is stored as an independent CSR matrix with independent indexing. The consecutive ordering on the weights implies that the solution vector %structured according to the ordering of set $\mathcal{G}$ 
 is treated as random access. 
@@ -288,7 +288,7 @@ The advantage of this approach is trivial concurrency.  Since each stencil has t
 \end{figure}
 
 Perfect concurrency from a logical point of view does not 
-imply perfect efficiency in practice. Due to the compression of the sparse matrix all stencil weights, offsets, and column indices are read by a warp as contiguous blocks from global memory. Unfortunately, the random access on the solution vector ensures that as a warp processes multiple stencils with solution values in very disparate regions of memory, threads may thrash the cache if they load new 128 byte wide cache lines and evict lines that are of use to other threads in the warp. The larger the stencil size, the less likely cache lines for solution values will avoid being evicted. Only very small stencil sizes stand to benefit from this approach. 
+imply perfect efficiency in practice. The compression of the sparse matrix means all stencil weights, offsets, and column indices are read by a warp as contiguous blocks from global memory, but in this case each thread of the warp must load a different block. Unfortunately, that can mean up to 32 memory transactions to load weights for the warp. Additionally, the random access on the solution vector implies that as a warp processes multiple stencils, threads may thrash the cache if they need to load new 128 byte wide cache lines too often. The new cache lines often end up evicting lines that would be of use to other threads in the warp for later stencil nodes. The larger the stencil size, the more difficult it becomes for solution value cache lines to avoid eviction. Only small stencil sizes stand to benefit from this approach. 
 %However, with stencils sharing many common nodes, and the Fermi hardware providing caching, some weights in the unused portions of the segments might remain in cache long enough to hide the cost of so many additional memory loads.
 
 
@@ -297,7 +297,7 @@ imply perfect efficiency in practice. Due to the compression of the sparse matri
 \subsection{Alternate Approach: One warp per stencil} 
 
 An alternate approach, illustrated in Figure~\ref{fig:oneWarpPerStencil}, dedicates a full warp of threads to a single stencil. Here, 32 threads load the weights of a stencil and the corresponding elements of the solution vector. As the 32 threads each perform a subset of the dot product, their intermediate sums are accumulated in 32 elements of shared memory (one per thread).
-Should  a stencil be larger than the warp size, the warp iterates over the stencil in increments of the warp size until the full dot product is complete. Finally, the first thread of the warp performs a sum reduction across the 32 (warp size)  intermediate sums stored in shared memory and writes the derivative value to global memory. 
+Should  a stencil be larger than the warp size, the warp iterates over the stencil in increments of the warp size until the full dot product is complete. Finally, the first thread of the warp performs a sum reduction across the 32 intermediate sums stored in shared memory and writes the derivative value to global memory. 
 
 \begin{figure}[ht]
       \centering
@@ -306,7 +306,7 @@ Should  a stencil be larger than the warp size, the warp iterates over the stenc
       \label{fig:oneWarpPerStencil}
 \end{figure}
 
-By operating on a warp by warp basis, weights for a single stencil are loaded with a reduced number of memory accesses. Memory loads for the solution vector remain random access but see some benefit when solution values for a stencil are in a small neighborhood in the memory space. Proximity in memory can be controlled by node indexing (see Chapter~\ref{chap:stencils}). 
+By operating on a warp by warp basis, weights for a single stencil are loaded with a reduced number of memory accesses. Memory loads for the solution vector remain random access but with only one stencil to worry about the warp is able to maximize the cache utilization and avoid evictions. The best performance of course is achieved when solution values for a stencil are in a small neighborhood in the memory space. Proximity in memory can be controlled by node indexing (see Chapter~\ref{chap:stencils}). 
 
 For stencil sizes smaller than 32, some threads in the warp always remain idle. Idle threads do not slow down the computation within a warp, but under-utilization of the GPU is not desirable. For small stencil sizes, caching on the Fermi can hide some of the cost of memory loads for the naive approach, with no idle threads, making it more efficient. The real strength of one warp per stencil is seen for large stencil sizes. 
 %As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. 
@@ -321,6 +321,8 @@ For the performance of the custom RBF-FD implementation we refer readers to \cit
 
 In an effort to boost performance of RBF-FD on the GPU beyond 3 GFLOP/sec work on the custom OpenCL kernels was suspended in favor of leveraging the SpMV from the ViennaCL library. 
 
+ViennaCL is a C++ library that depends on templates and object-oriented design to abstract the GPU behind a API for general sparse linear algebra. 
+
 ViennaCL supports a number of sparse formats. We consider the performance of three of them here: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), and ELLPACK Storage format (ELL). 
 
 Sparse formats supported by ViennaCL are shown in Figure~\ref{fig:sparse_format}.
@@ -332,7 +334,7 @@ Sparse formats supported by ViennaCL are shown in Figure~\ref{fig:sparse_format}
 \end{itemize}
 
 
-ViennaCL also offers a Hybrid format (HYB) that combines both ELL and CSR formats to accommodate matrices that have only a small variability in the number of nonzeros per row. The HYB splits the sparse matrix into two parts: one stored in ELL which has exactly the same number of nonzeros per row, and the other in CSR format representing the surplus nonzeros for any rows with greater than $n$ nonzeros. In light of our decision to generate all stencils with size $n$, the HYB offer no benefit.
+ViennaCL also offers a Diagonal a Hybrid format (HYB) that combines both ELL and CSR formats to accommodate matrices that have only a small variability in the number of nonzeros per row. The HYB splits the sparse matrix into two parts: one stored in ELL which has exactly the same number of nonzeros per row, and the other in CSR format representing the surplus nonzeros for any rows with greater than $n$ nonzeros. In light of our decision to generate all stencils with size $n$, the HYB offer no benefit.
 
 \begin{figure}
 \centering
@@ -346,14 +348,6 @@ Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}
 
 ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
-
-Measured performance of GPU kernels is computed as
-\begin{align}
-GFLOP/sec = ^{N * n * 2} /_{t_{ms}} * 10^{-9},
-\end{align}
-where $t_{ms}$ is the kernel execution time given in milliseconds, and the variables $N$ and $n$ describe the grid size and stencil size respectively. 
-
-%TODO: CUDA MPI not a feature provided by OpenCL. 
 
 %
 %\begin{verbatim}
@@ -420,49 +414,12 @@ where $t_{ms}$ is the kernel execution time given in milliseconds, and the varia
 %\cite{Vuduc2005} etc. 
 
 
-
-%\section{Performance}
-%In order to quantify the performance of our implementation, we can measure two
-%factors. First, we can check the speedup achieved on the GPU relative to the
-%CPU to get an idea of how much return of investment is to be expected by all
-%the effort in porting the application to the GPU. Speedup is measured as the
-%time to execute on the CPU divided by the time to execute on the GPU. 
 %
-%The second quantification is to check the throughput of the process. By
-%quantifying the GFLOP throughput we have a measure that tells us two things:
-%first, a concrete number quantifying the amount of work performed per second by
-%either hardware, and second because we can calculate the peak throughput possible on
-%each hardware, we also have a measure of how occupied our CPU/GPU units are.
-%With the GFLOP/sec we can also determine the cost per watt for computation and
-%conclude on what problem sizes the GPU is cost effective to target and use. 
-%
-%As we parallelize across multiple GPUs, these same numbers can come into
-%play. However we are also interested in the efficiency. Efficiency is the
-%speedup divided by the number of processors. With efficiency we have a measure
-%of how well-utilized processors are as we scale either the problem size (weak)
-%or the number of processors (strong). As the efficiency diminishes we can
-%conclude on how many stencils/nodes per processor will keep our processors
-%occupied balanced with the shortest compute time possible (i.e., we are
-%maximizing return of investment). 
-
-%Many GPU applications claim a 50x or higher speedup. This will never be the case for RBF-FD for the simple reason that the method reduces to an SpMV. The SpMV is a low computational complexity operation with only two operations for every one memory load. 
-
-
-
-
-%\subsection{OpenCL vs CUDA}
-%The market is volatile. Companies survive by investing margins in their next great product. If a product fails or the company faces a recall, their survival may come into question. Thus far, NVidia's CUDA has been wildly popular, but for the longest time (until May 2012) it was closed source. The closed source limited the language to NVidia hardware. As such, the OpenCL language gained popularity due to its support for AMD, Intel, mobile devices, web browsers, etc. NVidia's push to provide an open source compiler may be an attempt to regain the market share, but OpenCL appears to be on good footing. One other point: with an open source NVidia compiler, OpenCL can be optimized by the more mature NVidia compiler for their proprietary hardware. OpenCL compilers are also becoming more sophisticated at auto-optimization. 
-
-
-%TODO: paralution
-Paralution is another library that provides sparse matrix containers, iterative solvers, preconditioners, etc. Paralution provides interfaces to plug into Deal.ii, OpenFOAM, and other packages, and runs on multi-core CPUs and GPUs. 
-
-
-To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sparse Matrix-Vector Mulitply (SpMV). When we consider the problem in this light we generate a single Differentiation Matrix that can see two optimizations not possible with our stencil-based view: 
-\begin{itemize} 
-\item First, the sparse containers used in SpMV allow for their own unique optimizations to compress storage and leverage hardware cache.
-\item Evaluation of multiple derivatives can be accumulated by association into one matrix operation. This reduces the total number of floating point operations required per iteration. 
-\end{itemize}
+%To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sparse Matrix-Vector Mulitply (SpMV). When we consider the problem in this light we generate a single Differentiation Matrix that can see two optimizations not possible with our stencil-based view: 
+%\begin{itemize} 
+%\item First, the sparse containers used in SpMV allow for their own unique optimizations to compress storage and leverage hardware cache.
+%\item Evaluation of multiple derivatives can be accumulated by association into one matrix operation. This reduces the total number of floating point operations required per iteration. 
+%\end{itemize}
 
 
 %TODO: tell the story of ViennaCL. 
@@ -475,39 +432,20 @@ At the onset of work with ViennaCL two things were apparent: 1) the library was 
 Sparse containers allow increased efficiency compared to our custom kernels. 
 In an effort to boost performance, we integrated the ViennaCL library into our RBF-FD implementation and compared performance of three sparse containers provided by the library to determine the most appropriate sparse representation for RBF-FD. We compare the performance of the ViennaCL sparse containers (ELL, CSR, COO), and a CPU-only implementation of SpMV to the BOOST::uBLAS compressed-row storage. 
 
-
-%TODO: CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
-
+Due to the assumption that all stencils have equal size, the ELL format is preferred as the default. 
 
 
 %Most recently, the PETSc library gained GPU support with the addition of both CUSP \cite{Cusp2012} and ViennCL \cite{Rupp2010} back-ends \cite{Minden2010}. PETSc---which dates back to the early 1990s---is widely-used for solving PDEs with proven scalability on the world's top supercomputers. PETSc provides distributed sparse and dense matrix algebra, Krylov solvers, and preconditioners. The support for GPU back-ends allows a vast number of applications that have been developed over more than two decades to run on multiple GPUs with minimal modification. Since PETSc already has overlapping MPI communication and computation for distributed CPU environments, the GPU offloaded applications also benefit from this feature. Yokota et al. \cite{YokotaGPU2010} demonstrate that PETSc multi-GPU applications can scale excellently (in the strong sense) when configured for tree-based communication, which arises naturally from Fast Multipole Methods. The authors scale their boundary element method across 256 GPUs (2 per compute node) with 80\% parallel efficiency, and 512 GPUs (4 per compute node) with 50\% efficiency. In contrast to this our distributed implementation currently achieves no more than 57\% parallel efficiency when spanning 8 GPUs. While we do not take advantage of tree-based communications, this is planned as part of the future work to improve scalability. 
 
-
-
-%GPUs currently support single and double precision. RBF-FD certainly requires double precision at the moment. Solving for the weights in single precision might work, but the lower precision would not be able to handle the ill-conditioned system. Projecting double precision weights into single precision results in weights that sum to $\approx 10^{-4}$, a poor approximation to zero. 
-
-
-%the addition of a new software layer that finally made GPGPU accessible to the general public. The CUDA API includes routines for memory control, interoperability with graphics contexts (i.e., 
-%OpenGL programs), and provides GPU implementation subsets of BLAS and FFTW libraries \cite{CudaGuide2013}. After the undeniable success of CUDA for C, new projects emerged to encourage GPU programming in languages like FORTRAN (see e.g., HMPP \cite{HMPP2009} and Portland Group Inc.'s CUDA-FORTRAN \cite{CudaFortran2009}). 
-
-
-
-%\section{Test Environments}
-%
-%\begin{itemize}	
-%\item Early testing was completed on the Keeneland GPU cluster. At the time Keeneland was in the Keeneland Initial Deployment System (KIDS) had 320 NVidia M2070 GPUs (Fermi). 240 CPUs. 6GB of memory. 
-%%\item The Spear cluster at FSU has 16x NVIDIA Tesla m2050 GPUs. 3GB of memory. 
-%\item The Cascade cluster at the Minnesota Supercomputing Institute (UMN) has 32x NVidia M2070 GPUs. 8 nodes, 12 cores each with four GPUs attached to each. 6GB of memory each. In addition, Cascade has 8 NVidia Kepler K20 GPUs. 
-%\end{itemize}
-
-
-%TODO: list example loops for sparse kernels
-
-
-Due to the assumption that all stencils have equal size, the ELL format is preferred as the default. 
  
 
 \section{SpMV Performance on Cascade}
+
+Measured performance of GPU kernels is computed as
+\begin{align}
+GFLOP/sec = ^{N * n * 2} /_{t_{ms}} * 10^{-9},
+\end{align}
+where $t_{ms}$ is the kernel execution time given in milliseconds, and the variables $N$ and $n$ describe the grid size and stencil size respectively. 
 
 The actual observed GFLOP/sec achieved on Cascade's M2070 GPUs with the ViennaCL package is shown in Figure~\ref{fig:gflops_cascade_m2070}. Figure~\ref{fig:gflops_cascade_k20} provides achieved GFLOP/sec for Cascade's K20 GPUs.  
 
@@ -631,17 +569,7 @@ In hindsight, the market today clearly favors NVidia for GPU computing with the 
 
 \subsection{Preliminary Results for Intel Xeon Phi} 
 
-As part of future work into accelerating RBF methods, investigations are underway into the new Intel Xeon Phi architecture \cite{IntelXeonPhi2013}. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
-
-%TODO: preliminary benchmarks on performance of ViennaCL SpMV. 
-
-With the generalization of RBF-FD derivative computation formulated as a sparse matrix multiplication, we can 
-% TODO: mention CUSP as alternative but concentrate on VCL
-consider the various sparse formats provided by CUSP and ViennaCL. 
-
-%TODO later: \item All stencils with non-uniform size
-%TODO: What is the optimal choice of sparse container? How do the sparse containers compare in performance to each other, and to our custom kernels? What can we conclude? 
-
+As part of future work into accelerating RBF methods, investigations are underway considering the new Intel Xeon Phi architecture \cite{IntelXeonPhi2013}. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
 
 Figure~\ref{fig:gflops_cascade_intel_phi} is provided for comparison with Figures~\ref{fig:gflops_cascade_m2070} and \ref{fig:gflops_cascade_k20}. This stresses the point that although OpenCL offers functional portability, performance portability is still limited. 
 
@@ -676,18 +604,6 @@ Figure~\ref{fig:gflops_cascade_intel_phi} is provided for comparison with Figure
 \caption{Performance comparison of ViennaCL CSR, COO and ELL matrix formats on Cascade's Intel Phi Accelerator, and the Boost::uBLAS CSR format on an Intel Sandy-Bridge CPU (Intel Xeon E5-2670). ViennaCL's kernels are optimized for NVidia GPUs, but function (albeit poorly) on the Intel Phi with the current release of Intel's OpenCL SDK (May, 2013). }
 \label{fig:gflops_cascade_intel_phi}
 \end{figure}
-
-
-
-
-%
-%
-%Hardware architecture%•	Memory layout%•	Processing cores%•	Trends in hardware since 2006 (additions and benfits)%Optimization%•	SpMV memory layout%•	Scheduling threads%•	Reductions%OpenCL%•	Why? %o	Cross platform support%o	Asynchronous Queuing with Dependencies%•	Implementations details%o	Kernel%o	Work-Item%o	Work-Group%o	NDRange%o	Queue%o	Etc.%•	How does it compare to CUDA? Phi%•	Latest trends%o	Phi: bind against MKL for optimized CPU and MIC%o	CUDA-MPI%o	CUDA Sub-Kernel calls%o	CUDA uptake %•	E.g., Matlab (MEX compiled kernel wrappers)%Conclusions on GPGPU%•	Benefits are good%o	Cheap to purchase < $1K%o	superior performance 1.2 TFLOPs possible in one card%o	was a trending technology (major uptake in supercomputing and national labs)%•	Downsides were varied%•	Overall Impression is that%o	Uptake was wide-spread for research projects%o	Focus was on determining limits of the hardware%•	Many studies focused on optimization of primitives which allow general use in applications such as RBF-FD without recreating the wheel when it comes to optimal algorithms. Allows researchers to concentrate on other investigations into application, preconditioning, data analysis, etc.%Newcomers to the field are interested USING gpgpu applications, rather than writing them  
-
-
-%TODO: put somewhere else
-% When matrix is sparse, a direct LU decomposition causes fill-in on factorization. In some cases the fill-in can be minimal, but in general one must assume that fill in can turn the sparse matrix into a dense matrix. To invert and solve Equation~\ref{eq:implicit_eq}, use an iterative solver like GMRES. The GMRES algorithm (described further in Chapter~\ref{chap:applications} applies successive SpMVs along with other vector operations to converge on a solution. Due to the dominance of SpMV in GMRES, the performance of RBF-FD reduces once again to SpMV.
-
 
 
 \ifstandalone
