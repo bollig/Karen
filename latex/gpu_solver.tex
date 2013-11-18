@@ -393,7 +393,7 @@ We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec ac
 \label{fig:gflops_cascade_m2070}
 \end{figure}
 
-Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU. In this case, the K20 is expected to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for CSR and COO data, the ELL results are disappointingly similar to the M2070 results. The K20 also achieves up to 8 GFLOP/sec peak for stencil size $n=101$. 
+Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU. In this case, the K20 is expected to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for CSR and COO data, the ELL results are disappointingly similar to the M2070 results. The K20 also achieves only up to 8 GFLOP/sec peak for stencil size $n=101$. 
 
 \begin{figure} 
 \centering
@@ -430,7 +430,7 @@ Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU
 
 Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} summarize the best achieved GFLOP/sec (in all cases the ELL format) for each stencil size on the M2070 and K20 respectively. The figures show that stencil sizes $n=17$ and $n=31$ on the K20 perform roughly 20\% worse than the M2070. 
 
-In Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20} we consider the speedup achieved by each GPU over their respective CPUs  (i.e., Westmere-EP and Sandy-Bridge), which run the Boost::uBLAS CSR format. In \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} our custom kernels achieved at most 4x speedup over the CPU in a setup nearly identical to the M2070 case here. In this case, leveraging the ELL format results in between 10x and 14x speedup on one million nodes.
+In Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20} we consider the speedup achieved by each GPU over their respective CPUs  (i.e., Westmere-EP and Sandy-Bridge), which run the Boost::uBLAS CSR format. In \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} our custom kernels achieved at most 4x speedup over the CPU in a setup nearly identical to the M2070 case here. In this case, leveraging the ELL format achieves between 10x and 14x speedup on one million nodes.
 
 In the case of the K20 shown in Figure~\ref{fig:ell_speedup_cascade_k20}, the faster Sandy-Bridge architecture closes some of the divide between CPUs and GPUs, but we still maintain 8x to 10x speedup on one million nodes. 
 
@@ -517,12 +517,14 @@ This chapter presented the first implementation of RBF-FD to run on GPUs. Our Op
 
 The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of actual performance to be less than 20 GFLOP/sec. 
 
-Two custom GPU SpMV kernels were described: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. The performance of the custom kernels is rather low at 3 GFLOP/sec at best, but recent efforts to leverage the reduced memory footprint of the ELLPACK sparse matrix format in the ViennaCL library ultimately achieves up to 8 GFLOP/sec, or 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs. 
+Two custom GPU SpMV kernels were described: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. The performance of the custom kernels is rather low at 3 GFLOP/sec at best, but our recent effort to leverage the reduced memory footprint of the ELLPACK sparse matrix format from the ViennaCL library ultimately achieves up to 8 GFLOP/sec, or 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs. 
 
-Note there is still room to improve the SpMV performance in addition to a few other directions for future work:
+Note there is still room to improve the SpMV performance, in addition to a few other directions for future work:
 \begin{itemize} 
 \item 
-It has come to our attention that the market today appears to favor NVidia for GPU computing, with the majority of clusters world-wide containing NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, allowing other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). As we proceed into the future effort will likely focus on CUDA kernels. 
+It has come to our attention that the HPC market today appears to favor NVidia for GPU computing. %For example, the majority of clusters world-wide contain NVidia accelerators. The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). 
+Also, the lack of support for numerous hardware features in OpenCL leads to the belief that we will likely focus on CUDA kernels as we continue into the future. 
+%As we proceed into the future effort will likely focus on CUDA kernels. 
 
 \item We are aware that a number of additional sparse formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants \cite{LiSaad2010}, and a number of variants on the ELL format that improve cache use by operating in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. It remains to be seen how these formats can impact performance for RBF-FD. 
 
