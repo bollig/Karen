@@ -102,11 +102,35 @@ Techniques such as node reordering, presented in Chapter~\ref{chap:stencils}, is
 
 Before launching into the discussion of how GPU kernels are actually implemented for RBF-FD, we first attempt to manage expectations of the type of performance the method can achieve on the GPU. To this end we build a \emph{roofline model} \cite{Williams2009}, which is useful for expressing the maximum possible performance (in terms of GFLOP/sec) for any kernel on the GPU. 
 
-The roofline model 
+This work operates on two generations of NVidia GPUs shown in Table~\ref{tbl:gpu_comparison}. The first is the previous generation NVidia M2070 ``Fermi"-class GPU with 6 GB global memory and a maximum memory bandwidth of 148 GB/sec \cite{M2070FactSheet}. The second GPU is the latest generation NVidia K20 ``Kepler"-class GPU, which has only 5 GB of global memory but 208 GB/sec bandwidth \cite{KeplerFactSheet}. Both GPUs are mounted on the Cascade GPU cluster at the University of Minnesota Supercomputing Institute. 
+
+Cascade is a heterogenous compute cluster built with a total of 15 compute nodes. The first eight nodes each have two 6-core Intel Xeon X5675 ``Westmere-EP" class CPUs (3.06 GHz), 96 GB of memory and four M2070 GPUs (i.e., 32 total Fermi-class GPUs). Four compute nodes each contain dual 8-core Intel Xeon E5-2670 ``SandyBridge" class CPUs (2.60 GHz), 124 GB of memory, and two K20 GPUs (i.e., 8 total). The remaining nodes in the cluster are the same as the K20 compute nodes, except the K20 GPUs have been replaced an Intel Xeon Phi \cite{IntelXeonPhi2013}.
+
+
+\begin{table}[t]
+\centering
+\caption{Comparison of NVidia GPU features \cite{M2070FactSheet,KeplerFactSheet}.}
+\label{tbl:gpu_comparison}
+\begin{tabular}{c|c|c}
+ & M2070  & K20 \\ \hline
+Class & Fermi & Kepler \\ \hline
+Global Memory & 6 GB & 5 GB \\ 
+Max Memory Bandwidth & 148 GB/sec & 208 GB/sec \\ 
+DP Peak Performance & 515 GFLOP/sec & 1170 GFLOP/sec \\ 
+Multiprocessors & 14 & 13 \\ 
+Total Cores & 448 & 2496 \\ 
+Cores per Multiprocessor & 32 & 192 \\ \hline
+\end{tabular}
+\end{table}
+
+The roofline model depends on easily accessible hardware specifications.
+
+The roofline model states
 \begin{align*}
-\text{Attainable GFLOP/sec} = \min \begin{cases} \text{Peak Hardware GFLOP/sec} \\ \text{Peak Memory Bandwidth} \times \text{Operational Intensity} 
+\text{Max Attainable GFLOP/sec} = \min \begin{cases} \text{DP Peak Performance} \\ \text{Max Memory Bandwidth} \times \text{Operational Intensity}  \end{cases}
 \end{align*}
 
+Obviously the roofline model is idealistic, but it provides a nice upper bound on what to expect from the GPU. Actual measured performance will always be lower that anticipated, but if 80\% 
 
 Measured performance of GPU kernels is computed as
 \begin{align}
@@ -120,21 +144,6 @@ Performance of SpMV on GPU will not be optimal. Often one finds in literature ex
 
 On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/sec per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/sec on the Fermi and 13 on the K20 (compared to the 2 GFLOP/sec on Itasca). 
 
-\begin{table}[h]
-\centering
-\caption{Comparison of NVidia GPU features \cite{M2070FactSheet,KeplerFactSheet}.}
-\label{tbl:gpu_comparison}
-\begin{tabular}{c|c|c}
- & M2070  & K20 \\ \hline
-Class & Fermi & Kepler \\ \hline
-Global Memory & 6 GB & 5 GB \\ 
-Max Bandwidth & 148 GB/sec & 208 GB/sec \\ 
-DP Peak Performance & 515 GFLOP/sec & 1170 GFLOP/sec \\ 
-Multiprocessors & 14 & 13 \\ 
-Total Cores & 448 & 2496 \\ 
-Cores per Multiprocessor & 32 & 192 \\ \hline
-\end{tabular}
-\end{table}
 
 
 This work tests kernels on two GPUs: an NVidia M2070 GPU with 6 GB of global memory, 14 multiprocessors with 32 threads per multiprocessor,  148 Gbyte/sec . 
