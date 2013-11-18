@@ -131,7 +131,7 @@ Cores per Multiprocessor & 32 & 192 \\ \hline
 \end{tabular}
 \end{table}
 
-Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double precision roofline models for the M2070 and K20 GPUs. By drawing Equation~\ref{eq:roofline} as a function of the operational intensity we can get 
+Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double precision roofline models for the M2070 and K20 GPUs, and are produced by drawing Equation~\ref{eq:roofline} as a function of the operational intensity. The bandwidth and peak GFLOP/sec data for both figures comes from Table~\ref{tbl:gpu_comparison}. Note that the M2070 and K20 roofline models estimate the maximum possible performance of a double precision SpMV to be 18.5 GFLOP/sec and 26 GFLOP/sec respectively. These estimates are vastly lower that the advertised peaks of 515 GFLOP/sec and 1170 GFLOP/sec, but in order to boost performance one would need to increase the operational intensity to 4 FLOPs:Byte for the M2070 or 6 FLOPs:Byte on the K20. A possible approach to achieve this is to change the SpMV to a sparse matrix-matrix (SpMM) computation where the sparse matrix is multiplied against a collection of dense vectors (see e.g., the work in \cite{ErlebacherSauleFlyerBollig2013}). 
 
 \begin{figure} 
 \begin{subfigure}{0.45\textwidth}
@@ -150,22 +150,16 @@ Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double prec
 \caption{Roofline models manage expectations for maximum possible GFLOP/sec based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $\ ^{1}/_{8}$ FLOPS:Bytes. }
 \end{figure}
 
-Obviously the roofline model is idealistic, but it provides a nice upper bound on what to expect from the GPU. Actual measured performance will always be lower that anticipated, but if 80\% 
-
-Measured performance of GPU kernels is computed as
-\begin{align}
-GFLOP/sec = ^{N * n * 2} /_{t_{ms}} * 10^{-9},
-\end{align}
-where $t_{ms}$ is the kernel execution time given in milliseconds, and the variables $N$ and $n$ describe the grid size and stencil size respectively. 
-
-Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}.
-
-On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/sec per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/sec on the Fermi and 13 on the K20 (compared to the 2 GFLOP/sec on Itasca). 
+The roofline model is an idealistic estimate for the maximum possible performance one can achieve. Actual measured performance will always be lower than the estimates. 
 
 
-%TODO: problem with SpMV is operational intensity 
-%TODO: OI dictates GFLOP/sec (define GFLOP/sec)
-%TODO: roofline model predicts that the stock operation can only achieve 18.5 GFLOP/sec
+
+
+
+
+%DONE: problem with SpMV is operational intensity 
+%DONE: OI dictates GFLOP/sec (define GFLOP/sec)
+%DONE: roofline model predicts that the stock operation can only achieve 18.5 GFLOP/sec
 %TODO: the best way to optimize is through memory load reduction which leads to alternative formats
 %TODO: alternative formats include ELL, CSR, COO 
 
@@ -354,6 +348,12 @@ We consider the following formats: Coordinate Matrix format (COO), Compressed-Ro
 
 ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
+
+Measured performance of GPU kernels is computed as
+\begin{align}
+GFLOP/sec = ^{N * n * 2} /_{t_{ms}} * 10^{-9},
+\end{align}
+where $t_{ms}$ is the kernel execution time given in milliseconds, and the variables $N$ and $n$ describe the grid size and stencil size respectively. 
 
 %TODO: CUDA MPI not a feature provided by OpenCL. 
 
