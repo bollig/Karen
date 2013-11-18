@@ -332,11 +332,12 @@ As a testament to the functionality of the ViennaCL library and its utility with
 
 ViennaCL supports a number of sparse formats similar to \cite{Bell2009,Cusp2012}. Due to the low operational intensity in the SpMV operation, the best way to boost performance is to increase compression on the sparse matrix. To this end we consider the performance of three ViennaCL formats shown in Figure~\ref{fig:sparse_format}: 
 \begin{itemize} 
-\item \emph{Coordinate Matrix (COO)} -- The sparse matrix is compressed to three arrays, each containing $N*n$ elements. The first array stores all nonzero weights from the matrix. The second and third arrays store the row and column indices (resp.) for each nonzero element. The COO format does not require nonzeros 
-\item \emph{Compressed Row Storage (CSR)} -- This format assumes weights are sorted by row. 
-\item \emph{ELLPACK (ELL)} -- 
-Due to our assumption that all RBF-FD stencils will have equal size, the ELL format is clearly preferred. 
+\item \emph{Coordinate Matrix (COO)} -- The sparse matrix is compressed to three arrays of equal length. The first array stores all nonzero weights from the matrix contiguous by row. The second and third arrays store the row and column indices (resp.) for each nonzero element. For a mesh of $N$ nodes and RBF-FD stencil size $n$ this format requires $(3*N*n)$ storage. 
+\item \emph{Compressed Row Storage (CSR)} -- Similar to COO, the matrix is stored in three arrays. All $N*n$ nonzero weight are stored in the first array. The second array stores $N$ integers that indicate the offset (into the first array) to get to the first nonzero of each row. Finally, the $N*n$ column indices for each nonzero are stored in the third array. This format requires a total of $(2*(n+1)*N)$ storage.
+\item \emph{ELLPACK (ELL)} -- The matrix is assumed to have exactly $m$ nonzeros per row. Then the matrix is stored in two arrays, each of size $N*m$, containing the matrix nonzeros and column indices. Due to our assumption that all RBF-FD stencils will have equal size, $n$, this requires a total of $(2*N)$ storage. 
 \end{itemize}
+COO and CSR matrices are convenient for problems that have variable number of nonzeros per row. However, the extra storage means that 
+, the ELL format is clearly preferred. 
 
 
 \begin{figure}
@@ -427,11 +428,11 @@ Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU
 \end{figure}
 
 
-Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} summarize the best achieved GFLOP/sec (in all cases the ELL format) for each stencil size on the M2070 and K20 respectively. Surprisingly, for stencil sizes $n=17$ and $n=31$ we find that the K20 performs worse than the M2070. 
+Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} summarize the best achieved GFLOP/sec (in all cases the ELL format) for each stencil size on the M2070 and K20 respectively. The figures show that stencil sizes $n=17$ and $n=31$ on the K20 perform roughly 20\% worse than the M2070. 
 
-Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20} demonstrate the achieved speedup each GPU gains over their respective CPUs running the Boost::uBLAS CSR format (i.e., Westmere-EP and Sandy-Bridge). In \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} our custom kernels only achieved up to 4x speedup over the CPU in setups nearly identical to the M2070 case here. Leveraging the ELL format provides between 10x and 14x acceleration on one million nodes.
+In Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20} we consider the speedup achieved by each GPU over their respective CPUs  (i.e., Westmere-EP and Sandy-Bridge), which run the Boost::uBLAS CSR format. In \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} our custom kernels achieved at most 4x speedup over the CPU in a setup nearly identical to the M2070 case here. In this case, leveraging the ELL format results in between 10x and 14x speedup on one million nodes.
 
-In the case of the K20, Figure~\ref{fig:ell_speedup_cascade_k20} shows that the faster Sandy-Bridge architecture closes some of the divide between CPUs and GPUs, but the GPU is still between 8x to 10x faster than the CPU on one million nodes. 
+In the case of the K20 shown in Figure~\ref{fig:ell_speedup_cascade_k20}, the faster Sandy-Bridge architecture closes some of the divide between CPUs and GPUs, but we still maintain 8x to 10x speedup on one million nodes. 
 
 \begin{figure} 
 \centering
