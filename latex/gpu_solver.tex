@@ -98,9 +98,23 @@ Techniques such as node reordering, presented in Chapter~\ref{chap:stencils}, is
 
 %Our approach to solving PDEs with RBF-FD computes derivatives with a sparse matrix-vector multiply (SpMV). %Once a line has entered the L1 cache, the warp of work-items can access the cache line concurrently, although some rules exist on how quickly
 
-\section{Understanding SpMV Performance on the GPU}
+\section{Managing Performance Expectations on the GPU}
 
-One of the challenges is performin
+Before launching into the discussion of how GPU kernels are actually implemented for RBF-FD, we first attempt to manage expectations of the type of performance the method can achieve on the GPU. To this end we build a \emph{roofline model} \cite{Williams2009}, which is useful for expressing the maximum possible performance (in terms of GFLOP/sec) for any kernel on the GPU. 
+
+The roofline model 
+\begin{align*}
+\text{Attainable GFLOP/sec} = \min \begin{cases} \text{Peak Hardware GFLOP/sec} \\ \text{Peak Memory Bandwidth} \times \text{Operational Intensity} 
+\end{align*}
+
+
+Measured performance of GPU kernels is computed as
+\begin{align}
+GFLOP/sec = ^{N * n * 2} /_{t_{ms}} * 10^{-9},
+\end{align}
+where $t_{ms}$ is the kernel execution time given in milliseconds, and the variables $N$ and $n$ describe the grid size and stencil size respectively. 
+
+We consider the \emph{operational intensity} of a kernel, defined as the ratio of floating point operations to bytes loaded from memory. 
 
 Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}.
 
@@ -326,10 +340,6 @@ Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}
 %\label{fig:spmv_vcl_gflops}
 %\end{figure}
 
-GFLOP/sec calculated as: 
-\begin{align}
-GFLOP/sec = ^{N * n * 2} /_{t_ms} * 10^{-9}. 
-\end{align}
 
 %TODO: low OI is source of frustration. 
 
