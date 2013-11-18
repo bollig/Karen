@@ -460,23 +460,6 @@ Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} 
 \caption{Comparison by stencil size for the ELL sparse matrix format.}
 \end{figure}
 
-\section{Conclusions and Future Work}
-
-This chapter presents the first implementation of RBF-FD to run on GPUs. Our OpenCL implementations apply RBF-FD differentiation matrices via Sparse Matrix-Vector multiplication (SpMV) to compute derivatives everywhere in the domain. The solution values are then updated via a fourth-order Runge Kutta (RK4) time-step. 
-
-Two custom GPU SpMV kernels were tested: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. 
-
-The Roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance (in terms of GFLOP/sec) that can be achieved for RBF-FD. Although GPUs advertise over 1 TFLOP/sec peak possible performance in double precision, the actual achieved FLOP/sec for the memory-bound RBF-FD application is significantly lower. The SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes, limits the expected performance to be less than 20 GFLOP/sec on NVidia M2070 hardware. Our custom OpenCL kernels achieve at most 3 GFLOP/sec on NVidia M2070 GPUs, but by leveraging the reduced memory footprint of alternative sparse matrix containers provided by the ViennaCL library our implementation ultimately achieves up to 8 GFLOP/sec which is 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs.
-
-
-\subsection{Future Work} 
-
-
-In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). 
-
-Note that other sparse formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants \cite{LiSaad2010}, and a number of variants on the ELL format that improve cache use by operating in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. Although the additional formats are not considered here, we do have plans to consider them as part of future work. 
-
-
 \subsection{Preliminary Results for Intel Xeon Phi} 
 
 As part of future work into accelerating RBF methods, investigations are underway considering the new Intel Xeon Phi architecture \cite{IntelXeonPhi2013}. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
@@ -514,6 +497,27 @@ Figure~\ref{fig:gflops_cascade_intel_phi} is provided for comparison with Figure
 \caption{Performance comparison of ViennaCL CSR, COO and ELL matrix formats on Cascade's Intel Phi Accelerator, and the Boost::uBLAS CSR format on an Intel Sandy-Bridge CPU (Intel Xeon E5-2670). ViennaCL's kernels are optimized for NVidia GPUs, but function (albeit poorly) on the Intel Phi with the current release of Intel's OpenCL SDK (May, 2013). }
 \label{fig:gflops_cascade_intel_phi}
 \end{figure}
+
+
+\section{Conclusions and Future Work}
+
+This chapter presented the first implementation of RBF-FD to run on GPUs. Our OpenCL implementations apply RBF-FD differentiation matrices via Sparse Matrix-Vector multiplication (SpMV) to compute derivatives everywhere in the domain. The solution values are then updated via a fourth-order Runge Kutta (RK4) time-step. 
+
+
+The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of actual performance to be less than 20 GFLOP/sec. 
+
+Two custom GPU SpMV kernels were described: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. The performance of the custom kernels is rather low at 3 GFLOP/sec at best, but recent efforts to leverage the reduced memory footprint of the ELLPACK sparse matrix format in the ViennaCL library ultimately achieves up to 8 GFLOP/sec, or 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs. 
+
+Note there is still room to improve the SpMV performance in addition to a few other directions for future work:
+\begin{itemize} 
+\item 
+It has come to our attention that the market today appears to favor NVidia for GPU computing, with the majority of clusters world-wide containing NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, allowing other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). As we proceed into the future effort will likely focus on CUDA kernels. 
+
+\item We are aware that a number of additional sparse formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants \cite{LiSaad2010}, and a number of variants on the ELL format that improve cache use by operating in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. It remains to be seen how these formats can impact performance for RBF-FD. 
+
+\item Rather than focus only on the memory bound SpMV operation, we are already investigating scenarios that increase operational intensity and better utilize the GPU hardware. For example, a single sparse matrix multiplied against a dense matrix (i.e., the SpMM operation), as well as multiple sparse matrices times the same dense matrix (see e.g., \cite{ErlebacherSauleFlyerBollig2013}). 
+\end{itemize}
+
 
 
 \ifstandalone
