@@ -255,7 +255,7 @@ We choose $\alpha_{i}=0, \frac{1}{2}, \frac{1}{2}, 1, 0$ and $\mathbf{k}_{0} = \
 
 Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for one or more GPUs. Starting with code initialization, RBF-FD stencils and weights are computed on the CPU and assembled into differentiation matrices. The initial conditions, including the matrices, are copied to the GPU, and the solver enters a loop to perform the method of lines time-steps. Each iteration the GPU launches the evaluation kernel four times before launching a fifth kernel to advance the solution by computing $u_{n+1}$ from Equation~\ref{eqn:rk4}. For each launch of the evaluation substeps an application specific GPU kernel, labelled as the \texttt{PDE Solver}, is executed to evaluate to evaluate the PDE at the specified time-step. In order to do this, the \texttt{PDE Solver} loads RBF-FD weights and solution values from memory and then calls the generic GPU function \texttt{Apply Weights} to perform the SpMV for derivatives. The output vectors from calls to \texttt{Apply Weights} are scaled and combined by \texttt{PDE Solver}.
 
-\begin{figure}[t]
+\begin{figure}[ht]
       \centering
        \includegraphics[width=5in]{../figures/paper1/figures/omnigraffle/RK4_multi_GPU_flow.pdf}
       \caption{Workflow for RK4 on one or more GPUs. }
@@ -280,32 +280,31 @@ In this first implementation, each thread computes
 the derivative at one stencil center  (Figure~\ref{fig:oneThreadPerStencil}). 
 The advantage of this approach is trivial concurrency.  Since each stencil has the same number of neighbors, each derivative has an identical number of computations. As long as the number of stencils is a multiple of the warp size, there are no idle threads. Should the total number of stencils be less than a multiple of the warp size, the final warp would contain idle threads, but the impact on efficiency would be minimal assuming the stencil size is sufficiently large. In this approach all threads of a warp operate in lock-step on one stencil node after another for perfect concurrency. 
 
-Perfect concurrency from a logical point of view does not 
-imply perfect efficiency in practice. Due to the compression of the sparse matrix all stencil weights, offsets, and column indices are read by a warp as contiguous blocks from global memory. Unfortunately, the random access on the solution vector ensures that as a warp processes multiple stencils with solution values in very disparate regions of memory, threads may thrash the cache if they load new 128 byte wide cache lines and evict lines that are of use to other threads in the warp. The larger the stencil size, the less likely cache lines for solution values will avoid being evicted. Only very small stencil sizes stand to benefit from this approach. 
-%However, with stencils sharing many common nodes, and the Fermi hardware providing caching, some weights in the unused portions of the segments might remain in cache long enough to hide the cost of so many additional memory loads. 
-
-
-
-\begin{figure}[htbp]
+\begin{figure}[ht]
       \centering
        \includegraphics[width=3in]{../figures/paper1/figures/omnigraffle/oneThreadPerStencil.pdf}
       \caption{Naive approach to sparse matrix-vector multiply. Each thread is responsible for the sparse vector dot product of weights and solution values for derivatives at a single stencil.  }
       \label{fig:oneThreadPerStencil}
 \end{figure}
 
+Perfect concurrency from a logical point of view does not 
+imply perfect efficiency in practice. Due to the compression of the sparse matrix all stencil weights, offsets, and column indices are read by a warp as contiguous blocks from global memory. Unfortunately, the random access on the solution vector ensures that as a warp processes multiple stencils with solution values in very disparate regions of memory, threads may thrash the cache if they load new 128 byte wide cache lines and evict lines that are of use to other threads in the warp. The larger the stencil size, the less likely cache lines for solution values will avoid being evicted. Only very small stencil sizes stand to benefit from this approach. 
+%However, with stencils sharing many common nodes, and the Fermi hardware providing caching, some weights in the unused portions of the segments might remain in cache long enough to hide the cost of so many additional memory loads.
+
+
+
 
 \subsection{Alternate Approach: One warp per stencil} 
 
-\begin{figure}[htbp]
+An alternate approach, illustrated in Figure~\ref{fig:oneWarpPerStencil}, dedicates a full warp of threads to a single stencil. Here, 32 threads load the weights of a stencil and the corresponding elements of the solution vector. As the 32 threads each perform a subset of the dot product, their intermediate sums are accumulated in 32 elements of shared memory (one per thread).
+Should  a stencil be larger than the warp size, the warp iterates over the stencil in increments of the warp size until the full dot product is complete. Finally, the first thread of the warp performs a sum reduction across the 32 (warp size)  intermediate sums stored in shared memory and writes the derivative value to global memory. 
+
+\begin{figure}[ht]
       \centering
        \includegraphics[width=3in]{../figures/paper1/figures/omnigraffle/oneWarpPerStencil.pdf}
       \caption{Alternative approach. A full warp (32 threads) collaborate to apply weights  and compute the derivative at a stencil center. }
       \label{fig:oneWarpPerStencil}
 \end{figure}
-
-
-An alternate approach, illustrated in Figure~\ref{fig:oneWarpPerStencil}, dedicates a full warp of threads to a single stencil. Here, 32 threads load the weights of a stencil and the corresponding elements of the solution vector. As the 32 threads each perform a subset of the dot product, their intermediate sums are accumulated in 32 elements of shared memory (one per thread).
-Should  a stencil be larger than the warp size, the warp iterates over the stencil in increments of the warp size until the full dot product is complete. Finally, the first thread of the warp performs a sum reduction across the 32 (warp size)  intermediate sums stored in shared memory and writes the derivative value to global memory. 
 
 By operating on a warp by warp basis, weights for a single stencil are loaded with a reduced number of memory accesses. Memory loads for the solution vector remain random access but see some benefit when solution values for a stencil are in a small neighborhood in the memory space. Proximity in memory can be controlled by node indexing (see Chapter~\ref{chap:stencils}). 
 
@@ -313,15 +312,27 @@ For stencil sizes smaller than 32, some threads in the warp always remain idle. 
 %As part of future work on optimization, we will consider a parallel reduction in shared memory, as well as assigning multiple stencils to a single warp for small  $n$. 
 
 \subsection{Performance}
-For the performance of our custom RBF-FD implementation we refer readers to \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks}. 
+
+For the performance of the custom RBF-FD implementation we refer readers to \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks}, where the kernels are benchmarked on an NVidia M2070 GPU. The benchmarks show that dedicating a full warp of threads to each row of the SpMV performs the best for stencil sizes $n \geq 32$, and one thread per stencil otherwise. However, our observed GFLOP/sec for both kernels is fairly low with less than 3 GFLOP/sec in the best case, which is less than 15\% of the 18.5 GFLOP/sec peak estimated by the roofline model. 
+
 
 
 \section{ViennaCL Implementation} 
 
+In an effort to boost performance of RBF-FD on the GPU beyond 3 GFLOP/sec work on the custom OpenCL kernels was suspended in favor of leveraging the SpMV from the ViennaCL library. 
 
-In the time since the publication of \cite{BolligFlyerErlebacher2012} custom OpenCL kernels have been dropped in favor of a library called ViennaCL. 
+ViennaCL supports a number of sparse formats. We consider the performance of three of them here: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), and ELLPACK Storage format (ELL). 
 
 Sparse formats supported by ViennaCL are shown in Figure~\ref{fig:sparse_format}.
+
+\begin{itemize} 
+\item \emph{Coordinate Matrix (COO)} -- 
+\item \emph{Compressed Row Storage (CSR)} -- 
+\item \emph{ELLPACK (ELL)} -- 
+\end{itemize}
+
+
+ViennaCL also offers a Hybrid format (HYB) that combines both ELL and CSR formats to accommodate matrices that have only a small variability in the number of nonzeros per row. The HYB splits the sparse matrix into two parts: one stored in ELL which has exactly the same number of nonzeros per row, and the other in CSR format representing the surplus nonzeros for any rows with greater than $n$ nonzeros. In light of our decision to generate all stencils with size $n$, the HYB offer no benefit.
 
 \begin{figure}
 \centering
@@ -332,17 +343,6 @@ Sparse formats supported by ViennaCL are shown in Figure~\ref{fig:sparse_format}
 
 Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants, and a number of variants on the ELL format that operate in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. The HYB format stores the bulk of a matrix in an ELL container and the excess non-zeros per row in a CSR format. HYB benefits from reduced storage and memory loads in the ELL, and maintains the generality of a CSR matrix. 
 
-%\begin{figure}
-%\centering
-%\includegraphics[width=0.5\textwidth]{../figures/spmv/spmv_vcl_gflops-eps-converted-to.pdf}
-%\caption{Single GPU ViennaCL SpMV throughput (GFLOP/sec) compared to Boost::uBLAS CSR. Stencil size $n=50$ for all cases.}
-%\label{fig:spmv_vcl_gflops}
-%\end{figure}
-
-
-%TODO: low OI is source of frustration. 
-
-We consider the following formats: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), ELLPACK Storage format (ELL), and a Hybrid format (HYB) that combines the ELL and CSR formats. On top of 
 
 ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
 
@@ -470,6 +470,10 @@ To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sp
 The library includes a variety of sparse matrix formats, solvers, preconditioners, etc. Dense and sparse containers simplify targeting the GPU. 
 
 At the onset of work with ViennaCL two things were apparent: 1) the library was incredibly powerful but limited to square matrices; and 2) the library had no support for distributed computing. Our implementation of RBF-FD (\cite{BolligRBFFDCode}) required rectangular matrices resulting from domain decomposition. The enhancements to the API have since been added to the main branch of ViennaCL. 
+
+
+Sparse containers allow increased efficiency compared to our custom kernels. 
+In an effort to boost performance, we integrated the ViennaCL library into our RBF-FD implementation and compared performance of three sparse containers provided by the library to determine the most appropriate sparse representation for RBF-FD. We compare the performance of the ViennaCL sparse containers (ELL, CSR, COO), and a CPU-only implementation of SpMV to the BOOST::uBLAS compressed-row storage. 
 
 
 %TODO: CSR Bytes:Flop ratio: \url{http://arxiv.org/pdf/1101.0091v1.pdf}
@@ -612,21 +616,7 @@ This chapter presents the first implementation of RBF-FD to run on GPUs. Our Ope
 
 Two custom GPU SpMV kernels were tested: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. 
 
-The Roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance (in terms of GFLOP/sec) that can be achieved for RBF-FD. Although GPUs advertise over 1 TFLOP/sec peak possible performance in double precision, the actual achieved FLOP/sec for the memory-bound RBF-FD application is significantly lower. The SpMV operational intensity of $\frac{1}{8}$ FLOPs:bytes, limits the expected performance to be less than 20 GFLOP/sec on NVidia M2070 hardware. Our custom OpenCL kernels achieve at most 3 GFLOP/sec on NVidia M2070 GPUs.
-
-
-
-Sparse containers allow increased efficiency compared to our custom kernels. 
-In an effort to boost performance, we integrated the ViennaCL library into our RBF-FD implementation and compared performance of three sparse containers provided by the library to determine the most appropriate sparse representation for RBF-FD. We compare the performance of the ViennaCL sparse containers (ELL, CSR, COO), and a CPU-only implementation of SpMV to the BOOST::uBLAS compressed-row storage. 
-
-%ViennaCL allows control of the number of work-items for each kernel. 
-%ViennaCL includes a set of auto-tuning options. %TODO: provide tuned parameters
-
-%TODO: what is profile for each GPU type
-%TODO: What is the significance of tuning on our problem $n=17, 31, 50, 101,$ etc. 
-%TODO: experiment: SpMV on N=10^6, n = variable (5->105)
-%TODO: idealized experiment: SpMV on N=10^6 regular grid with n=variable.
-
+The Roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance (in terms of GFLOP/sec) that can be achieved for RBF-FD. Although GPUs advertise over 1 TFLOP/sec peak possible performance in double precision, the actual achieved FLOP/sec for the memory-bound RBF-FD application is significantly lower. The SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes, limits the expected performance to be less than 20 GFLOP/sec on NVidia M2070 hardware. Our custom OpenCL kernels achieve at most 3 GFLOP/sec on NVidia M2070 GPUs, but by leveraging the reduced memory footprint of alternative sparse matrix containers provided by the ViennaCL library our implementation ultimately achieves up to 8 GFLOP/sec which is 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs.
 
 
 \subsection{Future Work} 
