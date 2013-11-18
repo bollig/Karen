@@ -227,8 +227,7 @@ The roofline model is an idealistic estimate for the maximum possible performanc
 %Stencil weights are calculated once by the CPU and copied to the GPU at the beginning of the simulation. The static weights are then reused in every iteration on the GPU. When weights are initially computed they are written to disk in the MatrixMarket format, a standard format for archiving GPU Subsequent runs load weights from disk. Ignoring code initialization, the cost of the algorithm is simply the explicit time advancement of the solution. 
 
 
-Our initial implementation of RBF-FD on the GPU (published in \cite{BolligFlyerErlebacher2012}) accelerates the standard fourth order Runge-Kutta (RK4) scheme with OpenCL. Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for the multi-CPU/GPU implementation. Starting with code initialization, RBF-FD stencils and weights 
-
+Our initial implementation of RBF-FD on the GPU (published in \cite{BolligFlyerErlebacher2012}) accelerates the standard fourth order Runge-Kutta (RK4) scheme with OpenCL kernels. 
 The RK4 steps are: 
 \begin{eqnarray} 
 \mathbf{k}_1 &=& \Delta t f(t_n, \mathbf{u}_n) \nonumber \\
@@ -237,38 +236,41 @@ The RK4 steps are:
 \mathbf{k}_4 &=& \Delta t f(t_n+\Delta t, \mathbf{u}_n + \mathbf{k}_3) \nonumber \\
 \mathbf{u}_{n+1} &=& \mathbf{u}_{n} + \frac{1}{6}(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 +\mathbf{k}_4), \nonumber
 \end{eqnarray}
-where each equation has a corresponding kernel launch. To handle a variety of Runga-Kutta implementations, steps $\mathbf{k}_{1\rightarrow4}$ correspond to calls to the same kernel with different arguments. The evaluation kernel returns two output vectors: 
+where each equation has a corresponding kernel launch. 
+To handle a variety of Runge-Kutta methods as well as PDEs, steps $\mathbf{k}_{1\rightarrow4}$ in Equation~\ref{eqn:rk4} correspond to calls to the same \emph{evaluation kernel} with different arguments. Within each call to the evaluation kernel, the RK4 computes
+\begin{align*}
+f(t_n, u_n) = - D_{\diffop{}} u_n + H u_n, 
+\end{align*}
+where $D_{\diffop{}}$ is the sparse differentiation matrix for the derivative operator and $H$ is the sparse hyperviscosity filter. On the GPU, the kernel parallelizes across rows of the differentiation matrices, so all derivatives and filters for stencils are computed in one kernel call.
+
+%To evaluate $\mathbf{k}_{1\rightarrow4}$, the discretized operators from Equation~(\ref{eq:evaluation_with_hyperviscosity}) are applied using sparse matrix-vector multiplication. 
+%If the operator $D_{\diffop{}}$ is composed of multiple independent derivatives (e.g., $D_{\diffop{}} = D_x + D_y$), then each differentiation matrix is applied as a separate sparse dot product within an SpMV, including an additional multiplication for the discretized $H$ operator.
+
+ The evaluation kernel returns two output vectors: 
 \begin{enumerate} 
 \item $\mathbf{k}_i = \Delta t f(t_n + \alpha_{i} \Delta t, \mathbf{u}_n + \alpha_{i} \mathbf{k}_{i-1})$, for steps $i=1,2,3,4$, and
 \item  $\mathbf{u}_n + \alpha_{i+1} \mathbf{k}_i$
 \end{enumerate} 
 We choose $\alpha_{i}=0, \frac{1}{2}, \frac{1}{2}, 1, 0$ and $\mathbf{k}_{0} = \mathbf{u}_n$. The second output for each $\mathbf{k}_{i=1,2,3}$ serves as input to the next evaluation, $\mathbf{k}_{i+1}$. In an effort to avoid an extra kernel launch---and corresponding memory loads---the SAXPY that produces the second output uses the same evaluation kernel. Both outputs are stored in global device memory. When the computation spans multiple GPUs, steps $\mathbf{k}_{1\rightarrow3}$ are each followed by a communication barrier to synchronize the subsets $\mathcal{O}$ and $\mathcal{R}$ of the second output (this includes copying the subsets between GPU and CPU). An additional synchronization occurs on the updated solution, $\mathbf{u}_{n+1}$, to ensure that all GPUs share a consistent view of the solution going into the next time-step.
 
+Figure~\ref{fig:multi_GPU_flow} summarizes the time advancement steps for one or more GPUs. Starting with code initialization, RBF-FD stencils and weights are computed on the CPU and assembled into differentiation matrices. The initial conditions, including the matrices, are copied to the GPU, and the solver enters a loop to perform the method of lines time-steps. Each iteration the GPU launches the evaluation kernel four times before launching a fifth kernel to advance the solution by computing $u_{n+1}$ from Equation~\ref{eqn:rk4}. For each launch of the evaluation substeps an application specific GPU kernel, labelled as the \texttt{PDE Solver}, is executed to evaluate to evaluate the PDE at the specified time-step. In order to do this, the \texttt{PDE Solver} loads RBF-FD weights and solution values from memory and then calls the generic GPU function \texttt{Apply Weights} to perform the SpMV for derivatives. The output vectors from calls to \texttt{Apply Weights} are scaled and combined by \texttt{PDE Solver}.
+
 \begin{figure}[t]
       \centering
        \includegraphics[width=5in]{../figures/paper1/figures/omnigraffle/RK4_multi_GPU_flow.pdf}
-      \caption{Workflow for RK4 on multiple GPUs. }
+      \caption{Workflow for RK4 on one or more GPUs. }
       \label{fig:multi_GPU_flow}
 \end{figure}
-
-
-To evaluate $\mathbf{k}_{1\rightarrow4}$ in Equation~\ref{eqn:rk4}, the discretized operators from Equation~(\ref{eq:evaluation_with_hyperviscosity}) are applied using sparse matrix-vector multiplication. If the operator $D$ is composed of multiple derivatives, a differentiation matrix for each derivative is applied independently, including an additional multiplication for the discretized $H$ operator.
- On the GPU, the kernel parallelizes across rows of the DMs, so all derivatives for stencils are computed in one kernel call.
-
-
-For the GPU, the OpenCL language \cite{OpenCL2009} assumes a lowest common denominator of hardware capabilities to provide functional portability. For example, all target architectures are assumed to support some level of SIMD (Single Instruction Multiple Data) execution for kernels. Multiple \textit{work-items} execute a kernel in parallel. 
-A collection of work-items performing the same task is called a \textit{work-group}. While a user might think of work-groups as executing all work-items simultaneously, the work-items are divided at the hardware level into one or more SIMD \textit{warps}, which are executed by a single multiprocessor. On the family of Fermi GPUs, a warp is 32 work-items \cite{CudaGuide2011}. 
-OpenCL assumes a tiered memory hierarchy that provides fast but small \textit{local memory} space that is shared within a work-group \cite{OpenCL2009}. Local memory on Fermi GPUs is 48 KB per multiprocessor \cite{CudaGuide2011}. The \textit{global device memory} allows sharing between work-groups and is the slowest but most abundant memory. 
-In the GPU computing literature, the terms \textit{thread} and \textit{shared memory} are synonymous to \textit{work-item} and \textit{local memory} respectively, and are preferred below. 
  
-Our initial implementation of RBF-FD on multiple GPUs (\cite{BolligFlyerErlebacher2012}) tested two approaches to computation of derivatives. 
-In both cases, the stencil weights are stored in CSR format \cite{Bell2009}, 
-a packed one-dimensional array in global memory with all the weights 
-of a single stencil in consecutive memory addresses. Each operator is stored as an independent CSR matrix. The consecutive ordering on the weights implies that the solution vector %structured according to the ordering of set $\mathcal{G}$ 
+Our initial implementation of RBF-FD on multiple GPUs (\cite{BolligFlyerErlebacher2012}) tested two approaches to compute derivatives within \texttt{Apply Weights}. 
+In both cases, the stencil weights are stored in  
+a packed one-dimensional array of $N*n$ nonzeros in global memory with all the weights 
+of a single stencil (i.e., a row) in consecutive memory addresses. The one-dimensional array of weights is indexed by two vectors. The first vector contains $N$ integer offsets used to jump to the first nonzero of each row. The second vector contains $N*n$ integers representing the nonzero column index. This sparse compression is equivalent to the \emph{Compressed Row Storage} (CSR) format in \cite{Bell2009, Rupp2010, Cusp2012}.
+
+Each derivative operator is stored as an independent CSR matrix with independent indexing. The consecutive ordering on the weights implies that the solution vector %structured according to the ordering of set $\mathcal{G}$ 
 is treated as random access. 
 
-All the computation on the GPU is performed in 8-byte double precision. 
-
+%All the computation on the GPU is performed in 8-byte double precision. 
 
 
 
@@ -276,15 +278,11 @@ All the computation on the GPU is performed in 8-byte double precision.
 
 In this first implementation, each thread computes 
 the derivative at one stencil center  (Figure~\ref{fig:oneThreadPerStencil}). 
-The advantage of this approach is trivial concurrency.  Since each stencil has the same number of neighbors, each derivative has an identical number of computations. As long as the number of stencils is a multiple of the warp size, there are no idle threads. Should the total number of stencils be less than a multiple of the warp size, the final warp would contain idle threads, but the impact on efficiency would be minimal assuming the stencil size is sufficiently large. 
+The advantage of this approach is trivial concurrency.  Since each stencil has the same number of neighbors, each derivative has an identical number of computations. As long as the number of stencils is a multiple of the warp size, there are no idle threads. Should the total number of stencils be less than a multiple of the warp size, the final warp would contain idle threads, but the impact on efficiency would be minimal assuming the stencil size is sufficiently large. In this approach all threads of a warp operate in lock-step on one stencil node after another for perfect concurrency. 
 
 Perfect concurrency from a logical point of view does not 
-imply perfect efficiency in practice. 
-Unfortunately, the naive approach 
-is memory bound. When threads access weights in global memory, 
-a full warp accesses a 128-byte segment in a single memory operation \cite{CudaGuide2011}.
-Since each thread handles a single stencil, the various threads in a warp access data in very disparate areas of global memory, rather than the same segment. This leads to very large slowdowns as extra memory operations are added for each 128-byte segment that the threads of a warp must access.
-However, with stencils sharing many common nodes, and the Fermi hardware providing caching, some weights in the unused portions of the segments might remain in cache long enough to hide the cost of so many additional memory loads. 
+imply perfect efficiency in practice. Due to the compression of the sparse matrix all stencil weights, offsets, and column indices are read by a warp as contiguous blocks from global memory. Unfortunately, the random access on the solution vector ensures that as a warp processes multiple stencils with solution values in very disparate regions of memory, threads may thrash the cache if they load new 128 byte wide cache lines and evict lines that are of use to other threads in the warp. The larger the stencil size, the less likely cache lines for solution values will avoid being evicted. Only very small stencil sizes stand to benefit from this approach. 
+%However, with stencils sharing many common nodes, and the Fermi hardware providing caching, some weights in the unused portions of the segments might remain in cache long enough to hide the cost of so many additional memory loads. 
 
 
 
