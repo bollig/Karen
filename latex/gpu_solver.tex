@@ -100,12 +100,20 @@ Techniques such as node reordering, presented in Chapter~\ref{chap:stencils}, is
 
 \section{Managing Performance Expectations on the GPU}
 
-Before launching into the discussion of how GPU kernels are actually implemented for RBF-FD, we first attempt to manage expectations of the type of performance the method can achieve on the GPU. To this end we build a \emph{roofline model} \cite{Williams2009}, which is useful for expressing the maximum possible performance (in terms of GFLOP/sec) for any kernel on the GPU. 
+Before launching into the discussion of how GPU kernels are actually implemented for RBF-FD, we first attempt to manage expectations of the type of performance the method can achieve on the GPU. To this end, we consider the \emph{roofline model} \cite{Williams2009}, which is useful for estimating the maximum possible performance (in terms of GFLOP/sec) for any kernel on the GPU based only on readily available hardware specifications (e.g., \cite{M2070FactSheet, KeplerFactSheet}). 
+ 
+On the GPU, global memory bandwidth is the constraining resource in kernel performance. The roofline model relates processor performance to the global memory traffic based on the \emph{operational intensity} of a kernel. Operational intensity is defined as the ratio of floating point operations (FLOPs) to total number of bytes loaded by a kernel. The operational intensity depends of course on the precision assumed for calculations. For example, the operational intensity of an SpMV in double precision is two FLOPs (a multiply and add) for every two 8-byte words, resulting in a ratio of $\ ^{1}/_{8}$ FLOPs:Bytes. 
 
-This work operates on two generations of NVidia GPUs shown in Table~\ref{tbl:gpu_comparison}. The first is the previous generation NVidia M2070 ``Fermi"-class GPU with 6 GB global memory and a maximum memory bandwidth of 148 GB/sec \cite{M2070FactSheet}. The second GPU is the latest generation NVidia K20 ``Kepler"-class GPU, which has only 5 GB of global memory but 208 GB/sec bandwidth \cite{KeplerFactSheet}. Both GPUs are mounted on the Cascade GPU cluster at the University of Minnesota Supercomputing Institute. 
+The roofline model states that the maximum possible performance of a GPU kernel is given as
+\begin{align}
+\text{Max Attainable GFLOP/sec} = \min \begin{cases} \text{Peak Performance (Double Precision)} \\ \text{Max Memory Bandwidth} \times \text{Operational Intensity}  \end{cases}
+\label{eq:roofline}
+\end{align}
+where values for the ``DP Peak Performance" and ``Max Memory Bandwidth" are given by vendor provided hardware specifications. 
 
-Cascade is a heterogenous compute cluster built with a total of 15 compute nodes. The first eight nodes each have two 6-core Intel Xeon X5675 ``Westmere-EP" class CPUs (3.06 GHz), 96 GB of memory and four M2070 GPUs (i.e., 32 total Fermi-class GPUs). Four compute nodes each contain dual 8-core Intel Xeon E5-2670 ``SandyBridge" class CPUs (2.60 GHz), 124 GB of memory, and two K20 GPUs (i.e., 8 total). The remaining nodes in the cluster are the same as the K20 compute nodes, except the K20 GPUs have been replaced an Intel Xeon Phi \cite{IntelXeonPhi2013}.
+This work tests two generations of NVidia GPUs shown in Table~\ref{tbl:gpu_comparison}. The first GPU is the previous generation NVidia ``Fermi"-class M2070 with 6 GB global memory and a maximum memory bandwidth of 148 GB/sec \cite{M2070FactSheet}. The second GPU is the latest generation NVidia ``Kepler"-class K20, which has only 5 GB of global memory but 208 GB/sec bandwidth \cite{KeplerFactSheet}. Both GPUs are mounted on the Cascade cluster at the University of Minnesota Supercomputing Institute. 
 
+Cascade is a heterogenous compute cluster built with a total of 14 compute nodes. The cluster is configured in such a way that the first eight nodes each have two 6-core Intel Xeon X5675 ``Westmere-EP" class CPUs (3.06 GHz), 96 GB of memory, and four M2070 GPUs (i.e., 32 Fermi-class GPUs in total). The next four compute nodes each contain dual 8-core Intel Xeon E5-2670 ``SandyBridge" class CPUs (2.60 GHz), 124 GB of memory, and two K20 GPUs (i.e., 8 total). The remaining nodes in the cluster are styled the same as the K20 compute nodes, except the GPUs are replaced by a single Intel Xeon Phi 5110P accelerator \cite{IntelXeonPhi2013}. The cluster is connected via a QDR-link InfiniBand network in order to promote its use as a distributed multi-GPU computing environment. In Chapter~\ref{chap:multigpu_rbffd} we present details of RBF-FD spanning multiple GPUs on Cascade, but at present are only concerned with the performance on a single GPU. 
 
 \begin{table}[t]
 \centering
@@ -116,37 +124,14 @@ Cascade is a heterogenous compute cluster built with a total of 15 compute nodes
 Class & Fermi & Kepler \\ \hline
 Global Memory & 6 GB & 5 GB \\ 
 Max Memory Bandwidth & 148 GB/sec & 208 GB/sec \\ 
-DP Peak Performance & 515 GFLOP/sec & 1170 GFLOP/sec \\ 
+Peak Performance (Double Precision) & 515 GFLOP/sec & 1170 GFLOP/sec \\ 
 Multiprocessors & 14 & 13 \\ 
 Total Cores & 448 & 2496 \\ 
 Cores per Multiprocessor & 32 & 192 \\ \hline
 \end{tabular}
 \end{table}
 
-The roofline model depends on easily accessible hardware specifications.
-
-The roofline model states
-\begin{align*}
-\text{Max Attainable GFLOP/sec} = \min \begin{cases} \text{DP Peak Performance} \\ \text{Max Memory Bandwidth} \times \text{Operational Intensity}  \end{cases}
-\end{align*}
-
-Obviously the roofline model is idealistic, but it provides a nice upper bound on what to expect from the GPU. Actual measured performance will always be lower that anticipated, but if 80\% 
-
-Measured performance of GPU kernels is computed as
-\begin{align}
-GFLOP/sec = ^{N * n * 2} /_{t_{ms}} * 10^{-9},
-\end{align}
-where $t_{ms}$ is the kernel execution time given in milliseconds, and the variables $N$ and $n$ describe the grid size and stencil size respectively. 
-
-We consider the \emph{operational intensity} of a kernel, defined as the ratio of floating point operations to bytes loaded from memory. 
-
-Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}.
-
-On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/sec per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/sec on the Fermi and 13 on the K20 (compared to the 2 GFLOP/sec on Itasca). 
-
-
-
-This work tests kernels on two GPUs: an NVidia M2070 GPU with 6 GB of global memory, 14 multiprocessors with 32 threads per multiprocessor,  148 Gbyte/sec . 
+Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double precision roofline models for the M2070 and K20 GPUs. By drawing Equation~\ref{eq:roofline} as a function of the operational intensity we can get 
 
 \begin{figure} 
 \begin{subfigure}{0.45\textwidth}
@@ -162,8 +147,21 @@ This work tests kernels on two GPUs: an NVidia M2070 GPU with 6 GB of global mem
 \caption{Roofline Model for NVidia Kepler K20. SpMV Peak: 26 GFLOP/sec (double precision).}
 \label{fig:roofline_k20}
 \end{subfigure}
-\caption{Roofline models manage expectations for maximum possible GFLOP/sec based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $0.25$. }
+\caption{Roofline models manage expectations for maximum possible GFLOP/sec based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $\ ^{1}/_{8}$ FLOPS:Bytes. }
 \end{figure}
+
+Obviously the roofline model is idealistic, but it provides a nice upper bound on what to expect from the GPU. Actual measured performance will always be lower that anticipated, but if 80\% 
+
+Measured performance of GPU kernels is computed as
+\begin{align}
+GFLOP/sec = ^{N * n * 2} /_{t_{ms}} * 10^{-9},
+\end{align}
+where $t_{ms}$ is the kernel execution time given in milliseconds, and the variables $N$ and $n$ describe the grid size and stencil size respectively. 
+
+Performance of SpMV on GPU will not be optimal. Often one finds in literature examples of applications that have been accelerated by huge factors. In fact, speedup factors greater than 10x should never be possible for SpMV. In order to manage expectations of how much faster tasks will operate on the GPU we can turn to a \emph{roofline model} \cite{Williams2009}.
+
+On the Fermi GPUs (Figure~\ref{fig:roofline_m2070}) at 144 GB/s you need an OI of 4 to reach the peak of 515 GFLOP/sec per card. On the K20 (Figure~\ref{fig:roofline_k20}) you need 6 to hit the peak 1.17 TFLOP/s (208 GB/s). But with an OI of 1/16 you could get 9 GFLOP/sec on the Fermi and 13 on the K20 (compared to the 2 GFLOP/sec on Itasca). 
+
 
 %TODO: problem with SpMV is operational intensity 
 %TODO: OI dictates GFLOP/sec (define GFLOP/sec)
