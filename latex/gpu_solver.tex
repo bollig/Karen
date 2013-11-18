@@ -437,7 +437,7 @@ Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} 
 In Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20}, we consider the speedup achieved by each GPU over their respective CPUs  (i.e., Westmere-EP and Sandy-Bridge), which run the \ttt{Boost::uBLAS} CSR format. In \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} our custom kernels achieved at most 4x speedup over the CPU in a setup nearly identical to the M2070 case here. In this case, leveraging the ELL format achieves between 10x and 14x speedup on one million nodes. 
 %GE SPEEDUP COMPARED TO WHAT? To the CPUS? How do you know the CPU is optimized? What are the compiler options? Loop unroll? -O3? ...
 
-In the case of the K20 shown in Figure~\ref{fig:ell_speedup_cascade_k20}, the faster Sandy-Bridge architecture closes some of the divide between CPUs and GPUs, but we still maintain 8x to 10x speedup for a one million node mesh.
+In the case of the K20 shown in Figure~\ref{fig:ell_speedup_cascade_k20}, the faster Sandy-Bridge architecture closes some of the divide between CPUs and GPUs, but we still maintain 8x to 10x speedup for a one million nod mesh.
 
 \begin{figure} 
 \centering
@@ -520,7 +520,9 @@ As our investigation into the Xeon Phi continues, the benchmarks will be reasses
 This chapter presented the first implementation of RBF-FD to run on GPUs. Our OpenCL implementations apply RBF-FD differentiation matrices via Sparse Matrix-Vector multiplication (SpMV) to compute derivatives everywhere in the domain. The solution values are then updated via a fourth-order Runge Kutta (RK4) time-step. 
 
 
-The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of actual performance to be less than 20 GFLOP/sec. 
+The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of actual performance to be less than 20 GFLOP/sec.   
+%GE When did you achieve close to 20 GFLOP/sec? with ViennaCL? Do any of your plots show this? 
+% What is the maximum bandwidth on the GPUs in practice? Did you measure? I must have missed this. 
 
 Two custom GPU SpMV kernels were described: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. The performance of the custom kernels is rather low at 3 GFLOP/sec at best, but our recent effort to leverage the reduced memory footprint of the ELLPACK sparse matrix format from the ViennaCL library ultimately achieves up to 8 GFLOP/sec, or 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs. 
 
@@ -533,7 +535,7 @@ That, combined with the lack of support for numerous hardware features in OpenCL
 
 \item We are aware that a number of additional sparse formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants \cite{LiSaad2010}, and a number of variants on the ELL format that improve cache use by operating in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. It remains to be seen how these formats can impact performance for RBF-FD. 
 
-\item Rather than focus only on the memory bound SpMV operation, we are already investigating scenarios that increase operational intensity and better utilize the GPU hardware. For example, a single sparse matrix multiplied against a dense matrix (i.e., the SpMM operation), as well as multiple sparse matrices times the same dense matrix (see e.g., \cite{ErlebacherSauleFlyerBollig2013}). 
+\item Rather than focus only on the memory bound SpMV operation, we are already investigating scenarios that increase operational intensity and better utilize the GPU hardware. For example, a single sparse matrix multiplied against a dense matrix (i.e., the SpMM operation), as well as multiple sparse matrices times the same dense matrix (see e.g., \cite{ErlebacherSauleFlyerBollig2013}) show performances in the range of 100 Gflops. 
 \end{itemize}
 
 
