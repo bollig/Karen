@@ -332,8 +332,8 @@ As a testament to the functionality of the ViennaCL library and its utility with
 
 ViennaCL supports a number of sparse formats similar to \cite{Bell2009,Cusp2012}. Due to the low operational intensity in the SpMV operation, the best way to boost performance is to increase compression on the sparse matrix. To this end we consider the performance of three ViennaCL formats shown in Figure~\ref{fig:sparse_format}: 
 \begin{itemize} 
-\item \emph{Coordinate Matrix (COO)} -- 
-\item \emph{Compressed Row Storage (CSR)} -- 
+\item \emph{Coordinate Matrix (COO)} -- The sparse matrix is compressed to three arrays, each containing $N*n$ elements. The first array stores all nonzero weights from the matrix. The second and third arrays store the row and column indices (resp.) for each nonzero element. The COO format does not require nonzeros 
+\item \emph{Compressed Row Storage (CSR)} -- This format assumes weights are sorted by row. 
 \item \emph{ELLPACK (ELL)} -- 
 Due to our assumption that all RBF-FD stencils will have equal size, the ELL format is clearly preferred. 
 \end{itemize}
@@ -358,7 +358,7 @@ where $t_{s}$ is the SpMV execution time given in seconds, and the scale of 2 co
 
 Benchmarks are provided for both the NVidia M2070 and NVidia K20 GPUs on the Cascade cluster. In each case we consider a range of mesh resolutions up to one million nodes on the unit sphere, and stencil sizes $n=17, 31, 50, 101$. 
 
-We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec achieved on the M2070. For each stencil size the ELL format clearly demonstrates itself to perform the best and the format achieves up to 8 GFLOP/sec in the case of $n=101$ nodes per stencil. Unsurprisingly we find that the performance of the CSR format on the GPU is nearly the same GFLOP/sec achieved by our custom GPU kernels in Appendix~\ref{app:keeneland_alltoallv_benchmarks}.
+We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec achieved on the M2070. Unsurprisingly we find that the performance of the CSR format on the GPU is nearly the same GFLOP/sec achieved by our custom GPU kernels in Appendix~\ref{app:keeneland_alltoallv_benchmarks}. However, the performance of the COO format is interesting in that it exceeds the performance of the lower memory CSR format in most cases. For $n=101$ the COO format is approximately 50\% faster than the CSR format. Although this development is interesting, our motivation in the benchmarks is to achieve the best possible performance. For each stencil size the ELL format clearly demonstrates itself as the best with a peak of up to 8 GFLOP/sec in the case of $n=101$ nodes per stencil.
 
 \begin{figure} 
 \centering
@@ -392,7 +392,7 @@ We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec ac
 \label{fig:gflops_cascade_m2070}
 \end{figure}
 
-Figure~\ref{fig:gflops_cascade_k20} shows the achieved GFLOP/sec for Cascade's K20 GPUs. In this case we expect the K20 to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible in the case of the CSR and COO, the ELL disappointingly performs the same as the M2070 with 8 GFLOP/sec peak for stencil size $n=101$. 
+Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU. In this case, the K20 is expected to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for CSR and COO data, the ELL results are disappointingly similar to the M2070 results. The K20 also achieves up to 8 GFLOP/sec peak for stencil size $n=101$. 
 
 \begin{figure} 
 \centering
