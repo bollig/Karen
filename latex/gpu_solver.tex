@@ -356,9 +356,9 @@ GFLOP/sec = (\ ^{N * n * 2} /_{t_{s}} ) * 10^{-9},
 \end{align}
 where $t_{s}$ is the SpMV execution time given in seconds, and the scale of 2 counts the number of FLOPs (a multiply and add) required per nonzero of the matrix. Variables $N$ and $n$ describe the number of rows and nonzeros per row respectively (equivalently the mesh resolution and stencil size).
 
-Benchmarks are provided for both the NVidia M2070 and NVidia K20 GPUs on the Cascade cluster. In each case we consider a range of mesh resolutions up to one million nodes on the unit sphere, and stencil sizes $n=17, 31, 50, 101$. Curves for 
+Benchmarks are provided for both the NVidia M2070 and NVidia K20 GPUs on the Cascade cluster. In each case we consider a range of mesh resolutions up to one million nodes on the unit sphere, and stencil sizes $n=17, 31, 50, 101$. 
 
-We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec achieved on the M2070. For each stencil size the ELL format 
+We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec achieved on the M2070. For each stencil size the ELL format clearly demonstrates itself to perform the best and the format achieves up to 8 GFLOP/sec in the case of $n=101$ nodes per stencil. Unsurprisingly we find that the performance of the CSR format on the GPU is nearly the same GFLOP/sec achieved by our custom GPU kernels in Appendix~\ref{app:keeneland_alltoallv_benchmarks}.
 
 \begin{figure} 
 \centering
@@ -392,7 +392,7 @@ We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec ac
 \label{fig:gflops_cascade_m2070}
 \end{figure}
 
-Figure~\ref{fig:gflops_cascade_k20} provides achieved GFLOP/sec for Cascade's K20 GPUs.  
+Figure~\ref{fig:gflops_cascade_k20} shows the achieved GFLOP/sec for Cascade's K20 GPUs. In this case we expect the K20 to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for in the case of the CSR and COO formats
 
 \begin{figure} 
 \centering
@@ -462,9 +462,15 @@ Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} 
 
 \subsection{Preliminary Results for Intel Xeon Phi} 
 
-As part of future work into accelerating RBF methods, investigations are underway considering the new Intel Xeon Phi architecture \cite{IntelXeonPhi2013}. The variety of hardware available on Cascade will help us establish a clear argument in the choice of accelerator type and resolve the dilemma between choosing Phi vs GPU for our method. Since RBFs generalize other methods, our results should have broad reaching impact to answer similar questions for related methods.
+As part of our continued effort to accelerate RBF methods for HPC environments, investigations are underway to target the Intel's new Xeon Phi architecture \cite{IntelXeonPhi2013}; Intel's attempt to gain footing in the GPU/accelerator market. 
 
-Figure~\ref{fig:gflops_cascade_intel_phi} is provided for comparison with Figures~\ref{fig:gflops_cascade_m2070} and \ref{fig:gflops_cascade_k20}. This stresses the point that although OpenCL offers functional portability, performance portability is still limited. 
+The Xeon Phi hardware on Cascade has 60 cores, each the equivalent of a Pentium class processor extended to support 64-bit words, and four hardware threads per core (i.e., a total of 240 threads). Each of the 60 cores also has an associated vector unit, which operates on 512-bit wide SIMD registers. The SIMD registers function as a vector of eight double precision values. A bi-directional ring interconnect supplies each of the cores data from an 8 GB global memory. 
+
+The card has a theoretical maximum bandwidth of 320 GB/s and double precision peak performance of 1011 GFLOP/sec \cite{IntelXeonPhi2013}. The significantly higher bandwidth on the Xeon Phi leads to the expectation that the new architecture should easily outperform NVidia GPUs on SpMV. 
+
+In early 2013, Intel released a beta OpenCL driver for the Xeon Phi. In light of this we were able to repeat our ViennaCL benchmarks on the new hardware. The resulting data, presented in Figure~\ref{fig:gflops_cascade_intel_phi} \emph{should only be considered preliminary}.  The figure is provided for comparison with Figures~\ref{fig:gflops_cascade_m2070} and \ref{fig:gflops_cascade_k20}. The most obvious issue with Figure~\ref{fig:gflops_cascade_intel_phi} is that every single test case on the Xeon Phi demonstrates substantially lower performance than on NVidia GPUs. We suspect that the low performance is due in part to the beta status of the OpenCL driver. Another concern is that the ViennaCL SpMV kernels were written for NVidia hardware and it is known that OpenCL does not guarantee performance portability. 
+
+As our investigation into the Xeon Phi continues, the benchmarks will be reassessed on upcoming releases of the OpenCL drivers, and we may consider implementing a set of Xeon Phi specific kernels as another ViennaCL back-end. 
 
 \begin{figure} 
 \centering
