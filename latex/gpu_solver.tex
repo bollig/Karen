@@ -100,16 +100,16 @@ Techniques such as node reordering, presented in Chapter~\ref{chap:stencils}, is
 
 \section{Managing Performance Expectations on the GPU}
 
-Before launching into the discussion of how GPU kernels are actually implemented for RBF-FD, we first attempt to manage expectations of the type of performance the method can achieve on the GPU. To this end, we consider the \emph{roofline model} \cite{Williams2009}, which is useful for estimating the maximum possible performance (in terms of GFLOP/sec) for any kernel on the GPU based only on readily available hardware specifications (e.g., \cite{M2070FactSheet, KeplerFactSheet}). 
+Before launching into the discussion of how GPU kernels are actually implemented for RBF-FD, we first attempt to manage expectations of the type of performance the method can achieve on the GPU. To this end, we consider the \emph{roofline model} \cite{Williams2009}, which is useful for estimating the maximum possible performance (in terms of GFLOP/sec) for any kernel on the GPU. 
  
-On the GPU, global memory bandwidth is the constraining resource in kernel performance. The roofline model relates processor performance to the global memory traffic based on the \emph{operational intensity} of a kernel. Operational intensity is defined as the ratio of floating point operations (FLOPs) to total number of bytes loaded by a kernel. The operational intensity depends of course on the precision assumed for calculations. For example, the operational intensity of an SpMV in double precision is two FLOPs (a multiply and add) for every two 8-byte words, resulting in a ratio of $\ ^{1}/_{8}$ FLOPs:Bytes. 
+On the GPU, global memory bandwidth is the constraining resource in kernel performance. The roofline model relates processor performance to the global memory traffic based on the \emph{operational intensity} of a kernel. Operational intensity is defined as the ratio of floating point operations (FLOPs) to the total number of bytes loaded by a kernel. The operational intensity depends of course on the precision assumed for calculations. For example, the operational intensity of an SpMV in double precision is two FLOPs (a multiply and add) for every two 8-byte words, which gives a ratio of $\ ^{1}/_{8}$ FLOPs:Bytes. 
 
 The roofline model states that the maximum possible performance of a GPU kernel is given as
 \begin{align}
 \text{Max Attainable GFLOP/sec} = \min \begin{cases} \text{Peak Performance (Double Precision)} \\ \text{Max Memory Bandwidth} \times \text{Operational Intensity}  \end{cases}
 \label{eq:roofline}
 \end{align}
-where values for the ``DP Peak Performance" and ``Max Memory Bandwidth" are given by vendor provided hardware specifications. 
+where values for the peak performance and memory bandwidth are given by the vendor provided hardware specifications (e.g., \cite{M2070FactSheet, KeplerFactSheet}). 
 
 This work tests two generations of NVidia GPUs shown in Table~\ref{tbl:gpu_comparison}. The first GPU is the previous generation NVidia ``Fermi"-class M2070 with 6 GB global memory and a maximum memory bandwidth of 148 GB/sec \cite{M2070FactSheet}. The second GPU is the latest generation NVidia ``Kepler"-class K20, which has only 5 GB of global memory but 208 GB/sec bandwidth \cite{KeplerFactSheet}. Both GPUs are mounted on the Cascade cluster at the University of Minnesota Supercomputing Institute. 
 
@@ -131,7 +131,7 @@ Cores per Multiprocessor & 32 & 192 \\ \hline
 \end{tabular}
 \end{table}
 
-Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double precision roofline models for the M2070 and K20 GPUs, and are produced by drawing Equation~\ref{eq:roofline} as a function of the operational intensity. The bandwidth and peak GFLOP/sec data for both figures comes from Table~\ref{tbl:gpu_comparison}. Note that the M2070 and K20 roofline models estimate the maximum possible performance of a double precision SpMV to be 18.5 GFLOP/sec and 26 GFLOP/sec respectively. These estimates are vastly lower that the advertised peaks of 515 GFLOP/sec and 1170 GFLOP/sec, but in order to boost performance one would need to increase the operational intensity to 4 FLOPs:Byte for the M2070 or 6 FLOPs:Byte on the K20. A possible approach to achieve this is to change the SpMV to a sparse matrix-matrix (SpMM) computation where the sparse matrix is multiplied against a collection of dense vectors (see e.g., the work in \cite{ErlebacherSauleFlyerBollig2013}). 
+Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double precision roofline models for the M2070 and K20 GPUs, and are produced by drawing Equation~\ref{eq:roofline} as a function of the operational intensity. The bandwidth and peak GFLOP/sec data for both figures comes from Table~\ref{tbl:gpu_comparison}. Note that the M2070 and K20 roofline models estimate the maximum possible performance of a double precision SpMV to be 18.5 GFLOP/sec and 26 GFLOP/sec respectively. These estimates are vastly lower than the advertised peaks of 515 GFLOP/sec and 1170 GFLOP/sec, but in order to achieve the advertised peaks one would need to increase the operational intensity to 4 FLOPs:Byte for the M2070 or 6 FLOPs:Byte on the K20. One possible approach to achieve more performance is to add additional vectors to the multiplication so that the sparse matrix is multiplied against a dense matrix (see e.g., the work in \cite{ErlebacherSauleFlyerBollig2013}). 
 
 \begin{figure} 
 \begin{subfigure}{0.45\textwidth}
@@ -150,7 +150,7 @@ Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double prec
 \caption{Roofline models manage expectations for maximum possible GFLOP/sec based on the Operational Intensity of kernels. The SpMV needed by RBF-FD has an operational intensity of $\ ^{1}/_{8}$ FLOPS:Bytes. }
 \end{figure}
 
-The roofline model is an idealistic estimate for the maximum possible performance one can achieve. Actual measured performance will always be lower than the estimates. 
+The roofline model is an idealistic estimate for the maximum possible performance one can achieve. Actual measured performance is always lower than the estimates. 
 
 
 
@@ -319,22 +319,25 @@ For the performance of the custom RBF-FD implementation we refer readers to \cit
 
 \section{ViennaCL Implementation} 
 
-In an effort to boost performance of RBF-FD on the GPU beyond 3 GFLOP/sec work on the custom OpenCL kernels was suspended in favor of leveraging the SpMV from the ViennaCL library. 
 
-ViennaCL is a C++ library that depends on templates and object-oriented design to abstract the GPU behind a API for general sparse linear algebra. 
+In the interest of boosting performance of RBF-FD beyond 3 GFLOP/sec, work on the custom OpenCL kernels was suspended in favor of leveraging the SpMV built into the ViennaCL library \cite{Rupp2010, Rupp2010a}.  
+The ViennaCL library advertises itself as an OpenCL library that provides standard data types for linear algebra operations on GPUs and multi-core CPUs \cite{Rupp2010}. The library, written in C++ templates, abstracts the GPU behind an API for both dense and sparse linear algebra, iterative krylov solvers, matrix preconditioners, etc. Auto-tuned OpenCL kernels simplify targeting the GPU and allow developers to focus on prototyping applications rather than optimizing their own low-level matrix multiply kernels \cite{Rupp2010a}. 
+The API is structured following existing programming and interface conventions from the Boost::uBLAS library, a CPU-only linear algebra library (\cite{BoostSite}). In fact, the ViennaCL and Boost::uBLAS APIs are directly compatible, and many ViennaCL algorithms (e.g., iterative solvers, preconditioners, etc.) can be applied to Boost::uBLAS data structures. Similar interoperability exists between ViennaCL and the EIGEN and MTL libraries. 
 
-ViennaCL supports a number of sparse formats. We consider the performance of three of them here: Coordinate Matrix format (COO), Compressed-Row Storage format (CSR), and ELLPACK Storage format (ELL). 
+In an interesting twist, the most recent version of ViennaCL (v1.4.2) also supports multiple parallel back-ends that allow one to target different parallel architectures with the same API. Supported back-end options include OpenCL, CUDA, and OpenMP. 
 
-Sparse formats supported by ViennaCL are shown in Figure~\ref{fig:sparse_format}.
+We have integrated the ViennaCL library into the RBF-FD GPU project (\cite{BolligRBFFDCode}), and attempt to use the API whenever possible. When work started with ViennaCL two things were apparent: a) the library is incredibly powerful but it was limited to square matrices; and b) there was no support multiple GPUs. Since the library is open source, we became developers and made a number of contributions that have since been included in the main codebase to add support for rectangular matrices, a matrix preconditioner, and soon our multi-GPU algorithms with overlapping communication and computation presented in Chapter~\ref{chap:multigpu_rbffd}. 
 
+As a testament to the functionality of the ViennaCL library and its utility within the RBF-FD GPU project, we observe that the PETSc project (\cite{petsc-web-page}) recently integrated the library into its codebase. PETSc previously leveraged the CUDA-only library named CUSP (\cite{Cusp2012}) to internally target NVidia GPUs \cite{Minden2010}. However, with the help of ViennaCL back-ends and the functional portability of OpenCL, PETSc can now target parallel architectures from any vendor. 
+
+ViennaCL supports a number of sparse formats similar to \cite{Bell2009,Cusp2012}. Due to the low operational intensity in the SpMV operation, the best way to boost performance is to increase compression on the sparse matrix. To this end we consider the performance of three ViennaCL formats shown in Figure~\ref{fig:sparse_format}: 
 \begin{itemize} 
 \item \emph{Coordinate Matrix (COO)} -- 
 \item \emph{Compressed Row Storage (CSR)} -- 
 \item \emph{ELLPACK (ELL)} -- 
+Due to our assumption that all RBF-FD stencils will have equal size, the ELL format is clearly preferred. 
 \end{itemize}
 
-
-ViennaCL also offers a Diagonal a Hybrid format (HYB) that combines both ELL and CSR formats to accommodate matrices that have only a small variability in the number of nonzeros per row. The HYB splits the sparse matrix into two parts: one stored in ELL which has exactly the same number of nonzeros per row, and the other in CSR format representing the surplus nonzeros for any rows with greater than $n$ nonzeros. In light of our decision to generate all stencils with size $n$, the HYB offer no benefit.
 
 \begin{figure}
 \centering
@@ -343,109 +346,15 @@ ViennaCL also offers a Diagonal a Hybrid format (HYB) that combines both ELL and
 \label{fig:sparse_format}
 \end{figure}
 
-Other formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants, and a number of variants on the ELL format that operate in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. The HYB format stores the bulk of a matrix in an ELL container and the excess non-zeros per row in a CSR format. HYB benefits from reduced storage and memory loads in the ELL, and maintains the generality of a CSR matrix. 
 
+\subsection{Performance}
+To compare the performance of ViennaCL to our custom GPU kernels, we integrated the library into our RBF-FD implementation (\cite{BolligRBFFDCode}) and benchmarked the performance of the SpMV in a simulated RK4 iteration. In each case, a single RBF-FD differentiation matrix is assembled and then multiplied against four different vectors as evaluation steps. The resulting vectors are then scaled and added together to advance the time-step. We benchmark the time spent in SpMV for the ViennaCL sparse containers (ELL, CSR, COO), and a CPU-only CSR container from the BOOST::uBLAS library. 
 
-ViennaCL provides seamless interoperability with the Boost::UBLAS, EIGEN and MTL libraries via C++ templates. We test the performance of our algorithm on one or more CPUs with the Boost::UBLAS library. 
-
-
-%
-%\begin{verbatim}
-%"__kernel void vec_mul(\n"
-%"          __global const unsigned int * row_indices,\n"
-%"          __global const unsigned int * column_indices, \n"
-%"          __global const float * elements,\n"
-%"          __global const float * vector,  \n"
-%"          __global float * result,\n"
-%"          unsigned int size) \n"
-%"{ \n"
-%"  for (unsigned int row = get_global_id(0); row < size; row += get_global_size(0))\n"
-%"  {\n"
-%"    float dot_prod = 0.0f;\n"
-%"    unsigned int row_end = row_indices[row+1];\n"
-%"    for (unsigned int i = row_indices[row]; i < row_end; ++i)\n"
-%"      dot_prod += elements[i] * vector[column_indices[i]];\n"
-%"    result[row] = dot_prod;\n"
-%"  }\n"
-%"}\n"
-%\end{verbatim}
-%
-%\begin{verbatim}
-%"__kernel void vec_mul(\n"
-%"    const __global int* coords,\n"
-%"    const __global float* elements,\n"
-%"    const __global const float * vector,\n"
-%"    __global float * result,\n"
-%"    const unsigned int row_num,\n"
-%"    const unsigned int col_num,\n"
-%"    const unsigned int internal_row_num,\n"
-%"    const unsigned int items_per_row,\n"
-%"    const unsigned int aligned_items_per_row\n"
-%"    )\n"
-%"{\n"
-%"    uint glb_id = get_global_id(0);\n"
-%"    uint glb_sz = get_global_size(0);\n"
-%"    for(uint row_id = glb_id; row_id < row_num; row_id += glb_sz)\n"
-%"    {\n"
-%"        float sum = 0;\n"
-%"        \n"
-%"        uint offset = row_id;\n"
-%"        for(uint item_id = 0; item_id < items_per_row; item_id++, offset += internal_row_num)\n"
-%"        {\n"
-%"            float val = elements[offset];\n"
-%"            if(val != 0.0f)\n"
-%"            {\n"
-%"                int col = coords[offset];    \n"
-%"                sum += (vector[col] * val);\n"
-%"            }\n"
-%"            \n"
-%"        }\n"
-%"        result[row_id] = sum;\n"
-%"    }\n"
-%"}\n"
-%\end{verbatim}
-
-
-
-
-%TODO: ALL SPMV related work.
-%\cite{Bell2009} 
-%TODO: \cite{Kreuzer2012} in distributed GPU. 
-%\cite{Vuduc2005} etc. 
-
-
-%
-%To further optimize RBF-FD on the GPU, we formulate the problem in terms of a Sparse Matrix-Vector Mulitply (SpMV). When we consider the problem in this light we generate a single Differentiation Matrix that can see two optimizations not possible with our stencil-based view: 
-%\begin{itemize} 
-%\item First, the sparse containers used in SpMV allow for their own unique optimizations to compress storage and leverage hardware cache.
-%\item Evaluation of multiple derivatives can be accumulated by association into one matrix operation. This reduces the total number of floating point operations required per iteration. 
-%\end{itemize}
-
-
-%TODO: tell the story of ViennaCL. 
-%TODO: what motivated the switch
-The library includes a variety of sparse matrix formats, solvers, preconditioners, etc. Dense and sparse containers simplify targeting the GPU. 
-
-At the onset of work with ViennaCL two things were apparent: 1) the library was incredibly powerful but limited to square matrices; and 2) the library had no support for distributed computing. Our implementation of RBF-FD (\cite{BolligRBFFDCode}) required rectangular matrices resulting from domain decomposition. The enhancements to the API have since been added to the main branch of ViennaCL. 
-
-
-Sparse containers allow increased efficiency compared to our custom kernels. 
-In an effort to boost performance, we integrated the ViennaCL library into our RBF-FD implementation and compared performance of three sparse containers provided by the library to determine the most appropriate sparse representation for RBF-FD. We compare the performance of the ViennaCL sparse containers (ELL, CSR, COO), and a CPU-only implementation of SpMV to the BOOST::uBLAS compressed-row storage. 
-
-Due to the assumption that all stencils have equal size, the ELL format is preferred as the default. 
-
-
-%Most recently, the PETSc library gained GPU support with the addition of both CUSP \cite{Cusp2012} and ViennCL \cite{Rupp2010} back-ends \cite{Minden2010}. PETSc---which dates back to the early 1990s---is widely-used for solving PDEs with proven scalability on the world's top supercomputers. PETSc provides distributed sparse and dense matrix algebra, Krylov solvers, and preconditioners. The support for GPU back-ends allows a vast number of applications that have been developed over more than two decades to run on multiple GPUs with minimal modification. Since PETSc already has overlapping MPI communication and computation for distributed CPU environments, the GPU offloaded applications also benefit from this feature. Yokota et al. \cite{YokotaGPU2010} demonstrate that PETSc multi-GPU applications can scale excellently (in the strong sense) when configured for tree-based communication, which arises naturally from Fast Multipole Methods. The authors scale their boundary element method across 256 GPUs (2 per compute node) with 80\% parallel efficiency, and 512 GPUs (4 per compute node) with 50\% efficiency. In contrast to this our distributed implementation currently achieves no more than 57\% parallel efficiency when spanning 8 GPUs. While we do not take advantage of tree-based communications, this is planned as part of the future work to improve scalability. 
-
- 
-
-\section{SpMV Performance on Cascade}
-
-Measured performance of GPU kernels is computed as
+We measure the performance of the SpMV as
 \begin{align}
 GFLOP/sec = ^{N * n * 2} /_{t_{ms}} * 10^{-9},
 \end{align}
-where $t_{ms}$ is the kernel execution time given in milliseconds, and the variables $N$ and $n$ describe the grid size and stencil size respectively. 
+where $t_{ms}$ is the total SpMV execution time given in milliseconds, and the variables $N$ and $n$ describe the number of rows and nonzeros per row respectively. 
 
 The actual observed GFLOP/sec achieved on Cascade's M2070 GPUs with the ViennaCL package is shown in Figure~\ref{fig:gflops_cascade_m2070}. Figure~\ref{fig:gflops_cascade_k20} provides achieved GFLOP/sec for Cascade's K20 GPUs.  
 
@@ -562,9 +471,7 @@ The Roofline model (\cite{Williams2009}) was introduced to manage expectations f
 
 In hindsight, the market today clearly favors NVidia for GPU computing with the majority of GPU clusters world-wide contain NVidia accelerators (typically Tesla units). The CUDA C/C++ compiler was open-sourced in the Spring of 2012 as an LLVM compiler, which allows other languages to directly interface with the GPU without the need for wrappers (see e.g., \cite{NumbaPro}). 
 
-%The latest version of OpenMP (v4.0) introduces pragmas for offloading computation to accelerators. These pragmas will function similarly to pragmas from PGI, OpenACC, and the Intel MIC. 
-
-
+Note that other sparse formats exist such as the Hybrid ELL plus CSR (HYB) format \cite{Bell2009}, Diagonal (DIAG) and Jagged Diagonal (JAD) variants \cite{LiSaad2010}, and a number of variants on the ELL format that improve cache use by operating in blocks (BELL), slices (SELL), or both (SBELL) \cite{SuKeutzer2012}. Although the additional formats are not considered here, we do have plans to consider them as part of future work. 
 
 
 \subsection{Preliminary Results for Intel Xeon Phi} 
