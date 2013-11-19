@@ -326,7 +326,14 @@ Although the COO and CSR benchmarks are interesting, our motivation in the bench
 \label{fig:gflops_cascade_m2070}
 \end{figure}
 
-Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU. In this case, the K20 is expected to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for CSR and COO data, the ELL results are disappointingly similar to the M2070 results. The K20 also achieves only up to 8 GFLOP/sec peak for stencil size $n=101$. Given the performance increased as expected for COO and CSR formats, the lack of increase for ELL is likely cause by limited cache utilization (e.g., if only a few elements per cache line are needed before eviction). If cache lines are underutilized, then the 8 GFLOP/sec can be improved by techniques like node ordering (see Chapter~\ref{chap:stencils}). 
+Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU. In this case, the K20 is expected to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for CSR and COO data, the ELL results are disappointingly similar to the M2070 results. The K20 also achieves only up to 8 GFLOP/sec peak for stencil size $n=101$. 
+
+%The limited performance for ELL on the K20 problem can be caused by a number of is we know NVidia is
+%providing limited support for OpenCL kernels so it is possibly a
+%shortcoming of the OpenCL driver. However, the boost in performance on
+%COO and CSR leads me to believe its more likely a problem of register
+%density and cache utilization.
+%Given the performance increased as expected for COO and CSR formats, the lack of increase for ELL may be caused by limited cache utilization. The L1 caches on the M2070 and K20 have the same size. If cache lines are underutilized (e.g., if only a few doubles per line are used), then (all else being equal) both GPUs evict lines at the same time and performance is limited by the number of cycles .  then the 8 GFLOP/sec can be improved by techniques like node ordering (see Chapter~\ref{chap:stencils}). 
 
 % WHY IS THIS EVAN? MAKE SOME STATTEMENT IF YOU CAN. 
 
