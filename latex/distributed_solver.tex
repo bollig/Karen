@@ -191,6 +191,7 @@ METIS is preferred for consistent partition sizes and minimized overlap, but we 
 
 
 \section{Index Mappings}
+\label{sec:index_mappings}
 
 Once a partitioning is available, each MPI process is responsible for its own subset of nodes. 
 To simplify accounting, we track nodes in two ways. Each node is assigned
@@ -257,6 +258,7 @@ complete calculations at the center of node 6.
 The center of Figure~\ref{fig:stencilSets2CPU} assigns the nine nodes to local sets for each process. Constructing these index mappings allows each process to ignore nodes/stencils outside their subdomain and focus only on their subset of the problem. Processes avoid both the cost of storing a complete RBF-FD differentiation matrix (DM) as well as full solution vectors. Instead, a local rectangular DM of size $|\setCenters| \times |\setAllNodes|$ is constructed by each process with compressed solution vectors of size $|\setAllNodes|$ to match. Our implementation follows a workflow that first generates stencils, and then partitions the adjacency graph in serial. In parallel, each processor loads its assigned partition, constructs index mappings, and solves for RBF-FD weights to generate a local DM.  
 
 \section{Local Ordering}
+\label{sec:local_ordering}
 
 Figure~\ref{fig:stencilSets2CPU} lists global node indices contained in $\setAllNodes$ for each MPI process. Global indices are paired with a local mapping to indicate the internal node ordering for each process. The structure of set $\setAllNodes$,
    \begin{equation}
