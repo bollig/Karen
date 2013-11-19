@@ -49,9 +49,30 @@ In Chapter~\ref{chap:distributed_rbffd}, the SpMV was assumed run on the CPU. He
 
 Our original attempt at multi-GPU RBF-FD, described in \cite{BolligFlyerErlebacher2012}, utilized blocking communication (i.e., \texttt{MPI\_Send}/\texttt{MPI\_Recv}) for synchronization. The blocking communication functioned for debugging purposes, but was not practical. In Appendix~\ref{app:keeneland_alltoallv_benchmarks}, we provide supplementary data that demonstrates the result of replacing the blocking send and receives with an \texttt{MPI\_Alltoallv} (i.e., the GPU equivalent of Figure~\ref{fig:alltoallv_cpu}). In both cases the SpMV is a single kernel launch and the synchronization includes both an encode and decode phase (see \S~\ref{sec:local_ordering}). 
 
-The two multi-GPU algorithms presented in this chapter build on Figure~\ref{fig:no_decode_cpu} and Figure~\ref{fig:overlap_cpu}; the final collectives tested in \S~\ref{sec:mpi_improvements}. 
+The two multi-GPU algorithms presented in this chapter build off of Figure~\ref{fig:no_decode_cpu} and Figure~\ref{fig:overlap_cpu}; the final collectives tested in \S~\ref{sec:mpi_improvements}. 
 
-Figure~\ref{fig:isendirecv_gpu} presents 
+Figure~\ref{fig:isendirecv_gpu} presents the GPU accelerated equivalent of Figure~\ref{fig:no_decode_cpu} with \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} communication and no decode process (i.e., nodes in $\setDepend$ are expected to be in contiguous by processor). In this case the communication has no overlap with computation of the SpMV. 
+
+The algorithm for Figure~\ref{fig:isendrecv_gpu} is as follows. First, the CPU launches \texttt{MPI\_Irecv} as soon as possible. When control returns from the non-blocking launch, the CPU queues a non-blocking memory transfer to copy $\setOutput$ from GPU down to CPU and the OpenCL command \texttt{clFinish} is executed to ensure the transfer completes before . 
+ 
+\begin{figure} 
+\centering
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_IsendIrecv.pdf}
+\caption{GPU and MPI\_Isend/MPI\_Irecv (Non-Overlapping)}
+\label{fig:isendirecv_gpu}
+\end{subfigure}
+\quad
+\begin{subfigure}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_OverlapGPU.pdf}
+\caption{GPU and MPI\_Isend/MPI\_Irecv (Overlapping)}
+\label{fig:overlap_gpu}
+\end{subfigure}
+\caption{Overlapping GPU kernels with CPU managed communication. Task block sizes are not drawn to scale.} 
+\label{fig:gpu_mpi_tuning}
+\end{figure}
 
    \begin{enumerate}
     \item Transfer $\mathcal{O}$ from GPU to CPU
@@ -101,25 +122,7 @@ Recent advances in distributed (multi-)GPU computing involve NVidia's GPU Direct
 
 Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
 
- 
-\begin{figure} 
-\centering
-\begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_IsendIrecv.pdf}
-\caption{GPU and MPI\_Isend/MPI\_Irecv (Non-Overlapping)}
-\label{fig:isendirecv_gpu}
-\end{subfigure}
-\quad
-\begin{subfigure}{0.48\textwidth}
-\centering
-\includegraphics[width=\textwidth]{../figures/omnigraffle/GPU_OverlapGPU.pdf}
-\caption{GPU and MPI\_Isend/MPI\_Irecv (Overlapping)}
-\label{fig:overlap_gpu}
-\end{subfigure}
-\caption{Overlapping GPU kernels with CPU managed communication. Task block sizes are not drawn to scale.} 
-\label{fig:gpu_mpi_tuning}
-\end{figure}
+
 
 
 \section{Strong Scaling Performance}
