@@ -34,7 +34,7 @@ One issue with distributing computation across multiple GPUs is that the GPUs ex
 %With the popularity of GPU clusters, there are naturally a number of related investigations in the literature that consider overlapping communication and computation for multi-GPU applications. For example, Kim and Park overlap communication and computation in their implementation of a Finite-Difference Time-Domain algorithm and demonstrate near perfect strong scaling up to 6 GPUs \cite{KimPark2012}. \cite{Thibault2009}
 %
 
-\section{An Overlapping Communication and Computation Multi-GPU RBF-FD Algorithm}
+\section{Multi-GPU RBF-FD}
 
 Our efforts in \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} targeted the Keeneland Initial Delivery (KID) system. 
 
@@ -103,7 +103,11 @@ Overlapping communication and GPU computation is enabled by two levels of asynch
 
 \section{Performance}
 
-In Chapter~\ref{chap:gpu_rbffd} we introduced the Cascade GPU cluster which contains up to 32 NVidia M2070 GPUs, 8 NVidia K20 GPUs and 3 Intel Xeon Phis. 
+We now consider the performance of our multi-GPU algorithms. 
+
+In Appendix~\ref{app:keeneland_alltoallv_benchmarks}, we present scaling data for our multi-GPU implementation based on custom OpenCL kernels developed for \cite{BolligFlyerErlebacher2012}. The data was generated on the Keeneland Initial Delivery (KID) system \cite{Vetter2011}, and shows strong scaling up to 10 GPUs (1 GPU per compute node) applied to the small problem size of $N=27556$ nodes. Non-overlapping communication (\texttt{MPI\_Alltoallv}) synchronizes GPUs as they execute iterations of RK4 time-scheme. 
+
+In Chapter~\ref{chap:gpu_rbffd} the Cascade GPU cluster was introduced. Recall that Cascade contains up to 32 NVidia M2070 GPUs, 8 NVidia K20 GPUs and 3 Intel Xeon Phis. Although Cascade is not a large GPU cluster, it does present a nice environment for testing scaling 
 
 We scale our ViennaCL ELL format SpMV across the M2070 GPUs on Cascade. This gives us up to 32 GPUs for computation. 
 
@@ -119,7 +123,7 @@ If speedup greater than $p = (Compute Nodes * PPN)$ is achieved
 
 I/O Hub contention is a known issue on HP ProLiant GPU clusters like Cascade (see e.g., \cite{Spafford2011}). 
 
-See Appendix~\ref{app:keeneland_alltoallv_benchmarks} for scaling benchmarks from the non-ViennaCL multi-GPU implementation. Appendix~\ref{app:keeneland_alltoallv_benchmarks} demonstrates the scalability of an iteration of RK4 as applied in \S~\ref{sec:cosine_bell} on the Keeneland GPU cluster---the benchmark assumes three SpMV operations per intermediate evaluation of the RK4 time-step. 
+
 
 In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
 
