@@ -121,8 +121,16 @@ Compute Nodes &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 \end{tabular} 
 \end{table}
 
-The data in Table~\ref{tbl:cascade_m2070_nonoverlap} shows that without overlapped communication and computation our multi-GPU scaling poor in all cases. For 8 compute nodes and 1 PPN (i.e., 8 GPUs total) the code achieves stencil sizes achieve only 18\% - 20\% strong scaling efficiency. When multiple GPUs per node are tested, we find that the performance actually decreases by as much as a factor of two. 
+The data in Table~\ref{tbl:cascade_m2070_nonoverlap} shows that without overlapped communication and computation our multi-GPU scaling is poor in all cases. For 8 compute nodes and 1 PPN (i.e., 8 GPUs total) the code achieves only 18\% - 20\% strong scaling efficiency. When increased to multiple GPUs per node, we find that the performance actually decreases by as much as a factor of two. 
 
+The reduced performance observed for multiple GPUs per node (e.g., 1 compute node, 4 PPN) reflects a known problem in the design of Cascade. To understand this we turn to  Each of the M2070 compute nodes on Cascade has four GPUs attached to independent PCI-E buses. Those PCI-E buses junction at an I/O Hub which is in turn connected to the a bottleneck in the path between CPU and the four GPUs.
+
+\begin{figure}
+\centering
+\includegraphics[0.5\textwidth]{./gpu_content/omnigraffle/CascadeIOHub.pdf}
+\caption{A high level view of the }
+\label{fig:cascade_iohub}
+\end{figure}
 
 
 By comparing benchmarks from the non-overlapped and overlapped GPU cases, we get the speedup: 
@@ -134,10 +142,6 @@ in using the overlapped solution. Any reduction in time is evidence of overlap.
 The 32 M2070 GPUs partitioned into four GPUs per compute node poses a particularly interesting challenge. 
 
 Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
-
-
-I/O Hub contention is a known issue on HP ProLiant GPU clusters like Cascade (see e.g., \cite{Spafford2011}). 
-
 
 In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
 
