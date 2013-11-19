@@ -22,16 +22,25 @@
 %TODO: cuda mpi aware
 
 
-Today, high performance computing centers around the world are leveraging GPU accelerators to reach their peak performance. For example, the Titan supercomputer at Oak Ridge National Lab is (as of this writing) currently ranked \#2 on the world-wide Top500 list, and achieved that spot with 18,688 NVidia K20 GPUs and 18,688 AMD Opteron CPUs in a 1:1 pairing for a peak theoretical peak of 27.1 PFLOP/sec \cite{TitanGPUCluster}. 
-In some cases, HPC installations like the Keeneland project \cite{Vetter2011} boast significantly more GPU accelerators than CPU counterparts. The Keeneland Full-Scale (KFS) system has 264 compute nodes, with each containing two Intel Sandy-Bridge CPUs and 3 NVidia Fermi-class GPUs (i.e. 792 total GPUs), and a theoretical peak of 615 TFLOP/sec \cite{Vetter2011}. 
+Today, high performance computing centers around the world are leveraging GPU accelerators to reach their peak performance. For example, the Titan supercomputer at Oak Ridge National Lab is (as of this writing) ranked \#2 on the world-wide Top500 list, and achieved that spot with a total of 18,688 NVidia K20 GPUs and 18,688 AMD Opteron CPUs in a 1:1 pairing for a theoretical peak of 27.1 PFLOP/sec \cite{TitanGPUCluster}. 
+In some cases, HPC installations like the Keeneland project \cite{Vetter2011} boast significantly more GPU accelerators than CPU counterparts. The Keeneland Full-Scale (KFS) system has 528 Intel Sandy-Bridge CPUs and 792 NVidia Fermi-class GPUs in 264 compute nodes (i.e., 2:3 CPUs:GPUs), and a theoretical peak of 615 TFLOP/sec \cite{Vetter2011}. 
+
+Ultimately, finding a way to harness the tera- and peta-scale performance from such clusters is a grand challenge for our work on RBF-FD and other RBF PDE methods. To this end we present the first multi-GPU implementation of RBF-FD within this chapter.
+
+In Chapter~\ref{chap:gpu_rbffd}, we have already developed two different approaches to computing RBF-FD on a single GPU. Then in Chapter~\ref{chap:distributed_rbffd}, we laid the foundation for a distributed RBF-FD that spans the nodes of an HPC cluster, and demonstrated scaling up to 1024 processors (128 nodes). This chapter combines algorithms from both of those chapters to produce the first (to our knowledge) multi-GPU implementation of the RBF-FD method. Unfortunately, due to the this is not the possible due to one problem: communication overhead. 
+ 
 
 
-Our efforts in \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} targeted the Keeneland Initial Delivery (KID) system. 
-
+%TODO: deep memory hierarchy for CPUs gets deeper when going to GPUs. 
+%TODO: 
 
 \section{Multi-GPU Computing} 
 
 Multi-GPU clusters 
+
+
+Our efforts in \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} targeted the Keeneland Initial Delivery (KID) system. 
+
 
 
 %TODO: \cite{Goeddeke2009} \cite{Erez2007}
