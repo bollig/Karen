@@ -22,7 +22,9 @@
 %TODO: cuda mpi aware
 
 
-Today, high performance computing centers around the world are leveraging GPU accelerators to reach their peak performance. In fact, a number of high performance computing installations boast significantly more GPU accelerators than CPU counterparts. An example of this is the Keeneland project, which in its current Full-Scale deployment has 264 nodes, with each node containing two Intel Sandy-Bridge CPUs and 3 NVidia Fermi-class GPUs (i.e. 792 total GPUs), and a theoretical peak of 615 TFLOP/sec \cite{Vetter2011}. Other projects like TSUBAME 2.0 house up the ante to 4116 GPUs total 
+Today, high performance computing centers around the world are leveraging GPU accelerators to reach their peak performance. For example, the Titan supercomputer at Oak Ridge National Lab is (as of this writing) currently ranked \#2 on the world-wide Top500 list, and achieved that spot with 18,688 NVidia K20 GPUs and 18,688 AMD Opteron CPUs in a 1:1 pairing for a peak theoretical peak of 27.1 PFLOP/sec \cite{TitanGPUCluster}. 
+In some cases, HPC installations like the Keeneland project \cite{Vetter2011} boast significantly more GPU accelerators than CPU counterparts. The Keeneland Full-Scale (KFS) system has 264 compute nodes, with each containing two Intel Sandy-Bridge CPUs and 3 NVidia Fermi-class GPUs (i.e. 792 total GPUs), and a theoretical peak of 615 TFLOP/sec \cite{Vetter2011}. 
+
 
 Our efforts in \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} targeted the Keeneland Initial Delivery (KID) system. 
 
