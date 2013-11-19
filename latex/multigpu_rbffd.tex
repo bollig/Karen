@@ -31,6 +31,8 @@ In Chapter~\ref{chap:gpu_rbffd}, we have already developed two different approac
 
 One issue with distributing computation across multiple GPUs is that the GPUs excel at accelerating computation, but do nothing to reduce the cost of communication. With communication latency suddenly disproportionately large compared to computation, the distributed GPU implementation loses its ability to scale well. As part of this chapter, we detail an algorithm to hide communication latency behind overlapped computation. The algorithm presented herein is an organic extension to the overlapping communication and computation algorithm in Chapter~\ref{chap:distributed_rbffd}. 
 
+Our multi-GPU implementation leverages non-blocking MPI communication plus two asynchronous OpenCL queues to amortize the cost of data transfer between CPU and GPU, MPI communication, and in some cases hide some computation. 
+
 %With the popularity of GPU clusters, there are naturally a number of related investigations in the literature that consider overlapping communication and computation for multi-GPU applications. For example, Kim and Park overlap communication and computation in their implementation of a Finite-Difference Time-Domain algorithm and demonstrate near perfect strong scaling up to 6 GPUs \cite{KimPark2012}. \cite{Thibault2009}
 %
 %TODO: \cite{Goeddeke2009} \cite{Erez2007}
@@ -40,6 +42,17 @@ One issue with distributing computation across multiple GPUs is that the GPUs ex
 
 
 \section{Multi-GPU RBF-FD}
+
+In order to develop the multi-GPU implementation, we return to the idealized test case considered in Chapter~\ref{chap:distributed_rbffd}: four derivatives on a regular grid in 3-D are computed via SpMV and used as the intermediate vectors for an RK4 time-step. At the end of each SpMV a communication collective synchronizes external dependencies for each subdomain.
+
+In this chapter, the SpMV 
+
+
+
+
+In Chapter~\ref{chap:distributed_rbffd} our discussion of 
+
+
 
 Internal to every OpenCL application is both a Context and a Queue. The Context 
 
