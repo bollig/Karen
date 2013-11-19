@@ -123,16 +123,16 @@ Compute Nodes &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 
 The data in Table~\ref{tbl:cascade_m2070_nonoverlap} shows that without overlapped communication and computation our multi-GPU scaling is poor in all cases. For 8 compute nodes and 1 PPN (i.e., 8 GPUs total) the code achieves only 18\% - 20\% strong scaling efficiency. When increased to multiple GPUs per node, we find that the performance actually decreases by as much as a factor of two. 
 
-The reduced performance observed for multiple GPUs per node (e.g., 1 compute node, 4 PPN) reflects a known design flaw on Cascade illustrated in the block diagram in Figure~\ref{fig:cascade_iohub}. Each of the M2070 compute nodes on Cascade has four GPUs attached to an NVidia proprietary hub, which is in turn connected via PCI Express to the I/O Hub for the CPUs. The single lane connection between the I/O Hub and the NVidia Hub acts as a bottleneck when copying data to multiple GPUs. Simultaneous data transfers contend for access to the lane and transfers are serialized. Serializing the data transfers can effectively double or quadruples the run-time. 
+The reduced performance observed for multiple GPUs per node (e.g., 1 compute node, 4 PPN) reflects a known design flaw on Cascade illustrated in the block diagram in Figure~\ref{fig:cascade_iohub}. Each of the M2070 compute nodes on Cascade has four GPUs attached to an NVidia proprietary hub, which is in turn connected via PCI Express to the I/O Hub for the CPUs. The single lane connection between the I/O Hub and the NVidia Hub acts as a bottleneck when copying data to multiple GPUs. Simultaneous data transfers contend for access to the lane and transfers are serialized. Serializing the data transfers can effectively double or quadruple the run-time. 
 
 \begin{figure}
 \centering
 \includegraphics[width=0.5\textwidth]{gpu_content/omnigraffle/CascadeIOHub.pdf}
-\caption{A block diagram of Cascade's hardware structure. While GPUs can operate independently, the single lane connecting the I/O Hub to the NVidia Hub acts as a bottleneck. Simultaneous memory transfers to multiple GPUs must serialized to cross the link. }
+\caption{A block diagram of Cascade's hardware structure. While GPUs can operate independently, the single lane connecting the I/O Hub to the NVidia Hub acts as a bottleneck. Simultaneous memory transfers to multiple GPUs must serialized to cross the link. Based on the output from \texttt{lspci -tv}. }
 \label{fig:cascade_iohub}
 \end{figure}
 
-We now turn to Table~\ref{tbl:cascade_m2070_overlap}, which presents the scaling data for 1, 2, 4 and 8 nodes and 1, 2 and 4 PPN and our overlapping  algorithm communication and computation. Once again, GFLOP/sec are provide for each case. However, Table~\ref{tbl:cascade_m2070_overlap} additionally provides the speedup
+Table~\ref{tbl:cascade_m2070_overlap}, presents the scaling data for 1, 2, 4 and 8 nodes and 1, 2 and 4 PPN with our overlapping communication and computation algorithm. Once again, the measured GFLOP/sec are provide for each case. In this case, Table~\ref{tbl:cascade_m2070_overlap} additionally provides the speedup
 \begin{align*} 
 S_p = \ ^{t_{non-overlapped}} /_{t_{overlapped}},
 \end{align*}
