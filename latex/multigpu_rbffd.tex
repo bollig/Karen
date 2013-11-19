@@ -19,6 +19,12 @@
 %TODO: a single queue would have synchronous copy following kernel execution and synchronous SpMV if both in same queue
 %TODO: two queues allows asynchronous copy and overlap between SpMVs.
 
+In this chapter we extend the 
+
+Internal to every OpenCL application is both a Context and a Queue. The Context 
+
+The overlapping communication is achieved by creating additional queues 
+
 
 Recent advances in distributed (multi-)GPU computing involve NVidia's GPU Direct technology. GPU Direct allows hardware like the PCI-e bus to directly access memory on the GPU device. CUDA V5.5 adds full support for MPI applications 
 
