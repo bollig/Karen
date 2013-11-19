@@ -19,16 +19,18 @@
 %TODO: a single queue would have synchronous copy following kernel execution and synchronous SpMV if both in same queue
 %TODO: two queues allows asynchronous copy and overlap between SpMVs.
 
-
-\section{Introduction}
-
-
-
-\section{OpenCL Queues}
-\section{I/O Hub}
-\cite{Spafford2011} 
+%TODO: cuda mpi aware
 
 In this chapter we extend the 
+
+
+Petascale computing centers around the world are leveraging GPU accelerators to achieve peak performance. In fact, many of today's high performance computing installations boast significantly more GPU accelerators than CPU counterparts. The Keeneland project is one such example, currently with 240 CPUs accompanied by 360 NVidia Fermi class GPUs with at least double that number expected by the end of 2012 \cite{Vetter2011}. 
+
+%TODO: \cite{Goeddeke2009} \cite{Erez2007}
+
+
+
+Similar approaches to overlapping communication and computation can be found in \cite{Schubert2011} and \cite{Thibault2009}.
 
 Internal to every OpenCL application is both a Context and a Queue. The Context 
 
@@ -44,35 +46,12 @@ Lawlor \cite{Lawlor2009} wraps a subset of MPI collectives, memory copies betwee
 OpenCL does not support must be explicitly copied to the CPU 
 
 
-
-%TODO: \cite{Goeddeke2009} \cite{Erez2007}
+\section{Multi-GPU Challenges}
 
 Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
 
+\section{Communication Collectives}
 
-Petascale computing centers around the world are leveraging GPU accelerators to achieve peak performance. In fact, many of today's high performance computing installations boast significantly more GPU accelerators than CPU counterparts. The Keeneland project is one such example, currently with 240 CPUs accompanied by 360 NVidia Fermi class GPUs with at least double that number expected by the end of 2012 \cite{Vetter2011}. 
-
-Such throughput oriented architectures require developers to decompose problems into thousands of independent parallel tasks in order to fully harness the capabilities of the hardware. To this end, a plethora of research has been dedicated to researching algorithms in all fields of computational science. Of interest to us are methods for atmospheric- and geo-sciences. 
-
-
-Similar approaches to overlapping communication and computation can be found in \cite{Schubert2011} and \cite{Thibault2009}.
-
-When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
-
-\section{Overlapping with the GPU}
-
-%The two level parallelization can even be extended to three level parallelism
-%with pThreads or OpenMP (see code samples attached to \cite{CudaToolkitDoc}). While OpenCL provides
-%the means to target parallelism on either multi-core CPUs or many-core GPUs, it
-%does not allow a parallel kernel on one hardware interact with a parallel kernel
-%on the another. That is to say, an OpenCL kernel on the CPU cannot launch
-%kernels on the GPU.  
-
-Overlapping communication and GPU computation is enabled by two levels of asynchronous commands: 
-\begin{itemize} 
-\item \emph{Non-blocking MPI}. The MPI\_Isend/MPI\_Irecv routines are used to post communication and immediately return the main thread to computation. 
-\item \emph{Asynchronous GPU Queues}. Two OpenCL queues are utilized to send commands to the GPU. 
-\end{itemize}
 
  
 \begin{figure} 
@@ -95,23 +74,24 @@ Overlapping communication and GPU computation is enabled by two levels of asynch
 \end{figure}
 
 
+\subsection{Non-overlapping Communication}
+
+When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
+
+\section{Overlapping with the GPU}
+
+Overlapping communication and GPU computation is enabled by two levels of asynchronous commands: 
+\begin{itemize} 
+\item \emph{Non-blocking MPI}. The MPI\_Isend/MPI\_Irecv routines are used to post communication and immediately return the main thread to computation. 
+\item \emph{Asynchronous GPU Queues}. Two OpenCL queues are utilized to send commands to the GPU. 
+\end{itemize}
 
 
-\section{Distributed GPU Performance}
+\section{Performance}
 
+In Chapter~\ref{chap:gpu_rbffd} we introduced the Cascade GPU cluster which contains up to 32 NVidia M2070 GPUs, 8 NVidia K20 GPUs and 3 Intel Xeon Phis. 
 
-\subsection{Non-Overlapping Multi-GPU Results} 
-
-See Appendix~\ref{app:keeneland_alltoallv_benchmarks} for scaling benchmarks from the non-ViennaCL multi-GPU implementation. Appendix~\ref{app:keeneland_alltoallv_benchmarks} demonstrates the scalability of an iteration of RK4 as applied in \S~\ref{sec:cosine_bell} on the Keeneland GPU cluster---the benchmark assumes three SpMV operations per intermediate evaluation of the RK4 time-step. 
-
-In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
-
-Benchmarks
-
-
-\subsection{Overlapping Results}
-We scale the SpMV across the GPUs on Cascade.
-
+We scale our ViennaCL ELL format SpMV across the M2070 GPUs on Cascade. This gives us up to 32 GPUs for computation. 
 
 By comparing benchmarks from the non-overlapped and overlapped GPU cases, we get the speedup: 
 \begin{align*} 
@@ -119,11 +99,18 @@ S_p = \ ^{t_{non-overlapped}} /_{t_{overlapped}}
 \end{align*}
 in using the overlapped solution. Any reduction in time is evidence of overlap. 
 
-%Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, the time spent in non-SpMV related tasks (e.g., data transfer, encoding, and communication) is known from the unoverlapped case. Therefore, given the time for the overlapped SpMV case, we can calculate the amount of overlap as 
-
 If speedup greater than $p = (Compute Nodes * PPN)$ is achieved 
 
-\begin{table}[h]
+
+
+I/O Hub contention is a known issue on HP ProLiant GPU clusters like Cascade (see e.g., \cite{Spafford2011}). 
+
+See Appendix~\ref{app:keeneland_alltoallv_benchmarks} for scaling benchmarks from the non-ViennaCL multi-GPU implementation. Appendix~\ref{app:keeneland_alltoallv_benchmarks} demonstrates the scalability of an iteration of RK4 as applied in \S~\ref{sec:cosine_bell} on the Keeneland GPU cluster---the benchmark assumes three SpMV operations per intermediate evaluation of the RK4 time-step. 
+
+In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
+
+
+\begin{table}[htb]
 \centering
 \caption{GFLOP/sec achieved by the distributed ELL SpMV on Cascade's M2070 GPUs, with non-overlapping MPI communication. The SpMV computes derivatives over a 3-D regular grid of size $N=4096000$ nodes (i.e., $160^3$). Data reflects various combinations of stencil sizes, number of compute nodes and number of processes per node (PPN). GPUs are attached to each process per node (i.e. 4 PPN implies 4 GPUs). }
 \label{tbl:cascade_m2070_nonoverlap}
@@ -146,8 +133,17 @@ Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 \end{table}
 
 
+The total time required to compute the distributed SpMV for 1 node and 4 PPN is observed in the neighborhood of 80 ms for $n=50$ and the non-overlapping algorithm (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$). Of those 80 ms, approximately 60 ms is spent performing non-computation tasks such as transferring from GPU down to CPU, encoding and sending data via MPI and then transferring back up to the GPU. The remaining 20 ms is all dedicated to performing the SpMV.
 
-\begin{table}[h]
+By introducing the overlapped GPU kernels, the total time for the distributed SpMV for $n=50$ (1 node, 4 PPN) drops to approximately 15 ms---25\% less than the SpMV-only portion of the non-overlapped approach. Since the non-computation tasks amount to only 12 ms in the overlapped case, our first conclusion is that overlapping hides 100\% of communication for the cases tested in Table~\ref{tbl:cascade_m2070_overlap}, as well as the entire SpMV for $\setBoundary$. 
+
+Within each block of Table~\ref{tbl:cascade_m2070_overlap} we expect the GFLOP/sec to double by row. Obviously the strong scaling in the case of the GPU is not ideal when executing more than one PPN. However, for $n=50$ and 1 PPN we see super but on only 32 GPUs, and impeded by the I/O hub bottleneck, we manage to achieve 130 GFLOP/sec for $n=101$. Compare this to the GFLOP/sec scaling results on Itasca in Figure~\ref{fig:compare_strong_scaling_gflops_all_stencils} where 130 GFLOP/sec requires approximately 
+
+
+Greater than 4x speedup (bold-faced in Table~\ref{tbl:cascade_m2070_overlap}) is possible due to a design flaw on Cascade: each compute node has four attached GPUs connected to the host via a shared I/O hub. Concurrent data transfers from multiple GPUs to host, or vice versa---as would occur while executing a synchronized, distributed SpMV---result in contention on the hub and serialization of transfers. Serialization effectively quadruples the total run-time for 4 PPN. By overlapping communication and computation we notice two effects: a) I/O hub contention disappears (or it is at least hidden by computation), and b) 
+
+
+\begin{table}[htb]
 \centering
 \caption{GFLOP/sec achieved by the distributed ELL SpMV on Cascade's M2070 GPUs, with MPI communication overlapping two GPU kernels. The SpMV computes derivatives over a 3-D regular grid of size $N=4096000$ nodes (i.e., $160^3$). Data reflects various combinations of stencil sizes, number of compute nodes and number of processes per node (PPN). Quantities in parentheses denote the speedup factors achieved by the overlapping algorithm over the non-overlapping approach for identical combinations of compute nodes, PPN, stencil size, etc. }
 \label{tbl:cascade_m2070_overlap}
@@ -169,31 +165,30 @@ Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 \end{tabular} 
 \end{table}
 
-The total time required to compute the distributed SpMV for 1 node and 4 PPN is observed in the neighborhood of 80 ms for $n=50$ and the non-overlapping algorithm (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$). Of those 80 ms, approximately 60 ms is spent performing non-computation tasks such as transferring from GPU down to CPU, encoding and sending data via MPI and then transferring back up to the GPU. The remaining 20 ms is all dedicated to performing the SpMV.
 
-By introducing the overlapped GPU kernels, the total time for the distributed SpMV for $n=50$ (1 node, 4 PPN) drops to approximately 15 ms---25\% less than the SpMV-only portion of the non-overlapped approach. Since the non-computation tasks amount to only 12 ms in the overlapped case, our first conclusion is that overlapping hides 100\% of communication for the cases tested in Table~\ref{tbl:cascade_m2070_overlap}, as well as the entire SpMV for $\setBoundary$. 
+\section{Conclusion and Future Work}
 
-Within each block of Table~\ref{tbl:cascade_m2070_overlap} we expect the GFLOP/sec to double by row. Obviously the strong scaling in the case of the GPU is not ideal when executing more than one PPN. However, for $n=50$ and 1 PPN we see super but on only 32 GPUs, and impeded by the I/O hub bottleneck, we manage to achieve 130 GFLOP/sec for $n=101$. Compare this to the GFLOP/sec scaling results on Itasca in Figure~\ref{fig:compare_strong_scaling_gflops_all_stencils} where 130 GFLOP/sec requires approximately 
+This chapter presented the first 
+
+Future considerations include: 
+\begin{itemize} 
+\item 
+The two level parallelization can even be extended to three level parallelism
+with pThreads or OpenMP (see code samples attached to \cite{CudaToolkitDoc}). While OpenCL provides
+the means to target parallelism on either multi-core CPUs or many-core GPUs, it
+does not allow a parallel kernel on one hardware interact with a parallel kernel
+on the another. That is to say, an OpenCL kernel on the CPU cannot launch
+kernels on the GPU.  
+
+\item We have already leveraged the concurrent kernel execution feature on NVidia Fermi (and Kepler) class GPUs for the overlapping communication and computation algorithm when processing a single subdomain per GPU. However, it remains to be seen what benefit (if any) can be had by queueing multiple subdomains per GPU in order to fully occupy the hardware. This would be equivalent to a hierarchical domain decomposition that assigns a large problem size to each GPU that is then processed as smaller subdomains. 
+
+\item One of the problems with choosing to work in OpenCL is the fact that the standard offers the lowest common denominator of features from the various hardware vendors that support it. Many vendor specific features never make it into the standard or even vendor specific extensions.
+Take for example GPUDirect, a technology introduced first CUDA v3.1 for NVidia hardware \cite{CudaToolkitDoc}. GPUDirect allows direct access to GPU memory addresses from various sources including other GPUs. The technology allows GPUs to bypass intermediate copies to host memory en-route to another GPU on the same compute node. NVidia has recently combined GPUDirect with a new MPI aware implementation of CUDA in order to pass data directly from one GPU onto the InfiniBand network and directly onto another GPU, bypassing intermediate copies to the CPU \cite{NvidiaGPUMPI}. Since this type of feature may never be available in OpenCL, we plan to proceed with the development of CUDA+MPI implementation of RBF-FD.
+
+\end{itemize}
 
 
-Greater than 4x speedup (bold-faced in Table~\ref{tbl:cascade_m2070_overlap}) is possible due to a design flaw on Cascade: each compute node has four attached GPUs connected to the host via a shared I/O hub. Concurrent data transfers from multiple GPUs to host, or vice versa---as would occur while executing a synchronized, distributed SpMV---result in contention on the hub and serialization of transfers. Serialization effectively quadruples the total run-time for 4 PPN. By overlapping communication and computation we notice two effects: a) contention disappears (or is at least hidden by computation), and b) 
-
-
-\section{Multiple Kernel Scheduling}
-describe fermi's ability to schedule multiple kernels, what it means for our queues. 
-%Do we need multiple queues, or just one that is non-blocking. How do we indicate we are done communicating if there is no queue to add markers to? 
-
-
-\section{Future Work}
-
-One of the problems with choosing to work in OpenCL is the fact that the standard offers the lowest common denominator of features from the various hardware vendors that support it. Many vendor specific features never make it into the language. 
-
-Take for example GPUDirect, a technology introduced first CUDA v3.1 for NVidia hardware. GPUDirect allows direct access to GPU memory addresses from various sources including other GPUs. The technology allows GPUs to bypass copies to host memory en-route to another GPU on the same compute node. Combine GPUDirect with the new MPI aware features in CUDA v5.0 and data can pass directly from a GPU onto the infiniband fabric and up to another GPU \cite{NvidiaGPUMPI}. This type of feature may never be available in OpenCL. 
-
-The new Kepler K20s allow both concurrent kernel execution and dynamic parallelism. Dynamic parallelism is a means of scheduling new kernel launches from within an exist kernel. In order to support this feature,
-
-K20s also support CUDA 5.5 which introduces MPI aware CUDA. The nvcc compiler now detects MPI calls and routes data movement directly from InfiniBand to the GPU memory rather than making a stop on the host memory. This is only possible with GPUDirect (direct memory addressing) and dynamic parallelism (to spawn an MPI process from a kernel). 
-
-Features like MPI-CUDA will are unlikely to be available in OpenCL in the future. NVidia is no longer leading or distributing the OpenCL libraries with their driver. NVidia only plans to support the OpenCL spec v1.1.
-
+%Calculating the percentage reduction is useful to consider. The benchmarks are not complete (i.e., the actual time to compute SpMV1 is unknown). However, the time spent in non-SpMV related tasks (e.g., data transfer, encoding, and communication) is known from the unoverlapped case. Therefore, given the time for the overlapped SpMV case, we can calculate the amount of overlap as 
+%
+%K20s also support CUDA 5.5 which introduces MPI aware CUDA. The nvcc compiler now detects MPI calls and routes data movement directly from InfiniBand to the GPU memory rather than making a stop on the host memory. This is only possible with GPUDirect (direct memory addressing) and dynamic parallelism (to spawn an MPI process from a kernel). 
 
