@@ -196,9 +196,12 @@ Our initial implementation of RBF-FD on multiple GPUs (\cite{BolligFlyerErlebach
 In both cases, the stencil weights are stored in  
 a packed one-dimensional array in global memory with $N*n$ nonzeros and all the weights 
 for a single stencil (i.e., an entire row) stored in consecutive memory locations. The one-dimensional array of weights is indexed by two arrays. The first array contains $N$ integer offsets used to jump to the first nonzero of each row. The second array contains $N*n$ integers representing the column index for each nonzero. This sparse compression is equivalent to the \emph{Compressed Row Storage} (CSR) format in \cite{Bell2009, Rupp2010, Cusp2012}.
-% AND THE SAME AS ELLPACK?
 
-Each derivative operator is stored as an independent CSR matrix with independent indexing. The consecutive ordering on the weights implies that the solution vector is treated as random access.  % WHAT DOES THIS MEAN: treated as random access?
+Each derivative operator is stored as an independent CSR matrix with independent indexing. 
+
+%In general, sparse matrices have nonzeros randomly scattered throughout each row. A structured matrix has nonzeros distributed at regular intervals with neighboring rows. 
+In general nonzeros in a row can be regularly or irregularly spaced at intervals, but are rarely all consecutive. When the sparse matrix is compressed into CSR format, each row is condensed into a packed vector with consecutive nonzeros that can be easily loaded from memory in a few transactions and then operated on sequentially. Unfortunately, the packed vector must still be multiplied against the proper elements of the solution vector. Operating sequentially on the packed weights implies that the elements of the solution vector are accessed according to the original spacing between nonzeros of the uncompressed sparse matrix. As In other words, the solution vector is in general random access. 
+  % WHAT DOES THIS MEAN: treated as random access?
 
 %All the computation on the GPU is performed in 8-byte double precision. 
 
@@ -457,7 +460,6 @@ This chapter presented the first implementation of RBF-FD to run on GPUs. Our Op
 
 
 The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of the maximum possible performance to be less than 18.5 GFLOP/sec on the M2070.   
-%GE When did you achieve close to 20 GFLOP/sec? with ViennaCL? Do any of your plots show this? 
 % What is the maximum bandwidth on the GPUs in practice? Did you measure? I must have missed this. 
 
 Two custom GPU SpMV kernels were described: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. The performance of the custom kernels is rather low with less than 3 GFLOP/sec at best, but our recent effort to leverage the reduced memory footprint of the ELLPACK sparse matrix format from the ViennaCL library ultimately achieves up to 8 GFLOP/sec, or 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs. 
