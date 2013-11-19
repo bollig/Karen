@@ -130,7 +130,7 @@ Cores per Multiprocessor & 32 & 192 \\ \hline
 \end{tabular}
 \end{table}
 
-Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double precision roofline models for the M2070 and K20 GPUs, and are produced by drawing Equation~\ref{eq:roofline} as a function of the operational intensity. The bandwidth and peak GFLOP/sec data for both figures comes from Table~\ref{tbl:gpu_comparison}. Note that the M2070 and K20 roofline models estimate the maximum possible performance of a double precision SpMV to be 18.5 GFLOP/sec and 26 GFLOP/sec respectively. These estimates are vastly lower than the advertised peaks of 515 GFLOP/sec and 1170 GFLOP/sec, but in order to achieve the advertised peaks one would need to increase the operational intensity to 4 FLOPs:Byte for the M2070 or 6 FLOPs:Byte on the K20. One possible approach to achieve more performance is to add additional vectors to the multiplication so that the sparse matrix is multiplied against a dense matrix (see e.g., the work in \cite{ErlebacherSauleFlyerBollig2013}). 
+Figures~\ref{fig:roofline_m2070} and \ref{fig:roofline_k20} show the double precision roofline models for the M2070 and K20 GPUs, and are produced by drawing Equation~\ref{eq:roofline} as a function of the operational intensity. The memory bandwidth and peak GFLOP/sec data for both figures comes from Table~\ref{tbl:gpu_comparison}. Note that the M2070 and K20 roofline models estimate the maximum possible performance of a double precision SpMV to be 18.5 GFLOP/sec and 26 GFLOP/sec respectively. These estimates are vastly lower than the advertised peaks of 515 GFLOP/sec and 1170 GFLOP/sec, but in order to achieve the advertised peaks one would need to increase the operational intensity to 4 FLOPs:Byte for the M2070 or 6 FLOPs:Byte on the K20. One possible approach to achieve more performance is to add additional vectors to the multiplication so that the sparse matrix is multiplied against a dense matrix (see e.g., the work in \cite{ErlebacherSauleFlyerBollig2013}). 
 
 \begin{figure} 
 \begin{subfigure}{0.45\textwidth}
@@ -154,78 +154,9 @@ The roofline model is an idealistic estimate for the maximum possible performanc
 
 
 
-
-
-%DONE: problem with SpMV is operational intensity 
-%DONE: OI dictates GFLOP/sec (define GFLOP/sec)
-%DONE: roofline model predicts that the stock operation can only achieve 18.5 GFLOP/sec
-%TODO: the best way to optimize is through memory load reduction which leads to alternative formats
-%TODO: alternative formats include ELL, CSR, COO 
-
-%TODO: initially custom kernels attempted to implement efficiently
-%TODO: custom kernels by thread and warp tested 
-%TODO: data was structured as a CSR
-%TODO: ended up with this convoluted set of operations that perform RK4 in a few kernels
-%TODO: performance in Appendix C shows maximum of 3 GFLOP/sec, even when operating on two independent SpMVs
-
-%TODO: in an effort to improve performance we adopted ViennaCL 
-%TODO: ViennaCL support for sparse algebra was competitive.  
-%TODO: design now includes backends for CUDA, OpenMP, although some operations require OpenCL
-%TODO: included in PETSc
-%TODO: easy to implement kernels by stepping out to matrix primitives (SpMV, AXPY, etc). Tuned kernels for each
-%TODO: contributions to ViennaCL for rectangular matrices and distributed computation
-
-%TODO: performance achieved in ViennaCL formats shown here
-%TODO: test performance on cascade where two types of GPU and intel phi are available
-%TODO: compared to CPU CSR which was fastest BOOST::uBLAS 
-%TODO: surprising that COO performs better than CSR for larger n (explained as: ???; memory may already be loaded?)
-%TODO: regardless of COO vs CSR, ELL is clear winner with 43\% of estimated peak
-%TODO: expected M2070 to be slower than K20
-%TODO: suspect that K20 is same performance because the hardware has one less multiprocessor 
-%TODO: and OpenCL executes using NVidia driver from Fermi class, NVidia no longer actively maintaining
-%TODO: private comm with other ViennaCL developers suspects NVidia throttles OpenCL so K20 data is less true
-%TODO: for now accept 8 GFLOP/sec in ELL and verify the performance growth by stencil size
-%TODO: growth by stencil size compares all stencil sizes on M2070 and K20. 
-%TODO: comparison includes speedup against CPU CSR shows our expectations of 20x speedup not yet realized
-%TODO: speedup actually decreasing because of the increasing performance of CPUs as they become many-core
-
-%TODO: preliminary work on Intel Phi questioned whether it is a GPU killer
-%TODO: phi features ring, cache, SIMD cores
-%TODO: opencl portability allowed us to repeat matrix format tests with ViennaCL
-%TODO: GFLOP/sec shown here. dismal results
-%TODO: low low data, CSR better than ELL 
-%TODO: two reasons: opencl driver and kernels do not express parallelism necessary 
-
-%TODO: future GPU will investigate ELL alternatives BELL/SBELL/etc. 
-%TODO: future work will find more appropriate OpenCL or leverage ViennaCL OpenMP backend on Phi
-%TODO: give up on single SpMV and work toward SpMM and multiple SpMMs. 
-%TODO: already working with MIC vector instructions for up to xxx GFLOP/sec for multiple SpMMs
-
-
 \section{Custom Kernels}
 \label{sec:custom_gpu_kernels}
  
-%
-%Our codebase began as a prototype demonstrating the feasibility of RBF-FD
-%operating on the GPU. The initial code, published in \cite{BolligFlyerErlebacher2012}, was developed as $N$ independent dot
-%products of weights and solution values to approximate derivatives. Weights were
-%stored linearly in memory, with the solution values read randomly. On the GPU,
-%stencils were evaluated independently by threads, or shared by a warp of
-%threads. Operating on stencils in this way implied that GPU kernels were to be
-%hand written, tuned and optimized. 
-%
-%Much later, our perspective evolved to see derivative approximation and
-%time-stepping as sparse matrix operations. This opened new possibilities for
-%optimization and allowed us to forego hand optimization and fine-tuning of GPU
-%kernels. With all of the effort put into optimizing sparse operations within
-%libraries like CUSP \cite{Bell2009}, ViennaCL \cite{Rupp2010} and even the
-%NVidia provided CUSPARSE \cite{CudaToolkitDoc}, formulating the problem in terms of
-%sparse matrix operations allows us to quickly prototype on the GPU and leverage
-%all of the optimizations available within the third party libraries. 
-
-%Stencil weights are calculated once by the CPU and copied to the GPU at the beginning of the simulation. The static weights are then reused in every iteration on the GPU. When weights are initially computed they are written to disk in the MatrixMarket format, a standard format for archiving GPU Subsequent runs load weights from disk. Ignoring code initialization, the cost of the algorithm is simply the explicit time advancement of the solution. 
-
-
 Our initial implementation of RBF-FD on the GPU (published in \cite{BolligFlyerErlebacher2012}) accelerates the standard fourth order Runge-Kutta (RK4) scheme with OpenCL kernels. 
 The RK4 steps are: 
 \begin{eqnarray} 
@@ -267,9 +198,7 @@ a packed one-dimensional array in global memory with $N*n$ nonzeros and all the 
 for a single stencil (i.e., an entire row) stored in consecutive memory locations. The one-dimensional array of weights is indexed by two arrays. The first array contains $N$ integer offsets used to jump to the first nonzero of each row. The second array contains $N*n$ integers representing the column index for each nonzero. This sparse compression is equivalent to the \emph{Compressed Row Storage} (CSR) format in \cite{Bell2009, Rupp2010, Cusp2012}.
 % AND THE SAME AS ELLPACK?
 
-Each derivative operator is stored as an independent CSR matrix with independent indexing. The consecutive ordering on the weights implies that the solution vector %structured according to the ordering of set $\mathcal{G}$ 
-is treated as random access.  % WHAT DOES THIS MEAN: treated as random access?
-% Where is CSR indexing discussed first? 
+Each derivative operator is stored as an independent CSR matrix with independent indexing. The consecutive ordering on the weights implies that the solution vector is treated as random access.  % WHAT DOES THIS MEAN: treated as random access?
 
 %All the computation on the GPU is performed in 8-byte double precision. 
 
@@ -289,7 +218,7 @@ The advantage of this approach is trivial concurrency.  Since each stencil has t
 \end{figure}
 
 Perfect concurrency from a logical point of view does not 
-imply perfect efficiency in practice. The compression of the sparse matrix means all stencil weights, offsets, and column indices are read by a warp as contiguous blocks from global memory, but in this case each thread of the warp must load a different memory block. Unfortunately, that can mean up to 32 memory transactions to load weights for the warp. Additionally, the random access on the solution vector implies that sine a warp processes multiple stencils, threads might thrash the cache if they need to load new 128-byte-wide cache lines too often. The new cache lines often end up evicting lines that would be of use to other threads in the warp for later stencil nodes. The larger the stencil size, the more difficult it becomes for solution value cache lines to avoid eviction. Only small stencil sizes stand to benefit from this approach. 
+imply perfect efficiency in practice. The compression of the sparse matrix means all stencil weights, offsets, and column indices are read by a warp as contiguous blocks from global memory, but in this case each thread of the warp must load a different memory block. Unfortunately, that can mean up to 32 memory transactions to load weights for the warp. Additionally, the random access on the solution vector implies that since a warp processes multiple stencils, threads might thrash the cache if they need to load new 128-byte-wide cache lines too often. The new cache lines often end up evicting lines that would be of use to other threads in the warp for later stencil nodes. The larger the stencil size, the more difficult it becomes for solution value cache lines to avoid eviction. Only small stencil sizes stand to benefit from this approach. 
 %However, with stencils sharing many common nodes, and the Fermi hardware providing caching, some weights in the unused portions of the segments might remain in cache long enough to hide the cost of so many additional memory loads.
 
 
@@ -315,7 +244,7 @@ For stencil sizes smaller than 32, some threads in the warp always remain idle. 
 
 \subsection{Performance}
 
-For the performance of the custom RBF-FD implementation we refer readers to \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks}, where the kernels are benchmarked on an NVidia M2070 GPU. The benchmarks show that dedicating a full warp of threads to each row of the SpMV performs the best for stencil sizes $n \geq 32$, and one thread per stencil otherwise. However, our observed GFLOP/sec for both kernels is fairly low with less than 3 GFLOP/sec in the best case, which is less than 15\% of the 18.5 GFLOP/sec peak estimated by the roofline model. 
+For the performance of the custom RBF-FD implementation we refer readers to \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks}, where the kernels are benchmarked on an NVidia M2070 GPU. The benchmarks show that dedicating a full warp of threads to each row of the SpMV performs the best for stencil sizes $n \geq 32$, and one thread per stencil otherwise. However, our observed GFLOP/sec for both kernels is fairly low with less than 2 GFLOP/sec in a standard SpMV scenario, and less than 3 GFLOP/sec for the best case when multiple derivative operators are applied. When operating at less than 2 GFLOP/sec our kernels achieve lower than 10\% of the 18.5 GFLOP/sec peak estimated by the roofline model. 
 
 % OF COURSE you do not know how efficient your implementation is for n=32. 
 
@@ -328,7 +257,7 @@ The API is structured following existing programming and interface conventions f
 
 In an interesting twist, the most recent version of ViennaCL (v1.4.2) also supports multiple parallel back-ends that allow one to target different parallel architectures with the same API. Back-end options include OpenCL, CUDA, and OpenMP. Our work focuses solely on the OpenCL back-end.
 
-We have integrated the ViennaCL library into the RBF-FD GPU project (\cite{BolligRBFFDCode}), and attempt to use the Vienna API whenever possible. Two items became apparent once we started working with ViennaCL: a) the library is incredibly powerful but it is limited to square matrices; and b) there is no support for multiple GPUs. Since the library is open source, we joined the project as developers and made a number of contributions to the main codebase that adds support for rectangular matrices, a matrix preconditioner, a number of bugfixes, and in the near future,  our multi-GPU algorithms with overlapping communication and computation presented in Chapter~\ref{chap:multigpu_rbffd}.
+We have integrated the ViennaCL library into the RBF-FD GPU project (\cite{BolligRBFFDCode}), and attempt to use the ViennaCL API whenever possible. Two items became apparent once we started working with ViennaCL: a) the library is incredibly powerful but it is limited to square matrices; and b) there is no support for multiple GPUs. Since the library is open source, we joined the project as developers and made a number of contributions to the main codebase that add support for rectangular matrices, a matrix preconditioner, a number of bugfixes, and in the near future,  our multi-GPU algorithms with overlapping communication and computation presented in Chapter~\ref{chap:multigpu_rbffd}.
 
 As a testament to the functionality of the ViennaCL library and its utility within the RBF-FD GPU project, we note that the PETSc project (\cite{petsc-web-page}) recently integrated the library into its codebase. PETSc originally leveraged the CUDA-only library, CUSP (\cite{Cusp2012}), to internally offload matrix computations to NVidia GPUs \cite{Minden2010}. However, with the functional portability of OpenCL and the new ViennaCL back-ends, PETSc is now able to transparently target parallel architectures across all vendors. In turn, investigations like \cite{Yokota2010,Yokota2012}, which depend on PETSc, likewise gain this ability. 
 
@@ -336,7 +265,7 @@ ViennaCL supports a number of sparse formats similar to \cite{Bell2009,Cusp2012}
 \begin{itemize} 
 \item \emph{Coordinate Matrix (COO)} -- The sparse matrix is compressed to three arrays of equal length. The first array stores all nonzero weights from the matrix contiguous by row. The second and third arrays store the row and column indices (resp.) for each nonzero element. For a mesh of $N$ nodes and RBF-FD stencil size $n$ this format requires $(3*N*n)$ storage.  % YOU WILL NOTE THAT THERE ARE PAPERS THAT DISCUSS THE CORRECT FORMAT. ELL
 \item \emph{Compressed Row Storage (CSR)} -- Similar to COO, the matrix is stored in three arrays. All $N*n$ nonzero weights are stored in the first array. In the second array, $N$ integers indicate the offset (into the first array) to get to the first nonzero of each row. Finally, the $N*n$ column indices for each nonzero are stored in the third array. This format requires a total of $(2*(n+1)*N)$ storage.
-\item \emph{ELLPACK (ELL)} -- The matrix is assumed to have exactly $m$ nonzeros per row. Then the matrix is compressed to two arrays, each of size $N*m$, that contain only the matrix nonzeros and the column indices. If a row has less than $m$ nonzeros, then zeros are used to pad up to the required number of nonzeros. However, based on the assumption that all RBF-FD stencils will have equal size, we have $m=n$ and the format is a good fit for the problem. ELL requires a total of $(2*N*n)$ storage. 
+\item \emph{ELLPACK (ELL)} -- The matrix is assumed to have exactly $m$ nonzeros per row. Then the matrix is compressed to two arrays, each of size $N*m$, that contain only the matrix nonzeros and the column indices. If a row has less than $m$ nonzeros, then zeros are used to pad up to the required number of nonzeros. However, based on the assumption that all RBF-FD stencils will have equal size, we have $m=n$ and the format is a good fit for the problem. The ELL format requires a total of $(2*N*n)$ storage. 
 \end{itemize}
 %COO and CSR matrices are convenient for problems that have variable number of nonzeros per row. However, the extra storage means that 
 %, the ELL format is clearly preferred. 
@@ -351,7 +280,7 @@ ViennaCL supports a number of sparse formats similar to \cite{Bell2009,Cusp2012}
 
 
 \subsection{Performance}
-To compare the performance of ViennaCL to our custom GPU kernels, we benchmarked the SpMV in a simulated RK4 iteration. In each case, a single RBF-FD differentiation matrix is assembled and then multiplied against four different vectors as evaluation steps. The resulting vectors are then scaled and added together to advance the time-step. We benchmark the time spent in SpMV for the ViennaCL sparse containers (ELL, CSR, and COO), as well as a CPU-only CSR container from the BOOST::uBLAS library. 
+To compare the performance of ViennaCL to our custom GPU kernels, we benchmarked the SpMV in a simulated RK4 iteration. In each case, a single RBF-FD differentiation matrix is assembled and then multiplied against four different vectors as evaluation steps. The resulting vectors are then scaled and added together to advance the time-step. We benchmark the time spent in SpMV for the ViennaCL sparse containers (ELL, CSR, and COO), as well as a CPU-only CSR container from the \texttt{Boost::uBLAS} library. 
 
 Performance of the SpMV is measured as
 \begin{align}
@@ -361,7 +290,9 @@ where $t_{s}$ is the SpMV execution time given in seconds, and the factor of 2 c
 
 Benchmarks are provided for both the NVidia M2070 and NVidia K20 GPUs on the Cascade cluster. In each case we consider a range of mesh resolutions up to one million nodes on the unit sphere, and stencil sizes $n=17, 31, 50, 101$. 
 
-We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec achieved on the M2070. Unsurprisingly we find that the performance of the CSR format on the GPU is nearly the same GFLOP/sec achieved by our custom GPU kernels in Appendix~\ref{app:keeneland_alltoallv_benchmarks}. However, the performance of the COO format is interesting in that it exceeds the performance of the lower memory CSR format in most cases. For $n=101$ the COO format is approximately 50\% faster than the CSR format. Although this development is interesting, our motivation in the benchmarks is to achieve the best possible performance. For each stencil size, the ELL format clearly demonstrates itself as the best with a peak of up to 8 GFLOP/sec in the case of $n=101$ nodes per stencil.
+We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec achieved on the M2070. Unsurprisingly, we find that the performance of less than 2 GFLOP/sec by the GPU CSR format is nearly the same achieved by our custom GPU kernels in Appendix~\ref{app:keeneland_alltoallv_benchmarks}. The performance of the COO format in particular is interesting in that it exceeds the performance of the CSR format in most cases. For $n=101$ the COO format is approximately 50\% faster than the CSR format even though the CSR matrix has a memory footprint that is one third smaller. One possible cause for the lower performance is that our choice of stencil sizes do not result in properly aligned memory for the CSR format. The ViennaCL library does provide the option to align CSR arrays on multiples of 2, but these benchmarks were run unaligned. 
+
+Although the COO and CSR benchmarks are interesting, our motivation with the benchmarks is to achieve the best possible performance. For each stencil size, the ELL format clearly demonstrates itself as the best with a peak of up to 8 GFLOP/sec in the case of $n=101$ nodes per stencil. The ELL format achieves between 4x and 5x higher GFLOP/sec versus the COO and CSR formats respectively. 
 %GE AND WHAT WAS YOUR (HANDCRAFTED) PERFORMANCE IN THIS CASE? If COO exceeds perfornace of CSR, why is this not interesting? Is ELL FASTER than COO? I thought ELL and CSR would run at similar  speeds. 
 
 \begin{figure} 
@@ -520,11 +451,11 @@ As our investigation into the Xeon Phi continues, the benchmarks will be reasses
 This chapter presented the first implementation of RBF-FD to run on GPUs. Our OpenCL implementations apply RBF-FD differentiation matrices via Sparse Matrix-Vector multiplication (SpMV) to compute derivatives everywhere in the domain. The solution values are then updated via a fourth-order Runge Kutta (RK4) time-step. 
 
 
-The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of actual performance to be less than 20 GFLOP/sec.   
+The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of peak performance to be less than 18.5 GFLOP/sec on the M2070.   
 %GE When did you achieve close to 20 GFLOP/sec? with ViennaCL? Do any of your plots show this? 
 % What is the maximum bandwidth on the GPUs in practice? Did you measure? I must have missed this. 
 
-Two custom GPU SpMV kernels were described: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. The performance of the custom kernels is rather low at 3 GFLOP/sec at best, but our recent effort to leverage the reduced memory footprint of the ELLPACK sparse matrix format from the ViennaCL library ultimately achieves up to 8 GFLOP/sec, or 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs. 
+Two custom GPU SpMV kernels were described: one that performs the SpMV by dedicating one thread to compute each row of the differentiation matrix, and one that applies 32 threads (a warp) to compute each row. The performance of the custom kernels is rather low with less than 3 GFLOP/sec at best, but our recent effort to leverage the reduced memory footprint of the ELLPACK sparse matrix format from the ViennaCL library ultimately achieves up to 8 GFLOP/sec, or 43\% of the peak possible performance for SpMV on NVidia M2070 GPUs. 
 
 Note there is still room to improve the SpMV performance, in addition to a few other directions for future work:
 \begin{itemize} 
