@@ -49,7 +49,7 @@ In Chapter~\ref{chap:distributed_rbffd}, the SpMV was assumed run on the CPU. He
 
 Our original attempt at multi-GPU RBF-FD, described in \cite{BolligFlyerErlebacher2012}, utilized blocking communication (i.e., \texttt{MPI\_Send}/\texttt{MPI\_Recv}) for synchronization. The blocking communication functioned for debugging purposes, but was not practical. In Appendix~\ref{app:keeneland_alltoallv_benchmarks}, we provide supplementary data that demonstrates the result of replacing the blocking send and receives with an \texttt{MPI\_Alltoallv} (i.e., the GPU equivalent of Figure~\ref{fig:alltoallv_cpu}). In both cases the SpMV is a single kernel launch and the synchronization includes both an encode and decode phase (see \S~\ref{sec:local_ordering}). 
 
-The two multi-GPU algorithms presented in this chapter build off of Figure~\ref{fig:no_decode_cpu} and Figure~\ref{fig:overlap_cpu}; the final collectives tested in \S~\ref{sec:mpi_improvements}. 
+The two multi-GPU algorithms that follow build off of Figure~\ref{fig:no_decode_cpu} and Figure~\ref{fig:overlap_cpu}; the final collectives tested in \S~\ref{sec:mpi_improvements}. 
 When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
 
 \subsection{Non-overlapped Algorithm}
@@ -79,7 +79,8 @@ The algorithm for Figure~\ref{fig:isendirecv_gpu} is as follows. First, the CPU 
 
 \subsection{Overlapping with the GPU}
 
-Overlapping communication and GPU computation is enabled by two levels of asynchronous commands: 
+Our overlapping SpMV algorithm is illustrated in Figure~\ref{fig:overlap_gpu}. 
+Overlapping communication and GPU computation utilizes two sets of asynchronous commands: 
 \begin{itemize} 
 \item \emph{Non-blocking MPI}. The MPI\_Isend/MPI\_Irecv routines are used to post communication and immediately return the main thread to computation. 
 \item \emph{Asynchronous GPU Queues}. Two OpenCL queues are utilized to send commands to the GPU. 
