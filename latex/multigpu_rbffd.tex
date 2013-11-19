@@ -95,11 +95,9 @@ We now demonstrate the performance of our multi-GPU algorithms. In all cases the
 
 %Appendix~\ref{app:keeneland_alltoallv_benchmarks} demonstrates scaling of our custom OpenCL kernels using the \texttt{MPI\_Alltoallv} collective. The data was generated on the Keeneland Initial Delivery (KID) system \cite{Vetter2011} and is provided for comparison with the original benchmarks in \cite{BolligFlyerErlebacher2012}. We tested the strong scaling of RBF-FD kernels up to 10 GPUs (1 GPU per compute node) for the small problem size of $N=27556$ nodes. Non-overlapping communication (\texttt{MPI\_Alltoallv}) synchronizes GPUs as they execute iterations of the RK4 time-scheme. The benchmarks on Keeneland tested
 
-Chapter~\ref{chap:gpu_rbffd} introduced the Cascade cluster, which contains up to 32 NVidia M2070 GPUs, 8 NVidia K20 GPUs and 3 Intel Xeon Phis. Although Cascade is not a large GPU cluster like Titan or Keeneland, it suffices for prototyping and performing simple scaling tests an a variety of hardware. In the benchmarks that follow, we scale up 32 M2070 GPUs and measure the GFLOP/sec for the distributed SpMV with $N=4096000$ rows $n=17, 31, 50$ and $101$ nonzeros per row.  
+Chapter~\ref{chap:gpu_rbffd} introduced the Cascade cluster, which contains up to 32 NVidia M2070 GPUs, 8 NVidia K20 GPUs and 3 Intel Xeon Phis. Although Cascade is not a large GPU cluster like Titan or Keeneland, it suffices for prototyping GPU code, and performing simple scalability tests on the various hardware options. In the benchmarks that follow, we scale up 32 M2070 GPUs and measure the GFLOP/sec for the distributed SpMV applied to an ELL matrix with a total of $N=4096000$ rows and $n=17, 31, 50$ and $101$ nonzeros per row. GPUs are each paired with a unique MPI process on the CPU. 
 
-Table~\ref{tbl:cascade_m2070_nonoverlap} presents three groups of data for $p=1, 2, 4$ and $8$ compute nodes. In the first group each test case jobs with 1 processes per node (PPN), with each process. 
-
-For $n=101$ the single process, single node test could not be executed because the M2070 is limited to 6 GB global memory and the test case requires $(2*N*n)*8 \text{bytes}) = 6.6$ GB for the ELL matrix.
+Table~\ref{tbl:cascade_m2070_nonoverlap} presents three groups data (GFLOP/sec) observed for each $1, 2, 4$ and $8$ compute nodes. The first group tests the execution of one MPI process per node (i.e., 1 PPN) for each compute node. The second group scales the number of processes per node two, and the third group occupies all four GPUs per node with 4 PPN.  Data for the $n=101$, single process, single node test case could not be executed due to the limited availability of memory on the M2070 GPUs (matrix alone required $((2*N*n)*8\ \text{bytes}) = 6.6$ GB storage for the ELL matrix.
 
 \begin{table}[htb]
 \centering
@@ -107,7 +105,7 @@ For $n=101$ the single process, single node test could not be executed because t
 \label{tbl:cascade_m2070_nonoverlap}
 \begin{tabular}{c|c|c|c|c|c|c}
  \multicolumn{2}{c}{ } & \multicolumn{4}{|c|}{Observed GFLOP/sec} \\  \hline
-Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
+Compute Nodes &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 1  &  1  &  8.4  &  8.4  &  8.9  & --  \\
 2  &  1  &  6.1  &  6.8  &  6.4  &  7.6 \\
 4  &  1  &  6.9  &  9.1  &  10.3  &  13.3 \\
