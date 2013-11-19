@@ -91,31 +91,13 @@ The algorithm for Figure~\ref{fig:overlap_gpu} starts with the construction of t
 
 \section{Strong Scaling Performance}
 
-We now demonstrate the performance of our multi-GPU algorithms. In all test cases the strong scaling of our implementations are tested.  
+We now demonstrate the performance of our multi-GPU algorithms. In all cases the strong scaling of the ViennaCL ELL GPU implementation is tested.  
 
 %Appendix~\ref{app:keeneland_alltoallv_benchmarks} demonstrates scaling of our custom OpenCL kernels using the \texttt{MPI\_Alltoallv} collective. The data was generated on the Keeneland Initial Delivery (KID) system \cite{Vetter2011} and is provided for comparison with the original benchmarks in \cite{BolligFlyerErlebacher2012}. We tested the strong scaling of RBF-FD kernels up to 10 GPUs (1 GPU per compute node) for the small problem size of $N=27556$ nodes. Non-overlapping communication (\texttt{MPI\_Alltoallv}) synchronizes GPUs as they execute iterations of the RK4 time-scheme. The benchmarks on Keeneland tested
 
-Chapter~\ref{chap:gpu_rbffd} introduced the Cascade cluster, which contains up to 32 NVidia M2070 GPUs, 8 NVidia K20 GPUs and 3 Intel Xeon Phis. Although Cascade is not a large GPU cluster like Titan or Keeneland, it suffices for prototyping and performing simple scaling tests an a variety of hardware. The configuration of the 32 M2070 GPUs and environment testing scaling 
+Chapter~\ref{chap:gpu_rbffd} introduced the Cascade cluster, which contains up to 32 NVidia M2070 GPUs, 8 NVidia K20 GPUs and 3 Intel Xeon Phis. Although Cascade is not a large GPU cluster like Titan or Keeneland, it suffices for prototyping and performing simple scaling tests an a variety of hardware. In the benchmarks that follow, we scale up 32 M2070 GPUs and measure the GFLOP/sec for the distributed SpMV with $N=4096000$ rows $n=17, 31, 50$ and $101$ nonzeros per row.  
 
-We scale our ViennaCL ELL format SpMV across the M2070 GPUs on Cascade. This gives us up to 32 GPUs for computation. 
-
-By comparing benchmarks from the non-overlapped and overlapped GPU cases, we get the speedup: 
-\begin{align*} 
-S_p = \ ^{t_{non-overlapped}} /_{t_{overlapped}}
-\end{align*}
-in using the overlapped solution. Any reduction in time is evidence of overlap. 
-
-If speedup greater than $p = (Compute Nodes * PPN)$ is achieved 
-
-
-Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
-
-
-I/O Hub contention is a known issue on HP ProLiant GPU clusters like Cascade (see e.g., \cite{Spafford2011}). 
-
-
-In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
-
+Table~\ref{tbl:cascade_m2070_nonoverlap} presents the GFLOP/sec achieved
 
 \begin{table}[htb]
 \centering
@@ -140,7 +122,29 @@ Compute Nodes   &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 \end{table}
 
 
-The total time required to compute the distributed SpMV for 1 node and 4 PPN is observed in the neighborhood of 80 ms for $n=50$ and the non-overlapping algorithm (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$). Of those 80 ms, approximately 60 ms is spent performing non-computation tasks such as transferring from GPU down to CPU, encoding and sending data via MPI and then transferring back up to the GPU. The remaining 20 ms is all dedicated to performing the SpMV.
+
+
+
+By comparing benchmarks from the non-overlapped and overlapped GPU cases, we get the speedup: 
+\begin{align*} 
+S_p = \ ^{t_{non-overlapped}} /_{t_{overlapped}}
+\end{align*}
+in using the overlapped solution. Any reduction in time is evidence of overlap. 
+
+The 32 M2070 GPUs partitioned into four GPUs per compute node poses a particularly interesting challenge. 
+
+Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
+
+
+I/O Hub contention is a known issue on HP ProLiant GPU clusters like Cascade (see e.g., \cite{Spafford2011}). 
+
+
+In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
+
+
+
+
+The total time required to compute the distributed SpMV for 1 node and 4 PPN is observed in the neighborhood of 80 ms for $n=50$ and the non-overlapping algorithm (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$). Of those 80 ms, approximately 60 ms is spent performing non-computation tasks such as transferring from GPU down to CPU, encoding and sending data via MPI and then transferring back up to the GPU. The remaining 20 ms is dedicated to performing the SpMV.
 
 By introducing the overlapped GPU kernels, the total time for the distributed SpMV for $n=50$ (1 node, 4 PPN) drops to approximately 15 ms---25\% less than the SpMV-only portion of the non-overlapped approach. Since the non-computation tasks amount to only 12 ms in the overlapped case, our first conclusion is that overlapping hides 100\% of communication for the cases tested in Table~\ref{tbl:cascade_m2070_overlap}, as well as the entire SpMV for $\setBoundary$. 
 
