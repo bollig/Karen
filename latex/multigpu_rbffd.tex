@@ -87,7 +87,7 @@ Our overlapping SpMV algorithm is illustrated in Figure~\ref{fig:overlap_gpu}. T
 \item \emph{Asynchronous GPU Queues}. Two OpenCL queues (\cite{Gerstmann2009}) are constructed within the same context for a single GPU. Each queue allows commands (e.g., memory transfers and kernel launches) to be sent to the GPU independently. Fermi- and Kepler-class GPUs, which support concurrent kernel execution, overlap execution of the commands across multiple queues. Within each queue commands are processed sequentially.
 \end{itemize}
 
-The algorithm for Figure~\ref{fig:overlap_gpu} starts with the construction of two OpenCL queues. Within the ViennaCL package this can be done with: 
+The algorithm for Figure~\ref{fig:overlap_gpu} starts with the construction of two OpenCL queues, $Q1$ and $Q2$. Then, the algorithm first activates $Q1$ and launches the SpMV for $\mathcal{Q} \backslash \mathcal{B}$ (i.e., nodes on the interior of the subdomain). The kernel launch returns immediately and the non-blocking call \texttt{MPI\_Irecv} is made. Next, the CPU activates $Q2$ and issues the memory transfer on $\mathcal{O}$. The CPU flushes $Q2$ to ensure the transfer of $\mathcal{O}$ is complete before it starts encoding MPI buffers. When \texttt{MPI\_Isend} is called the CPU uses \texttt{MPI\_Waitall} to block until $\mathcal{R}$ is received.  on an
 
 \section{Strong Scaling Performance}
 
