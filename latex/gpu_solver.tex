@@ -372,10 +372,8 @@ Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU
 
 Figures~\ref{fig:ell_gflops_cascade_m2070} and \ref{fig:ell_gflops_cascade_k20} summarize the best achieved GFLOP/sec (in all cases the ELL format) for each stencil size on the M2070 and K20 respectively. The figures show that stencil sizes $n=17$ and $n=31$ on the K20 perform roughly 20\% worse than the M2070. 
 
-In Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20}, we consider the speedup achieved by each GPU over their respective CPUs  (i.e., Westmere-EP and Sandy-Bridge), which run the \texttt{Boost::uBLAS} CSR format. In \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} our custom kernels achieved at most 4x speedup over the CPU in a setup nearly identical to the M2070 case here. In this case, leveraging the ELL format achieves between 10x and 14x speedup on one million nodes. 
-%GE SPEEDUP COMPARED TO WHAT? To the CPUS? How do you know the CPU is optimized? What are the compiler options? Loop unroll? -O3? ...
-
-In the case of the K20 shown in Figure~\ref{fig:ell_speedup_cascade_k20}, the faster Sandy-Bridge architecture closes some of the divide between CPUs and GPUs, but we still maintain 8x to 10x speedup for a one million nod mesh.
+In Figures~\ref{fig:ell_speedup_cascade_m2070} and \ref{fig:ell_speedup_cascade_k20}, we consider the speedup achieved by each GPU compared to their respective CPUs (i.e., Westmere-EP and Sandy-Bridge), which run the \texttt{Boost::uBLAS} CSR format. In \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} our custom kernels achieved at most 4x speedup compared to a CSR SpMV written as a nested loop and run on a Westmere-EP class CPU in a setup nearly identical to the M2070 case here. The \texttt{Boost::uBLAS} CSR internally runs a nested loop similar to our custom SpMV. In all cases the CPU implementations are compiled with the Intel compiler (``icc") and the optimization flag ``-O3" to enable auto-vectorization, loop unrolling, blocking, etc. 
+Figure~\ref{fig:ell_speedup_cascade_m2070} shows that leveraging the ELL format on the M2070 achieves between 10x and 14x speedup compared to the Westmere-EP implementation on one million nodes. In the case of the K20 shown in Figure~\ref{fig:ell_speedup_cascade_k20}, the faster Sandy-Bridge architecture closes some of the divide between CPUs and GPUs, but we still maintain 8x to 10x speedup for a one million node mesh.
 
 \begin{figure} 
 \centering
