@@ -123,7 +123,7 @@ Compute Nodes &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 
 The data in Table~\ref{tbl:cascade_m2070_nonoverlap} shows that without overlapped communication and computation our multi-GPU scaling is poor in all cases. For 8 compute nodes and 1 PPN (i.e., 8 GPUs total) the code achieves only 18\% - 20\% strong scaling efficiency. When increased to multiple GPUs per node, we find that the performance actually decreases by as much as a factor of two. 
 
-The reduced performance observed for multiple GPUs per node (e.g., 1 compute node, 4 PPN) reflects a known problem in the design of Cascade. To understand this we turn to  Each of the M2070 compute nodes on Cascade has four GPUs attached to independent PCI-E buses. Those PCI-E buses junction at an I/O Hub which is in turn connected to the a bottleneck in the path between CPU and the four GPUs.
+The reduced performance observed for multiple GPUs per node (e.g., 1 compute node, 4 PPN) reflects a known problem in the design of Cascade illustrated in the block diagram in Figure~\ref{fig:cascade_iohub}. Each of the M2070 compute nodes on Cascade has four GPUs attached to an NVidia proprietary hub, which is in turn connected via PCI Express to the I/O Hub for the CPUs. The single lane connection between the I/O Hub and the NVidia Hub acts as a bottleneck when copying data to multiple GPUs. Simultaneous data transfers are serialized, which in turn causes the GPUs to process out of sync. 
 
 \begin{figure}
 \centering
@@ -132,25 +132,15 @@ The reduced performance observed for multiple GPUs per node (e.g., 1 compute nod
 \label{fig:cascade_iohub}
 \end{figure}
 
-
-By comparing benchmarks from the non-overlapped and overlapped GPU cases, we get the speedup: 
+We now turn to Table~\ref{tbl:cascade_m2070_overlap}, which presents the scaling data for 1, 2, 4 and 8 nodes and 1, 2 and 4 PPN and our overlapping  algorithm communication and computation. Once again, GFLOP/sec are provide for each case. However, in Table~\ref{tbl:cascade_m2070_overlap} we additionally provide the speedup
 \begin{align*} 
-S_p = \ ^{t_{non-overlapped}} /_{t_{overlapped}}
+S_p = \ ^{t_{non-overlapped}} /_{t_{overlapped}},
 \end{align*}
-in using the overlapped solution. Any reduction in time is evidence of overlap. 
+to demonstrate improvement over the non-overlapping cases.
 
-The 32 M2070 GPUs partitioned into four GPUs per compute node poses a particularly interesting challenge. 
-
-Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
-
-In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
-
-
-
-
-The total time required to compute the distributed SpMV for 1 node and 4 PPN is observed in the neighborhood of 80 ms for $n=50$ and the non-overlapping algorithm (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$). Of those 80 ms, approximately 60 ms is spent performing non-computation tasks such as transferring from GPU down to CPU, encoding and sending data via MPI and then transferring back up to the GPU. The remaining 20 ms is dedicated to performing the SpMV.
-
-By introducing the overlapped GPU kernels, the total time for the distributed SpMV for $n=50$ (1 node, 4 PPN) drops to approximately 15 ms---25\% less than the SpMV-only portion of the non-overlapped approach. Since the non-computation tasks amount to only 12 ms in the overlapped case, our first conclusion is that overlapping hides 100\% of communication for the cases tested in Table~\ref{tbl:cascade_m2070_overlap}, as well as the entire SpMV for $\setBoundary$. 
+%The total time required to compute the distributed SpMV for 1 node and 4 PPN is observed in the neighborhood of 80 ms for $n=50$ and the non-overlapping algorithm (i.e. without splitting $\setCenters \backslash \setBoundary$ and $\setBoundary$). Of those 80 ms, approximately 60 ms is spent performing non-computation tasks such as transferring from GPU down to CPU, encoding and sending data via MPI and then transferring back up to the GPU. The remaining 20 ms is dedicated to performing the SpMV.
+%
+%By introducing the overlapped GPU kernels, the total time for the distributed SpMV for $n=50$ (1 node, 4 PPN) drops to approximately 15 ms---25\% less than the SpMV-only portion of the non-overlapped approach. Since the non-computation tasks amount to only 12 ms in the overlapped case, our first conclusion is that overlapping hides 100\% of communication for the cases tested in Table~\ref{tbl:cascade_m2070_overlap}, as well as the entire SpMV for $\setBoundary$. 
 
 Within each block of Table~\ref{tbl:cascade_m2070_overlap} we expect the GFLOP/sec to double by row. Obviously the strong scaling in the case of the GPU is not ideal when executing more than one PPN. However, for $n=50$ and 1 PPN we see super but on only 32 GPUs, and impeded by the I/O hub bottleneck, we manage to achieve 130 GFLOP/sec for $n=101$. Compare this to the GFLOP/sec scaling results on Itasca in Figure~\ref{fig:compare_strong_scaling_gflops_all_stencils} where 130 GFLOP/sec requires approximately 
 
