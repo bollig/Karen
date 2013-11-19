@@ -87,39 +87,7 @@ Our overlapping SpMV algorithm is illustrated in Figure~\ref{fig:overlap_gpu}. T
 \item \emph{Asynchronous GPU Queues}. Two OpenCL queues (\cite{Gerstmann2009}) are constructed within the same context for a single GPU. Each queue allows commands (e.g., memory transfers and kernel launches) to be sent to the GPU independently. Fermi- and Kepler-class GPUs, which support concurrent kernel execution, overlap execution of the commands across multiple queues. Within each queue commands are processed sequentially.
 \end{itemize}
 
-
-Within ViennaCL additional queues are 
-
-
-Figure~\ref{fig:overlap_gpu}
-
-
-In Section~\ref{sec:local_ordering}
-
-OpenCL requires that data be explicitly copied to the CPU. The MPI collectives 
-
-
-
-\section{Overlapping Communication}
-Internal to every OpenCL application is both a Context and a Queue. The Context 
-
-~\ref{sec:index_mappings}
-
-
-
-The overlapping communication is achieved by creating additional queues 
-
-
-Recent advances in distributed (multi-)GPU computing involve NVidia's GPU Direct technology. GPU Direct allows hardware like the PCI-e bus to directly access memory on the GPU device. CUDA V5.5 adds full support for MPI applications 
-
-
-
-\section{Multi-GPU Challenges}
-
-Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
-
-
-
+The algorithm for Figure~\ref{fig:overlap_gpu} starts with the construction of two OpenCL queues. Within the ViennaCL package this can be done with: 
 
 \section{Strong Scaling Performance}
 
@@ -143,9 +111,10 @@ in using the overlapped solution. Any reduction in time is evidence of overlap.
 If speedup greater than $p = (Compute Nodes * PPN)$ is achieved 
 
 
+Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
+
 
 I/O Hub contention is a known issue on HP ProLiant GPU clusters like Cascade (see e.g., \cite{Spafford2011}). 
-
 
 
 In both cases, the performance is based on a non-overlapping communication collective (MPI\_Alltoallv).
