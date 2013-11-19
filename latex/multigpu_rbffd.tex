@@ -121,7 +121,7 @@ Compute Nodes &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 \end{tabular} 
 \end{table}
 
-The data in Table~\ref{tbl:cascade_m2070_nonoverlap} 
+The data in Table~\ref{tbl:cascade_m2070_nonoverlap} shows that without overlapped communication and computation our multi-GPU scaling poor in all cases. For 8 compute nodes and 1 PPN (i.e., 8 GPUs total) the code achieves stencil sizes achieve only 18\% - 20\% strong scaling efficiency. When multiple GPUs per node are tested, we find that the performance actually decreases by as much as a factor of two. 
 
 
 
