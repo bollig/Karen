@@ -5,7 +5,7 @@
 
 %%%%%%%%%%
 
-%TODO: extending work from chapter 6 we return to the GPU but this time attempt to span multiple GPUs
+%DONE: extending work from chapter 6 we return to the GPU but this time attempt to span multiple GPUs
 %TODO: describe context with multiple devices, we assume one device per context
 %TODO: describe multiple queues, assume two for SpMV (why? indep operation, overlapping kernel execution not just comm)
 %TODO: nonoverlapping test case description
@@ -29,24 +29,12 @@ Ultimately, finding a way to harness the tera- and peta-scale performance from s
 
 In Chapter~\ref{chap:gpu_rbffd}, we have already developed two different approaches to computing RBF-FD on a single GPU. Then in Chapter~\ref{chap:distributed_rbffd}, we laid the foundation for a distributed RBF-FD that spans the nodes of an HPC cluster, and demonstrated scaling up to 1024 processors (128 nodes). This chapter combines those algorithms to produce the first (to our knowledge) multi-GPU (OpenCL) implementation of the RBF-FD method. 
 
-One issue with distributing computation across multiple GPUs is that the GPUs excel at accelerating computation, but do nothing to reduce the cost of communication. With communication latency suddenly disproportionately large compared to computation, the distributed GPU implementation loses its ability to scale well. As part of this chapter, we detail an algorithm to hide communication latency behind overlapped computation. The algorithm here is an organic extension to the overlapping communication and computation algorithm in Chapter~\ref{chap:distributed_rbffd}. 
+One issue with distributing computation across multiple GPUs is that the GPUs excel at accelerating computation, but do nothing to reduce the cost of communication. With communication latency suddenly disproportionately large compared to computation, the distributed GPU implementation loses its ability to scale well. As part of this chapter, we detail an algorithm to hide communication latency behind overlapped computation. The algorithm presented herein is an organic extension to the overlapping communication and computation algorithm in Chapter~\ref{chap:distributed_rbffd}. 
 
+%With the popularity of GPU clusters, there are naturally a number of related investigations in the literature that consider overlapping communication and computation for multi-GPU applications. For example, Kim and Park overlap communication and computation in their implementation of a Finite-Difference Time-Domain algorithm and demonstrate near perfect strong scaling up to 6 GPUs \cite{KimPark2012}. \cite{Thibault2009}
+%
 
-Naturally, a number of related investigations exist in the literature that port applications to multi-GPU clusters. \cite{KimPark2012} 
-
-
-
-due to the this is not the possible due to one problem: communication overhead. 
- 
-
-
-%TODO: deep memory hierarchy for CPUs gets deeper when going to GPUs. 
-%TODO: 
-
-\section{Multi-GPU Computing} 
-
-Multi-GPU clusters 
-
+\section{An Overlapping Communication and Computation Multi-GPU RBF-FD Algorithm}
 
 Our efforts in \cite{BolligFlyerErlebacher2012} and Appendix~\ref{app:keeneland_alltoallv_benchmarks} targeted the Keeneland Initial Delivery (KID) system. 
 
