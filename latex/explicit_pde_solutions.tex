@@ -131,7 +131,9 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 Figure~\ref{fig:vortex_t10} shows the initial condition for Equation~\ref{eq:vortex} (Figure~\ref{fig:vortex_initial}) and the solution at $t = 10$ (Figure~\ref{fig:vortex_approx}), on $N=10201$ nodes, with stencil size $n=50$. This resolution is sufficient to properly capture the vortices at $t=10$ (Figure~\ref{fig:vortex_relerr}), but lower resolutions would suffer approximation errors associated with insufficient grid resolution. 
 For this reason, the solution at $t=3$ is considered in the normalized $\ell_2$ error convergence study presented in Figure~\ref{fig:conv_plot_vortex}. The time step $\Delta t = 0.05$ for all resolutions. 
 
-Based on Figure~\ref{fig:conv_plot_vortex_nohv}, which shows the convergence without the hyperviscosity filter on eigenvalues, we see that only one test case reflects the unstable eigenvalues present in the DM. In a stroke of luck the unstable modes are small enough that the solution at $t=3$ is not impacted, but as $t$ increases the instabilities begin to dominate. Figure~\ref{fig:conv_plot_vortex_hv} demonstrates the convergence of vortex roll-up with hyperviscosity included. The solution errors are slightly higher than Figure~\ref{fig:conv_plot_vortex_hv}, but the instabilities have vanished. 
+Based on Figure~\ref{fig:conv_plot_vortex_nohv}, which shows the convergence without the hyperviscosity filter on eigenvalues, we see that only one test case reflects the unstable eigenvalues present in the DM. 
+%In a stroke of luck 
+Fortuitously, the unstable modes are small enough that the solution at $t=3$ is not impacted, but as $t$ increases the instabilities begin to dominate. Figure~\ref{fig:conv_plot_vortex_hv} demonstrates the convergence of vortex roll-up with hyperviscosity included. The solution errors are slightly higher than Figure~\ref{fig:conv_plot_vortex_hv}, but the instabilities have vanished. 
 
 %TODO: copy data in: Users/evan/Laptop/efb06/research_2013/dsc_xpo_2013/figures/vortex/
 \begin{figure}[ht]
@@ -209,11 +211,11 @@ The discretized form of Equation~\ref{eq:cosine_bell} is
 \end{equation}
 where DMs $D_\lambda$ and $D_\theta$ contain RBF-FD weights corresponding to all $N$ stencils that approximate $\pd{}{\lambda}$ and $\pd{}{\theta}$ respectively. 
 
-Rather than merge the differentiation matrices in Equation~\ref{eq:cosine_with_hyperviscosity} into one operator, our implementation evaluates them as two sparse matrix-vector multiplies. The separate operations are motivated by an effort to provide general and reusable GPU kernels. Additionally, they artificially increase the amount of computation compared to the vortex roll-up test case to simulate cases when operators cannot be merged into one DM (e.g., a non-linear PDE).
+Rather than merge the differentiation matrices in Equation~\ref{eq:cosine_with_hyperviscosity} into a single operator, our implementation evaluates them as two sparse matrix-vector multiplications. The separate operations are motivated by an effort to provide general and reusable GPU kernels. Note that they artificially increase the amount of computation compared to the vortex roll-up test case to simulate cases when operators cannot be merged into one DM (e.g., a non-linear PDE).
 
 By splitting the DM, the singularities at the poles ($1 / \cos{\theta} \rightarrow \infty$ as $\theta \rightarrow \pm\frac{\pi}{2}$) in Equation~\ref{eq:cosine_bell} remain. However, in this case, the approach functions without amplification of errors because the MD node sets have nodes near, but not on, the poles. As noted in \cite{FlyerWright07, FornbergLehto11}, applying the entire spatial operator to the right hand side of Equation~\ref{eq:rbffd_weight_system} generates a single DM that analytically removes the singularities at poles (see Appendix~\ref{app:rbffd_remove_singularities} for details). 
 
-We will advect a $C^1$ cosine bell height-field given by
+We advect a $C^1$ cosine bell height-field given by
 \begin{equation*}
 h  =
 \begin{cases}
@@ -253,7 +255,7 @@ Stencil Size ($n$) & $c_{1}$ & $c_{2}$ & $k$ & $\gamma_c$ \\ \hline
 	\caption{With Hyperviscosity ($k=8$ and $\gamma_c = 5*10^{-2}$)}
 	%\label{fig:cosine_eigs_hv}
 \end{subfigure}
-\caption{Eigenvalues of Equation~\ref{eq:cosine_with_hyperviscosity} for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Eigenvalues are divided by $u_0$ to remove scaling effects of velocity.}
+\caption{Eigenvalues of Equation~\ref{eq:cosine_with_hyperviscosity} for the cosine bell test case with $N=4096$ nodes, stencil size $n=101$, and $\epsilon = 3.5$. Eigenvalues are divided by $u_0$ to remove the scaling effects of velocity.}
 \label{fig:eig_cosine}
 \end{center}
 \end{figure}
@@ -288,11 +290,11 @@ Hyperviscosity parameters are $k = 8$, $\gamma_c = 5(10^{-2})$.
 \end{figure}
 %TODO: emphasize that the oscillations in cosine bell are not high. The error demonstrates that all oscillations are between 1e-5 and 1.2e-12.
 
-Figure~\ref{fig:eig_cosine} compares eigenvalues of the DM for $N=4096$ nodes and stencil size $n=101$ before and after hyperviscosity is applied. To avoid scaling effects of velocity on the eigenvalues, they have been scaled by $1/u_0$.  The same approach as in the vortex roll-up case is used to determine the parameters for hyperviscosity and $\epsilon$. Our tuned parameters are presented in 
-Table~\ref{tbl:cos_hv_params}. In this case, the eigenvalues are significantly more sensitive to hyperviscosity and require fine tuning of $\gamma_c$. Figure~\ref{fig:cosine_eigs_hv_m1} demonstrates the impact on eigenvalues from Figure~\ref{fig:eig_cosine} when $\gamma_c$ is increased from $5*10^{-2}$ to $5*10^{-1}$. The higher $\gamma_c$ excessively damps modes, effectively wiping out those that are needed for the solution. 
+Figure~\ref{fig:eig_cosine} compares eigenvalues of the DM for $N=4096$ nodes and stencil size $n=101$ before and after hyperviscosity is applied. To avoid scaling effects of velocity on the eigenvalues, the velocity is multiplied by $1/u_0$.  The same approach as in the vortex roll-up case is used to determine the parameters for hyperviscosity and $\epsilon$. Our tuned parameters are presented in 
+Table~\ref{tbl:cos_hv_params}. In this case, the eigenvalues are significantly more sensitive to hyperviscosity and require fine tuning of $\gamma_c$. Figure~\ref{fig:cosine_eigs_hv_m1} demonstrates the impact on eigenvalues from Figure~\ref{fig:eig_cosine} when $\gamma_c$ is increased from $5*10^{-2}$ to $5*10^{-1}$. The higher $\gamma_c$ excessively damps modes, effectively wiping out those that are needed for an accurate solution. 
 
 
-Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolutions around the sphere. Without hyperviscosity, RBF-FD cannot complete a single revolution of the bell before instability takes over. However, adding hyperviscosity allows computation to extend to dozens or even thousands of revolutions and maintain stability (e.g., see \cite{FornbergLehto11}). 
+Figure~\ref{fig:cosine_10revs} shows the cosine bell transported ten full revolutions around the sphere. Without hyperviscosity, RBF-FD cannot complete a single revolution of the bell before instability takes over. However, adding hyperviscosity allows computation to extend to dozens or even thousands of revolutions and maintain stability (e.g., see \cite{FornbergLehto11}), although accuracy is increasingly compromised over time. 
 
 After ten revolutions, the cosine bell is still intact with only 0.6\% lost from the original peak ($h_0=1$). The white and purple rippling effect shown in Figure~\ref{fig:cosine_approx} is not severe. The absolute error in Figure~\ref{fig:cosine_abserror} clarifies that the majority of the absolute error appears at the base of the $C^1$ bell where the discontinuity appears in the derivative. Beyond the region at the base of the bell, the absolute error drops well below $10^{-5}$. 
 
