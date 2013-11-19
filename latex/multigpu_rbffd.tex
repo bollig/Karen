@@ -47,9 +47,9 @@ In order to develop the multi-GPU implementation, we return to the idealized tes
 
 In Chapter~\ref{chap:distributed_rbffd}, the SpMV was assumed run on the CPU. Herein, it is assumed the SpMV is computed via one of the GPU algorithms presented in Chapter~\ref{chap:gpu_rbffd}. For now the actual choice between custom OpenCL kernels and ViennaCL does not matter. Later, when we consider the scaling of this algorithm, the ViennaCL implementation is assumed. 
 
-Our original attempt at multi-GPU RBF-FD, described in \cite{BolligFlyerErlebacher2012}, utilized blocking communication (i.e., \texttt{MPI\_Send}/\texttt{MPI\_Recv}) for synchronization. The blocking communication functioned for debugging purposes, was not practical. In Appendix~\ref{app:keeneland_alltoallv_benchmarks}, we provide supplementary data that demonstrates the result of replacing the blocking send and receives with an \texttt{MPI\_Alltoallv} (i.e., the GPU equivalent of Figure~\ref{fig:alltoallv_cpu}). In both cases the SpMV is a single kernel launch and the synchronization includes both an encode and decode phases (see \S~\ref{sec:local_ordering}). 
+Our original attempt at multi-GPU RBF-FD, described in \cite{BolligFlyerErlebacher2012}, utilized blocking communication (i.e., \texttt{MPI\_Send}/\texttt{MPI\_Recv}) for synchronization. The blocking communication functioned for debugging purposes, but was not practical. In Appendix~\ref{app:keeneland_alltoallv_benchmarks}, we provide supplementary data that demonstrates the result of replacing the blocking send and receives with an \texttt{MPI\_Alltoallv} (i.e., the GPU equivalent of Figure~\ref{fig:alltoallv_cpu}). In both cases the SpMV is a single kernel launch and the synchronization includes both an encode and decode phases (see \S~\ref{sec:local_ordering}). 
 
-The two multi-GPU algorithms presented here build on the improved collectives presented in \S~\ref{sec:mpi_improvements}. The first is a direct extensions of the start from Figures~\ref{fig:alltoallv_cpu}
+The two multi-GPU algorithms presented here build on Figure~\ref{fig:no_decode_cpu} and Figure~\ref{fig:overlap_cpu}; the final collectives tested in \S~\ref{sec:mpi_improvements}. 
 
 \subsection{Non-overlapping Communication}
 
@@ -102,9 +102,6 @@ Recent advances in distributed (multi-)GPU computing involve NVidia's GPU Direct
 \section{Multi-GPU Challenges}
 
 Distributing SpMV across multiple GPUs poses a new problem: as previous mentioned, the data sent and received via MPI collectives must be copied from device to host and vice-versa. To amortize this cost we introduce a novel overlapping algorithm to hide the cost of communication behind the cost of a concurrent SpMV on the GPU. 
-
-\section{Communication Collectives}
-
 
  
 \begin{figure} 
