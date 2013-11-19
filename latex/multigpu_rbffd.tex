@@ -97,7 +97,7 @@ We now demonstrate the performance of our multi-GPU algorithms. In all cases the
 
 Chapter~\ref{chap:gpu_rbffd} introduced the Cascade cluster, which contains up to 32 NVidia M2070 GPUs, 8 NVidia K20 GPUs and 3 Intel Xeon Phis. Although Cascade is not a large GPU cluster like Titan or Keeneland, it suffices for prototyping GPU code, and performing simple scalability tests on the various hardware options. In the benchmarks that follow, we scale up 32 M2070 GPUs and measure the GFLOP/sec for the distributed SpMV applied to an ELL matrix with a total of $N=4096000$ rows and $n=17, 31, 50$ and $101$ nonzeros per row. GPUs are each paired with a unique MPI process on the CPU. 
 
-Table~\ref{tbl:cascade_m2070_nonoverlap} presents three groups data (GFLOP/sec) observed for each $1, 2, 4$ and $8$ compute nodes. The first group tests the execution of one MPI process per node (i.e., 1 PPN) for each compute node. The second group scales the number of processes per node two, and the third group occupies all four GPUs per node with 4 PPN.  Data for the $n=101$, single process, single node test case could not be executed due to the limited availability of memory on the M2070 GPUs (matrix alone required $((2*N*n)*8\ \text{bytes}) = 6.6$ GB storage for the ELL matrix.
+Table~\ref{tbl:cascade_m2070_nonoverlap} presents three groups data (GFLOP/sec) observed for each $1, 2, 4$ and $8$ compute nodes. The first group tests the execution of one MPI process per node (i.e., 1 PPN) for each compute node. The second and third groups scale the number of processes per node two four GPUs respectively. Data for the $n=101$, single process, single node test case could not be executed due to the limited memory on the M2070 GPUs (i.e., 6 GB available and the ELL matrix alone requires $((2*N*n)*8\ \text{bytes}) = 6.6$ GB).
 
 \begin{table}[htb]
 \centering
@@ -121,7 +121,7 @@ Compute Nodes &   PPN  &   n=17   &   n=31   &   n=50   &   n=101   \\ \hline
 \end{tabular} 
 \end{table}
 
-
+The data in Table~\ref{tbl:cascade_m2070_nonoverlap} 
 
 
 
