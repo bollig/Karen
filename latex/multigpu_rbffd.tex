@@ -43,9 +43,40 @@ Our multi-GPU implementation leverages non-blocking MPI communication plus two a
 
 \section{Multi-GPU RBF-FD}
 
-In order to develop the multi-GPU implementation, we return to the idealized test case considered in Chapter~\ref{chap:distributed_rbffd}: four derivatives on a 3-D regular grid are computed via SpMV and used as the intermediate vectors for an RK4 time-step. At the end of each SpMV a communication collective synchronizes external dependencies for each subdomain.
+In order to develop the multi-GPU implementation, we return to the idealized test case proposed in Chapter~\ref{chap:distributed_rbffd}: four derivatives on a 3-D regular grid are computed via SpMV and used as the intermediate vectors for an RK4 time-step. At the end of each SpMV a communication collective synchronizes external dependencies for each subdomain.
 
-Previously, the SpMV was assumed to be on the CPU. Herein, we assume the SpMV is computed via the GPU using the algorithms presented in Chapter~\ref{chap:gpu_rbffd}. In the description of our multi-GPU algorithm the actual choice between custom OpenCL kernels and ViennaCL does not matter. However, as we proceed with benchmarking the ViennaCL implementation is assumed. 
+In Chapter~\ref{chap:distributed_rbffd}, the SpMV was assumed run on the CPU. Herein, it is assumed the SpMV is computed via one of the GPU algorithms presented in Chapter~\ref{chap:gpu_rbffd}. For now the actual choice between custom OpenCL kernels and ViennaCL does not matter. Later, when we consider the scaling of this algorithm, the ViennaCL implementation is assumed. 
+
+Our original attempt at multi-GPU RBF-FD, described in \cite{BolligFlyerErlebacher2012}, utilized blocking communication (i.e., \texttt{MPI\_Send}/\texttt{MPI\_Recv}) for synchronization. The blocking communication functioned for debugging purposes, was not practical. In Appendix~\ref{app:keeneland_alltoallv_benchmarks}, we provide supplementary data that demonstrates the result of replacing the blocking send and receives with an \texttt{MPI\_Alltoallv} (i.e., the GPU equivalent of Figure~\ref{fig:alltoallv_cpu}). In both cases the SpMV is a single kernel launch and the synchronization includes both an encode and decode phases (see \S~\ref{sec:local_ordering}). 
+
+The two multi-GPU algorithms presented here build on the improved collectives presented in \S~\ref{sec:mpi_improvements}. The first is a direct extensions of the start from Figures~\ref{fig:alltoallv_cpu}
+
+\subsection{Non-overlapping Communication}
+
+Figure~\ref{fig:isendirecv_gpu} 
+
+   \begin{enumerate}
+    \item Transfer $\mathcal{O}$ from GPU to CPU
+    \item Encode $\mathcal{O}$ to send buffer
+	\item Distribute $\mathcal{O}$ to other CPUs and receive $R$ from other CPUs
+	\item Decode $\mathcal{R}$ from received buffer  
+	\item Transfer $\mathcal{R}$ to the GPU
+	\item Launch a GPU kernel to operate on $\mathcal{Q}$
+   \end{enumerate} 
+
+When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
+
+\section{Overlapping with the GPU}
+
+Overlapping communication and GPU computation is enabled by two levels of asynchronous commands: 
+\begin{itemize} 
+\item \emph{Non-blocking MPI}. The MPI\_Isend/MPI\_Irecv routines are used to post communication and immediately return the main thread to computation. 
+\item \emph{Asynchronous GPU Queues}. Two OpenCL queues are utilized to send commands to the GPU. 
+\end{itemize}
+
+
+
+Figure~\ref{fig:overlap_gpu}
 
 
 In Section~\ref{sec:local_ordering}
@@ -59,14 +90,7 @@ Internal to every OpenCL application is both a Context and a Queue. The Context
 
 ~\ref{sec:index_mappings}
 
-   \begin{enumerate}
-    \item Transfer $\mathcal{O}$ from GPU to CPU
-    \item Encode $\mathcal{O}$ to send buffer
-	\item Distribute $\mathcal{O}$ to other CPUs and receive $R$ from other CPUs
-	\item Decode $\mathcal{R}$ from received buffer  
-	\item Transfer $\mathcal{R}$ to the GPU
-	\item Launch a GPU kernel to operate on $\mathcal{Q}$
-   \end{enumerate} 
+
 
 The overlapping communication is achieved by creating additional queues 
 
@@ -101,19 +125,6 @@ Distributing SpMV across multiple GPUs poses a new problem: as previous mentione
 \caption{Overlapping GPU kernels with CPU managed communication. Task block sizes are not drawn to scale.} 
 \label{fig:gpu_mpi_tuning}
 \end{figure}
-
-
-\subsection{Non-overlapping Communication}
-
-When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
-
-\section{Overlapping with the GPU}
-
-Overlapping communication and GPU computation is enabled by two levels of asynchronous commands: 
-\begin{itemize} 
-\item \emph{Non-blocking MPI}. The MPI\_Isend/MPI\_Irecv routines are used to post communication and immediately return the main thread to computation. 
-\item \emph{Asynchronous GPU Queues}. Two OpenCL queues are utilized to send commands to the GPU. 
-\end{itemize}
 
 
 \section{Strong Scaling Performance}

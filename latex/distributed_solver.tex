@@ -457,7 +457,7 @@ The data in Figure~\ref{fig:weak_scaling_alltoallv_all_stencils} shows that \tex
 
 
 \subsection{Improvements}
-
+\label{sec:mpi_improvements}
 
 Figure~\ref{fig:mpi_tuning} illustrates a progression of improvements made in an effort to flatten the weak scaling curves from Figure~\ref{fig:weak_scaling_alltoallv_all_stencils}. Each tile of Figure~\ref{fig:mpi_tuning} is a timeline for the distributed SpMV. Vertical bars separate the SpMV in focus from execution of the next and last SpMV. Our implementation does not assume a global barrier before starting the next iteration, so load balancing is essential to limit wait times between processors. Operations are concurrent from top to bottom within each tile, and the top-most operations are launched first.
 
