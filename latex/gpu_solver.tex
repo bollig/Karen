@@ -292,8 +292,7 @@ Benchmarks are provided for both the NVidia M2070 and NVidia K20 GPUs on the Cas
 
 We start in Figure~\ref{fig:gflops_cascade_m2070} with the observed GFLOP/sec achieved on the M2070. Unsurprisingly, we find that the performance of less than 2 GFLOP/sec by the GPU CSR format is nearly the same achieved by our custom GPU kernels in Appendix~\ref{app:keeneland_alltoallv_benchmarks}. The performance of the COO format in particular is interesting in that it exceeds the performance of the CSR format in most cases. For $n=101$ the COO format is approximately 50\% faster than the CSR format even though the CSR matrix has a memory footprint that is one third smaller. One possible cause for the lower performance is that our choice of stencil sizes do not result in properly aligned memory for the CSR format. The ViennaCL library does provide the option to align CSR arrays on multiples of 2, but these benchmarks were run unaligned. 
 
-Although the COO and CSR benchmarks are interesting, our motivation with the benchmarks is to achieve the best possible performance. For each stencil size, the ELL format clearly demonstrates itself as the best with a peak of up to 8 GFLOP/sec in the case of $n=101$ nodes per stencil. The ELL format achieves between 4x and 5x higher GFLOP/sec versus the COO and CSR formats respectively. 
-%GE AND WHAT WAS YOUR (HANDCRAFTED) PERFORMANCE IN THIS CASE? If COO exceeds perfornace of CSR, why is this not interesting? Is ELL FASTER than COO? I thought ELL and CSR would run at similar  speeds. 
+Although the COO and CSR benchmarks are interesting, our motivation in the benchmarks is to achieve the best possible performance. For each stencil size, the ELL format clearly demonstrates itself as the best with a peak of up to 8 GFLOP/sec in the case of $n=101$ nodes per stencil. The ELL format achieves between 4x and 5x higher GFLOP/sec versus the COO and CSR formats respectively.  
 
 \begin{figure} 
 \centering
@@ -327,7 +326,8 @@ Although the COO and CSR benchmarks are interesting, our motivation with the ben
 \label{fig:gflops_cascade_m2070}
 \end{figure}
 
-Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU. In this case, the K20 is expected to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for CSR and COO data, the ELL results are disappointingly similar to the M2070 results. The K20 also achieves only up to 8 GFLOP/sec peak for stencil size $n=101$. 
+Figure~\ref{fig:gflops_cascade_k20} repeats the benchmarks for Cascade's K20 GPU. In this case, the K20 is expected to perform up to 50\% better than the M2070 due to increased bandwidth. Although an increase is visible for CSR and COO data, the ELL results are disappointingly similar to the M2070 results. The K20 also achieves only up to 8 GFLOP/sec peak for stencil size $n=101$. Given the performance increased as expected for COO and CSR formats, the lack of increase for ELL is likely cause by limited cache utilization (e.g., if only a few elements per cache line are needed before eviction). If cache lines are underutilized, then the 8 GFLOP/sec can be improved by techniques like node ordering (see Chapter~\ref{chap:stencils}). 
+
 % WHY IS THIS EVAN? MAKE SOME STATTEMENT IF YOU CAN. 
 
 \begin{figure} 
@@ -451,7 +451,7 @@ As our investigation into the Xeon Phi continues, the benchmarks will be reasses
 This chapter presented the first implementation of RBF-FD to run on GPUs. Our OpenCL implementations apply RBF-FD differentiation matrices via Sparse Matrix-Vector multiplication (SpMV) to compute derivatives everywhere in the domain. The solution values are then updated via a fourth-order Runge Kutta (RK4) time-step. 
 
 
-The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of peak performance to be less than 18.5 GFLOP/sec on the M2070.   
+The roofline model (\cite{Williams2009}) was introduced to manage expectations for the peak possible performance that can be achieved for RBF-FD. Although GPUs like the NVidia M2070 advertise 515 GFLOP/sec peak possible performance in double precision, the SpMV operational intensity of $\ ^{1}/_{8}$ FLOPs:Bytes limits our expectation of the maximum possible performance to be less than 18.5 GFLOP/sec on the M2070.   
 %GE When did you achieve close to 20 GFLOP/sec? with ViennaCL? Do any of your plots show this? 
 % What is the maximum bandwidth on the GPUs in practice? Did you measure? I must have missed this. 
 
