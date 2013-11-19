@@ -127,8 +127,8 @@ The reduced performance observed for multiple GPUs per node (e.g., 1 compute nod
 
 \begin{figure}
 \centering
-\includegraphics[0.5\textwidth]{./gpu_content/omnigraffle/CascadeIOHub.pdf}
-\caption{A high level view of the }
+\includegraphics[width=0.5\textwidth]{gpu_content/omnigraffle/CascadeIOHub.pdf}
+\caption{A block diagram of Cascade's hardware structure. While GPUs can operate independently, the single lane connecting the I/O Hub to the NVidia Hub acts as a bottleneck. Simultaneous memory transfers to multiple GPUs must serialized to cross the link. }
 \label{fig:cascade_iohub}
 \end{figure}
 
