@@ -58,6 +58,8 @@ Figure~\ref{fig:isendirecv_gpu} illustrates the GPU accelerated equivalent of Fi
 
 The algorithm for Figure~\ref{fig:isendirecv_gpu} is as follows. First, the CPU launches \texttt{MPI\_Irecv} as soon as possible. When control returns from the non-blocking launch, the CPU queues a blocking memory transfer to copy $\mathcal{O}$ from the GPU down to the CPU. Once the transfer is complete the CPU encodes the send buffers and issues the non-blocking \texttt{MPI\_Isend}. An \texttt{MPI\_Waitall} blocks until $\mathcal{R}$ is received. The CPU then queues both a non-blocking memory transfer to copy $\mathcal{R}$ from CPU to the GPU, and the SpMV kernel launch for $\mathcal{Q}$ (i.e., the local subdomain). 
 
+%This non-overlapping algorithm is presented in order capture 
+
 \begin{figure} 
 \centering
 \begin{subfigure}{0.48\textwidth}
@@ -79,13 +81,14 @@ The algorithm for Figure~\ref{fig:isendirecv_gpu} is as follows. First, the CPU 
 
 \subsection{Overlapping with the GPU}
 
-Our overlapping SpMV algorithm is illustrated in Figure~\ref{fig:overlap_gpu}. 
-Overlapping communication and GPU computation utilizes two sets of asynchronous commands: 
+Our overlapping SpMV algorithm is illustrated in Figure~\ref{fig:overlap_gpu}. This algorithm utilizes two sets of asynchronous commands: 
 \begin{itemize} 
-\item \emph{Non-blocking MPI}. The MPI\_Isend/MPI\_Irecv routines are used to post communication and immediately return the main thread to computation. 
-\item \emph{Asynchronous GPU Queues}. Two OpenCL queues are utilized to send commands to the GPU. 
+\item \emph{Non-blocking MPI}. The \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} routines are used to post communication and immediately return the control of computation to the main CPU thread. 
+\item \emph{Asynchronous GPU Queues}. Two OpenCL queues (\cite{Gerstmann2009}) are constructed within the same context for a single GPU. Each queue allows commands (e.g., memory transfers and kernel launches) to be sent to the GPU independently. Fermi- and Kepler-class GPUs, which support concurrent kernel execution, overlap execution of the commands across multiple queues. Within each queue commands are processed sequentially.
 \end{itemize}
 
+
+Within ViennaCL additional queues are 
 
 
 Figure~\ref{fig:overlap_gpu}
