@@ -50,11 +50,14 @@ In Chapter~\ref{chap:distributed_rbffd}, the SpMV was assumed run on the CPU. He
 Our original attempt at multi-GPU RBF-FD, described in \cite{BolligFlyerErlebacher2012}, utilized blocking communication (i.e., \texttt{MPI\_Send}/\texttt{MPI\_Recv}) for synchronization. The blocking communication functioned for debugging purposes, but was not practical. In Appendix~\ref{app:keeneland_alltoallv_benchmarks}, we provide supplementary data that demonstrates the result of replacing the blocking send and receives with an \texttt{MPI\_Alltoallv} (i.e., the GPU equivalent of Figure~\ref{fig:alltoallv_cpu}). In both cases the SpMV is a single kernel launch and the synchronization includes both an encode and decode phase (see \S~\ref{sec:local_ordering}). 
 
 The two multi-GPU algorithms presented in this chapter build off of Figure~\ref{fig:no_decode_cpu} and Figure~\ref{fig:overlap_cpu}; the final collectives tested in \S~\ref{sec:mpi_improvements}. 
+When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
 
-Figure~\ref{fig:isendirecv_gpu} presents the GPU accelerated equivalent of Figure~\ref{fig:no_decode_cpu} with \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} communication and no decode process (i.e., nodes in $\setDepend$ are expected to be in contiguous by processor). In this case the communication has no overlap with computation of the SpMV. 
+\subsection{Non-overlapped Algorithm}
 
-The algorithm for Figure~\ref{fig:isendrecv_gpu} is as follows. First, the CPU launches \texttt{MPI\_Irecv} as soon as possible. When control returns from the non-blocking launch, the CPU queues a non-blocking memory transfer to copy $\mathcal{O}$ from GPU down to CPU and the OpenCL command \texttt{clFinish} is executed to ensure the transfer completes before . 
- 
+Figure~\ref{fig:isendirecv_gpu} illustrates the GPU accelerated equivalent of Figure~\ref{fig:no_decode_cpu} with \texttt{MPI\_Isend}/\texttt{MPI\_Irecv} communication. In this case the communication has no overlap with computation of the SpMV. 
+
+The algorithm for Figure~\ref{fig:isendirecv_gpu} is as follows. First, the CPU launches \texttt{MPI\_Irecv} as soon as possible. When control returns from the non-blocking launch, the CPU queues a blocking memory transfer to copy $\mathcal{O}$ from the GPU down to the CPU. Once the transfer is complete the CPU encodes the send buffers and issues the non-blocking \texttt{MPI\_Isend}. An \texttt{MPI\_Waitall} blocks until $\mathcal{R}$ is received. The CPU then queues both a non-blocking memory transfer to copy $\mathcal{R}$ from CPU to the GPU, and the SpMV kernel launch for $\mathcal{Q}$ (i.e., the local subdomain). 
+
 \begin{figure} 
 \centering
 \begin{subfigure}{0.48\textwidth}
@@ -73,17 +76,6 @@ The algorithm for Figure~\ref{fig:isendrecv_gpu} is as follows. First, the CPU l
 \caption{Overlapping GPU kernels with CPU managed communication. Task block sizes are not drawn to scale.} 
 \label{fig:gpu_mpi_tuning}
 \end{figure}
-
-   \begin{enumerate}
-    \item Transfer $\mathcal{O}$ from GPU to CPU
-    \item Encode $\mathcal{O}$ to send buffer
-	\item Distribute $\mathcal{O}$ to other CPUs and receive $R$ from other CPUs
-	\item Decode $\mathcal{R}$ from received buffer  
-	\item Transfer $\mathcal{R}$ to the GPU
-	\item Launch a GPU kernel to operate on $\mathcal{Q}$
-   \end{enumerate} 
-
-When operating on multiple GPUs we avoid the copy-out or decode phase by requiring that the local ordering of nodes sort the set $\setDepend$ by the rank of the process sending each node. This way, when the MPI collective finishes and all values arrive contiguous by provider, the data can be copied directly to the GPU without reordering.
 
 \subsection{Overlapping with the GPU}
 
