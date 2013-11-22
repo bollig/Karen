@@ -201,7 +201,7 @@ for a single stencil (i.e., an entire row) stored in consecutive memory location
 In general nonzeros in a row are irregularly spaced at intervals, but are rarely all consecutive. When the sparse matrix is compressed into CSR format, the packed vector with consecutive nonzeros for each row is easily loaded from memory in a few transactions and then operated on sequentially. Unfortunately, the weights must still be multiplied against the proper elements of the solution vector. From the perspective of a single row the solution vector is random access. That is, operating sequentially on the packed weights implies that the elements of the solution vector are loaded following the irregular spacing between nonzeros in the uncompressed sparse matrix. It is not uncommon for the L1 cache on the GPU to pull in a 128-byte-wide cache line that contains only one or two values that are used by a single row. When this occurs, one hopes that subsequent rows will make use of the cache line before it is evicted. Node ordering can improve the structure of sparse matrices and increase cache utilization to an extent, but it is not always possible to avoid evictions. 
 
 
-\subsection{Naive Approach: One thread per stencil}
+\subsection{Naive Approach: One Thread Per Stencil}
 
 In this first implementation, each thread computes 
 the derivative at one stencil center  (Figure~\ref{fig:oneThreadPerStencil}). 
@@ -221,7 +221,7 @@ imply perfect efficiency in practice. The compression of the sparse matrix means
 
 
 
-\subsection{Alternate Approach: One warp per stencil} 
+\subsection{Alternate Approach: One Warp Per Stencil} 
 
 An alternate approach, illustrated in Figure~\ref{fig:oneWarpPerStencil}, dedicates a full warp of threads to a single stencil. Here, 32 threads load the weights of a stencil and the corresponding elements of the solution vector. As the 32 threads each perform a subset of the dot product, their intermediate sums are accumulated in 32 elements of shared memory (one per thread).
 Should  a stencil be larger than the warp size, the warp iterates over the stencil in increments of the warp size until the full dot product is complete. Finally, the first thread of the warp performs a sum reduction across the 32 intermediate sums stored in shared memory and writes the derivative value to global memory. 
